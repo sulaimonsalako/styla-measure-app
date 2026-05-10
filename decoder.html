@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discover Your Exact Size | STYLA Measure</title>
+  <!-- Same styles as main site + simple styles for this tool -->
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    .decoder-container {
+      max-width: 600px;
+      margin: 4rem auto;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 2.5rem;
+      text-align: left;
+    }
+    .decoder-container h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #fff 0%, #ff75a0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .decoder-container p {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #fff;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      font-size: 10px;
+      cursor: pointer;
+      color: #fff;
+    }
+    .info-icon:hover {
+      background: #ff2a75;
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+    input[type="number"], input[type="file"] {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    input[type="number"]:focus, .styled-select:focus {
+      border-color: #ff2a75;
+    }
+    .styled-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      appearance: none;
+    }
+    .styled-select option {
+      color: #000;
+    }
+    .styled-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      margin-bottom: 0.8rem;
+      transition: border-color 0.3s;
+    }
+    .styled-input:focus {
+      border-color: #ff2a75;
+    }
+    .file-drop {
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(0,0,0,0.2);
+    }
+    .file-drop:hover {
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.05);
+    }
+    .btn-run {
+      width: 100%;
+      background: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);
+      color: #fff;
+      border: none;
+      padding: 1rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-run:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.4);
+    }
+    .btn-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #result-box {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px;
+      display: none;
+      color: #fff;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    #preview-img {
+      max-width: 100%;
+      max-height: 200px;
+      margin-top: 1rem;
+      border-radius: 8px;
+      display: none;
+    }
+    
+    /* Loading State */
+    .loader-container {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top-color: #ff2a75;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 10px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loader-text {
+      color: #ff75a0;
+      font-weight: 500;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Save Profile Form */
+    #save-profile-box {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      display: none;
+    }
+    #save-profile-box h4 {
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #1e293b;
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px; right: 15px;
+      cursor: pointer;
+      font-size: 20px;
+      color: #94a3b8;
+    }
+
+    
+    
+    .nav-link {
+        display: inline-block;
+        margin-top: 1rem;
+        color: #94a3b8;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .nav-link:hover {
+        color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <h1 style="color: #fff; font-size: 1.5rem; letter-spacing: 1px; margin: 0; display: flex; align-items: center; gap: 10px;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span style="color: #ff75a0; font-weight: 400;">Measure</span></h1>
+    <div id="auth-status-container">
+        <button id="btn-show-login" class="btn-run" style="margin-top: 0; padding: 0.5rem 1rem; width: auto; font-size: 0.9rem; background: transparent; border: 1px solid rgba(255,255,255,0.2);">Log In</button>
+        <div id="logged-in-status" style="display: none; align-items: center; gap: 10px;">
+            <span style="color: #10b981; font-weight: 600; font-size: 0.9rem;">✅ Synced</span>
+            <button id="btn-logout" style="background: transparent; border: none; color: #fca5a5; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Log out</button>
+        </div>
+    </div>
+  </header>
+
+  <main class="decoder-container">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.8rem;">Check Your Fit <span style="display: inline-block; white-space: nowrap; font-size: 0.8rem; background: #ff2a75; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 10px; -webkit-text-fill-color: #fff; color: #fff;">v2.0 Vision AI Live ✨</span></h2>
+      <p style="color: #94a3b8; font-size: 1rem; line-height: 1.5;">Found a deal? Upload the brand's size chart to see if it fits your Digital Twin.</p>
+    </div>
+
+      <div class="input-row">
+        <div class="input-group">
+          <label>Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
+          <input type="number" id="val-chest" placeholder="e.g. 38" />
+        </div>
+        <div class="input-group">
+          <label>Waist (inches) <span class="info-icon" onclick="showMeasureModal('waist')">?</span></label>
+          <input type="number" id="val-waist" placeholder="e.g. 32" />
+        </div>
+        <div class="input-group">
+          <label>Hips (inches) <span class="info-icon" onclick="showMeasureModal('hips')">?</span></label>
+          <input type="number" id="val-hips" placeholder="e.g. 40" />
+        </div>
+      </div>
+      
+      <div class="input-row" style="grid-template-columns: 1fr 1fr; margin-top: 1rem;">
+        <div class="input-group">
+          <label>Height <span class="info-icon" onclick="showMeasureModal('height')">?</span></label>
+          <div style="display: flex; gap: 0.5rem;">
+            <select id="val-height-ft" class="styled-select" style="flex: 1;">
+              <option value="">ft</option>
+              <option value="4">4'</option>
+              <option value="5">5'</option>
+              <option value="6">6'</option>
+              <option value="7">7'</option>
+            </select>
+            <select id="val-height-in" class="styled-select" style="flex: 1;">
+              <option value="">in</option>
+              <option value="0">0"</option>
+              <option value="1">1"</option>
+              <option value="2">2"</option>
+              <option value="3">3"</option>
+              <option value="4">4"</option>
+              <option value="5">5"</option>
+              <option value="6">6"</option>
+              <option value="7">7"</option>
+              <option value="8">8"</option>
+              <option value="9">9"</option>
+              <option value="10">10"</option>
+              <option value="11">11"</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Inseam (inches) <span class="info-icon" onclick="showMeasureModal('inseam')">?</span></label>
+          <input type="number" id="val-inseam" placeholder="e.g. 30" />
+        </div>
+      </div>
+
+
+      <div class="input-row" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.5rem; gap: 1.5rem;">
+        <div class="input-group">
+          <label>1. Upload Size Chart(s) (Required)</label>
+          <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
+            <span id="drop-text">Click or drag & drop size charts</span>
+            <input type="file" id="file-upload" style="display: none;" accept="image/*" multiple />
+            <div id="chart-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem;"></div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>2. Upload Garment Photos (Required)</label>
+          <p style="font-size: 0.8rem; color: #94a3b8; margin-top: -5px; margin-bottom: 8px;">The more screenshots of the garment & model you upload, the better the AI can deduce the intended fit.</p>
+          <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
+            <span id="style-drop-text">Click or drag & drop garment photos</span>
+            <input type="file" id="style-file-upload" style="display: none;" accept="image/*" multiple />
+            <div id="style-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-decode" class="btn-run">Decode My Size</button>
+
+      <div id="loader" class="loader-container">
+        <div class="spinner"></div>
+        <div id="loader-status" class="loader-text">Reading size chart...</div>
+      </div>
+
+      <div id="result-box"></div>
+      
+      <!-- Save Profile Box (Appears after result) -->
+      <div id="save-profile-box">
+        <h4>💾 Save your Digital Twin</h4>
+        <p style="font-size: 0.9rem; margin-bottom: 1rem;">Create a free cloud profile so you never have to measure yourself again. Access your Twin on any device.</p>
+        <div class="input-group">
+          <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" />
+          <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" />
+        </div>
+        <button id="btn-save-profile" class="btn-run" style="margin-top: 0; padding: 0.8rem;">Save Profile to Cloud</button>
+      </div>
+      
+    </div>
+    
+    <div>
+        <a href="index.html" class="nav-link">← Back Home</a>
+    </div>
+
+  </main>
+
+  <!-- How to Measure Modal -->
+  <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeMeasureModal(event)">×</span>
+      <h3 id="modal-title" style="margin-bottom: 1rem; color: #ff75a0;">How to measure</h3>
+      <img id="modal-image" style="width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 1rem; border-radius: 8px; display: none;" />
+      <p id="modal-desc" style="color: #94a3b8; line-height: 1.5;"></p>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="login-modal" onclick="document.getElementById('login-modal').style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">×</span>
+      <h3 style="margin-bottom: 1rem; color: #fff;">Welcome Back</h3>
+      <p style="color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem; font-size: 0.9rem;">Log in to sync your Digital Twin measurements from the cloud.</p>
+      
+      <input type="email" id="login-email" class="styled-input" placeholder="Email Address" />
+      <input type="password" id="login-password" class="styled-input" placeholder="Password" />
+      
+      <button id="btn-login-submit" class="btn-run" style="margin-top: 1rem;">Log In & Sync</button>
+      <p id="login-error" style="color: #fca5a5; font-size: 0.9rem; margin-top: 1rem; display: none;"></p>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- FLOATING CHAT UI (EXPERT OPINION)          -->
+  <!-- Easily removable: delete this entire block -->
+  <!-- ========================================== -->
+  <div id="chat-widget" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1000; flex-direction: column; align-items: flex-end;">
+    <!-- Chat Window -->
+    <div id="chat-window" style="display: none; width: 320px; height: 400px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); overflow: hidden; flex-direction: column; margin-bottom: 10px;">
+      <div style="background: #ff2a75; padding: 12px; color: #fff; font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between;">
+        <span>Ask the AI Tailor</span>
+        <span id="close-chat" style="cursor: pointer;">✖</span>
+      </div>
+      <div id="chat-messages" style="flex: 1; padding: 12px; overflow-y: auto; font-size: 0.9rem; color: #f0f0ff; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Messages go here -->
+        <div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 12px; max-width: 85%;">
+          I've analyzed your fit. Have any questions about the sizing or materials?
+        </div>
+      </div>
+      <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px;">
+        <input type="text" id="chat-input" placeholder="Type a question..." style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; padding: 8px; font-size: 0.9rem; outline: none;" />
+        <button id="btn-send-chat" style="background: #ff2a75; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600;">Send</button>
+      </div>
+    </div>
+    <!-- Floating Button -->
+    <button id="btn-toggle-chat" style="width: 60px; height: 60px; border-radius: 50%; background: #ff2a75; border: none; color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(255,42,117,0.4); display: flex; align-items: center; justify-content: center;">💬</button>
+  </div>
+  <!-- ========================================== -->
+
+  <script src="decoder.js"></script>
+</body>
+</html>

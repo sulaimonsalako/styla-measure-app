@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            styla: {
+              bg: '#07070f',
+              pink: '#ff2a75',
+              gray: '#9090b0'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #07070f;
+      color: #ffffff;
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 42, 117, 0.15);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .bg-glow {
+      position: absolute;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, rgba(7, 7, 15, 0) 70%);
+      top: -300px;
+      left: -300px;
+      z-index: 0;
+      border-radius: 50%;
+    }
+    .bg-glow-2 {
+      position: absolute;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, rgba(7, 7, 15, 0) 70%);
+      bottom: -300px;
+      right: -300px;
+      z-index: 0;
+      border-radius: 50%;
+    }
+    .highlight {
+      color: #ff2a75;
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+  
+  <!-- Header -->
+  <div class="z-10 w-full px-20 pt-20 flex justify-between items-center">
+    <div class="text-white font-black tracking-widest text-3xl uppercase">STYLA<span class="text-styla-pink">.</span></div>
+    <div class="text-styla-gray text-2xl tracking-widest font-semibold">{{SLIDE_INDEX}} / {{TOTAL_SLIDES}}</div>
+  </div>
+
+  <!-- Content -->
+  <div class="z-10 flex-1 flex flex-col justify-center px-24">
+    <div class="glass-panel p-20 rounded-[40px] relative shadow-[0_0_80px_rgba(255,42,117,0.1)]">
+      <!-- Icon Badge -->
+      <div class="absolute -top-10 -left-10 w-24 h-24 bg-[#0e0e1c] rounded-full flex items-center justify-center border border-styla-pink/30 shadow-lg">
+        <svg class="w-10 h-10 text-styla-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+      </div>
+      
+      <!-- Slide Tag -->
+      <div class="text-styla-pink tracking-widest uppercase text-xl font-bold mb-8">{{SLIDE_TAG}}</div>
+      
+      <div class="flex flex-col gap-12">
+        <p class="{{TEXT_CLASS}} font-bold leading-[1.25] tracking-tight text-white/95" style="text-wrap: balance;">
+          {{SLIDE_CONTENT}}
+        </p>
+      </div>
+
+      <!-- CTA elements (only visible on CTA slide, injected via JS or text replacement) -->
+      {{CTA_BLOCK}}
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="z-10 w-full px-20 pb-20 flex justify-between items-end">
+    <div class="flex items-center gap-6">
+      <div class="w-20 h-20 rounded-full border-4 border-styla-pink/30 flex items-center justify-center bg-black">
+        <span class="text-white font-black text-4xl">S</span>
+      </div>
+      <div>
+        <div class="text-white font-black text-2xl">STYLA Measure</div>
+        <div class="text-styla-gray text-xl">The Perfect-Fit Fashion Marketplace</div>
+      </div>
+    </div>
+    {{SWIPE_BLOCK}}
+  </div>
+</body>
+</html>

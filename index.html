@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STYLA Measure — Know Your Size. Everywhere.</title>
+  <meta name="description" content="One body scan. Your perfect size across every clothing brand on earth. Join the waitlist for early access." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
+      <div class="nav-actions" style="display: flex; gap: 1.5rem; align-items: center;">
+        <a href="decoder.html" class="nav-cta">Discover Your Size</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-glow hero-glow--left"></div>
+    <div class="hero-glow hero-glow--right"></div>
+
+    <div class="container">
+      <div class="badge-wrap">
+        <span class="badge">🚀 Early Access — Limited Spots</span>
+      </div>
+
+      <h1 class="hero-headline" style="max-width: 900px; margin: 0 auto 1.5rem;">
+        Stop Losing Money on Clothes That Don't Fit.
+      </h1>
+
+      <p class="hero-sub" style="font-size: 1.25rem; max-width: 800px; margin: 0 auto 2rem;">
+        It is incredibly frustrating to figure out your size across various brands. Every brand uses a completely different size chart, leaving you guessing, returning items, and losing money on return shipping fees. We built a tool to solve this forever.
+      </p>
+
+      <!-- NEW FUNNEL CTA -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 2rem;">
+        <a href="decoder.html" class="btn-primary" style="text-decoration: none; display: inline-flex; font-size: 1.2rem; padding: 1rem 2rem;">
+          <span>Discover your exact size now</span>
+          <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
+        </a>
+        <p style="color: #94a3b8; font-size: 0.95rem;">⚡ It only takes 30 seconds. No account required.</p>
+      </div>
+
+      <!-- SOCIAL PROOF COUNTER -->
+      <div class="counter-row">
+        <div class="counter-avatars">
+          <div class="avatar" style="background: #ff2a75;"></div>
+          <div class="avatar" style="background: #ec4899;"></div>
+          <div class="avatar" style="background: #f59e0b;"></div>
+          <div class="avatar" style="background: #10b981;"></div>
+        </div>
+        <p class="counter-text"><span id="waitlist-count" class="counter-num">247</span> people already on the waitlist</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAIN STATS STRIP -->
+  <section class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-num">40%</span>
+          <span class="stat-label">of online fashion orders are returned</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">#1</span>
+          <span class="stat-label">reason for returns is wrong size</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">Lost $</span>
+          <span class="stat-label">paying for return shipping & fees</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">1 tool</span>
+          <span class="stat-label">to fix all of it. Forever.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <div class="container">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">From confusion to a perfect fit.<br />In under 30 seconds.</h2>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">📏</div>
+          <h3 class="step-title">Enter Your Numbers</h3>
+          <p class="step-desc">Input your basic measurements (chest, waist, hips, etc.). If you don't know them, our tool includes visual guides to show you exactly how to measure yourself.</p>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">📸</div>
+          <h3 class="step-title">Upload the Size Chart</h3>
+          <p class="step-desc">Found a shirt you like? Just take a screenshot of that brand's size chart and upload it. You can even upload a photo of the garment so the AI understands the intended fit.</p>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">✨</div>
+          <h3 class="step-title">Get Your Exact Size</h3>
+          <p class="step-desc">Our AI mathematically cross-references your body geometry against the brand's chart and instantly tells you exactly what size to buy. No more guessing. No more returns.</p>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin-top: 3rem;">
+        <a href="decoder.html" class="btn-primary" style="text-decoration: none; display: inline-flex;">
+          <span>Find Your Perfect Size Now</span>
+          <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO IT'S FOR -->
+  <section class="who-section">
+    <div class="container">
+      <div class="section-label">Built for</div>
+      <h2 class="section-title">Everyone who's ever been burned<br />by a size that didn't fit.</h2>
+
+      <div class="who-grid">
+        <div class="who-card">
+          <div class="who-icon">🛍️</div>
+          <h3 class="who-title">Online Shoppers</h3>
+          <p class="who-desc">Turn the internet into your personal closet. Filter out the noise and instantly discover brands from around the world that actually fit your unique body.</p>
+          <ul class="who-list">
+            <li>See only products that fit you</li>
+            <li>Zero size guessing or returns</li>
+            <li>Shop global brands with confidence</li>
+          </ul>
+        </div>
+        <div class="who-card who-card--accent">
+          <div class="who-icon">✂️</div>
+          <h3 class="who-title">Personal Stylists</h3>
+          <p class="who-desc">Save your client's profile once. Pull their perfect size across any brand, any style, any occasion. Reduce your session time by hours.</p>
+          <ul class="who-list">
+            <li>Client measurement database</li>
+            <li>Multi-brand size lookup</li>
+            <li>Share branded style profiles</li>
+          </ul>
+        </div>
+        <div class="who-card">
+          <div class="who-icon">👔</div>
+          <h3 class="who-title">Clothing Brands</h3>
+          <p class="who-desc">Discover the exact body types your sizing misses. Reduce returns. Increase conversion. Know your customers' bodies better than your competitors.</p>
+          <ul class="who-list">
+            <li>Sizing void analytics</li>
+            <li>Return rate reduction</li>
+            <li>Customer fit intelligence</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta">
+    <div class="hero-glow hero-glow--center"></div>
+    <div class="container">
+      <h2 class="final-title">
+        Stop gambling on sizes.<br />
+        Know before you buy.
+      </h2>
+      <p class="final-sub">
+        Founding members get lifetime priority access, early pricing, and input into what we build first.
+      </p>
+      <form class="waitlist-form waitlist-form--center" onsubmit="event.preventDefault(); window.location.href='decoder.html';">
+        <div class="form-row">
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+            <span>Discover Your Size Now</span>
+            <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
+          </button>
+        </div>
+        <p class="form-fine">100% Free. It takes 30 seconds.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner" style="flex-direction: column; gap: 20px;">
+        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
+        
+        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center;">
+          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
+        </div>
+
+        <p class="footer-copy">© 2026 STYLA Measure. All rights reserved.</p>
+        <p class="footer-tagline">Your body. Your size. Everywhere.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
