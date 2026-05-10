@@ -21,7 +21,7 @@ HEADERS = {
 }
 
 # Path to the 30-day markdown artifact
-MD_PATH = os.path.join(os.path.dirname(__file__), 'pain_engine_output.md')
+MD_PATH = os.path.join(os.path.dirname(__file__), 'pain_engine_output_v2.md')
 
 def parse_markdown(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:

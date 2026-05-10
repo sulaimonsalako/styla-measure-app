@@ -37,10 +37,17 @@
       position: relative;
     }
     .glass-panel {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 42, 117, 0.15);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 42, 117, 0.2);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
+    .layout-overlay .glass-panel {
+      background: rgba(10, 10, 15, 0.7);
+      border: 2px solid rgba(255, 42, 117, 0.4);
+      box-shadow: 0 0 40px rgba(255, 42, 117, 0.3);
+      padding: 40px !important;
+      border-radius: 24px !important;
     }
     .bg-glow {
       position: absolute;
@@ -49,7 +56,7 @@
       background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, rgba(7, 7, 15, 0) 70%);
       top: -300px;
       left: -300px;
-      z-index: 0;
+      z-index: 1;
       border-radius: 50%;
     }
     .bg-glow-2 {
@@ -59,55 +66,78 @@
       background: radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, rgba(7, 7, 15, 0) 70%);
       bottom: -300px;
       right: -300px;
-      z-index: 0;
+      z-index: 1;
       border-radius: 50%;
     }
     .highlight {
       color: #ff2a75;
     }
+    #dynamic-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .bg-darken {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 0;
+    }
+    .layout-pain .bg-darken {
+      background: rgba(0,0,0,0.6);
+    }
+    .layout-overlay .bg-darken {
+      background: rgba(0,0,0,0.2);
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 50%);
+    }
   </style>
 </head>
-<body class="antialiased">
+<body class="antialiased {{LAYOUT_CLASS}}">
+  
+  {{BG_HTML}}
+  <div class="bg-darken"></div>
+
   <div class="bg-glow"></div>
   <div class="bg-glow-2"></div>
   
   <!-- Header -->
-  <div class="z-10 w-full px-20 pt-20 flex justify-between items-center">
-    <div class="text-white font-black tracking-widest text-3xl uppercase">STYLA<span class="text-styla-pink">.</span></div>
-    <div class="text-styla-gray text-2xl tracking-widest font-semibold">{{SLIDE_INDEX}} / {{TOTAL_SLIDES}}</div>
+  <div class="z-10 w-full px-20 pt-20 flex justify-between items-center drop-shadow-md">
+    {{LOGO_HTML}}
+    <div class="text-white/80 text-2xl tracking-widest font-bold bg-black/40 px-6 py-2 rounded-full backdrop-blur-md">{{SLIDE_INDEX}} / {{TOTAL_SLIDES}}</div>
   </div>
 
   <!-- Content -->
-  <div class="z-10 flex-1 flex flex-col justify-center px-24">
-    <div class="glass-panel p-20 rounded-[40px] relative shadow-[0_0_80px_rgba(255,42,117,0.1)]">
-      <!-- Icon Badge -->
-      <div class="absolute -top-10 -left-10 w-24 h-24 bg-[#0e0e1c] rounded-full flex items-center justify-center border border-styla-pink/30 shadow-lg">
-        <svg class="w-10 h-10 text-styla-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+  <div class="z-10 flex-1 flex flex-col justify-center px-20">
+    <div class="glass-panel p-16 rounded-[40px] relative {{GLASS_EXTRA_CLASS}}">
+      <!-- Slide Tag -->
+      <div class="text-styla-pink tracking-widest uppercase text-xl font-bold mb-6 drop-shadow-[0_0_8px_rgba(255,42,117,0.5)] flex items-center gap-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        {{SLIDE_TAG}}
       </div>
       
-      <!-- Slide Tag -->
-      <div class="text-styla-pink tracking-widest uppercase text-xl font-bold mb-8">{{SLIDE_TAG}}</div>
-      
-      <div class="flex flex-col gap-12">
-        <p class="{{TEXT_CLASS}} font-bold leading-[1.25] tracking-tight text-white/95" style="text-wrap: balance;">
+      <div class="flex flex-col gap-10">
+        <p class="{{TEXT_CLASS}} font-bold leading-[1.3] tracking-tight text-white drop-shadow-lg" style="text-wrap: balance;">
           {{SLIDE_CONTENT}}
         </p>
       </div>
 
-      <!-- CTA elements (only visible on CTA slide, injected via JS or text replacement) -->
+      <!-- CTA elements -->
       {{CTA_BLOCK}}
     </div>
   </div>
 
   <!-- Footer -->
-  <div class="z-10 w-full px-20 pb-20 flex justify-between items-end">
-    <div class="flex items-center gap-6">
-      <div class="w-20 h-20 rounded-full border-4 border-styla-pink/30 flex items-center justify-center bg-black">
-        <span class="text-white font-black text-4xl">S</span>
+  <div class="z-10 w-full px-20 pb-20 flex justify-between items-end drop-shadow-md">
+    <div class="flex items-center gap-5 bg-black/40 p-4 pr-8 rounded-full backdrop-blur-md">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center bg-transparent drop-shadow-[0_0_15px_rgba(255,42,117,0.4)] overflow-hidden">
+        {{LOGO_HTML_SMALL}}
       </div>
       <div>
-        <div class="text-white font-black text-2xl">STYLA Measure</div>
-        <div class="text-styla-gray text-xl">The Perfect-Fit Fashion Marketplace</div>
+        <div class="text-white font-bold text-xl leading-tight">STYLA Measure</div>
+        <div class="text-styla-pink/90 text-sm font-semibold tracking-wide uppercase">AI Sizing Technology</div>
       </div>
     </div>
     {{SWIPE_BLOCK}}
