@@ -1,6 +1,6 @@
 import os
 
-files_to_update = ['style.css', 'index.html', 'decoder.html']
+files_to_update = ['style.css', 'index.html', 'landing.html']
 cwd = os.getcwd()
 
 replacements = {

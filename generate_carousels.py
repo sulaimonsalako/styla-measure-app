@@ -115,12 +115,9 @@ def generate_carousels():
                 html = html.replace('{{TOTAL_SLIDES}}', str(total))
                 
                 if logo_b64:
-                    logo_html = f'<img src="{logo_b64}" class="h-10 object-contain drop-shadow-[0_0_10px_rgba(255,42,117,0.5)]">'
                     logo_html_small = f'<img src="{logo_b64}" class="w-full h-full object-contain">'
-                    html = html.replace('{{LOGO_HTML}}', logo_html)
                     html = html.replace('{{LOGO_HTML_SMALL}}', logo_html_small)
                 else:
-                    html = html.replace('{{LOGO_HTML}}', '<div class="text-white font-black tracking-widest text-3xl uppercase">STYLA<span class="text-styla-pink drop-shadow-[0_0_10px_rgba(255,42,117,0.8)]">.</span></div>')
                     html = html.replace('{{LOGO_HTML_SMALL}}', '<span class="text-black font-black text-2xl">S</span>')
                 
                 # Text sizing based on layout

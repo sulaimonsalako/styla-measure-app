@@ -359,7 +359,7 @@ btnSaveProfile.addEventListener('click', async () => {
           email: email,
           password: password,
           options: {
-              emailRedirectTo: window.location.origin + '/decoder.html',
+              emailRedirectTo: window.location.origin + '/index.html',
               data: {
                   chest: chest,
                   waist: waist,
