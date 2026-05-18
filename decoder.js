@@ -90,7 +90,7 @@ function showMeasureModal(part) {
   
   const instructions = {
     chest: { text: "Measure under your arms, around the fullest part of your chest.", img: "images/measure_chest.png" },
-    waist: { text: "Measure around your natural waistline, keeping the tape a bit loose.", img: "images/measure_waist.png" },
+    waist: { text: "Measure around your natural waistline, keeping the tape comfortably snug.", img: "images/measure_waist.png" },
     hips: { text: "Measure around the fullest part of your body at the top of your leg.", img: "images/measure_hips.png" },
     height: { text: "Your total height from head to toe in inches (e.g. 5'4\" = 64 inches).", img: "images/measure_height.png" },
     inseam: { text: "Measure from your crotch to the bottom of your leg/ankle.", img: "images/measure_inseam.png" }
