@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Create a Size Chart for Manufacturing: Tech Pack Guide | STYLA</title>
+  <meta name="description" content="A complete guide for fashion designers and clothing brands on building factory-ready size charts, grading size scales, and setting tolerance limits." />
+  <link rel="stylesheet" href="../style.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --bg-base: #07070f;
+      --bg-surface: #0e0e1c;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-accent: rgba(255, 42, 117, 0.3);
+      --accent: #ff2a75;
+      --accent-light: #ff75a0;
+      --text-primary: #f0f0ff;
+      --text-secondary: #9090b0;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      padding-top: 80px;
+      line-height: 1.7;
+    }
+
+    .article-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 24px;
+    }
+
+    .article-header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 2rem;
+    }
+
+    .article-category {
+      color: var(--accent-light);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+
+    .article-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .article-content h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 2rem 0 1rem;
+      color: #fff;
+    }
+
+    .article-content h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.8rem;
+      color: #fff;
+    }
+
+    .article-content p {
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    .article-content ul, .article-content ol {
+      margin-bottom: 1.25rem;
+      padding-left: 20px;
+      color: var(--text-secondary);
+    }
+
+    .article-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .callout-box {
+      background: rgba(255, 42, 117, 0.05);
+      border: 1px solid var(--border-accent);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .callout-box h4 {
+      color: #fff;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .callout-box p {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+
+    /* Embedded CTA */
+    .embedded-cta {
+      background: linear-gradient(135deg, rgba(255, 42, 117, 0.1) 0%, rgba(20, 20, 40, 0.4) 100%);
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      margin: 3rem 0;
+    }
+
+    .embedded-cta h3 {
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .embedded-cta p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-cta {
+      background: linear-gradient(135deg, var(--accent) 0%, #d90040 100%);
+      color: #fff;
+      padding: 0.75rem 1.75rem;
+      border-radius: 100px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    .btn-cta:hover {
+      box-shadow: 0 8px 24px rgba(255, 42, 117, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .back-nav {
+      margin-bottom: 1.5rem;
+    }
+
+    .back-nav a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA <span class="logo-accent">Measure</span>
+      </div>
+      <div class="nav-actions" style="display: flex; gap: 1.5rem; align-items: center;">
+        <a href="../landing.html" class="nav-cta" style="background: transparent; border: none; color: var(--text-secondary);">Home</a>
+        <a href="../index.html" class="nav-cta">Discover Your Size</a>
+      </div>
+    </div>
+  </nav>
+
+  <article class="article-container">
+    
+    <div class="back-nav" id="back-nav-link">
+      <a href="../landing.html">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Home
+      </a>
+    </div>
+
+    <header class="article-header">
+      <span class="article-category">Manufacturing Guides</span>
+      <h1 id="main-title">How to Create a Size Chart for Manufacturing: Tech Pack Guide</h1>
+      <div class="meta-row">
+        <span>Published: May 2026</span>
+        <span>By Styla Pattern Team</span>
+        <span>Read time: 6 min</span>
+      </div>
+    </header>
+
+    <div class="article-content">
+      <p>When launching a D2C fashion collection, a size specification chart is the single most critical document in your manufacturer's Tech Pack. Think of it as the blueprints for an architect—without exact dimensions, the factory will guess, and guessing in clothing manufacturing is a recipe for high return rates, inconsistent fits, and wasted capital.</p>
+
+      <p>In this guide, we will walk you through the standard industry steps to establish your points of measure, structure grading rules, and format your size table for factory patterns.</p>
+
+      <h2>1. Body Measurements vs. Finished Garment Specs</h2>
+      <p>One of the most common mistakes independent fashion designers make is putting standard body measurements in their manufacturing specification files. Factories do not make garments that measure the exact same size as the customer's skin. You must distinguish between:</p>
+      <ul>
+        <li><strong>Body Measurements:</strong> The actual dimensions of your target demographic (e.g. a customer's chest circumference is 38 inches). These are used on your public store sizing guide to help customers pick a size.</li>
+        <li><strong>Finished Garment Specifications:</strong> The dimensions of the fabric when laid flat on a cutting table (e.g. a shirt chest width measuring 20 inches, or a 40-inch circumference). This includes <strong>"fit ease"</strong>.</li>
+      </ul>
+      <p><strong>Fit Ease</strong> is the extra space added to a pattern to allow for breathing room, muscle expansion, comfort, and silhouette styling. A tight activewear sports bra might have "negative ease" (measuring smaller than the body to compress it), while an oversized heavyweight hoodie might have 4 to 6 inches of positive ease.</p>
+
+      <div class="callout-box">
+        <h4>💡 Tech Tip: Calculate Fabric Stretch</h4>
+        <p>If you are utilizing knits or fabrics containing spandex, the stretch ratio will drastically alter your garment specifications. High-stretch fabrics require smaller flat dimensions compared to rigid woven materials like denim or heavy canvas.</p>
+      </div>
+
+      <h2>2. Define Your Points of Measure (POMs)</h2>
+      <p>Your tech pack must name and illustrate where the tape measure starts and ends. Standard Points of Measure include:</p>
+      <ul>
+        <li><strong>Chest/Bust Width:</strong> Measured flat from armhole seam to armhole seam (usually 1 inch below the armpit crease).</li>
+        <li><strong>High Point Shoulder (HPS) Length:</strong> The vertical distance from the highest point of the shoulder line down to the bottom edge.</li>
+        <li><strong>Sleeve Length:</strong> For short sleeves, measured from the shoulder seam to the hem. For long raglan/sweatshirt sleeves, measured from the center back collar down to the cuff.</li>
+        <li><strong>Waist Width (Bottoms):</strong> Measured flat across the waistband from side to side.</li>
+      </ul>
+
+      <!-- Embedded Tool Link CTA -->
+      <div class="embedded-cta">
+        <h3>Need to Grade Your Sample Specs?</h3>
+        <p>Don't spend hours in spreadsheets. Paste your base Medium sample measurements into Styla's AI Size Spec Grader and build factory-ready tables graded from XS to 4XL automatically.</p>
+        <a href="../tools/size-chart-maker.html" class="btn-cta">
+          <span>Launch AI Size Chart Maker</span>
+          <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+      </div>
+
+      <h2>3. Establish Base Sizes & Size Grading Curves</h2>
+      <p>Instead of grading every size from scratch, select one base size to sample first—typically a Size Medium for unisex collections, or a Size Small for women's boutique items. You will sew physical samples, adjust the fit on a live fit model, and finalize the base specs. Once approved, you mathematically project sizes upward and downward.</p>
+      
+      <h3>Standard Grading Scale Steps:</h3>
+      <ul>
+        <li><strong>XS through XL:</strong> In unisex patterns, width POMs (like chest and waist width) typically grade up or down by 1 inch to 1.5 inches per size. Lengths grade by 0.5 inches.</li>
+        <li><strong>2XL through 4XL:</strong> The human form scales differently at higher weight distributions. Plus-size grading increments typically double, jumping by 2 inches to 2.5 inches per size jump to ensure proper arm and belly ease.</li>
+      </ul>
+
+      <h2>4. Set Manufacturer Tolerance Levels</h2>
+      <p>No factory cuts fabric to the exact millimeter on every single unit. Because of fabric relaxation, cutting blade drift, and sewing variations, you must define the acceptable <strong>tolerance levels</strong>.</p>
+      <p>Typically, apparel brands allow a tolerance of <strong>+/- 0.5 inches</strong> for body lengths and widths, and <strong>+/- 0.25 inches</strong> for smaller points like pocket placement or collar heights. If a batch comes in outside these thresholds, it fails quality control (QC) testing.</p>
+
+      <h2>Scale Your Operations with Styla Measure</h2>
+      <p>Structuring your sizes correctly at the factory is half the battle. The other half is ensuring that online customers actually order their corresponding size on your storefront. Styla integrates directly onto D2C retail platforms, allowing shoppers to scan their bodies or enter measurements once to match their "Digital Twin" to your brand's unique graded chart. This eliminates returns and secures your profit margins.</p>
+    </div>
+
+  </article>
+</body>
+</html>

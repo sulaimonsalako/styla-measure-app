@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Garment Size Chart Maker | STYLA Measure</title>
+  <link rel="stylesheet" href="../style.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --bg-base: #07070f;
+      --bg-surface: #0e0e1c;
+      --bg-raised: #141428;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-accent: rgba(255, 42, 117, 0.3);
+      --accent: #ff2a75;
+      --accent-light: #ff75a0;
+      --text-primary: #f0f0ff;
+      --text-secondary: #9090b0;
+      --text-muted: #5a5a7a;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      padding-top: 80px;
+    }
+
+    .calc-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 24px;
+    }
+
+    .calc-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .calc-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .calc-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (min-width: 992px) {
+      .calc-grid {
+        grid-template-columns: 380px 1fr;
+      }
+    }
+
+    /* Input Panel */
+    .input-panel {
+      background: rgba(20, 20, 40, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+    }
+
+    .styled-select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .styled-select:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .styled-select option {
+      background: var(--bg-surface);
+      color: #fff;
+    }
+
+    .input-panel input[type="number"] {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .input-panel input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-generate {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, #d90040 100%);
+      color: #fff;
+      border: none;
+      padding: 1rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255, 42, 117, 0.4);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Output Section */
+    .output-panel {
+      background: rgba(20, 20, 40, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 1.5rem;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .result-table th, .result-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .result-table th {
+      background: rgba(255, 255, 255, 0.03);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .result-table td {
+      color: var(--text-secondary);
+    }
+
+    .result-table td.pom-name {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .result-table tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+      color: #fff;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      width: 100%;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-outline:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: #fff;
+    }
+
+    .explanation-box {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      width: 100%;
+    }
+
+    .explanation-box h4 {
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .explanation-box p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Loader */
+    .loader-wrap {
+      display: none;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,255,255,0.05);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loader-text {
+      color: var(--accent-light);
+      font-weight: 600;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .back-nav {
+      margin-bottom: 1.5rem;
+    }
+
+    .back-nav a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .back-nav a:hover {
+      color: #fff;
+    }
+        /* Collapsible Quick Guide */
+      .quick-guide-card {
+        background: rgba(255, 42, 117, 0.03);
+        border: 1px dashed var(--border-accent);
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .quick-guide-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .quick-guide-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .quick-guide-content {
+        margin-top: 1rem;
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        border-top: 1px solid rgba(255, 42, 117, 0.1);
+        padding-top: 1rem;
+        display: none;
+      }
+
+      .quick-guide-steps {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .quick-guide-steps {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .guide-step {
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 1rem;
+      }
+
+      .guide-step h4 {
+        font-family: 'Outfit', sans-serif;
+        color: var(--accent-light);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      /* Tooltip info trigger */
+      .info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+        height: 15px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #fff;
+        margin-left: 6px;
+        transition: all 0.2s;
+      }
+
+      .info-icon:hover {
+        background: var(--accent);
+        transform: scale(1.1);
+      }
+
+      /* Help Modal overlay */
+      .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: #141428;
+        border: 1px solid var(--border-accent);
+        padding: 2rem;
+        border-radius: 20px;
+        max-width: 450px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        cursor: pointer;
+        font-size: 24px;
+        color: var(--text-secondary);
+        transition: color 0.2s;
+      }
+
+      .modal-close:hover {
+        color: #fff;
+      }
+    </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA <span class="logo-accent">Measure</span>
+      </div>
+      <div class="nav-actions" style="display: flex; gap: 1.5rem; align-items: center;">
+        <a href="../landing.html" class="nav-cta" style="background: transparent; border: none; color: var(--text-secondary);">Home</a>
+        <a href="../index.html" class="nav-cta">Discover Your Size</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="calc-container">
+    
+    <div class="back-nav">
+      <a href="../landing.html">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Home
+      </a>
+    </div>
+
+    <div class="calc-header">
+      <h1>AI Garment Size Chart Maker</h1>
+      <p>Enter measurements for your base sample garment size and let AI automatically generate a graded manufacturer spec chart from XS to 4XL.</p>
+    </div>
+
+      <!-- Collapsible Quick Start Guide -->
+      <div class="quick-guide-card">
+        <div class="quick-guide-header" onclick="toggleQuickGuide()">
+          <div class="quick-guide-title">
+            <svg style="width: 20px; height: 20px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+            💡 Sizing & Tech Pack Guide (Click to Expand)
+          </div>
+          <svg id="guide-arrow" style="width: 18px; height: 18px; color: var(--text-secondary); transition: transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="quick-guide-content" id="quick-guide-content">
+          <p>Creating a factory-ready size chart requires translating your base sample garment dimensions into a full grading spec sheet. Styla's AI assistant automates this by applying garment industry grading rules.</p>
+          <div class="quick-guide-steps">
+            <div class="guide-step">
+              <h4>1. Point of Measure (POM)</h4>
+              <p>Specify critical dimensions. Standard POMs include Chest Width (measured 1" below the armhole), Body Length (from High Point Shoulder to hem), and Sleeve Length.</p>
+            </div>
+            <div class="guide-step">
+              <h4>2. Fabric & Silhouette Controls</h4>
+              <p><strong>Fit Silhouette</strong> defines standard ease boundaries (oversized, regular, slim). <strong>Fabric Stretch Index</strong> determines sizing tolerances (woven fabrics require higher grade jumps than stretch knitwear).</p>
+            </div>
+            <div class="guide-step">
+              <h4>3. Shopify / Web Integration</h4>
+              <p>Once generated, click <strong>"Copy Shopify Size Table"</strong>. In your Shopify store admin, open a product description, switch to HTML mode, and paste the code for a beautifully styled size table.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div class="calc-grid">
+      
+      <!-- Input Panel -->
+      <section class="input-panel">
+        
+        <div class="panel-section-title">
+          <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+          Style Configuration
+        </div>
+
+        <div class="input-group">
+          <label>Garment Category <span class="info-icon" onclick="openHelp('category')">?</span></label>
+          <select id="select-category" class="styled-select" onchange="renderDynamicPOMs()">
+            <option value="tops">T-Shirt / Polo / Shirt</option>
+            <option value="hoodies">Hoodie / Sweatshirt</option>
+            <option value="jackets">Jacket / Coat</option>
+            <option value="pants">Pants / Jeans / Shorts</option>
+            <option value="dresses">Dress / Jumpsuit</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Fit Silhouette <span class="info-icon" onclick="openHelp('fit')">?</span></label>
+          <select id="select-fit" class="styled-select">
+            <option value="regular">Regular Fit (Standard Ease)</option>
+            <option value="slim">Slim / Fitted (Low Ease)</option>
+            <option value="oversized">Oversized / Loose (High Ease)</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Fabric Stretch Index <span class="info-icon" onclick="openHelp('stretch')">?</span></label>
+          <select id="select-stretch" class="styled-select">
+            <option value="woven">No Stretch (Woven, e.g. Denim/Canvas)</option>
+            <option value="low-stretch">Low Stretch (Knit, e.g. Cotton Jersey/French Terry)</option>
+            <option value="high-stretch">High Stretch (Spandex, Rib Knit, Activewear)</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Base Reference Size <span class="info-icon" onclick="openHelp('base-size')">?</span></label>
+          <select id="select-base-size" class="styled-select">
+            <option value="s">Small (S)</option>
+            <option value="m" selected>Medium (M)</option>
+            <option value="l">Large (L)</option>
+            <option value="xl">Extra Large (XL)</option>
+          </select>
+        </div>
+
+        <div class="panel-section-title" style="margin-top: 2rem;">
+          <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          Base Size Specs (Inches)
+        </div>
+
+        <!-- Dynamic POM Input Container -->
+        <div id="pom-input-container">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <button class="btn-generate" id="btn-generate" onclick="generateSizeChart()">
+          <span>Grade & Generate Size Chart</span>
+          <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </button>
+
+      </section>
+
+      <!-- Output Panel -->
+      <section class="output-panel" id="output-pane">
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <h3>No Size Chart Generated</h3>
+          <p style="max-width: 400px; margin: 8px auto 0 auto; font-size: 0.9rem;">Fill out your base sample specs on the left and trigger the AI Grader to build your factory spec table.</p>
+        </div>
+
+        <!-- Loader State -->
+        <div class="loader-wrap" id="loader">
+          <div class="spinner"></div>
+          <div class="loader-text" id="loader-text">AI is grading dimensions...</div>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Applying tech pack grading curves...</p>
+        </div>
+
+        <!-- Result Content -->
+        <div id="result-content" style="display: none; width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem;">Graded Size Specifications Table</h3>
+            <span style="font-size: 0.8rem; background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-weight: 600;" id="result-tolerance">+/- 0.5" Tolerance</span>
+          </div>
+
+          <div class="table-container">
+            <table class="result-table" id="result-table">
+              <thead>
+                <tr>
+                  <th>Point of Measure (POM)</th>
+                  <th>XS</th>
+                  <th>S</th>
+                  <th>M</th>
+                  <th>L</th>
+                  <th>XL</th>
+                  <th>2XL</th>
+                  <th>3XL</th>
+                  <th>4XL</th>
+                </tr>
+              </thead>
+              <tbody id="result-table-body">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="explanation-box">
+            <h4>Grading Logic Details</h4>
+            <p id="result-explanation">AI grading analysis summary...</p>
+          </div>
+
+          <div class="result-actions">
+            <button class="btn-outline" onclick="copyTableToClipboard()">
+              <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+              <span>Copy Shopify Size Table</span>
+            </button>
+            <button class="btn-outline" onclick="downloadCSV()">
+              <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="info-modal" onclick="closeInfoModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeInfoModal(event)">&times;</span>
+      <h3 id="info-modal-title" style="margin-bottom: 1rem; color: #ff75a0; font-family:'Outfit', sans-serif;">Help Guide</h3>
+      <p id="info-modal-desc" style="color: #94a3b8; line-height: 1.6; font-size: 0.95rem; text-align: left;"></p>
+    </div>
+  </div>
+
+  <!-- JS SCRIPT -->
+  <script>
+    function toggleQuickGuide() {
+      const content = document.getElementById('quick-guide-content');
+      const arrow = document.getElementById('guide-arrow');
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+      } else {
+        content.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+      }
+    }
+
+    const helpContent = {
+      'category': "<strong>Garment Category:</strong> Select the clothing type to load industry-standard Point of Measure (POM) fields required for accurate technical specs.",
+      'fit': "<strong>Fit Silhouette:</strong> Defines the intended ease. 'Oversized' applies looser grading, while 'Slim' uses tighter increments to preserve the intended silhouette.",
+      'stretch': "<strong>Stretch Index:</strong> Tells the AI how the fabric reacts to tension. Woven items use strictly rigid specs; activewear with high spandex requires specific recovery-friendly grading.",
+      'base-size': "<strong>Base Reference Size:</strong> This is your 'sample size'. The AI uses this as the anchor point, grading upwards (2XL-4XL) and downwards (XS) from this specific garment.",
+      'chest': "<strong>Chest Width:</strong> Lay the garment flat. Measure horizontally straight across the chest from edge to edge, 1 inch below the armhole seam. Double this number for full chest circumference.",
+      'length': "<strong>Body Length:</strong> Lay the garment flat. Measure vertically from the High Point Shoulder (HPS)—where the shoulder seam meets the neck collar—straight down to the bottom edge of the hem.",
+      'shoulder': "<strong>Shoulder Width:</strong> Lay the garment flat. Measure horizontally across the back from the outer point of one shoulder armhole seam to the outer point of the opposite shoulder seam.",
+      'sleeve': "<strong>Sleeve Length:</strong> For short sleeves: measure from shoulder seam to sleeve hem. For long sleeves/hoodies: measure from the center back collar seam, across the shoulder point, and down to the sleeve cuff edge.",
+      'waist': "<strong>Waist Width:</strong> Lay the pants flat and make sure the waistband is relaxed. Measure horizontally straight across the waistband from side to side. Double this number for waist circumference.",
+      'hips': "<strong>Hip Width:</strong> Lay the pants flat. Measure horizontally across the hip area (typically at the bottom fly seam or 7-8 inches below waistband edge). Double this number for hip circumference.",
+      'inseam': "<strong>Inseam Length:</strong> Lay the pants flat. Measure along the inner leg seam starting from the center crotch junction point straight down to the bottom ankle hem opening.",
+      'rise': "<strong>Front Rise:</strong> Lay the pants flat. Measure vertically from the center crotch junction point up along the zipper/fly seam to the top edge of the waistband."
+    };
+
+    function openHelp(key) {
+      document.getElementById('info-modal-title').innerHTML = key.replace('-', ' ').toUpperCase();
+      document.getElementById('info-modal-desc').innerHTML = helpContent[key] || "No description available.";
+      document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function closeInfoModal(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('info-modal').style.display = 'none';
+    }
+
+    const categoryPOMs = {
+      tops: [
+        { key: 'chest', label: 'Chest / Bust Width (1" below armhole)', default: 20 },
+        { key: 'length', label: 'Body Length (HPS to hem)', default: 28 },
+        { key: 'shoulder', label: 'Shoulder Width (seam to seam)', default: 18 },
+        { key: 'sleeve', label: 'Sleeve Length', default: 8.5 }
+      ],
+      hoodies: [
+        { key: 'chest', label: 'Chest / Width (1" below armhole)', default: 22 },
+        { key: 'length', label: 'Body Length', default: 29 },
+        { key: 'shoulder', label: 'Shoulder Width', default: 20 },
+        { key: 'sleeve', label: 'Sleeve Length (long sleeve)', default: 34 }
+      ],
+      jackets: [
+        { key: 'chest', label: 'Chest / Width', default: 23 },
+        { key: 'length', label: 'Body Length', default: 30 },
+        { key: 'shoulder', label: 'Shoulder Width', default: 21 },
+        { key: 'sleeve', label: 'Sleeve Length', default: 35.5 }
+      ],
+      pants: [
+        { key: 'waist', label: 'Waist Width (relaxed)', default: 16 },
+        { key: 'hips', label: 'Hip Width (at fly end)', default: 20 },
+        { key: 'inseam', label: 'Inseam Length', default: 32 },
+        { key: 'rise', label: 'Front Rise', default: 11.5 }
+      ],
+      dresses: [
+        { key: 'chest', label: 'Bust Width', default: 18 },
+        { key: 'waist', label: 'Waist Width', default: 15 },
+        { key: 'hips', label: 'Hip Width', default: 19 },
+        { key: 'length', label: 'Total Length', default: 38 }
+      ]
+    };
+
+    function renderDynamicPOMs() {
+      const category = document.getElementById('select-category').value;
+      const container = document.getElementById('pom-input-container');
+      container.innerHTML = '';
+
+      categoryPOMs[category].forEach(pom => {
+        const div = document.createElement('div');
+        div.className = 'input-group';
+        div.innerHTML = `
+          <label style="display: flex; align-items: center; justify-content: space-between;">
+            <span>${pom.label}</span>
+            <span class="info-icon" onclick="openHelp('${pom.key}')">?</span>
+          </label>
+          <input type="number" id="pom-${pom.key}" value="${pom.default}" step="0.5" />
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function generateSizeChart() {
+      const btn = document.getElementById('btn-generate');
+      const emptyState = document.getElementById('empty-state');
+      const loader = document.getElementById('loader');
+      const resultContent = document.getElementById('result-content');
+      
+      const category = document.getElementById('select-category').value;
+      const fit = document.getElementById('select-fit').value;
+      const stretch = document.getElementById('select-stretch').value;
+      const baseSize = document.getElementById('select-base-size').value;
+
+      // Extract measurement inputs
+      const measurements = {};
+      categoryPOMs[category].forEach(pom => {
+        const input = document.getElementById(`pom-${pom.key}`);
+        measurements[pom.label] = parseFloat(input.value) || pom.default;
+      });
+
+      // UI States
+      btn.disabled = true;
+      emptyState.style.display = 'none';
+      resultContent.style.display = 'none';
+      loader.style.display = 'block';
+
+      const messages = [
+        "Analyzing fabric stretch ratio...",
+        "Applying point of measure curves...",
+        "Formulating plus-size grading leaps...",
+        "Assembling tech pack structure..."
+      ];
+      let msgIdx = 0;
+      const interval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % messages.length;
+        document.getElementById('loader-text').textContent = messages[msgIdx];
+      }, 1500);
+
+      try {
+        const response = await fetch('/api/generate-size-chart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category, fit, stretch, baseSize, measurements })
+        });
+
+        if (!response.ok) throw new Error("API failure");
+        const data = await response.json();
+
+        // Render data
+        renderTable(data);
+        
+        loader.style.display = 'none';
+        resultContent.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong while grading. Please check your network and try again.");
+        loader.style.display = 'none';
+        emptyState.style.display = 'block';
+      } finally {
+        clearInterval(interval);
+        btn.disabled = false;
+      }
+    }
+
+    let lastGeneratedData = null;
+
+    function renderTable(data) {
+      lastGeneratedData = data;
+      const tbody = document.getElementById('result-table-body');
+      tbody.innerHTML = '';
+
+      document.getElementById('result-tolerance').textContent = `${data.tolerance} Tolerance`;
+      document.getElementById('result-explanation').textContent = data.grading_explanation;
+
+      data.graded_chart.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="pom-name">${row.pom}</td>
+          <td>${row.xs}</td>
+          <td>${row.s}</td>
+          <td>${row.m}</td>
+          <td>${row.l}</td>
+          <td>${row.xl}</td>
+          <td>${row.xxl}</td>
+          <td>${row.xxxl}</td>
+          <td>${row.xxxxl}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function copyTableToClipboard() {
+      if (!lastGeneratedData) return;
+
+      let html = `<table class="styla-size-chart" style="width:100%; border-collapse:collapse; text-align:left; font-family:sans-serif;">\n`;
+      html += `  <thead>\n    <tr style="background:#f3f4f6; color:#000;">\n      <th style="padding:10px; border:1px solid #d1d5db;">Point of Measure</th>\n`;
+      html += `      <th style="padding:10px; border:1px solid #d1d5db;">XS</th>\n      <th style="padding:10px; border:1px solid #d1d5db;">S</th>\n`;
+      html += `      <th style="padding:10px; border:1px solid #d1d5db;">M</th>\n      <th style="padding:10px; border:1px solid #d1d5db;">L</th>\n`;
+      html += `      <th style="padding:10px; border:1px solid #d1d5db;">XL</th>\n      <th style="padding:10px; border:1px solid #d1d5db;">2XL</th>\n`;
+      html += `      <th style="padding:10px; border:1px solid #d1d5db;">3XL</th>\n      <th style="padding:10px; border:1px solid #d1d5db;">4XL</th>\n    </tr>\n  </thead>\n  <tbody>\n`;
+
+      lastGeneratedData.graded_chart.forEach(row => {
+        html += `    <tr>\n      <td style="padding:10px; border:1px solid #d1d5db; font-weight:600;">${row.pom}</td>\n`;
+        html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.xs}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.s}</td>\n`;
+        html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.m}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.l}</td>\n`;
+        html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.xl}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxl}</td>\n`;
+        html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxxl}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxxxl}</td>\n    </tr>\n`;
+      });
+      html += `  </tbody>\n</table>\n<p style="font-size:0.85em; color:#6b7280; text-align:right;">Powered by Styla AI Fit Widget</p>`;
+
+      navigator.clipboard.writeText(html).then(() => {
+        alert("Shopify HTML size table copied to clipboard! You can paste this directly into your Shopify product description HTML editor.");
+      });
+    }
+
+    function downloadCSV() {
+      if (!lastGeneratedData) return;
+
+      let csv = "Point of Measure,XS,S,M,L,XL,2XL,3XL,4XL\n";
+      lastGeneratedData.graded_chart.forEach(row => {
+        csv += `"${row.pom}",${row.xs},${row.s},${row.m},${row.l},${row.xl},${row.xxl},${row.xxxl},${row.xxxxl}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${document.getElementById('select-category').value}_size_chart.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDynamicPOMs();
+    });
+  </script>
+</body>
+</html>

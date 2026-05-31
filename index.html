@@ -249,6 +249,8 @@
         color: #fff;
     }
   </style>
+  <!-- Vercel Analytics -->
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -268,9 +270,22 @@
     <div style="text-align: center; margin-bottom: 2rem;">
       <h2 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.8rem;">Check Your Fit <span style="display: inline-block; white-space: nowrap; font-size: 0.8rem; background: #ff2a75; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 10px; -webkit-text-fill-color: #fff; color: #fff;">v2.0 Vision AI Live ✨</span></h2>
       <p style="color: #94a3b8; font-size: 1rem; line-height: 1.5;">Found a deal? Upload the brand's size chart to see if it fits your Digital Twin.</p>
-    </div>
+          </div>
+  
+      <div style="margin-bottom: 1.5rem; background: rgba(255,42,117,0.05); border: 1px solid rgba(255,42,117,0.2); border-radius: 12px; padding: 1rem; display: flex; align-items: flex-start; gap: 12px;">
+        <svg style="width: 24px; height: 24px; color: #ff2a75; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div>
+          <span style="font-weight: 600; color: #fff; font-size: 0.95rem;">Need help measuring?</span><br/>
+          <span style="color: #94a3b8; font-size: 0.85rem; line-height: 1.4; display: inline-block; margin-top: 2px;">Click the <span class="info-icon" style="position: static; margin: 0 2px; transform: scale(0.9); display: inline-flex;">?</span> icons next to each field below for a visual guide.</span>
+        </div>
+      </div>
 
-      <div class="input-row">
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-weight: 700; color: #fff; font-size: 1.1rem; margin-bottom: 4px;">1. Enter your measurements</label>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">(These will be securely saved for your future use)</p>
+      </div>
+
+        <div class="input-row">
         <div class="input-group">
           <label>Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
           <input type="number" id="val-chest" placeholder="e.g. 38" autocomplete="off" />
@@ -322,7 +337,7 @@
 
       <div class="input-row" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.5rem; gap: 1.5rem;">
         <div class="input-group">
-          <label>1. Upload Size Chart(s) (Required)</label>
+          <label style="font-size: 1.1rem;">2. Upload Size Chart(s) (Required)</label>
           <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
             <span id="drop-text">Click or drag & drop size charts</span>
             <input type="file" id="file-upload" style="display: none;" accept="image/*" multiple />
@@ -331,7 +346,7 @@
         </div>
 
         <div class="input-group">
-          <label>2. Upload Garment Photos (Required)</label>
+          <label style="font-size: 1.1rem;">3. Upload Garment Photos (Required)</label>
           <p style="font-size: 0.8rem; color: #94a3b8; margin-top: -5px; margin-bottom: 8px;">The more screenshots of the garment & model you upload, the better the AI can deduce the intended fit.</p>
           <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
             <span id="style-drop-text">Click or drag & drop garment photos</span>
@@ -363,8 +378,14 @@
       
     </div>
     
-    <div>
-        <a href="landing.html" class="nav-link">About STYLA →</a>
+    <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <a href="landing.html" class="nav-link" style="margin-top: 0; display: inline-block;">About STYLA</a>
+            <a href="tools/pricing-calculator.html" class="nav-link" style="margin-top: 0; display: inline-block;">MOQ Pricing Calculator</a>
+            <a href="tools/size-chart-maker.html" class="nav-link" style="margin-top: 0; display: inline-block;">AI Size Chart Maker</a>
+            <a href="seo/size-chart-manufacturing.html" class="nav-link" style="margin-top: 0; display: inline-block;">Manufacturing Size Guide</a>
+            <a href="seo/buying-correct-size.html" class="nav-link" style="margin-top: 0; display: inline-block;">Shopper Size Guide</a>
+        </div>
     </div>
 
   </main>
