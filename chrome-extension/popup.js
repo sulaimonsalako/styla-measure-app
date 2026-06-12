@@ -281,13 +281,16 @@
           }
 
           // Handle Sizing Verdict
-          if (!resData.recommended_size) {
+          if (!resData.recommended_size || resData.recommended_size === "null" || resData.recommended_size.toLowerCase() === "none" || resData.recommended_size.toLowerCase() === "null") {
             // No size chart was found
             recSize.textContent = "No Chart Detected";
             recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)"; // Slate gray style
-            explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page. Sizing calculation cannot be executed.";
+            explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
             breakdownList.innerHTML = '';
-            warningContainer.style.display = 'none';
+            
+            // Show warning box with helpful instructions
+            warningText.textContent = resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again.";
+            warningContainer.style.display = "block";
           } else {
             // Success size chart matching
             recSize.textContent = resData.recommended_size;
