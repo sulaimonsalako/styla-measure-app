@@ -3,8 +3,6 @@
   // Helper to find clickable size guide trigger elements
   function findSizeChartButton() {
     const keywords = [/size\s*guide/i, /size\s*chart/i, /sizing\s*guide/i, /sizing\s*info/i, /find\s*your\s*size/i];
-    
-    // Search buttons, links, and clickable divs
     const elements = Array.from(document.querySelectorAll('button, a, span, div, li'));
     for (const el of elements) {
       const text = (el.innerText || el.textContent || '').trim();
@@ -102,13 +100,17 @@
       }
     }
 
-    // 4. Extract Product / Model Images
-    const mainImages = [];
-    const descImages = [];
-
+    // 4. Extract Images with Dimensions and Sorting by Visual Area
+    const candidateImages = [];
     const ogImg = document.querySelector('meta[property="og:image"]');
     if (ogImg && ogImg.content && ogImg.content.startsWith('http')) {
-      mainImages.push(ogImg.content);
+      candidateImages.push({
+        src: ogImg.content.trim(),
+        width: 800,
+        height: 800,
+        area: 640000,
+        isLikelySizeChart: false
+      });
     }
 
     const allImages = Array.from(document.querySelectorAll('img'));
@@ -156,75 +158,43 @@
         continue;
       }
 
-      const isLarge = img.naturalWidth > 150 || img.naturalHeight > 150 || !img.naturalWidth;
-      if (!isLarge) continue;
+      const width = img.naturalWidth || img.clientWidth || 0;
+      const height = img.naturalHeight || img.clientHeight || 0;
+      const area = width * height;
 
-      let isInsideDescription = false;
-      if (contentArea && contentArea.contains(img)) {
-        isInsideDescription = true;
-      } else {
-        let parent = img.parentElement;
-        while (parent && parent !== document.body) {
-          const className = (parent.className || '').toString().toLowerCase();
-          const idName = (parent.id || '').toString().toLowerCase();
-          if (className.includes('desc') || className.includes('detail') || className.includes('spec') || 
-              idName.includes('desc') || idName.includes('detail') || idName.includes('spec')) {
-            isInsideDescription = true;
-            break;
-          }
-          parent = parent.parentElement;
-        }
-      }
-
+      // Exclude very small images/thumbnails (anything under 180px width or height unless size-chart is explicitly in name)
       const alt = (img.alt || '').toLowerCase();
       const isLikelySizeChart = alt.includes('size') || alt.includes('chart') || alt.includes('measure') || alt.includes('guide') ||
                                 srcLower.includes('size') || srcLower.includes('chart') || srcLower.includes('measure') || srcLower.includes('guide');
 
-      if (isLikelySizeChart) {
-        if (!descImages.includes(src)) descImages.unshift(src);
-      } else if (isInsideDescription) {
-        if (!descImages.includes(src)) descImages.push(src);
-      } else {
-        if (!mainImages.includes(src)) mainImages.push(src);
+      if (isLikelySizeChart || width > 180 || height > 180 || area > 35000 || !width) {
+        candidateImages.push({
+          src,
+          width,
+          height,
+          area: area || 100000, // Default to a standard size area if not yet fully loaded
+          isLikelySizeChart
+        });
       }
     }
 
-    const keywordMatches = [];
-    const otherDescImages = [];
-    descImages.forEach(url => {
-      const urlLower = url.toLowerCase();
-      if (urlLower.includes('size') || urlLower.includes('chart') || urlLower.includes('measure') || urlLower.includes('guide')) {
-        keywordMatches.push(url);
-      } else {
-        otherDescImages.push(url);
-      }
+    // Sort candidate images:
+    // 1. Sizing charts first (keyword matches)
+    // 2. Then by visual size (largest image area first)
+    candidateImages.sort((a, b) => {
+      if (a.isLikelySizeChart && !b.isLikelySizeChart) return -1;
+      if (!a.isLikelySizeChart && b.isLikelySizeChart) return 1;
+      return b.area - a.area;
     });
 
+    // Extract top 8 unique image URLs
     const finalImageUrls = [];
-    keywordMatches.forEach(url => {
-      if (finalImageUrls.length < 3) finalImageUrls.push(url);
-    });
-
-    if (otherDescImages.length > 0) {
-      const lastImages = otherDescImages.slice(-2);
-      lastImages.forEach(url => {
-        if (finalImageUrls.length < 5 && !finalImageUrls.includes(url)) {
-          finalImageUrls.push(url);
-        }
-      });
+    for (const item of candidateImages) {
+      if (!finalImageUrls.includes(item.src)) {
+        finalImageUrls.push(item.src);
+      }
+      if (finalImageUrls.length >= 8) break;
     }
-
-    mainImages.forEach(url => {
-      if (finalImageUrls.length < 7 && !finalImageUrls.includes(url)) {
-        finalImageUrls.push(url);
-      }
-    });
-
-    otherDescImages.forEach(url => {
-      if (finalImageUrls.length < 8 && !finalImageUrls.includes(url)) {
-        finalImageUrls.push(url);
-      }
-    });
 
     return {
       pageTitle,
