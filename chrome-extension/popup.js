@@ -43,6 +43,23 @@
     return total > 0 ? total.toString() : '';
   }
 
+  // Helper to download an image from a URL and convert it to a base64 Data URL (bypasses CORS using extension host permissions)
+  async function downloadImageAsBase64(url) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.warn("Could not download image locally in extension:", url, err);
+      return null;
+    }
+  }
+
   // 1. Load cached measurements and connection host
   const data = await chrome.storage.local.get(['measurements', 'apiHost']);
   if (data.measurements) {
@@ -156,7 +173,7 @@
     analyzeBtn.disabled = true;
     loaderPanel.style.display = 'block';
     resultPanel.style.display = 'none';
-    setLoaderPhase("Reading e-commerce page structure...");
+    setLoaderPhase("Scraping page structure...");
 
     try {
       // Find active tab
@@ -176,12 +193,25 @@
           }
 
           const pageData = results[0].result;
+          
+          // Download page images locally to bypass CDN hotlink protections
+          setLoaderPhase("Processing product images locally...");
+          const imagesBase64 = [];
+          if (pageData.imageUrls && pageData.imageUrls.length > 0) {
+            const urlsToFetch = pageData.imageUrls.slice(0, 4); // Limit to 4 images
+            for (const url of urlsToFetch) {
+              const base64 = await downloadImageAsBase64(url);
+              if (base64) {
+                imagesBase64.push(base64);
+              }
+            }
+          }
+
           setLoaderPhase("Matching measurements with fabric & style...");
 
           // Calculate correct API Endpoint
           let host = activeApiHost;
           if (!host) {
-            // Default fallbacks based on environment
             if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
               host = 'http://localhost:3000';
             } else {
@@ -199,7 +229,7 @@
               pageTitle: pageData.pageTitle,
               pageText: pageData.pageText,
               tableHtml: pageData.tableHtml,
-              imageUrls: pageData.imageUrls
+              imagesBase64 // Sent directly as base64 strings!
             })
           });
 
@@ -225,37 +255,48 @@
             throw new Error("The server returned an invalid response (not JSON).\n\nTip: Make sure the API endpoint is deployed and running at: " + apiUrl);
           }
 
-          // Render Sizing Verdict
-          recSize.textContent = resData.recommended_size;
-          explanation.textContent = resData.explanation;
-
-          // Render Fit Breakdown
-          breakdownList.innerHTML = '';
-          if (resData.fit_breakdown) {
-            Object.entries(resData.fit_breakdown).forEach(([key, val]) => {
-              const item = document.createElement('div');
-              item.className = 'fit-item';
-              
-              const label = document.createElement('span');
-              label.className = 'fit-label';
-              label.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-              
-              const value = document.createElement('span');
-              value.className = 'fit-value';
-              value.textContent = val;
-
-              item.appendChild(label);
-              item.appendChild(value);
-              breakdownList.appendChild(item);
-            });
-          }
-
-          // Handle Warnings
-          if (resData.warning && resData.warning.toLowerCase() !== 'none' && resData.warning.trim() !== '') {
-            warningText.textContent = resData.warning;
-            warningContainer.style.display = 'block';
-          } else {
+          // Handle Sizing Verdict
+          if (!resData.recommended_size) {
+            // No size chart was found
+            recSize.textContent = "No Chart Detected";
+            recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)"; // Slate gray style
+            explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page. Sizing calculation cannot be executed.";
+            breakdownList.innerHTML = '';
             warningContainer.style.display = 'none';
+          } else {
+            // Success size chart matching
+            recSize.textContent = resData.recommended_size;
+            recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)"; // Vibrant gradient
+            explanation.textContent = resData.explanation;
+
+            // Render Fit Breakdown
+            breakdownList.innerHTML = '';
+            if (resData.fit_breakdown) {
+              Object.entries(resData.fit_breakdown).forEach(([key, val]) => {
+                const item = document.createElement('div');
+                item.className = 'fit-item';
+                
+                const label = document.createElement('span');
+                label.className = 'fit-label';
+                label.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+                
+                const value = document.createElement('span');
+                value.className = 'fit-value';
+                value.textContent = val;
+
+                item.appendChild(label);
+                item.appendChild(value);
+                breakdownList.appendChild(item);
+              });
+            }
+
+            // Handle Warnings
+            if (resData.warning && resData.warning.toLowerCase() !== 'none' && resData.warning.trim() !== '') {
+              warningText.textContent = resData.warning;
+              warningContainer.style.display = 'block';
+            } else {
+              warningContainer.style.display = 'none';
+            }
           }
 
           // Display result
