@@ -195,38 +195,7 @@
       throw new Error("Could not detect active browser window.");
     }
 
-    // Pre-load description iframes/lazy-loaded images by scrolling programmatically
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: async () => {
-          const originalScrollY = window.scrollY;
-          const descriptionSelectors = [
-            '#desc-lazyload-container', 'iframe[src*="desc"]', 'iframe[data-src*="desc"]',
-            '.product-description', '.product-details', '.description', 
-            '#description', '#product-details', '[class*="description"]',
-            '[class*="details"]'
-          ];
-          let found = false;
-          for (const selector of descriptionSelectors) {
-            const el = document.querySelector(selector);
-            if (el) {
-              el.scrollIntoView({ behavior: 'instant', block: 'center' });
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            window.scrollBy(0, 800);
-          }
-          await new Promise(resolve => setTimeout(resolve, 500));
-          window.scrollTo({ top: originalScrollY, behavior: 'instant' });
-        }
-      });
-      await new Promise(resolve => setTimeout(resolve, 600));
-    } catch (err) {
-      console.warn("Pre-loading scroll failed:", err);
-    }
+
 
     return new Promise((resolve, reject) => {
       chrome.scripting.executeScript({
@@ -443,7 +412,7 @@
 
   function appendMessage(role, text) {
     const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-message \${role}`;
+    msgDiv.className = `chat-message ${role}`;
     msgDiv.innerHTML = text.replace(/\n/g, '<br/>');
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -491,7 +460,7 @@
           host = 'https://styla-measure-app.vercel.app';
         }
       }
-      const apiUrl = `\${host}/api/extension-chat`;
+      const apiUrl = `${host}/api/extension-chat`;
 
       const res = await fetch(apiUrl, {
         method: 'POST',
@@ -509,7 +478,7 @@
       loadingMessage.remove();
 
       if (!res.ok) {
-        throw new Error(`Server returned \${res.status}`);
+        throw new Error(`Server returned ${res.status}`);
       }
 
       const resData = await res.json();
@@ -523,7 +492,7 @@
 
     } catch (err) {
       loadingMessage.remove();
-      appendMessage('model', `Failed to get response: \${err.message}`);
+      appendMessage('model', `Failed to get response: ${err.message}`);
     }
   }
 
