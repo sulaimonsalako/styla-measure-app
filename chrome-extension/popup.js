@@ -478,7 +478,17 @@
       loadingMessage.remove();
 
       if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+        let errorMsg = `Server returned ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.error) errorMsg = errData.error;
+        } catch (_) {
+          try {
+            const text = await res.text();
+            if (text && text.length < 150) errorMsg = text;
+          } catch (__) {}
+        }
+        throw new Error(errorMsg);
       }
 
       const resData = await res.json();

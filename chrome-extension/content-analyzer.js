@@ -297,24 +297,7 @@
     url.toLowerCase().includes('guide')
   );
 
-  // 3. Fallback: If missing, attempt button clicking
-  if (!hasHtmlTable && !hasChartImage) {
-    const sizeBtn = findSizeChartButton();
-    if (sizeBtn) {
-      console.log("Styla found size chart button/modal trigger. Simulating click...");
-      try {
-        sizeBtn.click();
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const updatedData = scrapePage();
-        clickCloseButton();
-        return updatedData;
-      } catch (err) {
-        console.error("Styla automatic click-scrape failed:", err);
-      }
-    }
-  }
+
 
   return data;
 })();
