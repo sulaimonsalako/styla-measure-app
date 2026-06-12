@@ -22,6 +22,8 @@
   const warningText = document.getElementById('warning-text');
 
   let activeApiHost = '';
+  let scrapedProductContext = null;
+  let chatHistory = [];
 
   // Helper to convert total inches into Ft and In
   function setHeightFields(totalInchesStr) {
@@ -182,68 +184,51 @@
     loaderStatus.textContent = text;
   }
 
-  // 3. Handle Page Analysis Trigger
-  analyzeBtn.addEventListener('click', async () => {
-    const chest = chestInput.value.trim();
-    const waist = waistInput.value.trim();
-    const hips = hipsInput.value.trim();
-    const height = getTotalHeightInches();
-    const inseam = inseamInput.value.trim();
-
-    if (!chest || !waist || !hips) {
-      alert("Please fill in at least your Chest, Waist, and Hips measurements to calculate fit.");
-      return;
+  // Helper to extract context (either silent or for verdict panel)
+  async function getProductContext() {
+    if (scrapedProductContext) {
+      return scrapedProductContext;
     }
 
-    // Adjust UI state
-    analyzeBtn.disabled = true;
-    loaderPanel.style.display = 'block';
-    resultPanel.style.display = 'none';
-    setLoaderPhase("Pre-loading page details...");
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) {
+      throw new Error("Could not detect active browser window.");
+    }
 
+    // Pre-load description iframes/lazy-loaded images by scrolling programmatically
     try {
-      // Find active tab
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab) {
-        throw new Error("Could not detect active browser window.");
-      }
-
-      // Pre-load description iframes/lazy-loaded images by scrolling programmatically
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: async () => {
-            const originalScrollY = window.scrollY;
-            const descriptionSelectors = [
-              '#desc-lazyload-container', 'iframe[src*="desc"]', 'iframe[data-src*="desc"]',
-              '.product-description', '.product-details', '.description', 
-              '#description', '#product-details', '[class*="description"]',
-              '[class*="details"]'
-            ];
-            let found = false;
-            for (const selector of descriptionSelectors) {
-              const el = document.querySelector(selector);
-              if (el) {
-                el.scrollIntoView({ behavior: 'instant', block: 'center' });
-                found = true;
-                break;
-              }
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: async () => {
+          const originalScrollY = window.scrollY;
+          const descriptionSelectors = [
+            '#desc-lazyload-container', 'iframe[src*="desc"]', 'iframe[data-src*="desc"]',
+            '.product-description', '.product-details', '.description', 
+            '#description', '#product-details', '[class*="description"]',
+            '[class*="details"]'
+          ];
+          let found = false;
+          for (const selector of descriptionSelectors) {
+            const el = document.querySelector(selector);
+            if (el) {
+              el.scrollIntoView({ behavior: 'instant', block: 'center' });
+              found = true;
+              break;
             }
-            if (!found) {
-              window.scrollBy(0, 800);
-            }
-            await new Promise(resolve => setTimeout(resolve, 500));
-            window.scrollTo({ top: originalScrollY, behavior: 'instant' });
           }
-        });
-        await new Promise(resolve => setTimeout(resolve, 600));
-      } catch (err) {
-        console.warn("Pre-loading scroll failed:", err);
-      }
+          if (!found) {
+            window.scrollBy(0, 800);
+          }
+          await new Promise(resolve => setTimeout(resolve, 500));
+          window.scrollTo({ top: originalScrollY, behavior: 'instant' });
+        }
+      });
+      await new Promise(resolve => setTimeout(resolve, 600));
+    } catch (err) {
+      console.warn("Pre-loading scroll failed:", err);
+    }
 
-      setLoaderPhase("Scraping page structure...");
-
-      // Execute content scraper script on all frames (including description iframe)
+    return new Promise((resolve, reject) => {
       chrome.scripting.executeScript({
         target: { tabId: tab.id, allFrames: true },
         files: ["content-analyzer.js"]
@@ -277,14 +262,11 @@
             throw new Error("Failed to extract details from any page module.");
           }
 
-          // Truncate combined description text safely
           pageText = pageText.substring(0, 6000);
           
-          // Download page images locally to bypass CDN hotlink protections
-          setLoaderPhase("Processing product images locally...");
           const imagesBase64 = [];
           if (imageUrls.length > 0) {
-            const urlsToFetch = imageUrls.slice(0, 15); // Limit to 15 images to capture size chart
+            const urlsToFetch = imageUrls.slice(0, 15);
             for (const url of urlsToFetch) {
               const base64 = await downloadImageAsBase64(url);
               if (base64) {
@@ -293,119 +275,262 @@
             }
           }
 
-          setLoaderPhase("Matching measurements with fabric & style...");
-
-          // Calculate correct API Endpoint
-          let host = activeApiHost;
-          if (!host) {
-            if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
-              host = 'http://localhost:3000';
-            } else {
-              host = 'https://styla-measure-app.vercel.app';
-            }
-          }
-          const apiUrl = `${host}/api/extension-decode`;
-
-          // Post payload to backend
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chest, waist, hips, height, inseam,
-              pageTitle: pageTitle,
-              pageText: pageText,
-              tableHtml: tableHtml,
-              imagesBase64
-            })
-          });
-
-          if (!res.ok) {
-            let errorMsg = `Server error: ${res.status} ${res.statusText}`;
-            try {
-              const errData = await res.json();
-              if (errData && errData.error) errorMsg = errData.error;
-            } catch (_) {
-              try {
-                const text = await res.text();
-                if (text && text.length < 150) errorMsg = text;
-              } catch (__) {}
-            }
-            throw new Error(errorMsg + "\n\nTip: Make sure your backend API is deployed and running at: " + apiUrl);
-          }
-
-          let resData;
-          try {
-            resData = await res.json();
-          } catch (jsonErr) {
-            console.error("Failed to parse JSON response:", jsonErr);
-            throw new Error("The server returned an invalid response (not JSON).\n\nTip: Make sure the API endpoint is deployed and running at: " + apiUrl);
-          }
-
-          // Handle Sizing Verdict
-          if (!resData.recommended_size || resData.recommended_size === "null" || resData.recommended_size.toLowerCase() === "none" || resData.recommended_size.toLowerCase() === "null") {
-            // No size chart was found
-            recSize.textContent = "No Chart Detected";
-            recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)"; // Slate gray style
-            explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
-            breakdownList.innerHTML = '';
-            
-            // Show warning box with helpful instructions
-            const debugInfo = `(Scraped: ${imageUrls.length} images, ${tableHtml.length > 0 ? 'tables found' : 'no tables'} across ${results.length} frame modules)`;
-            warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}<br/><br/><small style="color: #94a3b8; font-size: 10px;">Diagnostics: ${debugInfo}</small>`;
-            warningContainer.style.display = "block";
-          } else {
-            // Success size chart matching
-            recSize.textContent = resData.recommended_size;
-            recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)"; // Vibrant gradient
-            explanation.textContent = resData.explanation;
-
-            // Render Fit Breakdown
-            breakdownList.innerHTML = '';
-            if (resData.fit_breakdown) {
-              Object.entries(resData.fit_breakdown).forEach(([key, val]) => {
-                const item = document.createElement('div');
-                item.className = 'fit-item';
-                
-                const label = document.createElement('span');
-                label.className = 'fit-label';
-                label.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-                
-                const value = document.createElement('span');
-                value.className = 'fit-value';
-                value.textContent = val;
-
-                item.appendChild(label);
-                item.appendChild(value);
-                breakdownList.appendChild(item);
-              });
-            }
-
-            // Handle Warnings
-            if (resData.warning && resData.warning.toLowerCase() !== 'none' && resData.warning.trim() !== '') {
-              warningText.textContent = resData.warning;
-              warningContainer.style.display = 'block';
-            } else {
-              warningContainer.style.display = 'none';
-            }
-          }
-
-          // Display result
-          resultPanel.style.display = 'block';
-
-        } catch (innerErr) {
-          console.error(innerErr);
-          alert(innerErr.message);
-        } finally {
-          loaderPanel.style.display = 'none';
-          analyzeBtn.disabled = false;
+          scrapedProductContext = {
+            pageTitle,
+            pageText,
+            tableHtml,
+            imagesBase64,
+            frameCount: results.length,
+            scrapedImagesCount: imageUrls.length
+          };
+          resolve(scrapedProductContext);
+        } catch (err) {
+          reject(err);
         }
       });
+    });
+  }
 
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+  // 3. Handle Page Analysis Trigger
+  analyzeBtn.addEventListener('click', async () => {
+    const chest = chestInput.value.trim();
+    const waist = waistInput.value.trim();
+    const hips = hipsInput.value.trim();
+    const height = getTotalHeightInches();
+    const inseam = inseamInput.value.trim();
+
+    if (!chest || !waist || !hips) {
+      alert("Please fill in at least your Chest, Waist, and Hips measurements to calculate fit.");
+      return;
+    }
+
+    // Adjust UI state
+    analyzeBtn.disabled = true;
+    loaderPanel.style.display = 'block';
+    resultPanel.style.display = 'none';
+    setLoaderPhase("Pre-loading page details...");
+
+    try {
+      scrapedProductContext = null;
+      const context = await getProductContext();
+
+      setLoaderPhase("Matching measurements with fabric & style...");
+
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      let host = activeApiHost;
+      if (!host) {
+        if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
+          host = 'http://localhost:3000';
+        } else {
+          host = 'https://styla-measure-app.vercel.app';
+        }
+      }
+      const apiUrl = `${host}/api/extension-decode`;
+
+      // Post payload to backend
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chest, waist, hips, height, inseam,
+          pageTitle: context.pageTitle,
+          pageText: context.pageText,
+          tableHtml: context.tableHtml,
+          imagesBase64: context.imagesBase64
+        })
+      });
+
+      if (!res.ok) {
+        let errorMsg = `Server error: ${res.status} ${res.statusText}`;
+        try {
+          const errData = await res.json();
+          if (errData && errData.error) errorMsg = errData.error;
+        } catch (_) {
+          try {
+            const text = await res.text();
+            if (text && text.length < 150) errorMsg = text;
+          } catch (__) {}
+        }
+        throw new Error(errorMsg + "\n\nTip: Make sure your backend API is deployed and running at: " + apiUrl);
+      }
+
+      let resData;
+      try {
+        resData = await res.json();
+      } catch (jsonErr) {
+        console.error("Failed to parse JSON response:", jsonErr);
+        throw new Error("The server returned an invalid response (not JSON).\n\nTip: Make sure the API endpoint is deployed and running at: " + apiUrl);
+      }
+
+      // Handle Sizing Verdict
+      if (!resData.recommended_size || resData.recommended_size === "null" || resData.recommended_size.toLowerCase() === "none" || resData.recommended_size.toLowerCase() === "null") {
+        recSize.textContent = "No Chart Detected";
+        recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)";
+        explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
+        breakdownList.innerHTML = '';
+        
+        const debugInfo = `(Scraped: ${context.scrapedImagesCount} images, ${context.tableHtml.length > 0 ? 'tables found' : 'no tables'} across ${context.frameCount} frame modules)`;
+        warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}<br/><br/><small style="color: #94a3b8; font-size: 10px;">Diagnostics: ${debugInfo}</small>`;
+        warningContainer.style.display = "block";
+      } else {
+        recSize.textContent = resData.recommended_size;
+        recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)";
+        explanation.textContent = resData.explanation;
+
+        breakdownList.innerHTML = '';
+        if (resData.fit_breakdown) {
+          Object.entries(resData.fit_breakdown).forEach(([key, val]) => {
+            const item = document.createElement('div');
+            item.className = 'fit-item';
+            
+            const label = document.createElement('span');
+            label.className = 'fit-label';
+            label.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+            
+            const value = document.createElement('span');
+            value.className = 'fit-value';
+            value.textContent = val;
+
+            item.appendChild(label);
+            item.appendChild(value);
+            breakdownList.appendChild(item);
+          });
+        }
+
+        if (resData.warning && resData.warning.toLowerCase() !== 'none' && resData.warning.trim() !== '') {
+          warningText.textContent = resData.warning;
+          warningContainer.style.display = 'block';
+        } else {
+          warningContainer.style.display = 'none';
+        }
+      }
+
+      resultPanel.style.display = 'block';
+
+    } catch (innerErr) {
+      console.error(innerErr);
+      alert(innerErr.message);
+    } finally {
       loaderPanel.style.display = 'none';
       analyzeBtn.disabled = false;
+    }
+  });
+
+  // --- 4. Tab Switching Navigation ---
+  const tabVerdict = document.getElementById('tab-verdict');
+  const tabChat = document.getElementById('tab-chat');
+  const verdictSection = document.getElementById('verdict-section');
+  const chatSection = document.getElementById('chat-section');
+
+  tabVerdict.addEventListener('click', () => {
+    tabVerdict.classList.add('active');
+    tabChat.classList.remove('active');
+    verdictSection.style.display = 'block';
+    chatSection.style.display = 'none';
+  });
+
+  tabChat.addEventListener('click', () => {
+    tabChat.classList.add('active');
+    tabVerdict.classList.remove('active');
+    verdictSection.style.display = 'none';
+    chatSection.style.display = 'block';
+  });
+
+  // --- 5. Interactive Sizing Chat Assistant ---
+  const chatInput = document.getElementById('chat-input');
+  const chatSendBtn = document.getElementById('chat-send-btn');
+  const chatMessages = document.getElementById('chat-messages');
+
+  function appendMessage(role, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message \${role}`;
+    msgDiv.innerHTML = text.replace(/\n/g, '<br/>');
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function handleChatSend() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    chatInput.value = '';
+    appendMessage('user', text);
+
+    if (!scrapedProductContext) {
+      appendMessage('system', "Analyzing page details to load styling context...");
+      try {
+        await getProductContext();
+        appendMessage('system', "Context loaded. Analyzing your question...");
+      } catch (err) {
+        appendMessage('model', "Sorry, I couldn't extract the product details from the page. Please make sure this is a product page.");
+        return;
+      }
+    }
+
+    chatHistory.push({ role: 'user', text: text });
+    
+    const loadingMessage = document.createElement('div');
+    loadingMessage.className = 'chat-message model loading-indicator';
+    loadingMessage.textContent = 'Typing...';
+    chatMessages.appendChild(loadingMessage);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      const chest = chestInput.value.trim() || '34';
+      const waist = waistInput.value.trim() || '30';
+      const hips = hipsInput.value.trim() || '34';
+      const height = getTotalHeightInches();
+      const inseam = inseamInput.value.trim();
+
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      let host = activeApiHost;
+      if (!host) {
+        if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
+          host = 'http://localhost:3000';
+        } else {
+          host = 'https://styla-measure-app.vercel.app';
+        }
+      }
+      const apiUrl = `\${host}/api/extension-chat`;
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chest, waist, hips, height, inseam,
+          pageTitle: scrapedProductContext.pageTitle,
+          pageText: scrapedProductContext.pageText,
+          tableHtml: scrapedProductContext.tableHtml,
+          imagesBase64: scrapedProductContext.imagesBase64,
+          history: chatHistory
+        })
+      });
+
+      loadingMessage.remove();
+
+      if (!res.ok) {
+        throw new Error(`Server returned \${res.status}`);
+      }
+
+      const resData = await res.json();
+      if (resData.error) {
+        throw new Error(resData.error);
+      }
+
+      const reply = resData.reply || "I'm sorry, I couldn't generate a reply.";
+      appendMessage('model', reply);
+      chatHistory.push({ role: 'model', text: reply });
+
+    } catch (err) {
+      loadingMessage.remove();
+      appendMessage('model', `Failed to get response: \${err.message}`);
+    }
+  }
+
+  chatSendBtn.addEventListener('click', handleChatSend);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      handleChatSend();
     }
   });
 });

@@ -1,0 +1,153 @@
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '4mb',
+    },
+  },
+};
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  try {
+    const { 
+      chest, 
+      waist, 
+      hips, 
+      height, 
+      inseam, 
+      pageTitle, 
+      pageText, 
+      imagesBase64, 
+      tableHtml,
+      history
+    } = req.body;
+
+    if (!chest || !waist || !hips) {
+      return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
+    }
+
+    const apiKey = process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'API key not configured on server.' });
+    }
+
+    const systemPrompt = `You are an expert fashion tailor and sizing/styling assistant for STYLA.
+The user has the following body measurements:
+- Chest / Bust: ${chest}"
+- Waist: ${waist}"
+- Hips: ${hips}"
+${height ? `- Total Height: ${height}"` : ''}
+${inseam ? `- Inseam: ${inseam}"` : ''}
+
+We are analyzing a product page for a garment:
+Product Title: "${pageTitle || 'Unknown Product'}"
+
+Product Details & Description:
+\"\"\"
+${pageText || 'No description found.'}
+\"\"\"
+
+HTML Sizing Tables found on page:
+\"\"\"
+${tableHtml || 'None'}
+\"\"\"
+
+You also have access to the attached images of the product. Use them to understand the design, style, fit on the model, fabric texture, and size chart details.
+
+Your role is to advise the customer, answer their questions about sizing, fabric quality, styling, fit options, and how different sizes would fit them.
+For example, if they ask about buying a size other than their recommended size (e.g. "What if I buy size XL?"), compare the measurements of that size in the size chart to their body measurements and give a professional, tailored opinion.
+
+CRITICAL RULES:
+1. Always be extremely polite, helpful, and professional.
+2. If the user asks about a specific size, refer to the size chart (HTML table or images) if available. If no size chart is detected, remind them that no size chart is present on the page and advise them accordingly.
+3. Keep your responses concise (around 2-4 sentences or a bulleted list if necessary) so it fits well in a small Chrome Extension popup window.
+4. Keep the tone premium, stylish, and direct. Avoid repeating system prompt details or writing overly long preambles.`;
+
+    const contents = [];
+
+    if (Array.isArray(history) && history.length > 0) {
+      history.forEach((msg, idx) => {
+        const parts = [];
+        
+        if (idx === 0) {
+          let firstMsgText = `User Profile:
+- Chest: ${chest}"
+- Waist: ${waist}"
+- Hips: ${hips}"
+${height ? `- Height: ${height}"` : ''}
+${inseam ? `- Inseam: ${inseam}"` : ''}
+
+Product Info:
+- Title: "${pageTitle || 'Unknown Product'}"
+- Details: ${pageText || 'No description.'}
+- Size Chart Table: ${tableHtml || 'None'}
+
+User message: ${msg.text}`;
+
+          parts.push({ text: firstMsgText });
+          
+          if (Array.isArray(imagesBase64)) {
+            imagesBase64.forEach(imgData => {
+              const match = imgData.match(/^data:(image\\/\\w+);base64,(.+)$/);
+              if (match) {
+                parts.push({
+                  inlineData: {
+                    mimeType: match[1],
+                    data: match[2]
+                  }
+                });
+              }
+            });
+          }
+        } else {
+          parts.push({ text: msg.text });
+        }
+
+        contents.push({
+          role: msg.role === 'model' ? 'model' : 'user',
+          parts: parts
+        });
+      });
+    } else {
+      contents.push({
+        role: 'user',
+        parts: [{ text: 'Hello!' }]
+      });
+    }
+
+    const geminiPayload = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      contents: contents
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(geminiPayload)
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Gemini Chat API Error:", data.error);
+      return res.status(500).json({ error: data.error.message });
+    }
+
+    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
+      console.error("Gemini Chat empty response payload:", data);
+      return res.status(500).json({ error: "Empty or invalid response from Gemini." });
+    }
+
+    const textAnswer = data.candidates[0].content.parts[0].text.trim();
+    res.status(200).json({ reply: textAnswer });
+
+  } catch (error) {
+    console.error("Extension chat handler error:", error);
+    res.status(500).json({ error: 'Server error processing chat request.' });
+  }
+}

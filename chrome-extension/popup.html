@@ -280,6 +280,133 @@
       font-size: 11.5px;
       line-height: 1.4;
     }
+    /* Tab Navigation Styles */
+    .tabs-container {
+      display: flex;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: none;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      transform: none;
+      opacity: 1;
+    }
+
+    .tab-btn.active {
+      background: rgba(139, 92, 246, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    /* Chat Panel Styles */
+    .chat-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      height: 250px;
+      margin-top: 8px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-message {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+
+    .chat-message.model {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-message.user {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+    }
+
+    .chat-message.system {
+      background: rgba(245, 158, 11, 0.08);
+      color: #fde68a;
+      align-self: center;
+      max-width: 95%;
+      font-size: 11px;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      text-align: center;
+    }
+
+    .chat-input-container {
+      display: flex;
+      border-top: 1px solid var(--border);
+      padding: 8px;
+      background: rgba(15, 23, 42, 0.4);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      gap: 8px;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    #chat-input:focus {
+      border-color: var(--primary);
+    }
+
+    #chat-send-btn {
+      width: auto;
+      padding: 0 16px;
+      font-size: 12px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
@@ -294,9 +421,17 @@
       </div>
     </header>
 
-    <div class="section-title">Your Digital Twin</div>
-    
-    <div class="profile-card">
+    <!-- Tab Navigation -->
+    <div class="tabs-container">
+      <button class="tab-btn active" id="tab-verdict">Verdict</button>
+      <button class="tab-btn" id="tab-chat">Ask Tailor AI</button>
+    </div>
+
+    <!-- Verdict Tab View -->
+    <div id="verdict-section">
+      <div class="section-title">Your Digital Twin</div>
+      
+      <div class="profile-card">
       <div class="measurements-grid">
         <div class="input-wrapper">
           <label for="chest">Chest (in)</label>
@@ -345,6 +480,23 @@
 
         <div id="warning-container" class="warning-box" style="display: none;">
           <strong>Fit Alert:</strong> <span id="warning-text"></span>
+        </div>
+      </div>
+    </div>
+    </div> <!-- End of verdict-section -->
+
+    <!-- Chat Tab View -->
+    <div id="chat-section" style="display: none;">
+      <div class="section-title">Ask Tailor AI</div>
+      <div class="chat-container">
+        <div id="chat-messages" class="chat-messages">
+          <div class="chat-message model">
+            Hello! I am your STYLA sizing assistant. Ask me anything about this product's fit, fabric, design, or how other sizes would compare to your measurements!
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+          <button id="chat-send-btn">Send</button>
         </div>
       </div>
     </div>
