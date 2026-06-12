@@ -20,6 +20,7 @@
   const breakdownList = document.getElementById('breakdown-list');
   const warningContainer = document.getElementById('warning-container');
   const warningText = document.getElementById('warning-text');
+  const tabsContainer = document.getElementById('tabs-container');
 
   let activeApiHost = '';
   let scrapedProductContext = null;
@@ -375,6 +376,8 @@
       }
 
       resultPanel.style.display = 'block';
+      // Reveal the AI Chat tab bar now that page analysis is complete
+      tabsContainer.style.display = 'flex';
 
     } catch (innerErr) {
       console.error(innerErr);
