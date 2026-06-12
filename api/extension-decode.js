@@ -93,6 +93,11 @@ Your task:
 3. If the product is oversized, advise if they should size down for a normal fit. If it has no stretch and is slim-fit, recommend if they need to size up for comfort.
 4. Look at the attached image(s) to verify style details, fit intent, or read size charts embedded in images.
 
+CRITICAL SIZING RULES:
+- You MUST ONLY recommend a size that actually exists in the size chart (either in the HTML table or in the size chart images).
+- For example, if the size chart only lists M, L, XL, 2XL, 3XL, do NOT recommend a size 'Small' or 'XS', even if you believe a Small would fit their body measurements better. If they are smaller than the smallest size, recommend the smallest available size (e.g. Medium) and explain in the warning/explanation that the item may fit slightly relaxed since the brand does not make a smaller size.
+- Ensure your recommended size matches the exact label in the chart (e.g., if the chart uses numbers like '32', '34' or letters like 'M', 'L', use that exact size label).
+
 You MUST return ONLY valid JSON. Do not include markdown code blocks or any other text.
 The JSON must have this exact structure:
 {

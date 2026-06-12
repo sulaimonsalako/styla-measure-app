@@ -10,7 +10,7 @@
     if (h1) pageTitle = h1.innerText.trim();
   }
 
-  // 2. Extract Description Text (targeting description wrappers or fallback to main content)
+  // 2. Extract Description Text
   let pageText = "";
   const descriptionSelectors = [
     '.product-description', '.product-details', '.description', 
@@ -30,11 +30,10 @@
   if (contentArea) {
     pageText = contentArea.innerText;
   } else {
-    // Fallback: get body text but clean it up
     pageText = document.body.innerText;
   }
 
-  // Clean whitespace and truncate to prevent massive payload sizes
+  // Clean whitespace and truncate
   pageText = pageText.replace(/\s+/g, ' ').trim().substring(0, 6000);
 
   // 3. Extract HTML Sizing Tables
@@ -45,38 +44,95 @@
   for (const table of tables) {
     const html = table.outerHTML;
     const text = table.innerText.toLowerCase();
-    
-    // Check if the table contains at least two size chart keywords
     const matches = sizeKeywords.filter(keyword => text.includes(keyword));
     if (matches.length >= 2) {
       tableHtml += html + "\n\n";
     }
   }
 
-  // 4. Extract Product / Model Images
-  const imageUrls = [];
+  // 4. Extract Product / Model Images (Split into Carousel and Details/Charts)
+  const mainImages = [];
+  const descImages = [];
+
   const ogImg = document.querySelector('meta[property="og:image"]');
   if (ogImg && ogImg.content && ogImg.content.startsWith('http')) {
-    imageUrls.push(ogImg.content);
+    mainImages.push(ogImg.content);
   }
 
-  const images = Array.from(document.querySelectorAll('img'));
-  for (const img of images) {
+  const allImages = Array.from(document.querySelectorAll('img'));
+  for (const img of allImages) {
     const src = img.src || img.getAttribute('data-src') || img.getAttribute('data-original');
-    if (src && src.startsWith('http')) {
-      const isLikelyProductImage = img.naturalWidth > 150 || img.naturalHeight > 150 || 
-                                   (!img.naturalWidth && !src.includes('logo') && !src.includes('icon') && !src.includes('banner'));
-      if (isLikelyProductImage && !imageUrls.includes(src)) {
-        imageUrls.push(src);
+    if (!src || !src.startsWith('http')) continue;
+
+    // Filter out social icons, banners, logs
+    const srcLower = src.toLowerCase();
+    if (srcLower.includes('logo') || srcLower.includes('icon') || srcLower.includes('banner') || srcLower.includes('avatar') || srcLower.includes('theme')) {
+      continue;
+    }
+
+    const isLarge = img.naturalWidth > 150 || img.naturalHeight > 150 || !img.naturalWidth;
+    if (!isLarge) continue;
+
+    // Detect if this image lives in the product description area
+    let isInsideDescription = false;
+    if (contentArea && contentArea.contains(img)) {
+      isInsideDescription = true;
+    } else {
+      let parent = img.parentElement;
+      while (parent && parent !== document.body) {
+        const className = (parent.className || '').toString().toLowerCase();
+        const idName = (parent.id || '').toString().toLowerCase();
+        if (className.includes('desc') || className.includes('detail') || className.includes('spec') || 
+            idName.includes('desc') || idName.includes('detail') || idName.includes('spec')) {
+          isInsideDescription = true;
+          break;
+        }
+        parent = parent.parentElement;
       }
     }
-    if (imageUrls.length >= 6) break; // Fetch up to 6 high-quality image candidates
+
+    const alt = (img.alt || '').toLowerCase();
+    const isLikelySizeChart = alt.includes('size') || alt.includes('chart') || alt.includes('measure') || alt.includes('guide') ||
+                              srcLower.includes('size') || srcLower.includes('chart') || srcLower.includes('measure') || srcLower.includes('guide');
+
+    if (isLikelySizeChart) {
+      if (!descImages.includes(src)) descImages.unshift(src); // Prioritize size charts
+    } else if (isInsideDescription) {
+      if (!descImages.includes(src)) descImages.push(src);
+    } else {
+      if (!mainImages.includes(src)) mainImages.push(src);
+    }
   }
+
+  // Combine images prioritizing size charts, then carousel shots, then description graphics
+  const finalImageUrls = [];
+  
+  // Add chart matches first
+  descImages.forEach(url => {
+    const urlLower = url.toLowerCase();
+    if (urlLower.includes('size') || urlLower.includes('chart') || urlLower.includes('measure') || urlLower.includes('guide')) {
+      if (finalImageUrls.length < 3) finalImageUrls.push(url);
+    }
+  });
+
+  // Add top carousel model images
+  mainImages.forEach(url => {
+    if (finalImageUrls.length < 4 && !finalImageUrls.includes(url)) {
+      finalImageUrls.push(url);
+    }
+  });
+
+  // Add detail images (which often contain the actual size chart)
+  descImages.forEach(url => {
+    if (finalImageUrls.length < 6 && !finalImageUrls.includes(url)) {
+      finalImageUrls.push(url);
+    }
+  });
 
   return {
     pageTitle,
     pageText,
     tableHtml,
-    imageUrls
+    imageUrls: finalImageUrls
   };
 })();
