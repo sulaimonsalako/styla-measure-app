@@ -61,12 +61,49 @@
 
   const allImages = Array.from(document.querySelectorAll('img'));
   for (const img of allImages) {
-    const src = img.src || img.getAttribute('data-src') || img.getAttribute('data-original');
-    if (!src || !src.startsWith('http')) continue;
+    let src = '';
+    
+    // Check lazy-loading attributes first
+    const lazyAttributes = ['data-src', 'data-lazy-src', 'data-original', 'data-actual-src', 'data-lazyload-src'];
+    for (const attr of lazyAttributes) {
+      const val = img.getAttribute(attr);
+      if (val) {
+        const trimmedVal = val.trim();
+        if (trimmedVal.startsWith('http')) {
+          src = trimmedVal;
+          break;
+        } else if (trimmedVal.startsWith('//')) {
+          src = 'https:' + trimmedVal;
+          break;
+        }
+      }
+    }
+    
+    // Fallback to standard src if no lazy attribute found
+    if (!src) {
+      const standardSrc = img.src || img.getAttribute('src');
+      if (standardSrc) {
+        const trimmedSrc = standardSrc.trim();
+        const isPlaceholder = trimmedSrc.startsWith('data:image') || 
+                              trimmedSrc.includes('placeholder') || 
+                              trimmedSrc.includes('blank.gif') || 
+                              trimmedSrc.includes('spacer.gif');
+                              
+        if (!isPlaceholder) {
+          if (trimmedSrc.startsWith('http')) {
+            src = trimmedSrc;
+          } else if (trimmedSrc.startsWith('//')) {
+            src = 'https:' + trimmedSrc;
+          }
+        }
+      }
+    }
 
-    // Filter out social icons, banners, logs
+    if (!src) continue;
+
+    // Filter out common UI elements
     const srcLower = src.toLowerCase();
-    if (srcLower.includes('logo') || srcLower.includes('icon') || srcLower.includes('banner') || srcLower.includes('avatar') || srcLower.includes('theme')) {
+    if (srcLower.includes('logo') || srcLower.includes('icon') || srcLower.includes('banner') || srcLower.includes('avatar') || srcLower.includes('theme') || srcLower.includes('button')) {
       continue;
     }
 
