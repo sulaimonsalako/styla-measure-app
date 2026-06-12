@@ -68,24 +68,24 @@ export default async function handler(req, res) {
 
     const prompt = `You are an expert fashion tailor and sizing assistant for STYLA.
 The user has the following body measurements:
-- Chest / Bust: \${chest}"
-- Waist: \${waist}"
-- Hips: \${hips}"
-\${height ? \`- Total Height: \${height}"\` : ''}
-\${inseam ? \`- Inseam: \${inseam}"\` : ''}
+- Chest / Bust: ${chest}"
+- Waist: ${waist}"
+- Hips: ${hips}"
+${height ? `- Total Height: ${height}"` : ''}
+${inseam ? `- Inseam: ${inseam}"` : ''}
 
 We are analyzing a product page for a garment:
-Product Title: "\${pageTitle || 'Unknown Product'}"
+Product Title: "${pageTitle || 'Unknown Product'}"
 
 Product Details & Description scraped from page:
 """
-\${pageText || 'No description found.'}
+${pageText || 'No description found.'}
 """
 
-\${tableHtml ? \`We found this size chart table on the page:
+${tableHtml ? `We found this size chart table on the page:
 """
-\${tableHtml}
-"""\` : 'No size chart table was found in the HTML. Please check if any attached images contain size chart data.'}
+${tableHtml}
+"""` : 'No size chart table was found in the HTML. Please check if any attached images contain size chart data.'}
 
 Your task:
 1. Determine the absolute best size for this user.
@@ -118,7 +118,7 @@ The JSON must have this exact structure:
     };
 
     // Call Gemini 2.5 Flash API
-    const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\${apiKey}\`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(geminiPayload)
@@ -139,7 +139,7 @@ The JSON must have this exact structure:
     let textAnswer = data.candidates[0].content.parts[0].text;
     
     // Clean up potential markdown code blocks
-    textAnswer = textAnswer.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    textAnswer = textAnswer.replace(/```json/g, "").replace(/```/g, "").trim();
 
     try {
       const jsonAnswer = JSON.parse(textAnswer);
