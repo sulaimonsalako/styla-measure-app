@@ -141,27 +141,45 @@
     }
   }
 
-  // Combine images prioritizing size charts, then carousel shots, then description graphics
-  const finalImageUrls = [];
-  
-  // Add chart matches first
+  // Split description images into keyword matches vs others
+  const keywordMatches = [];
+  const otherDescImages = [];
   descImages.forEach(url => {
     const urlLower = url.toLowerCase();
     if (urlLower.includes('size') || urlLower.includes('chart') || urlLower.includes('measure') || urlLower.includes('guide')) {
-      if (finalImageUrls.length < 3) finalImageUrls.push(url);
+      keywordMatches.push(url);
+    } else {
+      otherDescImages.push(url);
     }
   });
 
-  // Add top carousel model images
+  const finalImageUrls = [];
+  
+  // 1. Add all keyword matches (up to 3)
+  keywordMatches.forEach(url => {
+    if (finalImageUrls.length < 3) finalImageUrls.push(url);
+  });
+
+  // 2. Add the LAST 2 images from the description (highly likely to contain the size chart at the bottom)
+  if (otherDescImages.length > 0) {
+    const lastImages = otherDescImages.slice(-2);
+    lastImages.forEach(url => {
+      if (finalImageUrls.length < 5 && !finalImageUrls.includes(url)) {
+        finalImageUrls.push(url);
+      }
+    });
+  }
+
+  // 3. Add main product shots from the top carousel (up to 2)
   mainImages.forEach(url => {
-    if (finalImageUrls.length < 4 && !finalImageUrls.includes(url)) {
+    if (finalImageUrls.length < 7 && !finalImageUrls.includes(url)) {
       finalImageUrls.push(url);
     }
   });
 
-  // Add detail images (which often contain the actual size chart)
-  descImages.forEach(url => {
-    if (finalImageUrls.length < 6 && !finalImageUrls.includes(url)) {
+  // 4. Add the first few description images (fallback details)
+  otherDescImages.forEach(url => {
+    if (finalImageUrls.length < 8 && !finalImageUrls.includes(url)) {
       finalImageUrls.push(url);
     }
   });

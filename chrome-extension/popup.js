@@ -198,7 +198,7 @@
           setLoaderPhase("Processing product images locally...");
           const imagesBase64 = [];
           if (pageData.imageUrls && pageData.imageUrls.length > 0) {
-            const urlsToFetch = pageData.imageUrls.slice(0, 4); // Limit to 4 images
+            const urlsToFetch = pageData.imageUrls.slice(0, 8); // Limit to 8 images to capture bottom size chart
             for (const url of urlsToFetch) {
               const base64 = await downloadImageAsBase64(url);
               if (base64) {
@@ -319,3 +319,4 @@
     }
   });
 });
+
