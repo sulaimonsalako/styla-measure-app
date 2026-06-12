@@ -46,14 +46,14 @@ We are analyzing a product page for a garment:
 Product Title: "${pageTitle || 'Unknown Product'}"
 
 Product Details & Description:
-\"\"\"
+"""
 ${pageText || 'No description found.'}
-\"\"\"
+"""
 
 HTML Sizing Tables found on page:
-\"\"\"
+"""
 ${tableHtml || 'None'}
-\"\"\"
+"""
 
 You also have access to the attached images of the product. Use them to understand the design, style, fit on the model, fabric texture, and size chart details.
 
@@ -91,7 +91,7 @@ User message: ${msg.text}`;
           
           if (Array.isArray(imagesBase64)) {
             imagesBase64.forEach(imgData => {
-              const match = imgData.match(/^data:(image\\/\\w+);base64,(.+)$/);
+              const match = imgData.match(/^data:(image\/\w+);base64,(.+)$/);
               if (match) {
                 parts.push({
                   inlineData: {
