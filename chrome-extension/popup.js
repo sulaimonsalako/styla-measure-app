@@ -20,7 +20,7 @@
   const breakdownList = document.getElementById('breakdown-list');
   const warningContainer = document.getElementById('warning-container');
   const warningText = document.getElementById('warning-text');
-  const tabsContainer = document.getElementById('tabs-container');
+
 
   let activeApiHost = '';
   let scrapedProductContext = null;
@@ -281,6 +281,14 @@
     setLoaderPhase("Pre-loading page details...");
 
     try {
+      // Reset chat history and messages list on new page analysis run
+      chatHistory = [];
+      chatMessages.innerHTML = `
+        <div class="chat-message model">
+          Hello! I've analyzed this product. Ask me anything about its fit, stretch, or compare other sizes to your measurements!
+        </div>
+      `;
+
       scrapedProductContext = null;
       const context = await getProductContext();
 
@@ -376,8 +384,7 @@
       }
 
       resultPanel.style.display = 'block';
-      // Reveal the AI Chat tab bar now that page analysis is complete
-      tabsContainer.style.display = 'flex';
+
 
     } catch (innerErr) {
       console.error(innerErr);
@@ -388,25 +395,7 @@
     }
   });
 
-  // --- 4. Tab Switching Navigation ---
-  const tabVerdict = document.getElementById('tab-verdict');
-  const tabChat = document.getElementById('tab-chat');
-  const verdictSection = document.getElementById('verdict-section');
-  const chatSection = document.getElementById('chat-section');
 
-  tabVerdict.addEventListener('click', () => {
-    tabVerdict.classList.add('active');
-    tabChat.classList.remove('active');
-    verdictSection.style.display = 'block';
-    chatSection.style.display = 'none';
-  });
-
-  tabChat.addEventListener('click', () => {
-    tabChat.classList.add('active');
-    tabVerdict.classList.remove('active');
-    verdictSection.style.display = 'none';
-    chatSection.style.display = 'block';
-  });
 
   // --- 5. Interactive Sizing Chat Assistant ---
   const chatInput = document.getElementById('chat-input');
