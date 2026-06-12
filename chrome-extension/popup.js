@@ -182,23 +182,48 @@
         throw new Error("Could not detect active browser window.");
       }
 
-      // Execute content scraper script on page
+      // Execute content scraper script on all frames (including description iframe)
       chrome.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId: tab.id, allFrames: true },
         files: ["content-analyzer.js"]
       }, async (results) => {
         try {
-          if (!results || !results[0] || !results[0].result) {
+          if (!results || results.length === 0) {
             throw new Error("Failed to scan page content. Check that this is a public product page.");
           }
 
-          const pageData = results[0].result;
+          // Combine results collected from all frames
+          let pageTitle = "";
+          let pageText = "";
+          let tableHtml = "";
+          const imageUrls = [];
+
+          for (const frameResult of results) {
+            const data = frameResult.result;
+            if (!data) continue;
+
+            if (data.pageTitle && !pageTitle) pageTitle = data.pageTitle;
+            if (data.pageText) pageText += data.pageText + "\n";
+            if (data.tableHtml) tableHtml += data.tableHtml + "\n";
+            if (data.imageUrls) {
+              data.imageUrls.forEach(url => {
+                if (!imageUrls.includes(url)) imageUrls.push(url);
+              });
+            }
+          }
+
+          if (!pageTitle && !pageText && imageUrls.length === 0) {
+            throw new Error("Failed to extract details from any page module.");
+          }
+
+          // Truncate combined description text safely
+          pageText = pageText.substring(0, 6000);
           
           // Download page images locally to bypass CDN hotlink protections
           setLoaderPhase("Processing product images locally...");
           const imagesBase64 = [];
-          if (pageData.imageUrls && pageData.imageUrls.length > 0) {
-            const urlsToFetch = pageData.imageUrls.slice(0, 8); // Limit to 8 images to capture bottom size chart
+          if (imageUrls.length > 0) {
+            const urlsToFetch = imageUrls.slice(0, 8); // Limit to 8 images to capture size chart
             for (const url of urlsToFetch) {
               const base64 = await downloadImageAsBase64(url);
               if (base64) {
@@ -226,10 +251,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               chest, waist, hips, height, inseam,
-              pageTitle: pageData.pageTitle,
-              pageText: pageData.pageText,
-              tableHtml: pageData.tableHtml,
-              imagesBase64 // Sent directly as base64 strings!
+              pageTitle: pageTitle,
+              pageText: pageText,
+              tableHtml: tableHtml,
+              imagesBase64
             })
           });
 
@@ -319,4 +344,3 @@
     }
   });
 });
-
