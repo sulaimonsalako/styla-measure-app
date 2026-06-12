@@ -1,9 +1,6 @@
 ﻿function syncMeasurements() {
-  // 1. Safe guard check for chrome runtime presence
+  // Safe guard check for chrome runtime presence
   if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
-    if (window.stylaSyncInterval) {
-      clearInterval(window.stylaSyncInterval);
-    }
     return;
   }
 
@@ -29,30 +26,23 @@
         const err = chrome.runtime.lastError;
       });
     } catch (err) {
-      // Extension was reloaded! Stop the polling immediately to prevent any console noise.
-      if (window.stylaSyncInterval) {
-        clearInterval(window.stylaSyncInterval);
-      }
+      // Suppress extension reload errors
     }
   }
 }
 
-// Setup and track polling interval globally
-if (window.stylaSyncInterval) {
-  clearInterval(window.stylaSyncInterval);
-}
-window.stylaSyncInterval = setInterval(syncMeasurements, 3000);
-
-// Run immediately or on load
+// Run immediately on page load
 if (document.readyState === "complete" || document.readyState === "interactive") {
   syncMeasurements();
 } else {
   document.addEventListener("DOMContentLoaded", syncMeasurements);
 }
 
-// Watch localStorage updates
+// Sync only when localStorage is actively changed (no polling)
 window.addEventListener('storage', (e) => {
   if (e.key && e.key.startsWith('styla_twin_')) {
-    syncMeasurements();
+    try {
+      syncMeasurements();
+    } catch (err) {}
   }
 });
