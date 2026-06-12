@@ -1,4 +1,4 @@
-const fileUpload = document.getElementById('file-upload');
+﻿const fileUpload = document.getElementById('file-upload');
 const dropZone = document.getElementById('drop-zone');
 const dropText = document.getElementById('drop-text');
 const previewImg = document.getElementById('preview-img'); // Keeping for legacy if needed, but we use chart-preview-container
@@ -79,6 +79,37 @@ window.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
       console.log("Supabase session check skipped or failed.", err);
   }
+
+  // Auto-save measurements to localStorage on input change
+  const inputsToWatch = [
+    { id: "val-chest", key: "styla_twin_chest" },
+    { id: "val-waist", key: "styla_twin_waist" },
+    { id: "val-hips", key: "styla_twin_hips" },
+    { id: "val-inseam", key: "styla_twin_inseam" }
+  ];
+
+  inputsToWatch.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (el) {
+      el.addEventListener("input", (e) => {
+        localStorage.setItem(item.key, e.target.value);
+      });
+    }
+  });
+
+  // Watch height selectors
+  const ftEl = document.getElementById("val-height-ft");
+  const inEl = document.getElementById("val-height-in");
+  function saveHeight() {
+    const ftStr = ftEl.value;
+    const inStr = inEl.value;
+    if (ftStr !== "" && inStr !== "") {
+      const height = (parseInt(ftStr, 10) * 12) + parseInt(inStr, 10);
+      localStorage.setItem("styla_twin_height", height);
+    }
+  }
+  if (ftEl) ftEl.addEventListener("change", saveHeight);
+  if (inEl) inEl.addEventListener("change", saveHeight);
 });
 
 // "How to Measure" Modal Logic
@@ -277,7 +308,7 @@ btnDecode.addEventListener('click', async () => {
     if (res.ok) {
         let fitHtml = `
           <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #a5b4fc;">
-            ✨ Recommended Size: ${data.recommended_size}
+            âœ¨ Recommended Size: ${data.recommended_size}
           </div>
           <p style="margin-bottom: 1rem;">${data.explanation}</p>
         `;
@@ -285,7 +316,7 @@ btnDecode.addEventListener('click', async () => {
         if (data.warning && data.warning.toLowerCase() !== "none" && data.warning.trim() !== "") {
             fitHtml += `
             <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; color: #fca5a5;">
-              <strong>⚠️ Warning:</strong> ${data.warning}
+              <strong>âš ï¸ Warning:</strong> ${data.warning}
             </div>`;
         }
 
@@ -293,10 +324,10 @@ btnDecode.addEventListener('click', async () => {
             fitHtml += `<h4 style="margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Fit Breakdown</h4>`;
             fitHtml += `<ul style="list-style-type: none; padding-left: 0;">`;
             for (const [part, desc] of Object.entries(data.fit_breakdown)) {
-                let icon = "📏";
-                if (desc.toLowerCase().includes("tight") || desc.toLowerCase().includes("small")) icon = "🔴";
-                if (desc.toLowerCase().includes("perfect") || desc.toLowerCase().includes("great")) icon = "🟢";
-                if (desc.toLowerCase().includes("relaxed") || desc.toLowerCase().includes("large") || desc.toLowerCase().includes("oversized")) icon = "🔵";
+                let icon = "ðŸ“";
+                if (desc.toLowerCase().includes("tight") || desc.toLowerCase().includes("small")) icon = "ðŸ”´";
+                if (desc.toLowerCase().includes("perfect") || desc.toLowerCase().includes("great")) icon = "ðŸŸ¢";
+                if (desc.toLowerCase().includes("relaxed") || desc.toLowerCase().includes("large") || desc.toLowerCase().includes("oversized")) icon = "ðŸ”µ";
                 
                 fitHtml += `<li style="margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.5rem;">
                               <span>${icon}</span>
@@ -372,7 +403,7 @@ btnSaveProfile.addEventListener('click', async () => {
 
       if (error) throw error;
       
-      btnSaveProfile.textContent = "✓ Profile Saved to Cloud!";
+      btnSaveProfile.textContent = "âœ“ Profile Saved to Cloud!";
       btnSaveProfile.style.background = "#10b981";
       
       // Also update the header UI immediately
@@ -490,3 +521,4 @@ if (btnLogout) {
         }
     });
 }
+
