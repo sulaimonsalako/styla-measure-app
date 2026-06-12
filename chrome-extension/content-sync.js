@@ -7,16 +7,23 @@
     inseam: localStorage.getItem('styla_twin_inseam')
   };
 
-  if (measurements.chest || measurements.waist || measurements.hips) {
-    chrome.runtime.sendMessage({
-      type: "SYNC_MEASUREMENTS",
-      measurements,
-      origin: window.location.origin
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        // Suppress extension message channel warnings when popup is closed
+  // Ensure chrome extension context is still active and valid before messaging
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+    if (measurements.chest || measurements.waist || measurements.hips) {
+      try {
+        chrome.runtime.sendMessage({
+          type: "SYNC_MEASUREMENTS",
+          measurements,
+          origin: window.location.origin
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            // Suppress warnings when background context is inactive
+          }
+        });
+      } catch (err) {
+        // Suppress "Extension context invalidated" errors when extension reloads
       }
-    });
+    }
   }
 }
 
