@@ -313,8 +313,11 @@
       </div>
       <div class="measurements-row-2">
         <div class="input-wrapper">
-          <label for="height">Height (in)</label>
-          <input type="number" id="height" placeholder="e.g. 68">
+          <label>Height (ft/in)</label>
+          <div style="display: flex; gap: 4px;">
+            <input type="number" id="height-ft" placeholder="ft" style="width: 50%;">
+            <input type="number" id="height-in" placeholder="in" style="width: 50%;">
+          </div>
         </div>
         <div class="input-wrapper">
           <label for="inseam">Inseam (in)</label>
@@ -350,3 +353,4 @@
   <script src="popup.js"></script>
 </body>
 </html>
+

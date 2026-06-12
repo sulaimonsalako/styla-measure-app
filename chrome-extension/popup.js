@@ -2,7 +2,8 @@
   const chestInput = document.getElementById('chest');
   const waistInput = document.getElementById('waist');
   const hipsInput = document.getElementById('hips');
-  const heightInput = document.getElementById('height');
+  const heightFtInput = document.getElementById('height-ft');
+  const heightInInput = document.getElementById('height-in');
   const inseamInput = document.getElementById('inseam');
 
   const syncStatus = document.getElementById('sync-status');
@@ -22,6 +23,26 @@
 
   let activeApiHost = '';
 
+  // Helper to convert total inches into Ft and In
+  function setHeightFields(totalInchesStr) {
+    const totalInches = parseInt(totalInchesStr, 10);
+    if (!isNaN(totalInches) && totalInches > 0) {
+      heightFtInput.value = Math.floor(totalInches / 12);
+      heightInInput.value = totalInches % 12;
+    } else {
+      heightFtInput.value = '';
+      heightInInput.value = '';
+    }
+  }
+
+  // Helper to calculate total inches from Ft/In inputs
+  function getTotalHeightInches() {
+    const ft = parseInt(heightFtInput.value, 10) || 0;
+    const inch = parseInt(heightInInput.value, 10) || 0;
+    const total = (ft * 12) + inch;
+    return total > 0 ? total.toString() : '';
+  }
+
   // 1. Load cached measurements and connection host
   const data = await chrome.storage.local.get(['measurements', 'apiHost']);
   if (data.measurements) {
@@ -29,8 +50,8 @@
     if (m.chest) chestInput.value = m.chest;
     if (m.waist) waistInput.value = m.waist;
     if (m.hips) hipsInput.value = m.hips;
-    if (m.height) heightInput.value = m.height;
     if (m.inseam) inseamInput.value = m.inseam;
+    if (m.height) setHeightFields(m.height);
 
     // Show synced badge
     syncStatus.classList.remove('unsynced');
@@ -81,8 +102,8 @@
               if (m.chest) chestInput.value = m.chest;
               if (m.waist) waistInput.value = m.waist;
               if (m.hips) hipsInput.value = m.hips;
-              if (m.height) heightInput.value = m.height;
               if (m.inseam) inseamInput.value = m.inseam;
+              if (m.height) setHeightFields(m.height);
 
               syncStatus.classList.remove("unsynced");
               syncDot.classList.remove("unsynced");
@@ -99,14 +120,14 @@
   }
 
   // 2. Persist local manual changes
-  const inputs = [chestInput, waistInput, hipsInput, heightInput, inseamInput];
+  const inputs = [chestInput, waistInput, hipsInput, heightFtInput, heightInInput, inseamInput];
   inputs.forEach(input => {
     input.addEventListener('input', () => {
       const updatedMeasurements = {
         chest: chestInput.value,
         waist: waistInput.value,
         hips: hipsInput.value,
-        height: heightInput.value,
+        height: getTotalHeightInches(),
         inseam: inseamInput.value
       };
       chrome.storage.local.set({ measurements: updatedMeasurements });
@@ -123,7 +144,7 @@
     const chest = chestInput.value.trim();
     const waist = waistInput.value.trim();
     const hips = hipsInput.value.trim();
-    const height = heightInput.value.trim();
+    const height = getTotalHeightInches();
     const inseam = inseamInput.value.trim();
 
     if (!chest || !waist || !hips) {
@@ -257,5 +278,3 @@
     }
   });
 });
-
-
