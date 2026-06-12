@@ -289,7 +289,8 @@
             breakdownList.innerHTML = '';
             
             // Show warning box with helpful instructions
-            warningText.textContent = resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again.";
+            const debugInfo = `(Scraped: ${imageUrls.length} images, ${tableHtml.length > 0 ? 'tables found' : 'no tables'} across ${results.length} frame modules)`;
+            warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}<br/><br/><small style="color: #94a3b8; font-size: 10px;">Diagnostics: ${debugInfo}</small>`;
             warningContainer.style.display = "block";
           } else {
             // Success size chart matching

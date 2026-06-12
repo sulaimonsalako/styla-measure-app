@@ -3,7 +3,7 @@
   // Helper to find clickable size guide trigger elements
   function findSizeChartButton() {
     const keywords = [/size\s*guide/i, /size\s*chart/i, /sizing\s*guide/i, /sizing\s*info/i, /find\s*your\s*size/i];
-    const elements = Array.from(document.querySelectorAll('button, a, span, div, li'));
+    const elements = getAllElements(document);
     for (const el of elements) {
       const text = (el.innerText || el.textContent || '').trim();
       if (text.length > 0 && text.length < 50) {
@@ -28,7 +28,7 @@
   // Helper to find and click the close button of a modal
   function clickCloseButton() {
     const closeKeywords = [/close/i, /dismiss/i, /hide/i, /cancel/i, /^x$/i];
-    const elements = Array.from(document.querySelectorAll('button, a, span, div'));
+    const elements = getAllElements(document);
     
     for (const el of elements) {
       const text = (el.innerText || el.textContent || '').trim().toLowerCase();
@@ -48,6 +48,69 @@
       }
     }
     return false;
+  }
+
+  // Recursive Shadow DOM Traverser for all elements
+  function getAllElements(root = document) {
+    const elements = [];
+    function traverse(node) {
+      if (!node) return;
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        elements.push(node);
+      }
+      if (node.shadowRoot) {
+        traverse(node.shadowRoot);
+      }
+      let child = node.firstElementChild;
+      while (child) {
+        traverse(child);
+        child = child.nextElementSibling;
+      }
+    }
+    traverse(root);
+    return elements;
+  }
+
+  // Recursive Shadow DOM Traverser for images
+  function getAllImages(root = document) {
+    const images = [];
+    function traverse(node) {
+      if (!node) return;
+      if (node.tagName === 'IMG') {
+        images.push(node);
+      }
+      if (node.shadowRoot) {
+        traverse(node.shadowRoot);
+      }
+      let child = node.firstElementChild;
+      while (child) {
+        traverse(child);
+        child = child.nextElementSibling;
+      }
+    }
+    traverse(root);
+    return images;
+  }
+
+  // Recursive Shadow DOM Traverser for tables
+  function getAllTables(root = document) {
+    const tables = [];
+    function traverse(node) {
+      if (!node) return;
+      if (node.tagName === 'TABLE') {
+        tables.push(node);
+      }
+      if (node.shadowRoot) {
+        traverse(node.shadowRoot);
+      }
+      let child = node.firstElementChild;
+      while (child) {
+        traverse(child);
+        child = child.nextElementSibling;
+      }
+    }
+    traverse(root);
+    return tables;
   }
 
   // Core scraping function
@@ -86,9 +149,9 @@
     }
     pageText = pageText.replace(/\s+/g, ' ').trim().substring(0, 6000);
 
-    // 3. Extract HTML Sizing Tables
+    // 3. Extract HTML Sizing Tables (using Shadow DOM search)
     let tableHtml = "";
-    const tables = document.querySelectorAll('table');
+    const tables = getAllTables(document);
     const sizeKeywords = ['size', 'chest', 'waist', 'hips', 'bust', 'inches', 'cm', 'sizing', 'fit', 'guide', 'chart'];
     
     for (const table of tables) {
@@ -100,7 +163,7 @@
       }
     }
 
-    // 4. Extract Images with Dimensions and Sorting by Visual Area
+    // 4. Extract Images with Dimensions (using Shadow DOM search)
     const candidateImages = [];
     const ogImg = document.querySelector('meta[property="og:image"]');
     if (ogImg && ogImg.content && ogImg.content.startsWith('http')) {
@@ -113,7 +176,7 @@
       });
     }
 
-    const allImages = Array.from(document.querySelectorAll('img'));
+    const allImages = getAllImages(document);
     for (const img of allImages) {
       let src = '';
       
@@ -162,7 +225,6 @@
       const height = img.naturalHeight || img.clientHeight || 0;
       const area = width * height;
 
-      // Exclude very small images/thumbnails (anything under 180px width or height unless size-chart is explicitly in name)
       const alt = (img.alt || '').toLowerCase();
       const isLikelySizeChart = alt.includes('size') || alt.includes('chart') || alt.includes('measure') || alt.includes('guide') ||
                                 srcLower.includes('size') || srcLower.includes('chart') || srcLower.includes('measure') || srcLower.includes('guide');
@@ -172,22 +234,19 @@
           src,
           width,
           height,
-          area: area || 100000, // Default to a standard size area if not yet fully loaded
+          area: area || 100000,
           isLikelySizeChart
         });
       }
     }
 
-    // Sort candidate images:
-    // 1. Sizing charts first (keyword matches)
-    // 2. Then by visual size (largest image area first)
+    // Sort candidate images descending by area
     candidateImages.sort((a, b) => {
       if (a.isLikelySizeChart && !b.isLikelySizeChart) return -1;
       if (!a.isLikelySizeChart && b.isLikelySizeChart) return 1;
       return b.area - a.area;
     });
 
-    // Extract top 8 unique image URLs
     const finalImageUrls = [];
     for (const item of candidateImages) {
       if (!finalImageUrls.includes(item.src)) {
@@ -224,15 +283,10 @@
       try {
         sizeBtn.click();
         
-        // Wait 800ms for overlay rendering animation
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        // Rescrape the newly injected DOM elements
         const updatedData = scrapePage();
-        
-        // Dismiss the modal
         clickCloseButton();
-        
         return updatedData;
       } catch (err) {
         console.error("Styla automatic click-scrape failed:", err);
