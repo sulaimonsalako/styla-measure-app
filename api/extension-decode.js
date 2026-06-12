@@ -6,33 +6,6 @@
   },
 };
 
-// Helper function to download an image from a URL and convert it to base64 format for Gemini
-async function downloadImageAsBase64(url) {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-    if (!response.ok) {
-      console.warn(`Failed to fetch image ${url}: status ${response.status}`);
-      return null;
-    }
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const arrayBuffer = await response.arrayBuffer();
-    const base64Data = Buffer.from(arrayBuffer).toString('base64');
-    return {
-      inlineData: {
-        mimeType: contentType.split(';')[0],
-        data: base64Data
-      }
-    };
-  } catch (error) {
-    console.error(`Error downloading image ${url}:`, error);
-    return null;
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -47,7 +20,7 @@ export default async function handler(req, res) {
       inseam, 
       pageTitle, 
       pageText, 
-      imageUrls, 
+      imagesBase64, 
       tableHtml 
     } = req.body;
 
@@ -60,12 +33,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured on server.' });
     }
 
-    // Download relevant images concurrently (cap at 4 images to keep execution fast and payload small)
-    const imagesToProcess = Array.isArray(imageUrls) ? imageUrls.slice(0, 4) : [];
-    const imagePromises = imagesToProcess.map(url => downloadImageAsBase64(url));
-    const downloadedImages = await Promise.all(imagePromises);
-    const validImages = downloadedImages.filter(img => img !== null);
-
     const prompt = `You are an expert fashion tailor and sizing assistant for STYLA.
 The user has the following body measurements:
 - Chest / Bust: ${chest}"
@@ -77,46 +44,54 @@ ${inseam ? `- Inseam: ${inseam}"` : ''}
 We are analyzing a product page for a garment:
 Product Title: "${pageTitle || 'Unknown Product'}"
 
-Product Details & Description scraped from page:
+Product Details & Description:
 """
 ${pageText || 'No description found.'}
 """
 
-${tableHtml ? `We found this size chart table on the page:
+HTML Sizing Tables found on page:
 """
-${tableHtml}
-"""` : 'No size chart table was found in the HTML. Please check if any attached images contain size chart data.'}
+${tableHtml || 'None'}
+"""
 
-Your task:
-1. Determine the absolute best size for this user.
-2. Analyze the fabric details (e.g. stretch, spandex, polyester vs. 100% rigid cotton or linen) and fit silhouette (e.g. oversized, slim fit, regular fit) from the description.
-3. If the product is oversized, advise if they should size down for a normal fit. If it has no stretch and is slim-fit, recommend if they need to size up for comfort.
-4. Look at the attached image(s) to verify style details, fit intent, or read size charts embedded in images.
+YOUR TARGET:
+Check the HTML sizing tables above and the attached images to locate the size chart.
 
 CRITICAL SIZING RULES:
-- You MUST ONLY recommend a size that actually exists in the size chart (either in the HTML table or in the size chart images).
-- For example, if the size chart only lists M, L, XL, 2XL, 3XL, do NOT recommend a size 'Small' or 'XS', even if you believe a Small would fit their body measurements better. If they are smaller than the smallest size, recommend the smallest available size (e.g. Medium) and explain in the warning/explanation that the item may fit slightly relaxed since the brand does not make a smaller size.
-- Ensure your recommended size matches the exact label in the chart (e.g., if the chart uses numbers like '32', '34' or letters like 'M', 'L', use that exact size label).
+1. First, check if there is a product-specific size chart table in the HTML or if one is visible in the attached images. Set "size_chart_detected" to true if a specific size chart is found. Set it to false if no size chart exists or if you cannot read it.
+2. If "size_chart_detected" is false, you MUST set "recommended_size" to null. You are strictly FORBIDDEN from guessing, estimating, or recommending any size based on standard sizing.
+3. If "size_chart_detected" is true, you MUST only recommend a size that actually exists in that size chart. For example, if the size chart only lists M, L, XL, 2XL, 3XL, do NOT recommend a size 'Small' or 'XS'. If they are smaller than the smallest size, recommend the smallest available size (e.g. Medium) and explain that the brand does not make a smaller size.
+4. Ensure your recommended size matches the exact label in the chart (e.g., if the chart uses numbers like '32', '34' or letters like 'M', 'L', use that exact size label).
 
 You MUST return ONLY valid JSON. Do not include markdown code blocks or any other text.
 The JSON must have this exact structure:
 {
-  "recommended_size": "Medium",
+  "size_chart_detected": false, // boolean: true if a product-specific size chart is found in the HTML or images, false otherwise
+  "recommended_size": null, // MUST be null if size_chart_detected is false. If size_chart_detected is true, must be a size from the chart.
   "fit_breakdown": {
     "chest": "Perfect fit, slightly relaxed",
     "waist": "Tight, 1 inch smaller than your body",
     "hips": "Relaxed"
   },
-  "explanation": "Overall explanation of why you chose this size, mentioning fabric/silhouette details.",
-  "warning": "Any warnings about length, torso proportions, or fit issues (e.g. cropped length). Otherwise null."
+  "explanation": "Overall explanation of why you chose this size, or stating that no size chart was found.",
+  "warning": "A warning explaining that no size chart was detected, and telling the user to find the chart on the page and make sure it is open/visible, then click find size again. Otherwise null."
 }`;
 
     const parts = [{ text: prompt }];
     
-    // Add downloaded image parts to Gemini payload
-    validImages.forEach(img => {
-      parts.push(img);
-    });
+    if (Array.isArray(imagesBase64)) {
+      imagesBase64.forEach(imgData => {
+        const match = imgData.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (match) {
+          parts.push({
+            inlineData: {
+              mimeType: match[1],
+              data: match[2]
+            }
+          });
+        }
+      });
+    }
 
     const geminiPayload = {
       contents: [{ parts: parts }]
@@ -142,12 +117,13 @@ The JSON must have this exact structure:
     }
 
     let textAnswer = data.candidates[0].content.parts[0].text;
-    
-    // Clean up potential markdown code blocks
     textAnswer = textAnswer.replace(/```json/g, "").replace(/```/g, "").trim();
 
     try {
       const jsonAnswer = JSON.parse(textAnswer);
+      if (jsonAnswer.size_chart_detected === false || jsonAnswer.size_chart_detected === "false") {
+        jsonAnswer.recommended_size = null;
+      }
       res.status(200).json(jsonAnswer);
     } catch (e) {
       console.error("Failed to parse Gemini response as JSON. Raw text:", textAnswer);

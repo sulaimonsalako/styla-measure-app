@@ -43,19 +43,45 @@
     return total > 0 ? total.toString() : '';
   }
 
-  // Helper to download an image from a URL and convert it to a base64 Data URL (bypasses CORS using extension host permissions)
-  async function downloadImageAsBase64(url) {
+  // Helper to download, resize, and compress image as JPEG to save network payload
+  async function downloadImageAsBase64(url, maxDim = 1024, quality = 0.7) {
     try {
       const res = await fetch(url);
       if (!res.ok) return null;
       const blob = await res.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
+      
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = (err) => reject(err);
+        image.src = URL.createObjectURL(blob);
       });
+
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      URL.revokeObjectURL(img.src);
+
+      return canvas.toDataURL('image/jpeg', quality);
     } catch (err) {
-      console.warn("Could not download image locally in extension:", url, err);
+      console.warn("Could not download/compress image locally in extension:", url, err);
       return null;
     }
   }
@@ -173,7 +199,7 @@
     analyzeBtn.disabled = true;
     loaderPanel.style.display = 'block';
     resultPanel.style.display = 'none';
-    setLoaderPhase("Scraping page structure...");
+    setLoaderPhase("Pre-loading page details...");
 
     try {
       // Find active tab
@@ -181,6 +207,41 @@
       if (!tab) {
         throw new Error("Could not detect active browser window.");
       }
+
+      // Pre-load description iframes/lazy-loaded images by scrolling programmatically
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: async () => {
+            const originalScrollY = window.scrollY;
+            const descriptionSelectors = [
+              '#desc-lazyload-container', 'iframe[src*="desc"]', 'iframe[data-src*="desc"]',
+              '.product-description', '.product-details', '.description', 
+              '#description', '#product-details', '[class*="description"]',
+              '[class*="details"]'
+            ];
+            let found = false;
+            for (const selector of descriptionSelectors) {
+              const el = document.querySelector(selector);
+              if (el) {
+                el.scrollIntoView({ behavior: 'instant', block: 'center' });
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              window.scrollBy(0, 800);
+            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+            window.scrollTo({ top: originalScrollY, behavior: 'instant' });
+          }
+        });
+        await new Promise(resolve => setTimeout(resolve, 600));
+      } catch (err) {
+        console.warn("Pre-loading scroll failed:", err);
+      }
+
+      setLoaderPhase("Scraping page structure...");
 
       // Execute content scraper script on all frames (including description iframe)
       chrome.scripting.executeScript({
@@ -223,7 +284,7 @@
           setLoaderPhase("Processing product images locally...");
           const imagesBase64 = [];
           if (imageUrls.length > 0) {
-            const urlsToFetch = imageUrls.slice(0, 8); // Limit to 8 images to capture size chart
+            const urlsToFetch = imageUrls.slice(0, 15); // Limit to 15 images to capture size chart
             for (const url of urlsToFetch) {
               const base64 = await downloadImageAsBase64(url);
               if (base64) {

@@ -179,23 +179,21 @@
     const allImages = getAllImages(document);
     for (const img of allImages) {
       let src = '';
+      let rawUrl = '';
       
-      const lazyAttributes = ['data-src', 'data-lazy-src', 'data-original', 'data-actual-src', 'data-lazyload-src'];
+      const lazyAttributes = [
+        'data-src', 'data-lazy-src', 'data-original', 'data-actual-src', 
+        'data-lazyload-src', 'data-origin-src', 'data-src-webp', 'data-hi-res'
+      ];
       for (const attr of lazyAttributes) {
         const val = img.getAttribute(attr);
-        if (val) {
-          const trimmedVal = val.trim();
-          if (trimmedVal.startsWith('http')) {
-            src = trimmedVal;
-            break;
-          } else if (trimmedVal.startsWith('//')) {
-            src = 'https:' + trimmedVal;
-            break;
-          }
+        if (val && val.trim()) {
+          rawUrl = val.trim();
+          break;
         }
       }
       
-      if (!src) {
+      if (!rawUrl) {
         const standardSrc = img.src || img.getAttribute('src');
         if (standardSrc) {
           const trimmedSrc = standardSrc.trim();
@@ -205,16 +203,24 @@
                                 trimmedSrc.includes('spacer.gif');
                                 
           if (!isPlaceholder) {
-            if (trimmedSrc.startsWith('http')) {
-              src = trimmedSrc;
-            } else if (trimmedSrc.startsWith('//')) {
-              src = 'https:' + trimmedSrc;
-            }
+            rawUrl = trimmedSrc;
           }
         }
       }
 
-      if (!src) continue;
+      if (!rawUrl) continue;
+
+      try {
+        src = new URL(rawUrl, document.baseURI).href;
+      } catch (e) {
+        if (rawUrl.startsWith('//')) {
+          src = 'https:' + rawUrl;
+        } else if (rawUrl.startsWith('http')) {
+          src = rawUrl;
+        } else {
+          continue;
+        }
+      }
 
       const srcLower = src.toLowerCase();
       if (srcLower.includes('logo') || srcLower.includes('icon') || srcLower.includes('banner') || srcLower.includes('avatar') || srcLower.includes('theme') || srcLower.includes('button')) {
@@ -226,8 +232,24 @@
       const area = width * height;
 
       const alt = (img.alt || '').toLowerCase();
+      
+      // Check if image or its parents have sizing keywords in their class/id
+      let parentHasKeyword = false;
+      let current = img.parentElement;
+      const classIdKeywords = ['size', 'chart', 'measure', 'guide', 'spec', 'dimension', 'table'];
+      for (let i = 0; i < 4 && current; i++) {
+        const className = (current.className || '').toString().toLowerCase();
+        const idName = (current.id || '').toString().toLowerCase();
+        if (classIdKeywords.some(kw => className.includes(kw) || idName.includes(kw))) {
+          parentHasKeyword = true;
+          break;
+        }
+        current = current.parentElement;
+      }
+
       const isLikelySizeChart = alt.includes('size') || alt.includes('chart') || alt.includes('measure') || alt.includes('guide') ||
-                                srcLower.includes('size') || srcLower.includes('chart') || srcLower.includes('measure') || srcLower.includes('guide');
+                                srcLower.includes('size') || srcLower.includes('chart') || srcLower.includes('measure') || srcLower.includes('guide') ||
+                                parentHasKeyword;
 
       if (isLikelySizeChart || width > 180 || height > 180 || area > 35000 || !width) {
         candidateImages.push({
@@ -240,7 +262,7 @@
       }
     }
 
-    // Sort candidate images descending by area
+    // Sort candidate images descending by area, prioritizing size charts
     candidateImages.sort((a, b) => {
       if (a.isLikelySizeChart && !b.isLikelySizeChart) return -1;
       if (!a.isLikelySizeChart && b.isLikelySizeChart) return 1;
@@ -252,7 +274,7 @@
       if (!finalImageUrls.includes(item.src)) {
         finalImageUrls.push(item.src);
       }
-      if (finalImageUrls.length >= 8) break;
+      if (finalImageUrls.length >= 15) break;
     }
 
     return {
