@@ -98,8 +98,25 @@ def generate_carousels():
             day_dir = os.path.join(base_dir, day_str)
             os.makedirs(day_dir, exist_ok=True)
             
-            selected_model = models[idx % len(models)]
-            selected_pain_bg = pain_bgs[idx % len(pain_bgs)]
+            text_context = f"{hook} {pain} {solution} {cta}".lower()
+            
+            # Select model based on context
+            if any(w in text_context for w in ['suit', 'guy', 'man', 'men', 'he', 'his', 'boyfriend', 'dad']):
+                selected_model = 'male_model_1.png' if idx % 2 == 0 else 'male_model_2.png'
+            elif any(w in text_context for w in ['mom', 'woman', 'women', 'she', 'her', 'hers', 'girlfriend', 'dress']):
+                selected_model = 'female_model_1.png' if idx % 2 == 0 else 'female_model_2.png'
+            else:
+                selected_model = models[idx % len(models)]
+                
+            # Select pain bg based on context
+            if any(w in text_context for w in ['return', 'shipping', 'box', 'package', 'mail']):
+                selected_pain_bg = 'pain_boxes.png'
+            elif any(w in text_context for w in ['closet', 'wardrobe', 'wear', 'clothes']):
+                selected_pain_bg = 'pain_closet.png'
+            elif any(w in text_context for w in ['measur', 'tape', 'guess', 'chart', 'number', 'size']):
+                selected_pain_bg = 'pain_measuring.png'
+            else:
+                selected_pain_bg = pain_bgs[idx % len(pain_bgs)]
             
             def render_slide(text, tag, layout, bg_file, filename, index, total=4):
                 if not text: return
@@ -109,7 +126,11 @@ def generate_carousels():
                     display_text = highlight_text(text)
                 
                 html = template_html.replace('{{SLIDE_CONTENT}}', display_text)
-                html = html.replace('{{SLIDE_TAG}}', tag)
+                if tag:
+                    tag_html = f'<div class="text-styla-pink tracking-widest uppercase text-xl font-bold mb-6 drop-shadow-[0_0_8px_rgba(255,42,117,0.5)] flex items-center gap-3"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>{tag}</div>'
+                    html = html.replace('{{SLIDE_TAG_BLOCK}}', tag_html)
+                else:
+                    html = html.replace('{{SLIDE_TAG_BLOCK}}', '')
                 html = html.replace('{{LAYOUT_CLASS}}', layout)
                 html = html.replace('{{SLIDE_INDEX}}', str(index))
                 html = html.replace('{{TOTAL_SLIDES}}', str(total))
@@ -122,10 +143,18 @@ def generate_carousels():
                 
                 # Text sizing based on layout
                 if layout == 'layout-hook':
+                    layout = 'layout-cinematic'
+                if layout == 'layout-cinematic':
+                    html = html.replace('{{TEXT_CLASS}}', 'text-[4rem] font-serif')
+                    html = html.replace('{{GLASS_EXTRA_CLASS}}', '')
+                    html = html.replace('{{ACCENT_CLASS}}', 'accent-border')
+                elif layout == 'layout-hook':
                     html = html.replace('{{TEXT_CLASS}}', 'text-5xl')
                     html = html.replace('{{GLASS_EXTRA_CLASS}}', '')
+                    html = html.replace('{{ACCENT_CLASS}}', '')
                 elif layout == 'layout-overlay':
                     html = html.replace('{{TEXT_CLASS}}', 'text-4xl')
+                    html = html.replace('{{ACCENT_CLASS}}', '')
                     # Force glass panel to bottom for overlay
                     html = html.replace('{{GLASS_EXTRA_CLASS}}', 'mt-auto mb-10')
                 else:
@@ -157,8 +186,8 @@ def generate_carousels():
                 page.wait_for_timeout(200) # Give local images time to load
                 page.screenshot(path=os.path.join(day_dir, filename))
 
-            # Slide 1: Hook (Text format, no bg)
-            render_slide(hook, "THE TRAP", 'layout-hook', None, 'slide_1_hook.png', 1)
+            # Slide 1: Hook (Cinematic format, model background)
+            render_slide(hook, "", 'layout-cinematic', selected_model, 'slide_1_hook.png', 1)
             
             # Slide 2: Pain (Pain format, dark background)
             render_slide(pain, "THE REALITY", 'layout-pain', selected_pain_bg, 'slide_2_pain.png', 2)

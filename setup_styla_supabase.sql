@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     email TEXT UNIQUE NOT NULL,
     chest NUMERIC,
     waist NUMERIC,
+    belly NUMERIC,
     hips NUMERIC,
     height NUMERIC,
     inseam NUMERIC,
@@ -42,12 +43,13 @@ CREATE POLICY "Users can update own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, chest, waist, hips, height, inseam)
+  INSERT INTO public.profiles (id, email, chest, waist, belly, hips, height, inseam)
   VALUES (
     new.id, 
     new.email,
     (new.raw_user_meta_data->>'chest')::numeric,
     (new.raw_user_meta_data->>'waist')::numeric,
+    (new.raw_user_meta_data->>'belly')::numeric,
     (new.raw_user_meta_data->>'hips')::numeric,
     (new.raw_user_meta_data->>'height')::numeric,
     (new.raw_user_meta_data->>'inseam')::numeric

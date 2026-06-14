@@ -1,1924 +1,2047 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pricing & Sourcing Suite | STYLA Measure</title>
-  <link rel="stylesheet" href="../style.css" />
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
-  
-  <style>
-    :root {
-      --bg-base: #07070f;
-      --bg-surface: #0e0e1c;
-      --bg-raised: #141428;
-      --border: rgba(255, 255, 255, 0.07);
-      --border-accent: rgba(255, 42, 117, 0.3);
-      --accent: #ff2a75;
-      --accent-light: #ff75a0;
-      --text-primary: #f0f0ff;
-      --text-secondary: #9090b0;
-      --text-muted: #5a5a7a;
-    }
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing & Sourcing Suite | STYLA Measure</title>
+  <link rel="stylesheet" href="../style.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --bg-base: #07070f;
+      --bg-surface: #0e0e1c;
+      --bg-raised: #141428;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-accent: rgba(255, 42, 117, 0.3);
+      --accent: #ff2a75;
+      --accent-light: #ff75a0;
+      --text-primary: #f0f0ff;
+      --text-secondary: #9090b0;
+      --text-muted: #5a5a7a;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      padding-top: 80px;
+    }
+
+    .calc-container {
+      max-width: 1250px;
+      margin: 2rem auto;
+      padding: 0 24px;
+    }
+
+    .calc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .calc-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .calc-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Collapsible Quick Guide */
+    .quick-guide-card {
+      background: rgba(255, 42, 117, 0.03);
+      border: 1px dashed var(--border-accent);
+      border-radius: 16px;
+      padding: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .quick-guide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .quick-guide-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-guide-content {
+      margin-top: 1rem;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 42, 117, 0.1);
+      padding-top: 1rem;
+      display: none;
+    }
+
+    .quick-guide-steps {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .quick-guide-steps {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .guide-step {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .guide-step h4 {
+      font-family: 'Outfit', sans-serif;
+      color: var(--accent-light);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    /* Tab bar */
+    .app-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .tab-btn:hover {
+      border-color: rgba(255, 42, 117, 0.4);
+      color: #fff;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(255, 42, 117, 0.3);
+    }
+
+    .app-view {
+      display: none;
+    }
+
+    .app-view.active {
+      display: block;
+    }
+
+    /* Grid Layout */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (min-width: 992px) {
+      .calc-grid {
+        grid-template-columns: 320px 1fr;
+      }
+    }
+
+    /* Input Panel */
+    .input-panel {
+      background: rgba(20, 20, 40, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group label {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+    }
+
+    /* Info Trigger Icon */
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      margin-left: 6px;
+      transition: all 0.2s;
+    }
+
+    .info-icon:hover {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper span.prefix {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .input-wrapper span.suffix {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    input[type="number"].has-prefix {
+      padding-left: 22px;
+    }
+
+    input[type="number"].has-suffix {
+      padding-right: 24px;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .styled-select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+      appearance: none;
+      transition: all 0.3s;
+    }
+
+    .styled-select:focus {
+      border-color: var(--accent);
+    }
+
+    .styled-select option {
+      background: var(--bg-surface);
+      color: #fff;
+    }
+
+    /* Mode Toggles */
+    .mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: rgba(0,0,0,0.25);
+      border-radius: 100px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .range-slider-group {
+      margin-top: 0.5rem;
+    }
+
+    .range-slider-group input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .slider-val-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Output Columns */
+    .results-panel {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+
+    @media (min-width: 576px) {
+      .results-panel {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .results-panel {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .moq-card {
+      background: rgba(20, 20, 40, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 600px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .moq-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 42, 117, 0.25);
+    }
+
+    .moq-card.popular {
+      border-color: var(--accent-light);
+      background: linear-gradient(180deg, rgba(255, 42, 117, 0.05) 0%, rgba(20, 20, 40, 0.4) 100%);
+    }
+
+    .moq-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-inputs-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-light);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    .moq-card-input-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card-input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-input-group label {
+      display: flex;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+      font-weight: 500;
+    }
+
+    .card-input-wrapper {
+      position: relative;
+    }
+
+    .card-input-wrapper span {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .moq-card input[type="number"].has-symbol {
+      padding-left: 18px;
+    }
+
+    .cost-stat {
+      text-align: center;
+      margin: 1rem 0;
+      background: rgba(255,255,255,0.01);
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .cost-stat .label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cost-stat .value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      margin: 2px 0;
+    }
+
+    .cost-stat .value-sp {
+      color: var(--accent-light);
+    }
+
+    .metrics-list {
+      margin-bottom: 1rem;
+      flex-grow: 1;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: var(--text-secondary);
+    }
+
+    .metric-val {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .metric-val.profit {
+      color: #10b981;
+    }
+
+    /* Collapsible Breakdown Section */
+    .breakdown-container {
+      margin: 0.5rem 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.015);
+      overflow: hidden;
+    }
+
+    .breakdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-light);
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255, 255, 255, 0.01);
+      transition: background 0.2s ease;
+    }
+
+    .breakdown-header:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .breakdown-chevron {
+      font-size: 0.65rem;
+      transition: transform 0.3s ease;
+      color: var(--text-secondary);
+    }
+
+    .breakdown-content {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 10px;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, opacity 0.2s ease;
+    }
+
+    .breakdown-container.open .breakdown-content {
+      max-height: 250px;
+      opacity: 1;
+      padding: 4px 10px 8px 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .breakdown-container.open .breakdown-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-light);
+    }
+
+    .card-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 0.8rem;
+      margin-top: auto;
+    }
+
+    .margin-badge {
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      padding: 5px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+    }
+
+    .margin-badge.healthy {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .margin-badge.danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .margin-badge.low {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    /* Help Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: #141428;
+      border: 1px solid var(--border-accent);
+      padding: 2rem;
+      border-radius: 20px;
+      max-width: 450px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    /* Lead Gen Banner */
+    .lead-banner {
+      margin-top: 4rem;
+      background: linear-gradient(135deg, rgba(255, 42, 117, 0.1) 0%, rgba(20, 20, 40, 0.4) 100%);
+      border: 1px solid var(--border-accent);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .lead-banner h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .lead-banner p {
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .lead-banner .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #d90040 100%);
+      color: #fff;
+      padding: 0.8rem 2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lead-banner .btn-primary:hover {
+      box-shadow: 0 8px 24px rgba(255, 42, 117, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .back-nav {
+      margin-bottom: 1.5rem;
+    }
+
+    .back-nav a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .back-nav a:hover {
+      color: #fff;
+    }
+
+    /* Graphic Charts styling */
+    .comparison-chart-card {
+      background: rgba(20, 20, 40, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-top: 3rem;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .chart-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .chart-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 250px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+      gap: 1.5rem;
+      margin: 0 auto;
+      max-width: 800px;
+    }
+
+    .chart-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      height: 100%;
+    }
+
+    .chart-bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 100%;
+      width: 50px;
+      position: relative;
+    }
+
+    .chart-msrp-lbl {
+      position: absolute;
+      top: -24px;
+      left: -20px;
+      right: -20px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-light);
+    }
+
+    .chart-bar {
+      width: 100%;
+      height: 0%;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .chart-segment-profit {
+      background: #10b981;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #fff;
+      font-weight: 700;
+      min-height: 15px;
+      transition: all 0.4s ease;
+    }
+
+    .chart-segment-cost {
+      background: rgba(255, 42, 117, 0.35);
+      height: 60%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #fff;
+      font-weight: 700;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      min-height: 15px;
+      transition: all 0.4s ease;
+    }
+
+    .chart-moq-lbl {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+        <img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA <span class="logo-accent">Measure</span>
+      </div>
+      <div class="nav-actions" style="display: flex; gap: 1.5rem; align-items: center;">
+        <a href="../index.html" class="nav-cta" style="background: transparent; border: none; color: var(--text-secondary);">Home</a>
+        <a href="../measure.html" class="nav-cta">Discover Your Size</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CONTENT CONTAINER -->
+  <main class="calc-container">
+    
+    <div class="back-nav">
+      <a href="../index.html">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Home
+      </a>
+    </div>
+
+    <div class="calc-header">
+      <h1>Brand Sourcing & Pricing Suite</h1>
+      <p>Solve factory MOQ cost barriers and project profit margins using our interactive tier tools.</p>
+    </div>
+
+    <!-- Collapsible Quick Start Guide -->
+    <div class="quick-guide-card">
+      <div class="quick-guide-header" onclick="toggleQuickGuide()">
+        <div class="quick-guide-title">
+          <svg style="width: 20px; height: 20px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+          &#128161; Pricing Calculator Guide (Click to Expand)
+        </div>
+        <svg id="guide-arrow" style="width: 18px; height: 18px; color: var(--text-secondary); transition: transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+      </div>
+      <div class="quick-guide-content" id="quick-guide-content">
+        <p>Launching a clothing brand requires navigating manufacturer pricing variables. This suite offers two distinct apps to analyze your pricing strategy:</p>
+        <div class="quick-guide-steps">
+          <div class="guide-step">
+            <h4>1. Solve Price from Target Margin %</h4>
+            <p>Enter the production quotes you got from your factory and shipping rates to find what retail MSRP you must charge to maintain a target profit margin %.</p>
+          </div>
+          <div class="guide-step">
+            <h4>2. Solve Price from Flat Order Profit ($)</h4>
+            <p>Set a target **flat profit wage** for your time per batch (e.g. $500). Compare how higher order sizes drop your required customer selling price, allowing you to price competitively.</p>
+          </div>
+          <div class="guide-step">
+            <h4>3. Click the (?) Help Icons</h4>
+            <p>Every pricing field (Sample Fee, Packaging, Customs, MOQ) has a <strong>?</strong> icon. Click them to view exact math equations and descriptions of how that cost impacts your margin.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="app-tabs">
+      <button class="tab-btn active" id="tab-btn-analyzer" onclick="switchAppTab('analyzer')">Calculate Selling Price from Profit Margin</button>
+      <button class="tab-btn" id="tab-btn-negotiator" onclick="switchAppTab('negotiator')">Set Minimum Profit and Get Selling Price</button>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- VIEW A: MOQ COST & PROFIT ANALYZER             -->
+    <!-- ============================================== -->
+    <div class="app-view active" id="view-analyzer">
+      <div class="calc-grid">
+        
+        <!-- Left Panel: Global Costs -->
+        <section class="input-panel">
+          <div class="panel-section-title">
+            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            Startup Fees
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Physical Sample Fee (Flat)</span>
+              <span class="info-icon" onclick="openHelp('sample-fee')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-sample-a" value="250" class="has-prefix" />
+            </div>
+          </div>
+
+          <div class="panel-section-title" style="margin-top: 1.5rem;">
+            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Logistics & Ads
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Packaging & Unit Handling</span>
+              <span class="info-icon" onclick="openHelp('handling')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-handling-a" value="3.00" class="has-prefix" step="0.5" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Marketing & Launch Ads</span>
+              <span class="info-icon" onclick="openHelp('marketing')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-marketing-a" value="300" class="has-prefix" />
+            </div>
+          </div>
+
+          <!-- Unified Customs duties -->
+          <div class="input-group">
+            <label>
+              <span>Customs & Duties Type</span>
+              <span class="info-icon" onclick="openHelp('customs')">?</span>
+            </label>
+            <select id="customs-type-a" class="styled-select" onchange="toggleCustomsInput('a')">
+              <option value="percent">Percentage of Unit Cost (%)</option>
+              <option value="flat-unit">Flat Fee Per Unit ($)</option>
+              <option value="flat-batch">Flat Fee Per Batch ($)</option>
+            </select>
+          </div>
+          <div class="input-group" id="customs-input-container-a">
+            <label id="customs-label-a">Duties Rate (%)</label>
+            <div class="input-wrapper">
+              <span class="prefix" id="customs-prefix-a" style="display:none;">$</span>
+              <input type="number" id="cost-customs-val-a" value="10" />
+              <span class="suffix" id="customs-suffix-a">%</span>
+            </div>
+          </div>
+
+          <div class="panel-section-title" style="margin-top: 1.5rem;">
+            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Pricing Targets
+          </div>
+          <div class="mode-selector">
+            <button type="button" class="mode-btn active" id="btn-mode-margin-a" onclick="setPricingMode('a', 'margin')">Target Margin</button>
+            <button type="button" class="mode-btn" id="btn-mode-retail-a" onclick="setPricingMode('a', 'retail')">Set Retail SP</button>
+          </div>
+          <div id="pricing-margin-group-a">
+            <div class="input-group range-slider-group">
+              <label style="display: flex; justify-content: space-between;">
+                <span>Target Profit Margin</span>
+                <span style="color: var(--accent-light); font-weight: 700;" id="val-margin-lbl-a">60%</span>
+              </label>
+              <input type="range" id="slider-margin-a" min="5" max="95" value="60" oninput="updateCalculatorA()" />
+              <div class="slider-val-label">
+                <span>5%</span>
+                <span>50%</span>
+                <span>95%</span>
+              </div>
+            </div>
+          </div>
+          <div id="pricing-retail-group-a" style="display: none;">
+            <div class="input-group">
+              <label>Retail Selling Price (MSRP)</label>
+              <div class="input-wrapper">
+                <span class="prefix">$</span>
+                <input type="number" id="input-retail-sp-a" value="85" class="has-prefix" oninput="updateCalculatorA()" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Panel: Tiers Output -->
+        <section style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div class="results-panel">
+            <!-- Column 1 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 1 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-a-1" value="10" min="1" oninput="updateCalculatorA()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-a-1" value="35" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-a-1" value="50" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cost-stat">
+                <div class="label">Selling Price</div>
+                <div class="value value-sp" id="sp-a-1">$0.00</div>
+              </div>
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-1">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-a-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" id="profit-val-a-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-1">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-a-1">Healthy</span></div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 2 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-a-2" value="25" min="1" oninput="updateCalculatorA()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-a-2" value="28" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-a-2" value="100" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cost-stat">
+                <div class="label">Selling Price</div>
+                <div class="value value-sp" id="sp-a-2">$0.00</div>
+              </div>
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-2">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-a-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" id="profit-val-a-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-2">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-a-2">Healthy</span></div>
+            </div>
+
+            <!-- Column 3 -->
+            <div class="moq-card popular">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 3 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-a-3" value="50" min="1" oninput="updateCalculatorA()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-a-3" value="22" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-a-3" value="180" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cost-stat">
+                <div class="label">Selling Price</div>
+                <div class="value value-sp" id="sp-a-3">$0.00</div>
+              </div>
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-3">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-a-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" id="profit-val-a-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-3">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-a-3">Healthy</span></div>
+            </div>
+
+            <!-- Column 4 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 4 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-a-4" value="100" min="1" oninput="updateCalculatorA()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-a-4" value="18" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-a-4" value="300" class="has-symbol" oninput="updateCalculatorA()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cost-stat">
+                <div class="label">Selling Price</div>
+                <div class="value value-sp" id="sp-a-4">$0.00</div>
+              </div>
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-4">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-a-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" id="profit-val-a-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-4">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-a-4">Healthy</span></div>
+            </div>
+          </div>
+
+          <!-- COMPARATIVE BAR CHART CARD FOR VIEW A -->
+          <div class="comparison-chart-card">
+            <div class="chart-title">Visual Cost vs. Profit Analysis (Unit Scale)</div>
+            <div class="chart-container" id="chart-container-a">
+              <!-- Column 1 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-a-msrp-1">$0.00</div>
+                  <div class="chart-bar" id="chart-a-bar-container-1">
+                    <div class="chart-segment-profit" id="chart-a-seg-profit-1">+$0</div>
+                    <div class="chart-segment-cost" id="chart-a-seg-cost-1">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-a-moq-lbl-1">10 MOQ</div>
+              </div>
+              <!-- Column 2 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-a-msrp-2">$0.00</div>
+                  <div class="chart-bar" id="chart-a-bar-container-2">
+                    <div class="chart-segment-profit" id="chart-a-seg-profit-2">+$0</div>
+                    <div class="chart-segment-cost" id="chart-a-seg-cost-2">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-a-moq-lbl-2">25 MOQ</div>
+              </div>
+              <!-- Column 3 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-a-msrp-3">$0.00</div>
+                  <div class="chart-bar" id="chart-a-bar-container-3">
+                    <div class="chart-segment-profit" id="chart-a-seg-profit-3">+$0</div>
+                    <div class="chart-segment-cost" id="chart-a-seg-cost-3">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-a-moq-lbl-3">50 MOQ</div>
+              </div>
+              <!-- Column 4 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-a-msrp-4">$0.00</div>
+                  <div class="chart-bar" id="chart-a-bar-container-4">
+                    <div class="chart-segment-profit" id="chart-a-seg-profit-4">+$0</div>
+                    <div class="chart-segment-cost" id="chart-a-seg-cost-4">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-a-moq-lbl-4">100 MOQ</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; font-size: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; background: rgba(255, 42, 117, 0.35); border-radius: 3px;"></div>
+                <span style="color: var(--text-secondary);">True Cost Price (CP)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
+                <span style="color: var(--text-secondary);">Markup Unit Profit</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- VIEW B: MOQ SOURCING NEGOTIATOR (REVERSE SOLVER)-->
+    <!-- ============================================== -->
+    <div class="app-view" id="view-negotiator">
+      <div class="calc-grid">
+        
+        <!-- Left Panel: Targets & Margins first -->
+        <section class="input-panel">
+          <div class="panel-section-title" style="color: #10b981; border-color: rgba(16,185,129,0.15);">
+            <svg style="width: 18px; height: 18px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Is It Worth My Time?
+          </div>
+
+          <div class="input-group">
+            <label>
+              <span>Desired Net Profit (Per Order/Batch)</span>
+              <span class="info-icon" onclick="openHelp('desired-profit')">?</span>
+            </label>
+            <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">(Flat payout goal for managing the production run)</p>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="target-profit-b" value="500" class="has-prefix" oninput="updateCalculatorB()" />
+            </div>
+          </div>
+
+          <div class="panel-section-title" style="margin-top: 2rem;">
+            <svg style="width: 18px; height: 18px; color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            Startup Fees
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Physical Sample Fee (Flat)</span>
+              <span class="info-icon" onclick="openHelp('sample-fee')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-sample-b" value="250" class="has-prefix" oninput="updateCalculatorB()" />
+            </div>
+          </div>
+
+          <div class="panel-section-title" style="margin-top: 1.5rem;">
+            <svg style="width: 18px; height: 18px; color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Unit Packaging & Duties
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Packaging & Unit Handling</span>
+              <span class="info-icon" onclick="openHelp('handling')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-handling-b" value="3.00" class="has-prefix" step="0.5" oninput="updateCalculatorB()" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label>
+              <span>Marketing & Launch Ads</span>
+              <span class="info-icon" onclick="openHelp('marketing')">?</span>
+            </label>
+            <div class="input-wrapper">
+              <span class="prefix">$</span>
+              <input type="number" id="cost-marketing-b" value="300" class="has-prefix" oninput="updateCalculatorB()" />
+            </div>
+          </div>
+
+          <!-- Unified Customs duties -->
+          <div class="input-group">
+            <label>
+              <span>Customs & Duties Type</span>
+              <span class="info-icon" onclick="openHelp('customs')">?</span>
+            </label>
+            <select id="customs-type-b" class="styled-select" onchange="toggleCustomsInput('b')">
+              <option value="percent">Percentage of Unit Cost (%)</option>
+              <option value="flat-unit">Flat Fee Per Unit ($)</option>
+              <option value="flat-batch">Flat Fee Per Batch ($)</option>
+            </select>
+          </div>
+          <div class="input-group" id="customs-input-container-b">
+            <label id="customs-label-b">Duties Rate (%)</label>
+            <div class="input-wrapper">
+              <span class="prefix" id="customs-prefix-b" style="display:none;">$</span>
+              <input type="number" id="cost-customs-val-b" value="10" />
+              <span class="suffix" id="customs-suffix-b">%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Panel: Sourcing Negotiation Outputs -->
+        <section style="display:flex; flex-direction:column; gap:1.5rem;">
+          
+          <div class="results-panel">
+            <!-- Column 1 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 1 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-b-1" value="10" min="1" oninput="updateCalculatorB()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-b-1" value="35" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-b-1" value="50" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
+                <div class="label" style="color: var(--accent-light);">Selling Price</div>
+                <div class="value value-sp" id="sp-b-1">$0.00</div>
+                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
+              </div>
+
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-1">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-1">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-b-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-1">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-1">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-b-1">Healthy</span></div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 2 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-b-2" value="25" min="1" oninput="updateCalculatorB()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-b-2" value="28" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-b-2" value="100" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
+                <div class="label" style="color: var(--accent-light);">Selling Price</div>
+                <div class="value value-sp" id="sp-b-2">$0.00</div>
+                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
+              </div>
+
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-2">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-2">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-b-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-2">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-2">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-b-2">Healthy</span></div>
+            </div>
+
+            <!-- Column 3 -->
+            <div class="moq-card popular">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 3 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-b-3" value="50" min="1" oninput="updateCalculatorB()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-b-3" value="22" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-b-3" value="180" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
+                <div class="label" style="color: var(--accent-light);">Selling Price</div>
+                <div class="value value-sp" id="sp-b-3">$0.00</div>
+                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
+              </div>
+
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-3">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-3">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-b-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-3">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-3">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-b-3">Healthy</span></div>
+            </div>
+
+            <!-- Column 4 -->
+            <div class="moq-card">
+              <div class="moq-header">
+                <div class="card-inputs-title">Tier 4 Config</div>
+                <div class="moq-card-input-row">
+                  <div class="card-input-group">
+                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
+                    <input type="number" id="moq-b-4" value="100" min="1" oninput="updateCalculatorB()" />
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="rate-b-4" value="18" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                  <div class="card-input-group">
+                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
+                    <div class="card-input-wrapper">
+                      <span>$</span>
+                      <input type="number" id="ship-b-4" value="300" class="has-symbol" oninput="updateCalculatorB()" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
+                <div class="label" style="color: var(--accent-light);">Selling Price</div>
+                <div class="value value-sp" id="sp-b-4">$0.00</div>
+                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
+              </div>
+
+              <div class="metrics-list">
+                <div class="breakdown-container">
+                  <div class="breakdown-header" onclick="toggleBreakdown(this)">
+                    <span>Cost Breakdown</span>
+                    <span class="breakdown-chevron">&#9660;</span>
+                  </div>
+                  <div class="breakdown-content">
+                    <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-4">$0.00</span></div>
+                    <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-4">$0.00</span></div>
+                  </div>
+                </div>
+                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">Cost Price per Unit</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Total Cost Price</span><span class="metric-val" id="batch-cost-val-b-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Profit per Unit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-4">$0.00</span></div>
+                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-4">$0.00</span></div>
+              </div>
+              <div class="card-footer"><span class="margin-badge" id="badge-b-4">Healthy</span></div>
+            </div>
+          </div>
+
+          <!-- COMPARATIVE BAR CHART CARD FOR VIEW B -->
+          <div class="comparison-chart-card">
+            <div class="chart-title">Visual Cost vs. Profit Analysis (Flat Order Profit Mode)</div>
+            <div class="chart-container" id="chart-container-b">
+              <!-- Column 1 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-b-msrp-1">$0.00</div>
+                  <div class="chart-bar" id="chart-b-bar-container-1">
+                    <div class="chart-segment-profit" id="chart-b-seg-profit-1">+$0</div>
+                    <div class="chart-segment-cost" id="chart-b-seg-cost-1">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-b-moq-lbl-1">10 MOQ</div>
+              </div>
+              <!-- Column 2 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-b-msrp-2">$0.00</div>
+                  <div class="chart-bar" id="chart-b-bar-container-2">
+                    <div class="chart-segment-profit" id="chart-b-seg-profit-2">+$0</div>
+                    <div class="chart-segment-cost" id="chart-b-seg-cost-2">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-b-moq-lbl-2">25 MOQ</div>
+              </div>
+              <!-- Column 3 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-b-msrp-3">$0.00</div>
+                  <div class="chart-bar" id="chart-b-bar-container-3">
+                    <div class="chart-segment-profit" id="chart-b-seg-profit-3">+$0</div>
+                    <div class="chart-segment-cost" id="chart-b-seg-cost-3">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-b-moq-lbl-3">50 MOQ</div>
+              </div>
+              <!-- Column 4 -->
+              <div class="chart-col">
+                <div class="chart-bar-wrapper">
+                  <div class="chart-msrp-lbl" id="chart-b-msrp-4">$0.00</div>
+                  <div class="chart-bar" id="chart-b-bar-container-4">
+                    <div class="chart-segment-profit" id="chart-b-seg-profit-4">+$0</div>
+                    <div class="chart-segment-cost" id="chart-b-seg-cost-4">$0 CP</div>
+                  </div>
+                </div>
+                <div class="chart-moq-lbl" id="chart-b-moq-lbl-4">100 MOQ</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; font-size: 0.85rem;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; background: rgba(255, 42, 117, 0.35); border-radius: 3px;"></div>
+                <span style="color: var(--text-secondary);">True Cost Price (CP)</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
+                <span style="color: var(--text-secondary);">Distributed Order Net Profit</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Lead Generation Banner -->
+    <div class="lead-banner">
+      <h3>Protect Your Margins from Sizing Returns</h3>
+      <p>Fashion brands lose substantial batch profits to returns. E-commerce returns average 40%, directly wiping out margins on shipping labels and handling. Add Styla's AI Fit widget to reduce returns by 70%.</p>
+      <button class="btn-primary" onclick="window.location.href='../measure.html'">
+        <span>Try Styla Fit AI Widget</span>
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner" style="flex-direction: column; gap: 20px;">
+        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;"><img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
+        
+        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
+        </div>
+
+        <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
+          <a href="../tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
+          <a href="../tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
+          <a href="../seo/guides.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Sizing & Sourcing Hub</a>
+        </div>
+
+        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">Ac 2026 STYLA Measure. All rights reserved.</p>
+        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="info-modal" onclick="closeInfoModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeInfoModal(event)">&times;</span>
+      <h3 id="info-modal-title" style="margin-bottom: 1rem; color: #ff75a0; font-family:'Outfit', sans-serif;">Help Guide</h3>
+      <p id="info-modal-desc" style="color: #94a3b8; line-height: 1.6; font-size: 0.95rem; text-align: left;"></p>
+    </div>
+  </div>
+
+  <!-- CALCULATOR SCRIPT -->
+  <script>
+    // Help Modal Content Map
+    const helpData = {
+      'desired-profit': {
+        title: "Desired Net Profit (Per Order)",
+        desc: "The total flat profit payout you want to make on the entire run to make it worth your time (e.g., $500).<br><br><strong>Formulas:</strong><br>&bull; Unit Net Profit = Desired Order Net Profit / MOQ<br>&bull; Required MSRP = True Cost Price + Unit Net Profit<br><br><em>Example:</em> If you want to make $500: at 10 MOQ each customer pays a $50 markup. At 100 MOQ, each customer pays only a $5 markup. Higher MOQs allow you to offer competitive retail prices without sacrificing your time's value."
+      },
+      'sample-fee': {
+        title: "Physical Sample & Pattern Fee",
+        desc: "The upfront flat fee paid to draft your pattern and sew your first physical sample. This is a one-time fixed cost.<br><br><strong>Formula:</strong><br>&bull; Amortized Sample Cost = Physical Sample Fee / MOQ<br><br><em>Example:</em> If your sample fee is $250: at 10 MOQ it adds $25.00/unit to your true cost. At 100 MOQ, it amortizes down to only $2.50/unit."
+      },
+      'handling': {
+        title: "Packaging & Unit Handling",
+        desc: "The cost of variable items that go with every single garment order&ndash;like custom shipping boxes, tissue paper, brand labels, polybags, stickers, and the labor cost to pack it. This is a variable cost that scales with quantity."
+      },
+      'marketing': {
+        title: "Marketing & Launch Ads",
+        desc: "The total marketing and ad spend budget allocated for this specific collection.<br><br><strong>Formula:</strong><br>&bull; Amortized Marketing Cost = Marketing & Launch Ads Budget / MOQ<br><br><em>Example:</em> If you spend $300 on launch ads: at 10 MOQ, it adds $30.00/unit of marketing overhead. At 100 MOQ, it is only $3.00/unit."
+      },
+      'customs': {
+        title: "Customs & Duties",
+        desc: "Duties and import clearances. You can calculate this as:<br><br><strong>Formulas:</strong><br>&bull; <strong>Percentage of unit cost</strong>: (Factory Unit Quote * Duties Rate %) / 100<br>&bull; <strong>Flat fee per unit</strong>: Tariff Rate ($)<br>&bull; <strong>Flat fee per batch</strong>: Flat Broker Fee / MOQ"
+      },
+      'moq': {
+        title: "Minimum Order Quantity (MOQ)",
+        desc: "The number of units you are ordering from the manufacturer. You can customize this number for each tier to compare how different order sizes impact your pricing structure."
+      },
+      'factory-quote': {
+        title: "Unit Sourcing Quote",
+        desc: "The manufacturing price per garment quoted by the factory. Factories typically charge a much higher unit rate for low MOQs (e.g. 10 units at $35) compared to bulk orders (e.g. 100 units at $18)."
+      },
+      'shipping': {
+        title: "Tier Shipping Cost",
+        desc: "The total shipping cost to transport this batch of clothes from the factory to your warehouse.<br><br><strong>Formula:</strong><br>&bull; Amortized Shipping Cost = Tier Shipping Cost / MOQ<br><br><em>Example:</em> Shipping 10 units by air courier is cheaper in total ($50) than shipping 100 units by ocean freight ($300). However, the air freight costs $5.00/unit, while the ocean freight costs only $3.00/unit."
+      }
+    };
+
+    function openHelp(key) {
+      const data = helpData[key];
+      if (!data) return;
+      document.getElementById('info-modal-title').innerHTML = data.title;
+      document.getElementById('info-modal-desc').innerHTML = data.desc;
+      document.getElementById('info-modal').style.display = 'flex';
+    }
+
+    function closeInfoModal(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('info-modal').style.display = 'none';
+    }
+
+    // Quick Guide Toggle
+    function toggleQuickGuide() {
+      const content = document.getElementById('quick-guide-content');
+      const arrow = document.getElementById('guide-arrow');
+      if (content.style.display === 'block') {
+        content.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+      } else {
+        content.style.display = 'block';
+        arrow.style.transform = 'rotate(180deg)';
+      }
+    }
+
+    // Tab Controller
+    function switchAppTab(view) {
+      document.getElementById('tab-btn-analyzer').classList.toggle('active', view === 'analyzer');
+      document.getElementById('tab-btn-negotiator').classList.toggle('active', view === 'negotiator');
+      
+      document.getElementById('view-analyzer').classList.toggle('active', view === 'analyzer');
+      document.getElementById('view-negotiator').classList.toggle('active', view === 'negotiator');
+      
+      if (view === 'analyzer') {
+        updateCalculatorA();
+      } else {
+        updateCalculatorB();
+      }
+    }
+
+    // Toggle Customs Field layout
+    function toggleCustomsInput(prefix) {
+      const customsType = document.getElementById(`customs-type-${prefix}`).value;
+      const label = document.getElementById(`customs-label-${prefix}`);
+      const suffix = document.getElementById(`customs-suffix-${prefix}`);
+      const prefixSymbol = document.getElementById(`customs-prefix-${prefix}`);
+      const input = document.getElementById(`cost-customs-val-${prefix}`);
+
+      if (customsType === 'percent') {
+        label.textContent = "Duties Rate (%)";
+        suffix.style.display = "inline";
+        prefixSymbol.style.display = "none";
+        input.className = "has-suffix";
+      } else if (customsType === 'flat-unit') {
+        label.textContent = "Flat Fee Per Unit ($)";
+        suffix.style.display = "none";
+        prefixSymbol.style.display = "inline";
+        input.className = "has-prefix";
+      } else {
+        label.textContent = "Flat Fee Per Batch ($)";
+        suffix.style.display = "none";
+        prefixSymbol.style.display = "inline";
+        input.className = "has-prefix";
+      }
+      
+      if (prefix === 'a') {
+        updateCalculatorA();
+      } else {
+        updateCalculatorB();
+      }
+    }
+
+    // Dynamic Sizing Modes in App A
+    let pricingModeA = 'margin';
+
+    function setPricingMode(prefix, mode) {
+      if (prefix === 'a') {
+        pricingModeA = mode;
+        document.getElementById('btn-mode-margin-a').classList.toggle('active', mode === 'margin');
+        document.getElementById('btn-mode-retail-a').classList.toggle('active', mode === 'retail');
+        
+        document.getElementById('pricing-margin-group-a').style.display = mode === 'margin' ? 'block' : 'none';
+        document.getElementById('pricing-retail-group-a').style.display = mode === 'retail' ? 'block' : 'none';
+        
+        updateCalculatorA();
+      }
+    }
+
+    function parseInput(id, defaultVal = 0) {
+      const val = parseFloat(document.getElementById(id).value);
+      return isNaN(val) ? defaultVal : val;
+    }
+
+    function formatCurrency(val) {
+      if (val < 0) return '-$' + Math.abs(val).toFixed(2);
+      return '$' + val.toFixed(2);
+    }
+
+    function toggleBreakdown(header) {
+      const container = header.parentElement;
+      container.classList.toggle('open');
+    }
+
+    // ==========================================
+    // APP A: MOQ PROFIT ANALYZER
+    // ==========================================
+    function updateCalculatorA() {
+      // Global parameters
+      const sampleFee = parseInput('cost-sample-a', 0);
+      const unitHandlingFee = parseInput('cost-handling-a', 0);
+      const marketingBudget = parseInput('cost-marketing-a', 0);
+      
+      const customsType = document.getElementById('customs-type-a').value;
+      const customsVal = parseInput('cost-customs-val-a', 0);
+
+      // Sizing targets
+      const targetMarginSlider = parseInt(document.getElementById('slider-margin-a').value, 10);
+      document.getElementById('val-margin-lbl-a').textContent = targetMarginSlider + '%';
+      const hardRetailSP = parseInput('input-retail-sp-a', 0);
+
+      let maxMSRP = 0;
+      const dataStore = [];
+
+      for (let i = 1; i <= 4; i++) {
+        const moq = Math.max(1, parseInput(`moq-a-${i}`, 1));
+        const factoryRate = parseInput(`rate-a-${i}`, 0);
+        const shippingTier = parseInput(`ship-a-${i}`, 0);
+
+        // Unified customs logic
+        let unitTariff = 0;
+        if (customsType === 'percent') {
+          unitTariff = (factoryRate * customsVal) / 100;
+        } else if (customsType === 'flat-unit') {
+          unitTariff = customsVal;
+        } else {
+          unitTariff = customsVal / moq;
+        }
+
+        const unitStartup = sampleFee / moq;
+        const unitBatchLogistics = (shippingTier + marketingBudget) / moq;
+        
+        const trueCP = factoryRate + unitStartup + unitBatchLogistics + unitTariff + unitHandlingFee;
+
+        let sellingPrice = 0;
+        let marginPercent = 0;
+
+        if (pricingModeA === 'margin') {
+          marginPercent = targetMarginSlider;
+          sellingPrice = trueCP / (1 - (marginPercent / 100));
+        } else {
+          sellingPrice = hardRetailSP;
+          marginPercent = ((sellingPrice - trueCP) / sellingPrice) * 100;
+        }
+
+        const profitPerUnit = sellingPrice - trueCP;
+        const totalBatchCost = trueCP * moq;
+        const totalBatchProfit = profitPerUnit * moq;
+
+        maxMSRP = Math.max(maxMSRP, sellingPrice);
+        dataStore.push({ moq, trueCP, sellingPrice, profitPerUnit, totalBatchCost, totalBatchProfit, factoryRate, unitStartup, unitBatchLogistics, unitTariff, unitHandlingFee, marginPercent });
+      }
+
+      // Render DOM outputs & chart bars
+      for (let i = 1; i <= 4; i++) {
+        const idx = i - 1;
+        const info = dataStore[idx];
+
+        document.getElementById(`factory-val-a-${i}`).textContent = formatCurrency(info.factoryRate);
+        document.getElementById(`startup-val-a-${i}`).textContent = formatCurrency(info.unitStartup);
+        document.getElementById(`logistics-val-a-${i}`).textContent = formatCurrency(info.unitBatchLogistics);
+        document.getElementById(`duties-val-a-${i}`).textContent = formatCurrency(info.unitTariff);
+        document.getElementById(`handling-val-a-${i}`).textContent = formatCurrency(info.unitHandlingFee);
+        document.getElementById(`cp-val-a-${i}`).textContent = formatCurrency(info.trueCP);
+        
+        document.getElementById(`sp-a-${i}`).textContent = formatCurrency(info.sellingPrice);
+        document.getElementById(`profit-val-a-${i}`).textContent = formatCurrency(info.profitPerUnit);
+        document.getElementById(`batch-cost-val-a-${i}`).textContent = formatCurrency(info.totalBatchCost);
+        document.getElementById(`batch-profit-val-a-${i}`).textContent = formatCurrency(info.totalBatchProfit);
+
+        // Adjust badge styles
+        const badge = document.getElementById(`badge-a-${i}`);
+        if (info.marginPercent <= 0 || info.profitPerUnit < 0) {
+          badge.textContent = `Loss (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge danger';
+        } else if (info.marginPercent < 20) {
+          badge.textContent = `Low Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge danger';
+        } else if (info.marginPercent < 45) {
+          badge.textContent = `Medium Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge low';
+        } else {
+          badge.textContent = `Healthy Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge healthy';
+        }
+
+        // Render Chart stack A
+        const safeMax = maxMSRP > 0 ? maxMSRP : 1;
+        const totalHeight = (info.sellingPrice / safeMax) * 100;
+        const costHeightPercent = (info.trueCP / info.sellingPrice) * 100;
+
+        document.getElementById(`chart-a-bar-container-${i}`).style.height = `${totalHeight}%`;
+        document.getElementById(`chart-a-seg-cost-${i}`).style.height = `${costHeightPercent}%`;
+        document.getElementById(`chart-a-msrp-${i}`).textContent = formatCurrency(info.sellingPrice);
+        document.getElementById(`chart-a-seg-profit-${i}`).textContent = `+$${info.profitPerUnit.toFixed(0)}`;
+        document.getElementById(`chart-a-seg-cost-${i}`).textContent = `$${info.trueCP.toFixed(0)} CP`;
+        document.getElementById(`chart-a-moq-lbl-${i}`).textContent = `${info.moq} MOQ`;
+      }
+    }
+
+    // ==========================================
+    // APP B: MOQ SOURCING NEGOTIATOR (REVERSE)
+    // ==========================================
+    function updateCalculatorB() {
+      // Pricing Target Targets: Target Payout/Profit per Order
+      const targetOrderProfit = parseInput('target-profit-b', 0);
+
+      // Global Constants
+      const sampleFee = parseInput('cost-sample-b', 0);
+      const unitHandlingFee = parseInput('cost-handling-b', 0);
+      const marketingBudget = parseInput('cost-marketing-b', 0);
+      
+      const customsType = document.getElementById('customs-type-b').value;
+      const customsVal = parseInput('cost-customs-val-b', 0);
+
+      let maxMSRP = 0;
+      const dataStore = [];
+
+      for (let i = 1; i <= 4; i++) {
+        const moq = Math.max(1, parseInput(`moq-b-${i}`, 1));
+        const factoryRate = parseInput(`rate-b-${i}`, 0);
+        const shippingTier = parseInput(`ship-b-${i}`, 0);
+
+        // Unit target profit: Distributed flat profit over MOQ
+        const unitTargetProfit = targetOrderProfit / moq;
+
+        // Compute customs tax
+        let unitTariff = 0;
+        if (customsType === 'percent') {
+          unitTariff = (factoryRate * customsVal) / 100;
+        } else if (customsType === 'flat-unit') {
+          unitTariff = customsVal;
+        } else {
+          unitTariff = customsVal / moq;
+        }
+
+        const unitStartup = sampleFee / moq;
+        const unitBatchLogistics = (shippingTier + marketingBudget) / moq;
+        
+        const trueCP = factoryRate + unitStartup + unitBatchLogistics + unitTariff + unitHandlingFee;
+
+        // Required Retail Selling Price to hit target batch profit
+        const requiredMSRP = trueCP + unitTargetProfit;
+        const marginPercent = requiredMSRP > 0 ? (unitTargetProfit / requiredMSRP) * 100 : 0;
+
+        const totalBatchCost = trueCP * moq;
+        const totalBatchProfit = targetOrderProfit; // Static order profit payout!
+
+        maxMSRP = Math.max(maxMSRP, requiredMSRP);
+        dataStore.push({ moq, trueCP, requiredMSRP, unitTargetProfit, totalBatchCost, totalBatchProfit, factoryRate, unitStartup, unitBatchLogistics, unitTariff, unitHandlingFee, marginPercent });
+      }
+
+      // Render B Outputs & chart bars
+      for (let i = 1; i <= 4; i++) {
+        const idx = i - 1;
+        const info = dataStore[idx];
+
+        document.getElementById(`sp-b-${i}`).textContent = formatCurrency(info.requiredMSRP);
+        document.getElementById(`factory-val-b-${i}`).textContent = formatCurrency(info.factoryRate);
+        document.getElementById(`startup-val-b-${i}`).textContent = formatCurrency(info.unitStartup);
+        document.getElementById(`logistics-val-b-${i}`).textContent = formatCurrency(info.unitBatchLogistics);
+        document.getElementById(`duties-val-b-${i}`).textContent = formatCurrency(info.unitTariff);
+        document.getElementById(`handling-val-b-${i}`).textContent = formatCurrency(info.unitHandlingFee);
+        document.getElementById(`cp-val-b-${i}`).textContent = formatCurrency(info.trueCP);
+        
+        document.getElementById(`profit-val-b-${i}`).textContent = formatCurrency(info.unitTargetProfit);
+        document.getElementById(`batch-cost-val-b-${i}`).textContent = formatCurrency(info.totalBatchCost);
+        document.getElementById(`batch-profit-val-b-${i}`).textContent = formatCurrency(info.totalBatchProfit);
+
+        // Adjust badge styles
+        const badge = document.getElementById(`badge-b-${i}`);
+        if (info.marginPercent <= 0) {
+          badge.textContent = `No Margin (0%)`;
+          badge.className = 'margin-badge danger';
+        } else if (info.marginPercent < 25) {
+          badge.textContent = `Low Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge danger';
+        } else if (info.marginPercent < 50) {
+          badge.textContent = `Medium Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge low';
+        } else {
+          badge.textContent = `Healthy Margin (${info.marginPercent.toFixed(0)}%)`;
+          badge.className = 'margin-badge healthy';
+        }
+
+        // Render Chart stack B
+        const safeMax = maxMSRP > 0 ? maxMSRP : 1;
+        const totalHeight = (info.requiredMSRP / safeMax) * 100;
+        const costHeightPercent = (info.trueCP / info.requiredMSRP) * 100;
+
+        document.getElementById(`chart-b-bar-container-${i}`).style.height = `${totalHeight}%`;
+        document.getElementById(`chart-b-seg-cost-${i}`).style.height = `${costHeightPercent}%`;
+        document.getElementById(`chart-b-msrp-${i}`).textContent = formatCurrency(info.requiredMSRP);
+        document.getElementById(`chart-b-seg-profit-${i}`).textContent = `+$${info.unitTargetProfit.toFixed(0)}`;
+        document.getElementById(`chart-b-seg-cost-${i}`).textContent = `$${info.trueCP.toFixed(0)} CP`;
+        document.getElementById(`chart-b-moq-lbl-${i}`).textContent = `${info.moq} MOQ`;
+      }
+    }
+
+    // Attach listeners dynamically for App A inputs
+    const inputsA = [
+      'cost-sample-a', 'cost-handling-a', 'cost-marketing-a', 'cost-customs-val-a'
+    ];
+    inputsA.forEach(id => {
+      document.getElementById(id).addEventListener('input', updateCalculatorA);
+    });
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById(`moq-a-${i}`).addEventListener('input', updateCalculatorA);
+      document.getElementById(`rate-a-${i}`).addEventListener('input', updateCalculatorA);
+      document.getElementById(`ship-a-${i}`).addEventListener('input', updateCalculatorA);
+    }
+
+    // Attach listeners dynamically for App B inputs
+    const inputsB = [
+      'target-profit-b', 'cost-sample-b', 'cost-handling-b', 'cost-marketing-b', 'cost-customs-val-b'
+    ];
+    inputsB.forEach(id => {
+      document.getElementById(id).addEventListener('input', updateCalculatorB);
+    });
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById(`moq-b-${i}`).addEventListener('input', updateCalculatorB);
+      document.getElementById(`rate-b-${i}`).addEventListener('input', updateCalculatorB);
+      document.getElementById(`ship-b-${i}`).addEventListener('input', updateCalculatorB);
+    }
+
+    // Initial setups
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set initial customs modes
+      toggleCustomsInput('a');
+      toggleCustomsInput('b');
+    });
+  </script>
+</body>
+</html>
 
-    body {
-      background: var(--bg-base);
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      padding-top: 80px;
-    }
-
-    .calc-container {
-      max-width: 1250px;
-      margin: 2rem auto;
-      padding: 0 24px;
-    }
-
-    .calc-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .calc-header h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 2.5rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-
-    .calc-header p {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    /* Collapsible Quick Guide */
-    .quick-guide-card {
-      background: rgba(255, 42, 117, 0.03);
-      border: 1px dashed var(--border-accent);
-      border-radius: 16px;
-      padding: 1.2rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .quick-guide-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .quick-guide-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .quick-guide-content {
-      margin-top: 1rem;
-      font-size: 0.88rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      border-top: 1px solid rgba(255, 42, 117, 0.1);
-      padding-top: 1rem;
-      display: none;
-    }
-
-    .quick-guide-steps {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    @media (min-width: 768px) {
-      .quick-guide-steps {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    .guide-step {
-      background: rgba(255, 255, 255, 0.01);
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .guide-step h4 {
-      font-family: 'Outfit', sans-serif;
-      color: var(--accent-light);
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-
-    /* Tab bar */
-    .app-tabs {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 3rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      padding: 10px 24px;
-      border-radius: 100px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-family: 'Outfit', sans-serif;
-    }
-
-    .tab-btn:hover {
-      border-color: rgba(255, 42, 117, 0.4);
-      color: #fff;
-    }
-
-    .tab-btn.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-      box-shadow: 0 4px 16px rgba(255, 42, 117, 0.3);
-    }
-
-    .app-view {
-      display: none;
-    }
-
-    .app-view.active {
-      display: block;
-    }
-
-    /* Grid Layout */
-    .calc-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 2rem;
-      align-items: start;
-    }
-
-    @media (min-width: 992px) {
-      .calc-grid {
-        grid-template-columns: 320px 1fr;
-      }
-    }
-
-    /* Input Panel */
-    .input-panel {
-      background: rgba(20, 20, 40, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.5rem;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    .panel-section-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 1.2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .input-group {
-      margin-bottom: 1.2rem;
-    }
-
-    .input-group label {
-      display: flex;
-      align-items: center;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-bottom: 0.4rem;
-    }
-
-    /* Info Trigger Icon */
-    .info-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 15px;
-      height: 15px;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 50%;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      color: #fff;
-      margin-left: 6px;
-      transition: all 0.2s;
-    }
-
-    .info-icon:hover {
-      background: var(--accent);
-      transform: scale(1.1);
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .input-wrapper span.prefix {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .input-wrapper span.suffix {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    input[type="number"] {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.6rem 0.8rem;
-      color: #fff;
-      font-size: 0.9rem;
-      outline: none;
-      transition: all 0.3s;
-    }
-
-    input[type="number"].has-prefix {
-      padding-left: 22px;
-    }
-
-    input[type="number"].has-suffix {
-      padding-right: 24px;
-    }
-
-    input[type="number"]:focus {
-      border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.07);
-    }
-
-    .styled-select {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0.6rem 0.8rem;
-      color: #fff;
-      font-size: 0.9rem;
-      outline: none;
-      cursor: pointer;
-      margin-bottom: 0.5rem;
-      appearance: none;
-      transition: all 0.3s;
-    }
-
-    .styled-select:focus {
-      border-color: var(--accent);
-    }
-
-    .styled-select option {
-      background: var(--bg-surface);
-      color: #fff;
-    }
-
-    /* Mode Toggles */
-    .mode-selector {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: rgba(0,0,0,0.25);
-      border-radius: 100px;
-      padding: 4px;
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--border);
-    }
-
-    .mode-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 6px 12px;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .mode-btn.active {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .range-slider-group {
-      margin-top: 0.5rem;
-    }
-
-    .range-slider-group input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    .slider-val-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    /* Output Columns */
-    .results-panel {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.2rem;
-    }
-
-    @media (min-width: 576px) {
-      .results-panel {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .results-panel {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-
-    .moq-card {
-      background: rgba(20, 20, 40, 0.4);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 1.5rem;
-      position: relative;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 600px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .moq-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(255, 42, 117, 0.25);
-    }
-
-    .moq-card.popular {
-      border-color: var(--accent-light);
-      background: linear-gradient(180deg, rgba(255, 42, 117, 0.05) 0%, rgba(20, 20, 40, 0.4) 100%);
-    }
-
-    .moq-header {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      padding-bottom: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .card-inputs-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--accent-light);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      letter-spacing: 0.03em;
-    }
-
-    .moq-card-input-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .card-input-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-input-group label {
-      display: flex;
-      align-items: center;
-      font-size: 0.72rem;
-      color: var(--text-secondary);
-      margin-bottom: 2px;
-      font-weight: 500;
-    }
-
-    .card-input-wrapper {
-      position: relative;
-    }
-
-    .card-input-wrapper span {
-      position: absolute;
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .moq-card input[type="number"].has-symbol {
-      padding-left: 18px;
-    }
-
-    .cost-stat {
-      text-align: center;
-      margin: 1rem 0;
-      background: rgba(255,255,255,0.01);
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.03);
-    }
-
-    .cost-stat .label {
-      font-size: 0.7rem;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .cost-stat .value {
-      font-size: 1.8rem;
-      font-weight: 800;
-      font-family: 'Outfit', sans-serif;
-      color: #fff;
-      margin: 2px 0;
-    }
-
-    .cost-stat .value-sp {
-      color: var(--accent-light);
-    }
-
-    .metrics-list {
-      margin-bottom: 1rem;
-      flex-grow: 1;
-    }
-
-    .metric-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      padding: 6px 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
-    }
-
-    .metric-row:last-child {
-      border-bottom: none;
-    }
-
-    .metric-label {
-      color: var(--text-secondary);
-    }
-
-    .metric-val {
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .metric-val.profit {
-      color: #10b981;
-    }
-
-    .card-footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      padding-top: 0.8rem;
-      margin-top: auto;
-    }
-
-    .margin-badge {
-      display: inline-block;
-      width: 100%;
-      text-align: center;
-      padding: 5px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: rgba(255,255,255,0.03);
-      color: var(--text-secondary);
-    }
-
-    .margin-badge.healthy {
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .margin-badge.danger {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .margin-badge.low {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--amber);
-      border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    /* Help Modal overlay */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(5px);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background: #141428;
-      border: 1px solid var(--border-accent);
-      padding: 2rem;
-      border-radius: 20px;
-      max-width: 450px;
-      width: 90%;
-      position: relative;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      cursor: pointer;
-      font-size: 24px;
-      color: var(--text-secondary);
-      transition: color 0.2s;
-    }
-
-    .modal-close:hover {
-      color: #fff;
-    }
-
-    /* Lead Gen Banner */
-    .lead-banner {
-      margin-top: 4rem;
-      background: linear-gradient(135deg, rgba(255, 42, 117, 0.1) 0%, rgba(20, 20, 40, 0.4) 100%);
-      border: 1px solid var(--border-accent);
-      border-radius: 20px;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .lead-banner h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.5rem;
-      color: #fff;
-      margin-bottom: 0.5rem;
-    }
-
-    .lead-banner p {
-      color: var(--text-secondary);
-      max-width: 700px;
-      margin: 0 auto 1.5rem;
-      font-size: 0.95rem;
-    }
-
-    .lead-banner .btn-primary {
-      background: linear-gradient(135deg, var(--accent) 0%, #d90040 100%);
-      color: #fff;
-      padding: 0.8rem 2rem;
-      border-radius: 100px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .lead-banner .btn-primary:hover {
-      box-shadow: 0 8px 24px rgba(255, 42, 117, 0.3);
-      transform: translateY(-2px);
-    }
-
-    .back-nav {
-      margin-bottom: 1.5rem;
-    }
-
-    .back-nav a {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .back-nav a:hover {
-      color: #fff;
-    }
-
-    /* Graphic Charts styling */
-    .comparison-chart-card {
-      background: rgba(20, 20, 40, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-top: 3rem;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow-card);
-    }
-
-    .chart-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-
-    .chart-container {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-around;
-      height: 250px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 10px;
-      gap: 1.5rem;
-      margin: 0 auto;
-      max-width: 800px;
-    }
-
-    .chart-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-      height: 100%;
-    }
-
-    .chart-bar-wrapper {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      height: 100%;
-      width: 50px;
-      position: relative;
-    }
-
-    .chart-msrp-lbl {
-      position: absolute;
-      top: -24px;
-      left: -20px;
-      right: -20px;
-      text-align: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--accent-light);
-    }
-
-    .chart-bar {
-      width: 100%;
-      height: 0%;
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .chart-segment-profit {
-      background: #10b981;
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: #fff;
-      font-weight: 700;
-      min-height: 15px;
-      transition: all 0.4s ease;
-    }
-
-    .chart-segment-cost {
-      background: rgba(255, 42, 117, 0.35);
-      height: 60%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: #fff;
-      font-weight: 700;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      min-height: 15px;
-      transition: all 0.4s ease;
-    }
-
-    .chart-moq-lbl {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-top: 12px;
-      white-space: nowrap;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-        <img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
-        STYLA <span class="logo-accent">Measure</span>
-      </div>
-      <div class="nav-actions" style="display: flex; gap: 1.5rem; align-items: center;">
-        <a href="../landing.html" class="nav-cta" style="background: transparent; border: none; color: var(--text-secondary);">Home</a>
-        <a href="../index.html" class="nav-cta">Discover Your Size</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- CONTENT CONTAINER -->
-  <main class="calc-container">
-    
-    <div class="back-nav">
-      <a href="../landing.html">
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        Back to Home
-      </a>
-    </div>
-
-    <div class="calc-header">
-      <h1>Brand Sourcing & Pricing Suite</h1>
-      <p>Solve factory MOQ cost barriers and project profit margins using our interactive tier tools.</p>
-    </div>
-
-    <!-- Collapsible Quick Start Guide -->
-    <div class="quick-guide-card">
-      <div class="quick-guide-header" onclick="toggleQuickGuide()">
-        <div class="quick-guide-title">
-          <svg style="width: 20px; height: 20px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-          💡 Pricing Calculator Guide (Click to Expand)
-        </div>
-        <svg id="guide-arrow" style="width: 18px; height: 18px; color: var(--text-secondary); transition: transform 0.2s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </div>
-      <div class="quick-guide-content" id="quick-guide-content">
-        <p>Launching a clothing brand requires navigating manufacturer pricing variables. This suite offers two distinct apps to analyze your pricing strategy:</p>
-        <div class="quick-guide-steps">
-          <div class="guide-step">
-            <h4>1. Solve Price from Target Margin %</h4>
-            <p>Enter the production quotes you got from your factory and shipping rates to find what retail MSRP you must charge to maintain a target profit margin %.</p>
-          </div>
-          <div class="guide-step">
-            <h4>2. Solve Price from Flat Order Profit ($)</h4>
-            <p>Set a target **flat profit wage** for your time per batch (e.g. $500). Compare how higher order sizes drop your required customer selling price, allowing you to price competitively.</p>
-          </div>
-          <div class="guide-step">
-            <h4>3. Click the (?) Help Icons</h4>
-            <p>Every pricing field (Sample Fee, Packaging, Customs, MOQ) has a <strong>?</strong> icon. Click them to view exact math equations and descriptions of how that cost impacts your margin.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab Bar -->
-    <div class="app-tabs">
-      <button class="tab-btn active" id="tab-btn-analyzer" onclick="switchAppTab('analyzer')">Calculate Price from Target Margin %</button>
-      <button class="tab-btn" id="tab-btn-negotiator" onclick="switchAppTab('negotiator')">Calculate Price from Flat Order Profit ($)</button>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- VIEW A: MOQ COST & PROFIT ANALYZER             -->
-    <!-- ============================================== -->
-    <div class="app-view active" id="view-analyzer">
-      <div class="calc-grid">
-        
-        <!-- Left Panel: Global Costs -->
-        <section class="input-panel">
-          <div class="panel-section-title">
-            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            Startup Fees
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Physical Sample Fee (Flat)</span>
-              <span class="info-icon" onclick="openHelp('sample-fee')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-sample-a" value="250" class="has-prefix" />
-            </div>
-          </div>
-
-          <div class="panel-section-title" style="margin-top: 1.5rem;">
-            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Logistics & Ads
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Packaging & Unit Handling</span>
-              <span class="info-icon" onclick="openHelp('handling')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-handling-a" value="3.00" class="has-prefix" step="0.5" />
-            </div>
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Marketing & Launch Ads</span>
-              <span class="info-icon" onclick="openHelp('marketing')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-marketing-a" value="300" class="has-prefix" />
-            </div>
-          </div>
-
-          <!-- Unified Customs duties -->
-          <div class="input-group">
-            <label>
-              <span>Customs & Duties Type</span>
-              <span class="info-icon" onclick="openHelp('customs')">?</span>
-            </label>
-            <select id="customs-type-a" class="styled-select" onchange="toggleCustomsInput('a')">
-              <option value="percent">Percentage of Unit Cost (%)</option>
-              <option value="flat-unit">Flat Fee Per Unit ($)</option>
-              <option value="flat-batch">Flat Fee Per Batch ($)</option>
-            </select>
-          </div>
-          <div class="input-group" id="customs-input-container-a">
-            <label id="customs-label-a">Duties Rate (%)</label>
-            <div class="input-wrapper">
-              <span class="prefix" id="customs-prefix-a" style="display:none;">$</span>
-              <input type="number" id="cost-customs-val-a" value="10" />
-              <span class="suffix" id="customs-suffix-a">%</span>
-            </div>
-          </div>
-
-          <div class="panel-section-title" style="margin-top: 1.5rem;">
-            <svg style="width: 18px; height: 18px; color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Pricing Targets
-          </div>
-          <div class="mode-selector">
-            <button type="button" class="mode-btn active" id="btn-mode-margin-a" onclick="setPricingMode('a', 'margin')">Target Margin</button>
-            <button type="button" class="mode-btn" id="btn-mode-retail-a" onclick="setPricingMode('a', 'retail')">Set Retail SP</button>
-          </div>
-          <div id="pricing-margin-group-a">
-            <div class="input-group range-slider-group">
-              <label style="display: flex; justify-content: space-between;">
-                <span>Target Profit Margin</span>
-                <span style="color: var(--accent-light); font-weight: 700;" id="val-margin-lbl-a">60%</span>
-              </label>
-              <input type="range" id="slider-margin-a" min="5" max="95" value="60" oninput="updateCalculatorA()" />
-              <div class="slider-val-label">
-                <span>5%</span>
-                <span>50%</span>
-                <span>95%</span>
-              </div>
-            </div>
-          </div>
-          <div id="pricing-retail-group-a" style="display: none;">
-            <div class="input-group">
-              <label>Retail Selling Price (MSRP)</label>
-              <div class="input-wrapper">
-                <span class="prefix">$</span>
-                <input type="number" id="input-retail-sp-a" value="85" class="has-prefix" oninput="updateCalculatorA()" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right Panel: Tiers Output -->
-        <section style="display:flex; flex-direction:column; gap:1.5rem;">
-          <div class="results-panel">
-            <!-- Column 1 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 1 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-a-1" value="10" min="1" oninput="updateCalculatorA()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-a-1" value="35" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-a-1" value="50" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="cost-stat">
-                <div class="label">Unit Retail SP</div>
-                <div class="value value-sp" id="sp-a-1">$0.00</div>
-              </div>
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-1">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Profit / Unit</span><span class="metric-val profit" id="profit-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Cost</span><span class="metric-val" id="batch-cost-val-a-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-1">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-a-1">Healthy</span></div>
-            </div>
-
-            <!-- Column 2 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 2 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-a-2" value="25" min="1" oninput="updateCalculatorA()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-a-2" value="28" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-a-2" value="100" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="cost-stat">
-                <div class="label">Unit Retail SP</div>
-                <div class="value value-sp" id="sp-a-2">$0.00</div>
-              </div>
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-2">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Profit / Unit</span><span class="metric-val profit" id="profit-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Cost</span><span class="metric-val" id="batch-cost-val-a-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-2">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-a-2">Healthy</span></div>
-            </div>
-
-            <!-- Column 3 -->
-            <div class="moq-card popular">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 3 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-a-3" value="50" min="1" oninput="updateCalculatorA()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-a-3" value="22" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-a-3" value="180" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="cost-stat">
-                <div class="label">Unit Retail SP</div>
-                <div class="value value-sp" id="sp-a-3">$0.00</div>
-              </div>
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-3">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Profit / Unit</span><span class="metric-val profit" id="profit-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Cost</span><span class="metric-val" id="batch-cost-val-a-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-3">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-a-3">Healthy</span></div>
-            </div>
-
-            <!-- Column 4 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 4 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-a-4" value="100" min="1" oninput="updateCalculatorA()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-a-4" value="18" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-a-4" value="300" class="has-symbol" oninput="updateCalculatorA()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="cost-stat">
-                <div class="label">Unit Retail SP</div>
-                <div class="value value-sp" id="sp-a-4">$0.00</div>
-              </div>
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-a-4">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Profit / Unit</span><span class="metric-val profit" id="profit-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Cost</span><span class="metric-val" id="batch-cost-val-a-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-a-4">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-a-4">Healthy</span></div>
-            </div>
-          </div>
-
-          <!-- COMPARATIVE BAR CHART CARD FOR VIEW A -->
-          <div class="comparison-chart-card">
-            <div class="chart-title">Visual Cost vs. Profit Analysis (Unit Scale)</div>
-            <div class="chart-container" id="chart-container-a">
-              <!-- Column 1 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-a-msrp-1">$0.00</div>
-                  <div class="chart-bar" id="chart-a-bar-container-1">
-                    <div class="chart-segment-profit" id="chart-a-seg-profit-1">+$0</div>
-                    <div class="chart-segment-cost" id="chart-a-seg-cost-1">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-a-moq-lbl-1">10 MOQ</div>
-              </div>
-              <!-- Column 2 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-a-msrp-2">$0.00</div>
-                  <div class="chart-bar" id="chart-a-bar-container-2">
-                    <div class="chart-segment-profit" id="chart-a-seg-profit-2">+$0</div>
-                    <div class="chart-segment-cost" id="chart-a-seg-cost-2">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-a-moq-lbl-2">25 MOQ</div>
-              </div>
-              <!-- Column 3 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-a-msrp-3">$0.00</div>
-                  <div class="chart-bar" id="chart-a-bar-container-3">
-                    <div class="chart-segment-profit" id="chart-a-seg-profit-3">+$0</div>
-                    <div class="chart-segment-cost" id="chart-a-seg-cost-3">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-a-moq-lbl-3">50 MOQ</div>
-              </div>
-              <!-- Column 4 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-a-msrp-4">$0.00</div>
-                  <div class="chart-bar" id="chart-a-bar-container-4">
-                    <div class="chart-segment-profit" id="chart-a-seg-profit-4">+$0</div>
-                    <div class="chart-segment-cost" id="chart-a-seg-cost-4">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-a-moq-lbl-4">100 MOQ</div>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; font-size: 0.85rem;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 12px; height: 12px; background: rgba(255, 42, 117, 0.35); border-radius: 3px;"></div>
-                <span style="color: var(--text-secondary);">True Cost Price (CP)</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
-                <span style="color: var(--text-secondary);">Markup Unit Profit</span>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-      </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- VIEW B: MOQ SOURCING NEGOTIATOR (REVERSE SOLVER)-->
-    <!-- ============================================== -->
-    <div class="app-view" id="view-negotiator">
-      <div class="calc-grid">
-        
-        <!-- Left Panel: Targets & Margins first -->
-        <section class="input-panel">
-          <div class="panel-section-title" style="color: #10b981; border-color: rgba(16,185,129,0.15);">
-            <svg style="width: 18px; height: 18px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Is It Worth My Time?
-          </div>
-
-          <div class="input-group">
-            <label>
-              <span>Desired Net Profit (Per Order/Batch)</span>
-              <span class="info-icon" onclick="openHelp('desired-profit')">?</span>
-            </label>
-            <p style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:4px;">(Flat payout goal for managing the production run)</p>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="target-profit-b" value="500" class="has-prefix" oninput="updateCalculatorB()" />
-            </div>
-          </div>
-
-          <div class="panel-section-title" style="margin-top: 2rem;">
-            <svg style="width: 18px; height: 18px; color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            Startup Fees
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Physical Sample Fee (Flat)</span>
-              <span class="info-icon" onclick="openHelp('sample-fee')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-sample-b" value="250" class="has-prefix" oninput="updateCalculatorB()" />
-            </div>
-          </div>
-
-          <div class="panel-section-title" style="margin-top: 1.5rem;">
-            <svg style="width: 18px; height: 18px; color: var(--text-secondary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Unit Packaging & Duties
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Packaging & Unit Handling</span>
-              <span class="info-icon" onclick="openHelp('handling')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-handling-b" value="3.00" class="has-prefix" step="0.5" oninput="updateCalculatorB()" />
-            </div>
-          </div>
-          <div class="input-group">
-            <label>
-              <span>Marketing & Launch Ads</span>
-              <span class="info-icon" onclick="openHelp('marketing')">?</span>
-            </label>
-            <div class="input-wrapper">
-              <span class="prefix">$</span>
-              <input type="number" id="cost-marketing-b" value="300" class="has-prefix" oninput="updateCalculatorB()" />
-            </div>
-          </div>
-
-          <!-- Unified Customs duties -->
-          <div class="input-group">
-            <label>
-              <span>Customs & Duties Type</span>
-              <span class="info-icon" onclick="openHelp('customs')">?</span>
-            </label>
-            <select id="customs-type-b" class="styled-select" onchange="toggleCustomsInput('b')">
-              <option value="percent">Percentage of Unit Cost (%)</option>
-              <option value="flat-unit">Flat Fee Per Unit ($)</option>
-              <option value="flat-batch">Flat Fee Per Batch ($)</option>
-            </select>
-          </div>
-          <div class="input-group" id="customs-input-container-b">
-            <label id="customs-label-b">Duties Rate (%)</label>
-            <div class="input-wrapper">
-              <span class="prefix" id="customs-prefix-b" style="display:none;">$</span>
-              <input type="number" id="cost-customs-val-b" value="10" />
-              <span class="suffix" id="customs-suffix-b">%</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right Panel: Sourcing Negotiation Outputs -->
-        <section style="display:flex; flex-direction:column; gap:1.5rem;">
-          
-          <div class="results-panel">
-            <!-- Column 1 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 1 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-b-1" value="10" min="1" oninput="updateCalculatorB()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-b-1" value="35" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-b-1" value="50" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
-                <div class="label" style="color: var(--accent-light);">Required Selling Price</div>
-                <div class="value value-sp" id="sp-b-1">$0.00</div>
-                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
-              </div>
-
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-1">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Net Unit Profit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Investment</span><span class="metric-val" id="batch-cost-val-b-1">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Net Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-1">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-b-1">Healthy</span></div>
-            </div>
-
-            <!-- Column 2 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 2 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-b-2" value="25" min="1" oninput="updateCalculatorB()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-b-2" value="28" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-b-2" value="100" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
-                <div class="label" style="color: var(--accent-light);">Required Selling Price</div>
-                <div class="value value-sp" id="sp-b-2">$0.00</div>
-                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
-              </div>
-
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-2">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Net Unit Profit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Investment</span><span class="metric-val" id="batch-cost-val-b-2">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Net Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-2">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-b-2">Healthy</span></div>
-            </div>
-
-            <!-- Column 3 -->
-            <div class="moq-card popular">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 3 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-b-3" value="50" min="1" oninput="updateCalculatorB()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-b-3" value="22" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-b-3" value="180" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
-                <div class="label" style="color: var(--accent-light);">Required Selling Price</div>
-                <div class="value value-sp" id="sp-b-3">$0.00</div>
-                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
-              </div>
-
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-3">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Net Unit Profit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Investment</span><span class="metric-val" id="batch-cost-val-b-3">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Net Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-3">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-b-3">Healthy</span></div>
-            </div>
-
-            <!-- Column 4 -->
-            <div class="moq-card">
-              <div class="moq-header">
-                <div class="card-inputs-title">Tier 4 Config</div>
-                <div class="moq-card-input-row">
-                  <div class="card-input-group">
-                    <label><span>MOQ Quantity</span><span class="info-icon" onclick="openHelp('moq')">?</span></label>
-                    <input type="number" id="moq-b-4" value="100" min="1" oninput="updateCalculatorB()" />
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Unit Quote</span><span class="info-icon" onclick="openHelp('factory-quote')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="rate-b-4" value="18" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                  <div class="card-input-group">
-                    <label><span>Shipping Cost</span><span class="info-icon" onclick="openHelp('shipping')">?</span></label>
-                    <div class="card-input-wrapper">
-                      <span>$</span>
-                      <input type="number" id="ship-b-4" value="300" class="has-symbol" oninput="updateCalculatorB()" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="cost-stat" style="border-color: rgba(255, 42, 117, 0.25);">
-                <div class="label" style="color: var(--accent-light);">Required Selling Price</div>
-                <div class="value value-sp" id="sp-b-4">$0.00</div>
-                <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:2px;">(MSRP needed to make profit goal)</div>
-              </div>
-
-              <div class="metrics-list">
-                <div class="metric-row"><span class="metric-label">Factory Unit Cost</span><span class="metric-val" id="factory-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Sample Fee</span><span class="metric-val" id="startup-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Amortized Shipping & Ads</span><span class="metric-val" id="logistics-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Customs & Duties</span><span class="metric-val" id="duties-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Packaging & Handling</span><span class="metric-val" id="handling-val-b-4">$0.00</span></div>
-                <div class="metric-row" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;"><span class="metric-label" style="color:#fff; font-weight:700;">True Cost Price (CP)</span><span class="metric-val" style="color:#fff; font-weight:700;" id="cp-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Net Unit Profit</span><span class="metric-val profit" style="font-weight:700;" id="profit-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Investment</span><span class="metric-val" id="batch-cost-val-b-4">$0.00</span></div>
-                <div class="metric-row"><span class="metric-label">Batch Net Profit</span><span class="metric-val profit" style="font-weight:700;" id="batch-profit-val-b-4">$0.00</span></div>
-              </div>
-              <div class="card-footer"><span class="margin-badge" id="badge-b-4">Healthy</span></div>
-            </div>
-          </div>
-
-          <!-- COMPARATIVE BAR CHART CARD FOR VIEW B -->
-          <div class="comparison-chart-card">
-            <div class="chart-title">Visual Cost vs. Profit Analysis (Flat Order Profit Mode)</div>
-            <div class="chart-container" id="chart-container-b">
-              <!-- Column 1 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-b-msrp-1">$0.00</div>
-                  <div class="chart-bar" id="chart-b-bar-container-1">
-                    <div class="chart-segment-profit" id="chart-b-seg-profit-1">+$0</div>
-                    <div class="chart-segment-cost" id="chart-b-seg-cost-1">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-b-moq-lbl-1">10 MOQ</div>
-              </div>
-              <!-- Column 2 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-b-msrp-2">$0.00</div>
-                  <div class="chart-bar" id="chart-b-bar-container-2">
-                    <div class="chart-segment-profit" id="chart-b-seg-profit-2">+$0</div>
-                    <div class="chart-segment-cost" id="chart-b-seg-cost-2">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-b-moq-lbl-2">25 MOQ</div>
-              </div>
-              <!-- Column 3 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-b-msrp-3">$0.00</div>
-                  <div class="chart-bar" id="chart-b-bar-container-3">
-                    <div class="chart-segment-profit" id="chart-b-seg-profit-3">+$0</div>
-                    <div class="chart-segment-cost" id="chart-b-seg-cost-3">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-b-moq-lbl-3">50 MOQ</div>
-              </div>
-              <!-- Column 4 -->
-              <div class="chart-col">
-                <div class="chart-bar-wrapper">
-                  <div class="chart-msrp-lbl" id="chart-b-msrp-4">$0.00</div>
-                  <div class="chart-bar" id="chart-b-bar-container-4">
-                    <div class="chart-segment-profit" id="chart-b-seg-profit-4">+$0</div>
-                    <div class="chart-segment-cost" id="chart-b-seg-cost-4">$0 CP</div>
-                  </div>
-                </div>
-                <div class="chart-moq-lbl" id="chart-b-moq-lbl-4">100 MOQ</div>
-              </div>
-            </div>
-            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; font-size: 0.85rem;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 12px; height: 12px; background: rgba(255, 42, 117, 0.35); border-radius: 3px;"></div>
-                <span style="color: var(--text-secondary);">True Cost Price (CP)</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
-                <span style="color: var(--text-secondary);">Distributed Order Net Profit</span>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-      </div>
-    </div>
-
-    <!-- Lead Generation Banner -->
-    <div class="lead-banner">
-      <h3>Protect Your Margins from Sizing Returns</h3>
-      <p>Fashion brands lose substantial batch profits to returns. E-commerce returns average 40%, directly wiping out margins on shipping labels and handling. Add Styla's AI Fit widget to reduce returns by 70%.</p>
-      <button class="btn-primary" onclick="window.location.href='../index.html'">
-        <span>Try Styla Fit AI Widget</span>
-        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-      </button>
-    </div>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-inner" style="flex-direction: column; gap: 20px;">
-        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;"><img src="../logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
-        
-        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
-          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
-        </div>
-
-        <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
-          <a href="../tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
-          <a href="../tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
-          <a href="../seo/guides.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Sizing & Sourcing Hub</a>
-        </div>
-
-        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">Ac 2026 STYLA Measure. All rights reserved.</p>
-        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Help Modal -->
-  <div class="modal-overlay" id="info-modal" onclick="closeInfoModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="modal-close" onclick="closeInfoModal(event)">&times;</span>
-      <h3 id="info-modal-title" style="margin-bottom: 1rem; color: #ff75a0; font-family:'Outfit', sans-serif;">Help Guide</h3>
-      <p id="info-modal-desc" style="color: #94a3b8; line-height: 1.6; font-size: 0.95rem; text-align: left;"></p>
-    </div>
-  </div>
-
-  <!-- CALCULATOR SCRIPT -->
-  <script>
-    // Help Modal Content Map
-    const helpData = {
-      'desired-profit': {
-        title: "Desired Net Profit (Per Order)",
-        desc: "The total flat profit payout you want to make on the entire run to make it worth your time (e.g., $500).<br><br><strong>Formulas:</strong><br>• Unit Net Profit = Desired Order Net Profit / MOQ<br>• Required MSRP = True Cost Price + Unit Net Profit<br><br><em>Example:</em> If you want to make $500: at 10 MOQ each customer pays a $50 markup. At 100 MOQ, each customer pays only a $5 markup. Higher MOQs allow you to offer competitive retail prices without sacrificing your time's value."
-      },
-      'sample-fee': {
-        title: "Physical Sample & Pattern Fee",
-        desc: "The upfront flat fee paid to draft your pattern and sew your first physical sample. This is a one-time fixed cost.<br><br><strong>Formula:</strong><br>• Amortized Sample Cost = Physical Sample Fee / MOQ<br><br><em>Example:</em> If your sample fee is $250: at 10 MOQ it adds $25.00/unit to your true cost. At 100 MOQ, it amortizes down to only $2.50/unit."
-      },
-      'handling': {
-        title: "Packaging & Unit Handling",
-        desc: "The cost of variable items that go with every single garment order—like custom shipping boxes, tissue paper, brand labels, polybags, stickers, and the labor cost to pack it. This is a variable cost that scales with quantity."
-      },
-      'marketing': {
-        title: "Marketing & Launch Ads",
-        desc: "The total marketing and ad spend budget allocated for this specific collection.<br><br><strong>Formula:</strong><br>• Amortized Marketing Cost = Marketing & Launch Ads Budget / MOQ<br><br><em>Example:</em> If you spend $300 on launch ads: at 10 MOQ, it adds $30.00/unit of marketing overhead. At 100 MOQ, it is only $3.00/unit."
-      },
-      'customs': {
-        title: "Customs & Duties",
-        desc: "Duties and import clearances. You can calculate this as:<br><br><strong>Formulas:</strong><br>• <strong>Percentage of unit cost</strong>: (Factory Unit Quote * Duties Rate %) / 100<br>• <strong>Flat fee per unit</strong>: Tariff Rate ($)<br>• <strong>Flat fee per batch</strong>: Flat Broker Fee / MOQ"
-      },
-      'moq': {
-        title: "Minimum Order Quantity (MOQ)",
-        desc: "The number of units you are ordering from the manufacturer. You can customize this number for each tier to compare how different order sizes impact your pricing structure."
-      },
-      'factory-quote': {
-        title: "Unit Sourcing Quote",
-        desc: "The manufacturing price per garment quoted by the factory. Factories typically charge a much higher unit rate for low MOQs (e.g. 10 units at $35) compared to bulk orders (e.g. 100 units at $18)."
-      },
-      'shipping': {
-        title: "Tier Shipping Cost",
-        desc: "The total shipping cost to transport this batch of clothes from the factory to your warehouse.<br><br><strong>Formula:</strong><br>• Amortized Shipping Cost = Tier Shipping Cost / MOQ<br><br><em>Example:</em> Shipping 10 units by air courier is cheaper in total ($50) than shipping 100 units by ocean freight ($300). However, the air freight costs $5.00/unit, while the ocean freight costs only $3.00/unit."
-      }
-    };
-
-    function openHelp(key) {
-      const data = helpData[key];
-      if (!data) return;
-      document.getElementById('info-modal-title').innerHTML = data.title;
-      document.getElementById('info-modal-desc').innerHTML = data.desc;
-      document.getElementById('info-modal').style.display = 'flex';
-    }
-
-    function closeInfoModal(e) {
-      if (e) e.stopPropagation();
-      document.getElementById('info-modal').style.display = 'none';
-    }
-
-    // Quick Guide Toggle
-    function toggleQuickGuide() {
-      const content = document.getElementById('quick-guide-content');
-      const arrow = document.getElementById('guide-arrow');
-      if (content.style.display === 'block') {
-        content.style.display = 'none';
-        arrow.style.transform = 'rotate(0deg)';
-      } else {
-        content.style.display = 'block';
-        arrow.style.transform = 'rotate(180deg)';
-      }
-    }
-
-    // Tab Controller
-    function switchAppTab(view) {
-      document.getElementById('tab-btn-analyzer').classList.toggle('active', view === 'analyzer');
-      document.getElementById('tab-btn-negotiator').classList.toggle('active', view === 'negotiator');
-      
-      document.getElementById('view-analyzer').classList.toggle('active', view === 'analyzer');
-      document.getElementById('view-negotiator').classList.toggle('active', view === 'negotiator');
-      
-      if (view === 'analyzer') {
-        updateCalculatorA();
-      } else {
-        updateCalculatorB();
-      }
-    }
-
-    // Toggle Customs Field layout
-    function toggleCustomsInput(prefix) {
-      const customsType = document.getElementById(`customs-type-${prefix}`).value;
-      const label = document.getElementById(`customs-label-${prefix}`);
-      const suffix = document.getElementById(`customs-suffix-${prefix}`);
-      const prefixSymbol = document.getElementById(`customs-prefix-${prefix}`);
-      const input = document.getElementById(`cost-customs-val-${prefix}`);
-
-      if (customsType === 'percent') {
-        label.textContent = "Duties Rate (%)";
-        suffix.style.display = "inline";
-        prefixSymbol.style.display = "none";
-        input.className = "has-suffix";
-      } else if (customsType === 'flat-unit') {
-        label.textContent = "Flat Fee Per Unit ($)";
-        suffix.style.display = "none";
-        prefixSymbol.style.display = "inline";
-        input.className = "has-prefix";
-      } else {
-        label.textContent = "Flat Fee Per Batch ($)";
-        suffix.style.display = "none";
-        prefixSymbol.style.display = "inline";
-        input.className = "has-prefix";
-      }
-      
-      if (prefix === 'a') {
-        updateCalculatorA();
-      } else {
-        updateCalculatorB();
-      }
-    }
-
-    // Dynamic Sizing Modes in App A
-    let pricingModeA = 'margin';
-
-    function setPricingMode(prefix, mode) {
-      if (prefix === 'a') {
-        pricingModeA = mode;
-        document.getElementById('btn-mode-margin-a').classList.toggle('active', mode === 'margin');
-        document.getElementById('btn-mode-retail-a').classList.toggle('active', mode === 'retail');
-        
-        document.getElementById('pricing-margin-group-a').style.display = mode === 'margin' ? 'block' : 'none';
-        document.getElementById('pricing-retail-group-a').style.display = mode === 'retail' ? 'block' : 'none';
-        
-        updateCalculatorA();
-      }
-    }
-
-    function parseInput(id, defaultVal = 0) {
-      const val = parseFloat(document.getElementById(id).value);
-      return isNaN(val) ? defaultVal : val;
-    }
-
-    function formatCurrency(val) {
-      if (val < 0) return '-$' + Math.abs(val).toFixed(2);
-      return '$' + val.toFixed(2);
-    }
-
-    // ==========================================
-    // APP A: MOQ PROFIT ANALYZER
-    // ==========================================
-    function updateCalculatorA() {
-      // Global parameters
-      const sampleFee = parseInput('cost-sample-a', 0);
-      const unitHandlingFee = parseInput('cost-handling-a', 0);
-      const marketingBudget = parseInput('cost-marketing-a', 0);
-      
-      const customsType = document.getElementById('customs-type-a').value;
-      const customsVal = parseInput('cost-customs-val-a', 0);
-
-      // Sizing targets
-      const targetMarginSlider = parseInt(document.getElementById('slider-margin-a').value, 10);
-      document.getElementById('val-margin-lbl-a').textContent = targetMarginSlider + '%';
-      const hardRetailSP = parseInput('input-retail-sp-a', 0);
-
-      let maxMSRP = 0;
-      const dataStore = [];
-
-      for (let i = 1; i <= 4; i++) {
-        const moq = Math.max(1, parseInput(`moq-a-${i}`, 1));
-        const factoryRate = parseInput(`rate-a-${i}`, 0);
-        const shippingTier = parseInput(`ship-a-${i}`, 0);
-
-        // Unified customs logic
-        let unitTariff = 0;
-        if (customsType === 'percent') {
-          unitTariff = (factoryRate * customsVal) / 100;
-        } else if (customsType === 'flat-unit') {
-          unitTariff = customsVal;
-        } else {
-          unitTariff = customsVal / moq;
-        }
-
-        const unitStartup = sampleFee / moq;
-        const unitBatchLogistics = (shippingTier + marketingBudget) / moq;
-        
-        const trueCP = factoryRate + unitStartup + unitBatchLogistics + unitTariff + unitHandlingFee;
-
-        let sellingPrice = 0;
-        let marginPercent = 0;
-
-        if (pricingModeA === 'margin') {
-          marginPercent = targetMarginSlider;
-          sellingPrice = trueCP / (1 - (marginPercent / 100));
-        } else {
-          sellingPrice = hardRetailSP;
-          marginPercent = ((sellingPrice - trueCP) / sellingPrice) * 100;
-        }
-
-        const profitPerUnit = sellingPrice - trueCP;
-        const totalBatchCost = trueCP * moq;
-        const totalBatchProfit = profitPerUnit * moq;
-
-        maxMSRP = Math.max(maxMSRP, sellingPrice);
-        dataStore.push({ moq, trueCP, sellingPrice, profitPerUnit, totalBatchCost, totalBatchProfit, factoryRate, unitStartup, unitBatchLogistics, unitTariff, unitHandlingFee, marginPercent });
-      }
-
-      // Render DOM outputs & chart bars
-      for (let i = 1; i <= 4; i++) {
-        const idx = i - 1;
-        const info = dataStore[idx];
-
-        document.getElementById(`factory-val-a-${i}`).textContent = formatCurrency(info.factoryRate);
-        document.getElementById(`startup-val-a-${i}`).textContent = formatCurrency(info.unitStartup);
-        document.getElementById(`logistics-val-a-${i}`).textContent = formatCurrency(info.unitBatchLogistics);
-        document.getElementById(`duties-val-a-${i}`).textContent = formatCurrency(info.unitTariff);
-        document.getElementById(`handling-val-a-${i}`).textContent = formatCurrency(info.unitHandlingFee);
-        document.getElementById(`cp-val-a-${i}`).textContent = formatCurrency(info.trueCP);
-        
-        document.getElementById(`sp-a-${i}`).textContent = formatCurrency(info.sellingPrice);
-        document.getElementById(`profit-val-a-${i}`).textContent = formatCurrency(info.profitPerUnit);
-        document.getElementById(`batch-cost-val-a-${i}`).textContent = formatCurrency(info.totalBatchCost);
-        document.getElementById(`batch-profit-val-a-${i}`).textContent = formatCurrency(info.totalBatchProfit);
-
-        // Adjust badge styles
-        const badge = document.getElementById(`badge-a-${i}`);
-        if (info.marginPercent <= 0 || info.profitPerUnit < 0) {
-          badge.textContent = `Loss (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge danger';
-        } else if (info.marginPercent < 20) {
-          badge.textContent = `Low Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge danger';
-        } else if (info.marginPercent < 45) {
-          badge.textContent = `Medium Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge low';
-        } else {
-          badge.textContent = `Healthy Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge healthy';
-        }
-
-        // Render Chart stack A
-        const safeMax = maxMSRP > 0 ? maxMSRP : 1;
-        const totalHeight = (info.sellingPrice / safeMax) * 100;
-        const costHeightPercent = (info.trueCP / info.sellingPrice) * 100;
-
-        document.getElementById(`chart-a-bar-container-${i}`).style.height = `${totalHeight}%`;
-        document.getElementById(`chart-a-seg-cost-${i}`).style.height = `${costHeightPercent}%`;
-        document.getElementById(`chart-a-msrp-${i}`).textContent = formatCurrency(info.sellingPrice);
-        document.getElementById(`chart-a-seg-profit-${i}`).textContent = `+$${info.profitPerUnit.toFixed(0)}`;
-        document.getElementById(`chart-a-seg-cost-${i}`).textContent = `$${info.trueCP.toFixed(0)} CP`;
-        document.getElementById(`chart-a-moq-lbl-${i}`).textContent = `${info.moq} MOQ`;
-      }
-    }
-
-    // ==========================================
-    // APP B: MOQ SOURCING NEGOTIATOR (REVERSE)
-    // ==========================================
-    function updateCalculatorB() {
-      // Pricing Target Targets: Target Payout/Profit per Order
-      const targetOrderProfit = parseInput('target-profit-b', 0);
-
-      // Global Constants
-      const sampleFee = parseInput('cost-sample-b', 0);
-      const unitHandlingFee = parseInput('cost-handling-b', 0);
-      const marketingBudget = parseInput('cost-marketing-b', 0);
-      
-      const customsType = document.getElementById('customs-type-b').value;
-      const customsVal = parseInput('cost-customs-val-b', 0);
-
-      let maxMSRP = 0;
-      const dataStore = [];
-
-      for (let i = 1; i <= 4; i++) {
-        const moq = Math.max(1, parseInput(`moq-b-${i}`, 1));
-        const factoryRate = parseInput(`rate-b-${i}`, 0);
-        const shippingTier = parseInput(`ship-b-${i}`, 0);
-
-        // Unit target profit: Distributed flat profit over MOQ
-        const unitTargetProfit = targetOrderProfit / moq;
-
-        // Compute customs tax
-        let unitTariff = 0;
-        if (customsType === 'percent') {
-          unitTariff = (factoryRate * customsVal) / 100;
-        } else if (customsType === 'flat-unit') {
-          unitTariff = customsVal;
-        } else {
-          unitTariff = customsVal / moq;
-        }
-
-        const unitStartup = sampleFee / moq;
-        const unitBatchLogistics = (shippingTier + marketingBudget) / moq;
-        
-        const trueCP = factoryRate + unitStartup + unitBatchLogistics + unitTariff + unitHandlingFee;
-
-        // Required Retail Selling Price to hit target batch profit
-        const requiredMSRP = trueCP + unitTargetProfit;
-        const marginPercent = requiredMSRP > 0 ? (unitTargetProfit / requiredMSRP) * 100 : 0;
-
-        const totalBatchCost = trueCP * moq;
-        const totalBatchProfit = targetOrderProfit; // Static order profit payout!
-
-        maxMSRP = Math.max(maxMSRP, requiredMSRP);
-        dataStore.push({ moq, trueCP, requiredMSRP, unitTargetProfit, totalBatchCost, totalBatchProfit, factoryRate, unitStartup, unitBatchLogistics, unitTariff, unitHandlingFee, marginPercent });
-      }
-
-      // Render B Outputs & chart bars
-      for (let i = 1; i <= 4; i++) {
-        const idx = i - 1;
-        const info = dataStore[idx];
-
-        document.getElementById(`sp-b-${i}`).textContent = formatCurrency(info.requiredMSRP);
-        document.getElementById(`factory-val-b-${i}`).textContent = formatCurrency(info.factoryRate);
-        document.getElementById(`startup-val-b-${i}`).textContent = formatCurrency(info.unitStartup);
-        document.getElementById(`logistics-val-b-${i}`).textContent = formatCurrency(info.unitBatchLogistics);
-        document.getElementById(`duties-val-b-${i}`).textContent = formatCurrency(info.unitTariff);
-        document.getElementById(`handling-val-b-${i}`).textContent = formatCurrency(info.unitHandlingFee);
-        document.getElementById(`cp-val-b-${i}`).textContent = formatCurrency(info.trueCP);
-        
-        document.getElementById(`profit-val-b-${i}`).textContent = formatCurrency(info.unitTargetProfit);
-        document.getElementById(`batch-cost-val-b-${i}`).textContent = formatCurrency(info.totalBatchCost);
-        document.getElementById(`batch-profit-val-b-${i}`).textContent = formatCurrency(info.totalBatchProfit);
-
-        // Adjust badge styles
-        const badge = document.getElementById(`badge-b-${i}`);
-        if (info.marginPercent <= 0) {
-          badge.textContent = `No Margin (0%)`;
-          badge.className = 'margin-badge danger';
-        } else if (info.marginPercent < 25) {
-          badge.textContent = `Low Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge danger';
-        } else if (info.marginPercent < 50) {
-          badge.textContent = `Medium Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge low';
-        } else {
-          badge.textContent = `Healthy Margin (${info.marginPercent.toFixed(0)}%)`;
-          badge.className = 'margin-badge healthy';
-        }
-
-        // Render Chart stack B
-        const safeMax = maxMSRP > 0 ? maxMSRP : 1;
-        const totalHeight = (info.requiredMSRP / safeMax) * 100;
-        const costHeightPercent = (info.trueCP / info.requiredMSRP) * 100;
-
-        document.getElementById(`chart-b-bar-container-${i}`).style.height = `${totalHeight}%`;
-        document.getElementById(`chart-b-seg-cost-${i}`).style.height = `${costHeightPercent}%`;
-        document.getElementById(`chart-b-msrp-${i}`).textContent = formatCurrency(info.requiredMSRP);
-        document.getElementById(`chart-b-seg-profit-${i}`).textContent = `+$${info.unitTargetProfit.toFixed(0)}`;
-        document.getElementById(`chart-b-seg-cost-${i}`).textContent = `$${info.trueCP.toFixed(0)} CP`;
-        document.getElementById(`chart-b-moq-lbl-${i}`).textContent = `${info.moq} MOQ`;
-      }
-    }
-
-    // Attach listeners dynamically for App A inputs
-    const inputsA = [
-      'cost-sample-a', 'cost-handling-a', 'cost-marketing-a', 'cost-customs-val-a'
-    ];
-    inputsA.forEach(id => {
-      document.getElementById(id).addEventListener('input', updateCalculatorA);
-    });
-    for (let i = 1; i <= 4; i++) {
-      document.getElementById(`moq-a-${i}`).addEventListener('input', updateCalculatorA);
-      document.getElementById(`rate-a-${i}`).addEventListener('input', updateCalculatorA);
-      document.getElementById(`ship-a-${i}`).addEventListener('input', updateCalculatorA);
-    }
-
-    // Attach listeners dynamically for App B inputs
-    const inputsB = [
-      'target-profit-b', 'cost-sample-b', 'cost-handling-b', 'cost-marketing-b', 'cost-customs-val-b'
-    ];
-    inputsB.forEach(id => {
-      document.getElementById(id).addEventListener('input', updateCalculatorB);
-    });
-    for (let i = 1; i <= 4; i++) {
-      document.getElementById(`moq-b-${i}`).addEventListener('input', updateCalculatorB);
-      document.getElementById(`rate-b-${i}`).addEventListener('input', updateCalculatorB);
-      document.getElementById(`ship-b-${i}`).addEventListener('input', updateCalculatorB);
-    }
-
-    // Initial setups
-    document.addEventListener('DOMContentLoaded', () => {
-      // Set initial customs modes
-      toggleCustomsInput('a');
-      toggleCustomsInput('b');
-    });
-  </script>
-</body>
-</html>

@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, hips, history } = req.body;
+    const { chest, waist, belly, hips, history } = req.body;
 
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
@@ -26,20 +26,49 @@ export default async function handler(req, res) {
     // Prepare system prompt containing context
     const systemInstruction = `You are an expert STYLA tailor and fashion consultant. 
 The user is asking questions about sizing, fit, or fashion. 
-Keep your answers very brief, friendly, and highly actionable (1-3 short sentences max).
+Keep your answers extremely brief and highly actionable (1-2 short sentences max). Avoid verbose introductory or concluding fluff.
 
 The user's current measurements are:
 - Chest: ${chest}"
 - Waist: ${waist}"
-- Hips: ${hips}"
+${belly ? `- Belly: ${belly}"\\n` : ''}- Hips: ${hips}"
 
-Always answer from the perspective of an expert tailor. If they ask about tailoring, tell them exactly what can and cannot be easily altered (e.g., taking in a waist is easy, letting out shoulders is hard).`;
+Always answer from the perspective of an expert tailor. Understand ease rules, fabric stretch properties, and garment comfort limits. If they ask about tailoring, tell them exactly what can and cannot be easily altered (e.g., taking in a waist is easy, letting out shoulders is hard).
+
+PROFESSIONAL SIZING & APPAREL MATCHING RULES:
+1. BODY-TO-BODY MATCHING (DEFAULT): Assume size charts are target body sizes, not finished garment dimensions, unless explicitly labeled "garment specifications".
+   - You MUST compare the user's body measurements directly to the brand's recommended body dimensions in the size chart.
+   - Do NOT add ease requirements (like +3 inches) on top of the chart body values; the brand has already built ease into the sizing patterns.
+
+2. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's chart spec):
+   - Woven / Structured (Suits, Coats, Blazers, Woven Shirts): Max tolerance of +0.5". The user's body measurement must not exceed the brand's body spec by more than 0.5", otherwise size up.
+   - Knits / Stretch (T-shirts, hoodies, knitwear): Max tolerance of +1.5". Since knits stretch, the user's body can exceed the spec by up to 1.5".
+   - Activewear / Compression (Spandex, Leggings): Max tolerance of +3.0". Since compression items fit tightly, the user can be up to 3.0" larger than the spec.
+
+3. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
+   - Pants/Bottoms (Waist): User's body must not be smaller than the brand spec by more than -1.5" (otherwise they fall off).
+   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5" (otherwise too loose/droopy).
+   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0" (for an oversized look).
+   - Compression Activewear: User's body must not be smaller than the spec by more than -1.0" (otherwise saggy).
+
+4. BELLY & WAIST INTEGRATION:
+   - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
+   - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
+   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
+
+5. DECISION ENGINE:
+   - Identify the item category and fabric type.
+   - Filter sizes that are compatible (i.e. not too tight, and not too loose).
+   - From the compatible sizes, recommend the one where the difference (UserBody - BrandBody) is closest to 0 (or slightly negative for a comfortable drape).`;
 
     const geminiPayload = {
       systemInstruction: {
         parts: [{ text: systemInstruction }]
       },
-      contents: history
+      contents: history,
+      generationConfig: {
+        temperature: 0.1
+      }
     };
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {

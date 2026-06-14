@@ -7,6 +7,7 @@
   const measurements = {
     chest: localStorage.getItem('styla_twin_chest'),
     waist: localStorage.getItem('styla_twin_waist'),
+    belly: localStorage.getItem('styla_twin_belly'),
     hips: localStorage.getItem('styla_twin_hips'),
     height: localStorage.getItem('styla_twin_height'),
     inseam: localStorage.getItem('styla_twin_inseam')

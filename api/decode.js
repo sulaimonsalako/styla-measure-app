@@ -47,24 +47,29 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - Otherwise, it is a BODY SIZE CHART (contains recommended target body measurements, like chest circumferences 36", 38", 40").
 
 2. MATCHING LOGIC AND TRUE PHYSICAL EASE:
-   - CASE A: BODY SIZE CHART (Recommended Body Dimensions)
-     - The brand has pre-factored style ease into the garment patterns for that target body size. 
-     - If the user's body measurement matches the recommended body dimensions, they experience the intended fit (fit_spectrum: 'ideal', fit_match_score: 100).
+   - CASE A: BODY SIZE CHART (Recommended Target Body Dimensions, e.g. M is for 38" chest)
+     - Compare the user's body measurements directly to the recommended target body sizes in the chart. The brand has already built styling ease into the garment patterns for that target body size.
+     - The ideal fit (fit_spectrum: 'ideal', fit_match_score: 100) is when the user's body size matches the recommended body spec exactly.
      - If the user's body is smaller than the recommended body size (e.g., user is 35" chest, recommended is 39.4" chest), they get EXTRA ease:
-       True Physical Ease = Brand's Pre-Factored Ease (approx 3" for regular tops) + (Recommended Body Spec - User Body).
-       For example, a 35" chest user buying a size designed for a 39.4" body gets 3" + 4.4" = 7.4" of physical ease. This fits looser than designed!
-       - Recommending this size is fine if it is the best fit, but set fit_spectrum to 'relaxed' or 'oversized', deduct score points (e.g., -6% per inch of body difference, so fit_match_score is 74), and state in the explanation that it fits looser than designed.
-       - NEVER suggest sizing down if no smaller size exists in the chart. Instead, warn the user that this is the smallest available size.
-     - If the user's body is larger than the recommended body spec, they get LESS ease (fit_spectrum: 'slim' or 'tight'). Deduct score points proportionally.
+       True Physical Ease = Brand's Pre-Factored Ease (approx 2" for regular tops) + (Recommended Body Spec - User Body).
+       For example, a 35" user buying a size designed for a 39.4" body gets 2" + 4.4" = 6.4" of physical ease. This fits looser than designed!
+       - In this case, recommend the size that matches their body closest (e.g., Size S designed for a 36.2" chest is a much better match than M). 
+       - If M is recommended because S does not exist or is unavailable, set fit_spectrum to 'relaxed' or 'oversized', deduct score points (e.g., -6% per inch of body difference, so fit_match_score is ~74%), and explain that it fits looser than designed.
+       - If the user's body is larger than the recommended body spec, they get LESS ease (fit_spectrum: 'slim' or 'tight'). Deduct score points proportionally.
 
-   - CASE B: GARMENT SPECIFICATION CHART (Finished Garment Dimensions)
-     - Calculate the actual physical ease: Ease = Garment Circumference - User Body Measurement.
-     - Evaluate the ease against the garment's fit intent and fabric:
-       - Regular Fit Knit Polo: Standard chest ease is 3" to 5" (comfortably relaxed).
-       - Slim Fit Knit: Standard chest ease is 1.5" to 3".
-       - Oversized Fit: Standard chest ease is 6" to 10".
-       - Woven Shirt / Jacket: Standard chest ease is 4" to 6".
-     - Fit Match Score & Spectrum: If the calculated physical ease falls in the standard range, fit_spectrum is 'ideal' and score is 100. If it is wider than the target range, fit_spectrum is 'relaxed' or 'oversized' and score is lower. If narrower, fit_spectrum is 'slim' or 'tight' and score is lower. Deduct 10 points per inch outside the target ease range.
+   - CASE B: GARMENT SPECIFICATION CHART (Finished Garment Dimensions, e.g. flat measurements)
+     - Flat measurements represent the fabric itself. The brand has already built styling ease into these dimensions.
+     - To find the target body size the garment was designed for, subtract the standard design ease from the finished garment circumference:
+       - Regular Fit Knit / Polo: Standard design ease is 1.5" to 2.5". (e.g. M with 39.4" finished chest is designed for a ~37.4" body chest).
+       - Slim Fit: Standard design ease is 0.5" to 1.5".
+       - Oversized Fit: Standard design ease is 4" to 6".
+       - Woven Shirt / Jacket: Standard design ease is 3" to 4".
+     - Calculate the user's difference from the target body chest:
+       Difference = Target Body Spec - User Body.
+       - If the difference is close to 0 (within +/- 1"), the fit is 'ideal' (fit_match_score: 95-100, fit_spectrum: 'ideal').
+       - If the user's body is significantly smaller than the target body spec, the fit is 'relaxed' or 'oversized' (score is lower, fit_spectrum is 'relaxed' or 'oversized').
+       - If the user's body is larger than the target body spec, the fit is 'slim' or 'tight' (score is lower, fit_spectrum is 'slim' or 'tight').
+       - Example: A polo with finished chest 39.4" (Size M) is designed for a ~37.4" body chest. A 35" chest user is 2.4" smaller than the target body. Thus, M is a 'relaxed' fit (score ~85%). S (finished chest ~37.4", designed for a ~35.4" body) is the 'ideal' fit (score ~97%). Recommending M as 100% ideal is wrong when S is available.
 
 3. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's body spec or target body size):
    - Woven / Structured: Max tolerance of +0.5". The user's body measurement must not exceed the target body size by more than 0.5", otherwise size up.
@@ -83,7 +88,7 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
 
 6. DECISION ENGINE & NO EXTRAPOLATION:
-   - Recommend the size that is closest to an 'ideal' fit.
+   - Recommend the size that is closest to an 'ideal' fit (closest target body spec to user's body).
    - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size (e.g. M) and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available/manufactured. Do NOT suggest sizing down if that size does not exist.
 
 CRITICAL SIZING RULES:
