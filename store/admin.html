@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Control | STYLA PS</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-nav-left">
+      <span class="admin-logo" style="display: flex; align-items: center; gap: 8px;">
+        <img src="logo.png" alt="STYLA Logo" style="height: 28px; width: auto; border-radius: 50%;" />
+        STYLA PS <span class="logo-sub">ADMIN</span>
+      </span>
+    </div>
+    <div class="admin-nav-right">
+      <a href="index.html" class="btn-secondary-sm">← Back to Storefront</a>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <div class="admin-layout">
+      <!-- Upload Form -->
+      <section class="admin-card">
+        <h2 class="admin-section-title" id="form-title">Upload New Product</h2>
+        <form id="upload-form" class="admin-form">
+          <div class="form-group">
+            <label for="prod-name">Product Title</label>
+            <input type="text" id="prod-name" required placeholder="e.g. Oversized Knit Cardigan">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prod-category">Category</label>
+              <select id="prod-category" required>
+                <!-- Dynamically Populated -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prod-supplier">Supplier (China)</label>
+              <input type="text" id="prod-supplier" required placeholder="e.g. Fujian Denim Co.">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-desc">Product Description</label>
+            <textarea id="prod-desc" rows="3" placeholder="Describe materials, origin, construction..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prod-single-price">Single Item Price ($)</label>
+              <input type="number" id="prod-single-price" required min="1" placeholder="e.g. 150">
+              <span class="input-helper">Full shipping wait price</span>
+            </div>
+            <div class="form-group">
+              <label for="prod-bulk-price">Bulk Item Price ($)</label>
+              <input type="number" id="prod-bulk-price" required min="1" placeholder="e.g. 85">
+              <span class="input-helper">Unlocked at 4+ combined items</span>
+            </div>
+          </div>
+
+          <!-- AI Size Chart Scanner -->
+          <div class="form-group" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 1.25rem; margin-bottom: 1.5rem;">
+            <label style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 0.25rem;">
+              <span>🤖 AI Size Chart Scanner (Image / PDF)</span>
+            </label>
+            <span style="font-size: 0.75rem; color: #64748b; display: block; margin-bottom: 0.75rem;">
+              Upload a screenshot (JPG/PNG) or a PDF file of the manufacturer's size chart. The AI will extract the dimensions to populate the grid below automatically.
+            </span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input type="file" id="scanner-file" accept="image/jpeg,image/png,application/pdf" style="font-size: 0.8rem;">
+              <span id="scanner-status" class="hidden" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: #2563eb; display: flex; align-items: center; gap: 4px;">
+                ⚡ SCANNING FILE...
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-poms">Garment Measurement Columns (POMs)</label>
+            <input type="text" id="prod-poms" value="Chest, Waist, Hips, Sleeve Length, Shoulder Width" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:4px; margin-bottom: 0.5rem;">
+            <span class="input-helper" style="margin-bottom:1rem; display:block;">Comma-separated column names for the size chart specs table. Auto-filled during AI scanning.</span>
+          </div>
+
+          <div class="form-group">
+            <label>Available Sizes & Garment Measurements</label>
+            <div class="sizes-checkboxes">
+              <label><input type="checkbox" name="sizes" value="XS"> XS</label>
+              <label><input type="checkbox" name="sizes" value="S" checked> S</label>
+              <label><input type="checkbox" name="sizes" value="M" checked> M</label>
+              <label><input type="checkbox" name="sizes" value="L" checked> L</label>
+              <label><input type="checkbox" name="sizes" value="XL" checked> XL</label>
+              <label><input type="checkbox" name="sizes" value="XXL"> XXL</label>
+            </div>
+            <!-- Dynamic Size Chart Input Grid Container -->
+            <div id="size-chart-inputs-container" style="margin-top:1.25rem;"></div>
+          </div>
+
+          <!-- Color Variations -->
+          <div class="form-group">
+            <label for="prod-colors">Color Variations</label>
+            <input type="text" id="prod-colors" placeholder="e.g. Charcoal, Off-White, Dusty Pink (comma separated)">
+            <span class="input-helper">Enter color names separated by commas</span>
+          </div>
+
+          <div class="form-group">
+            <label>Product Images</label>
+            <div class="image-upload-tabs">
+              <button type="button" class="tab-btn active" data-target="urls-input">Paste URLs</button>
+              <button type="button" class="tab-btn" data-target="files-input">Upload Files</button>
+            </div>
+            
+            <div id="urls-input" class="tab-content">
+              <textarea id="prod-image-urls" rows="3" placeholder="Paste image URLs (one per line). For best results, use direct image links."></textarea>
+              <span class="input-helper">Example: https://images.unsplash.com/...</span>
+            </div>
+
+            <div id="files-input" class="tab-content hidden">
+              <input type="file" id="prod-files" multiple accept="image/*">
+              <span class="input-helper">Select multiple files (Base64 local storage fallback)</span>
+              <div id="file-previews" class="previews-grid"></div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; width:100%; margin-top: 1.5rem;">
+            <button type="submit" class="btn-primary-admin" id="btn-submit-prod" style="flex-grow:1; margin-top:0;">Publish Product</button>
+            <button type="button" class="btn-cancel-edit hidden" id="btn-cancel-edit">Cancel Edit</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Active Inventory, Categories & Simulated Orders -->
+      <div class="admin-side-panel">
+        <section class="admin-card">
+          <h2 class="admin-section-title">Simulated Group Orders</h2>
+          <div class="orders-list" id="orders-container">
+            <div class="no-orders">No active group orders placed yet.</div>
+          </div>
+        </section>
+
+        <!-- Category Management Section -->
+        <section class="admin-card">
+          <h2 class="admin-section-title">Manage Categories</h2>
+          <form id="category-manager-form" style="display:flex; gap:10px; margin-bottom:1.25rem;">
+            <input type="text" id="new-cat-name" placeholder="New category" required style="flex-grow:1; border: 1px solid #d4d4d8; padding: 8px; border-radius: 4px;">
+            <button type="submit" class="btn-secondary-sm" style="padding:8px 16px; background-color:#000; color:#fff; border-color:#000; border-radius:4px; font-weight:600; cursor:pointer; font-size:0.75rem;">Add</button>
+          </form>
+          <div class="categories-list" id="categories-manager-list" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Dynamically Populated -->
+          </div>
+        </section>
+
+        <section class="admin-card">
+          <h2 class="admin-section-title">Current Inventory</h2>
+          <div class="inventory-list" id="inventory-container">
+            <div class="loading">Loading products...</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="admin.js" type="module"></script>
+</body>
+</html>

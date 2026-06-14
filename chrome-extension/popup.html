@@ -1,18 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>STYLA Measure</title>
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --bg-card: rgba(30, 41, 59, 0.7);
-      --primary: #8b5cf6;
-      --primary-hover: #7c3aed;
+      --bg-dark: #07070f;
+      --bg-card: rgba(14, 14, 28, 0.7);
+      --primary: #ff0055;
+      --primary-hover: #d90048;
       --accent: #ff2a75;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.1);
+      --text-main: #f0f0ff;
+      --text-muted: #9090b0;
+      --border: rgba(255, 255, 255, 0.07);
       --success: #10b981;
       --warning: #f59e0b;
       --error: #ef4444;
@@ -51,9 +51,7 @@
       font-size: 1.15rem;
       font-weight: 800;
       letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, var(--accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-main);
     }
 
     .sync-badge {
@@ -113,7 +111,7 @@
 
     .measurements-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       margin-bottom: 8px;
     }
@@ -152,7 +150,7 @@
     .input-wrapper input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      box-shadow: 0 0 0 2px rgba(255, 42, 117, 0.2);
     }
 
     button {
@@ -223,8 +221,8 @@
     }
 
     .result-card {
-      background: rgba(139, 92, 246, 0.08);
-      border: 1px solid rgba(139, 92, 246, 0.25);
+      background: rgba(255, 42, 117, 0.08);
+      border: 1px solid rgba(255, 42, 117, 0.25);
       border-radius: 12px;
       padding: 14px;
     }
@@ -238,7 +236,7 @@
       padding: 6px 16px;
       border-radius: 8px;
       margin-bottom: 12px;
-      box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+      box-shadow: 0 4px 10px rgba(255, 42, 117, 0.3);
     }
 
     .fit-description {
@@ -311,9 +309,9 @@
     }
 
     .tab-btn.active {
-      background: rgba(139, 92, 246, 0.15);
-      color: #c084fc;
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: rgba(255, 42, 117, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(255, 42, 117, 0.3);
     }
 
     /* Chat Panel Styles */
@@ -358,7 +356,7 @@
       color: white;
       align-self: flex-end;
       border-bottom-right-radius: 2px;
-      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
+      box-shadow: 0 2px 8px rgba(255, 42, 117, 0.15);
     }
 
     .chat-message.system {
@@ -413,7 +411,8 @@
   <div class="container">
     <header>
       <div class="logo-container">
-        <span class="logo-text">STYLA Measure</span>
+        <img src="logo.png" alt="STYLA Logo" style="height: 24px; width: auto; border-radius: 50%;" />
+        <span class="logo-text">STYLA <span style="color: var(--accent); font-weight: 400;">Measure</span></span>
       </div>
       <div id="sync-status" class="sync-badge unsynced">
         <div id="sync-dot" class="pulse unsynced"></div>
@@ -421,9 +420,14 @@
       </div>
     </header>
 
+    <!-- Tab Navigation -->
+    <div class="tabs-container">
+      <button id="tab-twin" class="tab-btn active">Twin Sizing</button>
+      <button id="tab-cloud" class="tab-btn">Cloud Sync</button>
+    </div>
 
-
-
+    <!-- Sizing Tab Content -->
+    <div id="sizing-tab-content">
       <div class="section-title">Your Digital Twin</div>
       
       <div class="profile-card">
@@ -435,6 +439,10 @@
         <div class="input-wrapper">
           <label for="waist">Waist (in)</label>
           <input type="number" id="waist" placeholder="--">
+        </div>
+        <div class="input-wrapper">
+          <label for="belly">Belly (in)</label>
+          <input type="number" id="belly" placeholder="--">
         </div>
         <div class="input-wrapper">
           <label for="hips">Hips (in)</label>
@@ -457,6 +465,13 @@
     </div>
 
     <button id="analyze-btn">Analyze Fit on this Page</button>
+    
+    <div id="manual-upload-container" style="margin-top: 6px; text-align: center;">
+      <button id="btn-trigger-upload" class="btn-run" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2); font-size: 11px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+        <span>&#128209;</span> Or Upload Size Chart Image
+      </button>
+      <input type="file" id="ext-file-upload" accept="image/*" style="display: none;" />
+    </div>
 
     <div id="loader-panel" class="loader">
       <div class="spinner"></div>
@@ -496,6 +511,49 @@
     </div>
 
 
+
+    </div> <!-- End of sizing-tab-content -->
+
+    <!-- Cloud Sync Tab Content -->
+    <div id="cloud-tab-content" style="display: none;">
+      <div class="section-title">Cloud Login</div>
+      <div class="profile-card" id="cloud-login-form">
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">
+          Log in with your STYLA account to sync your measurements across all devices and tab sessions.
+        </p>
+        <div class="input-wrapper" style="margin-bottom: 8px;">
+          <label for="cloud-email">Email</label>
+          <input type="email" id="cloud-email" placeholder="email@example.com">
+        </div>
+        <div class="input-wrapper" style="margin-bottom: 12px;">
+          <label for="cloud-password">Password</label>
+          <input type="password" id="cloud-password" placeholder="Password">
+        </div>
+        <button id="btn-cloud-login" style="margin-top: 4px;">Log In & Pull</button>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 12px; margin-bottom: 0; text-align: center;">
+          Don't have an account? <a href="https://styla.ca/measure.html?action=signup" target="_blank" style="color: var(--accent); text-decoration: underline;">Create one on styla.ca</a>
+        </p>
+        <div id="cloud-login-error" class="warning-box" style="display: none; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; margin-top: 8px; padding: 8px;"></div>
+      </div>
+
+      <div class="profile-card" id="cloud-profile-panel" style="display: none;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Logged in as:</div>
+        <div id="cloud-user-email" style="font-size: 12px; color: var(--accent); margin-bottom: 12px; word-break: break-all;">user@styla.ca</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button id="btn-cloud-pull" class="btn-run" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); font-size: 11.5px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>&#11015;</span> Pull Cloud Measurements
+          </button>
+          <button id="btn-cloud-push" class="btn-run" style="font-size: 11.5px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>&#11014;</span> Push local measurements to Cloud
+          </button>
+          <button id="btn-cloud-logout" style="background: transparent; border: none; color: #fca5a5; font-size: 11px; cursor: pointer; text-decoration: underline; margin-top: 4px; width: fit-content; align-self: center;">
+            Log Out
+          </button>
+        </div>
+        <div id="cloud-sync-msg" style="display: none; font-size: 11px; text-align: center; margin-top: 8px; color: #10b981;"></div>
+      </div>
+    </div>
 
   </div>
 

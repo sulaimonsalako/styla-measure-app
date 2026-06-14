@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist Group Shipping Storefront | STYLA PS</title>
+  <meta name="description" content="Shop apparel direct from China suppliers. Order together, split shipping, and unlock exclusive VIP Group Pricing.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+
+  <!-- Friend Invite Banner (Hidden by default, shown when cartId in URL) -->
+  <div id="invite-banner" class="invite-banner hidden">
+    <div class="container invite-banner-inner">
+      <span>You've been invited to join <strong><span id="creator-name-banner">a friend</span>'s</strong> cart to unlock VIP Group Pricing!</span>
+      <button id="btn-accept-invite" class="btn-accept-invite">Join Group Buy</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">
+        <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA PS <span class="logo-accent">GROUP BUY</span>
+      </div>
+      <div class="header-actions">
+        <!-- Auth Profile State Widget -->
+        <div id="auth-widget" style="display:flex; align-items:center; gap:8px;">
+          <button id="login-trigger-btn" class="twin-badge-btn" style="background:none; border:1px solid var(--border-color); color:var(--text-color);">
+            &#128100; LOGIN / SIGNUP
+          </button>
+          <div id="logged-in-box" class="hidden" style="display:flex; align-items:center; gap:8px;">
+            <button id="twin-btn" class="twin-badge-btn">
+              &#129516; TWIN: <span id="twin-status">@username</span>
+            </button>
+            <button id="logout-btn" style="background:none; border:none; text-decoration:underline; font-size:0.75rem; font-family:var(--font-mono); cursor:pointer; padding:0; color:var(--text-muted);">LOGOUT</button>
+          </div>
+        </div>
+        <a href="admin.html" class="btn-secondary-sm">Admin Dashboard</a>
+        <button id="cart-btn" class="cart-trigger">
+          CART <span id="cart-count" class="cart-count-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter & Status Bar -->
+  <div class="filter-bar">
+    <div class="container filter-bar-inner">
+      <div class="category-tags" id="tags-categories-container">
+        <!-- Dynamically Populated -->
+      </div>
+      
+      <!-- Unlocked Banner -->
+      <div id="status-unlocked-banner" class="group-status-banner pending">
+        <div class="pulse-dot"></div>
+        <span id="status-banner-text">Cart: 0/4 items. Add items to unlock VIP Group Pricing.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Store Layout -->
+  <div class="container">
+    <div class="store-layout">
+      <!-- Sidebar Filters -->
+      <aside class="store-sidebar">
+        <div class="sidebar-section">
+          <h3 class="sidebar-title">Categories</h3>
+          <ul class="sidebar-list" id="sidebar-categories-container">
+            <!-- Dynamically Populated -->
+          </ul>
+        </div>
+        
+
+      </aside>
+
+      <!-- Products Area -->
+      <main class="store-main">
+        <!-- Co-Shopping Hero Header Card -->
+        <div class="co-shopping-hero" id="co-shopping-hero">
+          <div class="co-hero-content">
+            <div class="co-hero-tag">&#128187; CO-SHOPPING TERMINAL ACTIVE</div>
+            <h2 class="co-hero-title">Share a Cart. Unlock VIP Group Pricing.</h2>
+            <p class="co-hero-desc">
+              Invite friends to shop with you! Add items to your cart, send them your live shopping link, and split the order. Once your combined cart reaches <strong>4+ items</strong>, everyone instantly unlocks <strong>VIP Group Pricing</strong> and <strong>Free Consolidated Shipping</strong>.
+            </p>
+            <div class="co-hero-share-action">
+              <span class="co-hero-share-label">Your Live Shopping Link:</span>
+              <div class="co-hero-input-wrap">
+                <input type="text" id="co-hero-share-url" readonly value="Add items to generate link...">
+                <button type="button" id="btn-co-hero-copy">Copy Live Link</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="products-grid" id="products-grid">
+          <!-- Dynamically Populated -->
+        </div>
+
+        <!-- Simulation Help Box for funnel testing -->
+        <section class="sim-helper-box">
+          <h3 class="sim-helper-title">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+            Group-Buy Funnel Simulator
+          </h3>
+          <p class="sim-helper-text">
+            Test the VIP Group Pricing logic easily! Add 1 or 2 items to your cart, then click the simulator buttons below to copy the share link or simulate a friend adding the remaining items to unlock the VIP Group discounts.
+          </p>
+          <div class="sim-actions">
+            <button id="sim-add-friend" class="btn-sim-action">Simulate Friend Adding 2 Items</button>
+            <button id="sim-reset-cart" class="btn-sim-secondary">Reset Group Cart</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Shopping Cart Sidebar Overlay -->
+  <div id="cart-overlay" class="cart-overlay">
+    <div class="cart-sidebar">
+      <div class="cart-sidebar-header">
+        <h3 class="cart-sidebar-title">YOUR GROUP CART</h3>
+        <button id="close-cart-btn" class="btn-close-cart">&times;</button>
+      </div>
+
+      <!-- Funnel Progress Box -->
+      <div class="group-funnel-card">
+        <div class="funnel-header">
+          <span>GROUP SHIPPING PROGRESS</span>
+          <span id="funnel-progress-ratio">0 / 4 ITEMS</span>
+        </div>
+        <div class="funnel-progress-wrap">
+          <div id="funnel-progress-bar" class="funnel-progress-bar"></div>
+        </div>
+        <div id="funnel-msg" class="funnel-msg pending-msg">
+          Add items to unlock VIP Group Shipping & Pricing! Consolidate orders from China to save.
+        </div>
+        
+        <!-- Share Link Area -->
+        <div class="share-link-box">
+          <span class="share-url" id="share-link-url">Add items to generate link...</span>
+          <button id="btn-copy-share" class="btn-copy-url" disabled>COPY LINK</button>
+        </div>
+      </div>
+
+      <!-- Cart Items list -->
+      <div class="cart-items-wrapper">
+        <!-- Creator items (You) -->
+        <div id="creator-cart-section">
+          <h4 class="cart-section-title">My Items (<span id="creator-count">0</span>)</h4>
+          <div class="cart-list" id="creator-cart-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Friend items -->
+        <div id="friend-cart-section" class="hidden">
+          <h4 class="cart-section-title">Friend's Items (<span id="friend-count">0</span>)</h4>
+          <div class="cart-list" id="friend-cart-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer / Summary -->
+      <div class="cart-sidebar-footer">
+        <div id="cart-payment-status-row" class="cart-summary-row hidden" style="margin-bottom: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
+          <span>Cart Payment</span>
+          <span id="cart-payment-status-badge" class="cart-payment-status unpaid">Unpaid</span>
+        </div>
+        <div class="cart-summary-row">
+          <span>Subtotal</span>
+          <span id="cart-subtotal" class="font-mono">$0</span>
+        </div>
+        <div class="cart-summary-row">
+          <span>Consolidated Shipping</span>
+          <span id="cart-shipping" class="font-mono">$0</span>
+        </div>
+        <div class="cart-summary-row total">
+          <span>Total</span>
+          <span id="cart-total" class="font-mono">$0</span>
+        </div>
+        <div id="cart-savings-row" class="cart-savings hidden">
+          Group shipping unlocked! You saved <span id="cart-savings-amount">$0</span>
+        </div>
+        <button id="btn-checkout-trigger" class="btn-checkout">Checkout Batch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Product Details Modal -->
+  <div id="details-modal" class="modal-overlay">
+    <div class="modal-container">
+      <button class="btn-close-modal" id="close-details-btn">&times;</button>
+      <div class="modal-content" id="details-modal-content">
+        <!-- Dynamically rendered detailed view -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Digital Twin Modal -->
+    <!-- Digital Twin Modal -->
+  <div id="twin-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 580px; padding: 1.5rem;">
+      <button class="btn-close-modal" id="close-twin-btn">&times;</button>
+      <div class="modal-content">
+        <h2 class="admin-section-title" style="margin-bottom:0.75rem;">Styla Digital Twin Profile</h2>
+        <p style="font-size:0.8rem; color:#666; margin-bottom:1rem;">
+          Configure your digital twin dimensions below.
+        </p>
+        <div class="twin-banner" style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #b45309; margin-top: 0; margin-bottom: 1.25rem;">
+          <span>💡</span>
+          <div>
+            <strong>Need help measuring?</strong> Click the <strong>?</strong> icon next to any field below for a visual guide.
+          </div>
+        </div>
+        <form id="twin-form" class="admin-form" style="padding-right: 4px;">
+          <div class="twin-grid">
+            
+            <div class="twin-section-title">Primary Measurements (Required)</div>
+            
+            <div class="form-group">
+              <label for="twin-chest" style="font-size:0.75rem;">Chest (in) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
+              <input type="number" id="twin-chest" step="0.1" required min="20" max="70" placeholder="e.g. 38" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-waist" style="font-size:0.75rem;">Waist (in) <span class="info-icon" onclick="showMeasureModal('waist')">?</span></label>
+              <input type="number" id="twin-waist" step="0.1" required min="18" max="70" placeholder="e.g. 31" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-belly" style="font-size:0.75rem;">Belly (in) <span class="info-icon" onclick="showMeasureModal('belly')">?</span></label>
+              <input type="number" id="twin-belly" step="0.1" required min="18" max="70" placeholder="e.g. 35" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-hips" style="font-size:0.75rem;">Hips (in) <span class="info-icon" onclick="showMeasureModal('hips')">?</span></label>
+              <input type="number" id="twin-hips" step="0.1" required min="20" max="70" placeholder="e.g. 37" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label style="font-size:0.75rem;">Height <span class="info-icon" onclick="showMeasureModal('height')">?</span></label>
+              <div style="display: flex; gap: 0.25rem;">
+                <select id="twin-height-ft" required style="padding:6px; flex: 1; border: 1px solid #d4d4d8; border-radius: 4px; background: #fff;">
+                  <option value="">ft</option>
+                  <option value="4">4'</option>
+                  <option value="5">5'</option>
+                  <option value="6">6'</option>
+                  <option value="7">7'</option>
+                </select>
+                <select id="twin-height-in" required style="padding:6px; flex: 1; border: 1px solid #d4d4d8; border-radius: 4px; background: #fff;">
+                  <option value="">in</option>
+                  <option value="0">0"</option>
+                  <option value="1">1"</option>
+                  <option value="2">2"</option>
+                  <option value="3">3"</option>
+                  <option value="4">4"</option>
+                  <option value="5">5"</option>
+                  <option value="6">6"</option>
+                  <option value="7">7"</option>
+                  <option value="8">8"</option>
+                  <option value="9">9"</option>
+                  <option value="10">10"</option>
+                  <option value="11">11"</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="twin-inseam" style="font-size:0.75rem;">Inseam (in) <span class="info-icon" onclick="showMeasureModal('inseam')">?</span></label>
+              <input type="number" id="twin-inseam" step="0.1" required min="15" max="45" placeholder="e.g. 30" style="padding:6px;">
+            </div>
+            
+            <div class="twin-section-title">Advanced Measurements (Optional)</div>
+            
+            <div class="twin-banner">
+              <span>💡</span>
+              <div>
+                <strong>Get 99% Sizing Accuracy</strong><br/>
+                Completing these optional measurements helps our Tailor AI match sleeve, shoulder, and neck details precisely, raising sizing accuracy to 99% for custom items.
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="twin-shoulder" style="font-size:0.75rem;">Shoulder Width (in) <span class="info-icon" onclick="showMeasureModal('shoulder')">?</span></label>
+              <input type="number" id="twin-shoulder" step="0.1" min="10" max="30" placeholder="e.g. 17.5" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-sleeve" style="font-size:0.75rem;">Sleeve Length (in) <span class="info-icon" onclick="showMeasureModal('sleeve')">?</span></label>
+              <input type="number" id="twin-sleeve" step="0.1" min="15" max="45" placeholder="e.g. 33.5" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-neck" style="font-size:0.75rem;">Neck (in) <span class="info-icon" onclick="showMeasureModal('neck')">?</span></label>
+              <input type="number" id="twin-neck" step="0.1" min="10" max="25" placeholder="e.g. 15.5" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-thigh" style="font-size:0.75rem;">Thigh (in) <span class="info-icon" onclick="showMeasureModal('thigh')">?</span></label>
+              <input type="number" id="twin-thigh" step="0.1" min="10" max="40" placeholder="e.g. 22.5" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-bicep" style="font-size:0.75rem;">Bicep (in) <span class="info-icon" onclick="showMeasureModal('bicep')">?</span></label>
+              <input type="number" id="twin-bicep" step="0.1" min="8" max="25" placeholder="e.g. 13" style="padding:6px;">
+            </div>
+            <div class="form-group">
+              <label for="twin-wrist" style="font-size:0.75rem;">Wrist (in) <span class="info-icon" onclick="showMeasureModal('wrist')">?</span></label>
+              <input type="number" id="twin-wrist" step="0.1" min="5" max="15" placeholder="e.g. 6.5" style="padding:6px;">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="twin-length" style="font-size:0.75rem;">Torso Length (in) <span class="info-icon" onclick="showMeasureModal('length')">?</span></label>
+              <input type="number" id="twin-length" step="0.1" min="15" max="45" placeholder="e.g. 26" style="padding:6px;">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary-admin" style="margin-top:1.5rem; width: 100%;">Save Sizing Twin Profile</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login / Signup Modal -->
+  <!-- Login / Signup Modal -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 400px;">
+      <button class="btn-close-modal" id="close-auth-btn">&times;</button>
+      <div class="modal-content">
+        <h2 class="admin-section-title" id="auth-modal-title" style="margin-bottom:1.5rem;">Styla Account Login</h2>
+        <form id="auth-form" class="admin-form">
+          
+          <!-- Username Group -->
+          <div class="form-group" id="auth-username-group" style="text-align:left;">
+            <label for="auth-username">Username</label>
+            <input type="text" id="auth-username" required placeholder="e.g. alex" minlength="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:4px;">
+          </div>
+          
+          <!-- Password Group -->
+          <div class="form-group" id="auth-password-group" style="text-align:left;">
+            <label for="auth-password">Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="auth-password" required placeholder="••••••••" minlength="4" style="width:100%; padding:10px; padding-right:40px; border:1px solid #d4d4d8; border-radius:4px;">
+              <button type="button" class="btn-reveal-pwd" tabindex="-1" title="Toggle password visibility">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Confirm Password Group (Signup only) -->
+          <div class="form-group hidden" id="auth-confirm-password-group" style="text-align:left;">
+            <label for="auth-confirm-password">Confirm Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="auth-confirm-password" placeholder="••••••••" minlength="4" style="width:100%; padding:10px; padding-right:40px; border:1px solid #d4d4d8; border-radius:4px;">
+              <button type="button" class="btn-reveal-pwd" tabindex="-1" title="Toggle password visibility">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Verification Code Group (Forgot only) -->
+          <div class="form-group hidden" id="auth-code-group" style="text-align:left;">
+            <label for="auth-reset-code">6-Digit Verification Code</label>
+            <input type="text" id="auth-reset-code" placeholder="123456" maxlength="6" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:4px; font-family:var(--font-mono); text-align:center; letter-spacing:0.2em; font-size:1.1rem;">
+          </div>
+          
+          <!-- New Password Group (Reset only) -->
+          <div id="auth-new-password-group" class="hidden">
+            <div class="form-group" style="text-align:left;">
+              <label for="auth-new-password">New Password</label>
+              <div class="password-input-wrap">
+                <input type="password" id="auth-new-password" placeholder="••••••••" minlength="4" style="width:100%; padding:10px; padding-right:40px; border:1px solid #d4d4d8; border-radius:4px;">
+                <button type="button" class="btn-reveal-pwd" tabindex="-1" title="Toggle password visibility">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="form-group" style="text-align:left;">
+              <label for="auth-new-password-confirm">Confirm New Password</label>
+              <div class="password-input-wrap">
+                <input type="password" id="auth-new-password-confirm" placeholder="••••••••" minlength="4" style="width:100%; padding:10px; padding-right:40px; border:1px solid #d4d4d8; border-radius:4px;">
+                <button type="button" class="btn-reveal-pwd" tabindex="-1" title="Toggle password visibility">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Forgot Password Trigger link (Login only) -->
+          <div id="auth-forgot-trigger-wrap" style="text-align:right; margin-bottom:1rem; font-size:0.75rem; margin-top:-0.5rem;">
+            <button type="button" id="auth-forgot-trigger-btn" style="background:none; border:none; color:#2563eb; text-decoration:underline; cursor:pointer; padding:0;">Forgot password?</button>
+          </div>
+          
+          <button type="submit" id="auth-submit-btn" class="btn-primary-admin" style="margin-top:0.5rem; width:100%;">Login</button>
+          
+          <div id="auth-switcher-wrap" style="text-align:center; margin-top:1rem; font-size:0.8rem;">
+            <span id="auth-switch-text">New to Styla?</span>
+            <button type="button" id="auth-switch-btn" style="background:none; border:none; color:#2563eb; text-decoration:underline; cursor:pointer; font-weight:600; padding:0; margin-left:4px;">Create an account</button>
+          </div>
+          
+          <!-- Sandbox logs console (Forgot only) -->
+          <div class="api-log-console hidden" id="auth-sandbox-console" style="margin-top:1rem; max-height:100px;">
+            <div class="api-log-line info">Simulation System: Verification code will appear here after request.</div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Split Checkout Simulator Modal -->
+  <div id="checkout-modal" class="modal-overlay">
+    <div class="modal-container checkout-modal-inner">
+      <button class="btn-close-modal" id="close-checkout-btn">&times;</button>
+      <div class="modal-content">
+        <h2 class="admin-section-title" style="margin-bottom:1.5rem;">Group Checkout Simulator</h2>
+        <div class="checkout-grid">
+          
+          <div id="checkout-unlocked-summary">
+            <!-- Dynamic checkout layout -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Co-Shopping HUD Tracker -->
+  <div id="co-shopping-hud" class="co-shopping-hud-wrap hidden">
+    <div class="co-hud-card">
+      <div class="co-hud-header">
+        <div class="co-hud-title-wrap">
+          <div class="pulse-dot active"></div>
+          <span class="co-hud-title">CO-SHOPPING PROGRESS</span>
+        </div>
+        <button id="btn-hud-close-sim" class="co-hud-close">&times;</button>
+      </div>
+      <div class="co-hud-body">
+        <div class="co-hud-stat">
+          <span id="co-hud-progress-text">0 / 4 ITEMS</span>
+          <span id="co-hud-savings-text" class="hidden">Saved </span>
+        </div>
+        <div class="co-hud-progress-wrap">
+          <div id="co-hud-progress-bar" class="co-hud-progress-bar"></div>
+        </div>
+        <div id="co-hud-status-desc" class="co-hud-status-desc">Add items or invite a friend to split!</div>
+        <button id="btn-hud-share" class="btn-hud-share-action">&#128101; Invite Friend to Shop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Co-Shopping Live Toast Notifications -->
+  <div id="co-shopping-toast-container" class="co-toast-container"></div>
+
+  <script src="app.js" type="module"></script>
+  <!-- How to Measure Modal -->
+  <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)" style="z-index: 500;">
+    <div class="modal-container" style="max-width: 400px; padding: 1.5rem; text-align: center;">
+      <button class="btn-close-modal" onclick="closeMeasureModal(event)">&times;</button>
+      <div class="modal-content" style="padding: 1rem 0 0 0; text-align: left;">
+        <h3 id="measure-modal-title" style="margin-bottom: 1rem; color: #3b82f6; font-family: var(--font-head); font-weight:700; font-size: 1.25rem;">How to measure</h3>
+        <img id="measure-modal-image" style="width: 100%; max-height: 220px; object-fit: contain; margin-bottom: 1rem; border-radius: 8px; display: none;" />
+        <p id="measure-modal-desc" style="color: #4b5563; line-height: 1.5; font-size: 0.8rem; margin: 0;"></p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+
+
+
