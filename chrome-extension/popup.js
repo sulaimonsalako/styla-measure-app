@@ -49,6 +49,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     return total > 0 ? total.toString() : '';
   }
 
+  // Helper to update Fit Match Score & Fit Spectrum Slider
+  function updateFitScoreAndSpectrum(resData) {
+    const fitScoreBadge = document.getElementById('fit-score-badge');
+    const fitSpectrumPointer = document.getElementById('fit-spectrum-pointer');
+
+    if (fitScoreBadge) {
+      if (resData.fit_match_score !== undefined && resData.fit_match_score !== null) {
+        fitScoreBadge.textContent = resData.fit_match_score + "%";
+        if (resData.fit_match_score >= 85) {
+          fitScoreBadge.style.color = "#10b981"; // green
+        } else if (resData.fit_match_score >= 70) {
+          fitScoreBadge.style.color = "#f59e0b"; // amber
+        } else {
+          fitScoreBadge.style.color = "#ef4444"; // red
+        }
+      } else {
+        fitScoreBadge.textContent = "--";
+        fitScoreBadge.style.color = "var(--accent)";
+      }
+    }
+
+    if (fitSpectrumPointer) {
+      const spectrumValue = (resData.fit_spectrum || 'ideal').toLowerCase();
+      let position = '50%';
+      if (spectrumValue === 'tight') position = '8%';
+      else if (spectrumValue === 'slim') position = '30%';
+      else if (spectrumValue === 'ideal') position = '50%';
+      else if (spectrumValue === 'relaxed' || spectrumValue === 'loose') position = '70%';
+      else if (spectrumValue === 'oversized') position = '92%';
+      fitSpectrumPointer.style.left = position;
+    }
+  }
+
   // Helper to save current page state to chrome.storage.local
   async function savePageState() {
     try {
@@ -230,6 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)";
             explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
             breakdownList.innerHTML = '';
+            updateFitScoreAndSpectrum({});
             
             const debugInfo = `(Scraped: ${scrapedProductContext ? scrapedProductContext.scrapedImagesCount : 0} images, ${scrapedProductContext && scrapedProductContext.tableHtml.length > 0 ? 'tables found' : 'no tables'})`;
             warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}<br/><br/><small style="color: #94a3b8; font-size: 10px;">Diagnostics: ${debugInfo}</small>`;
@@ -238,6 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             recSize.textContent = resData.recommended_size;
             recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)";
             explanation.textContent = resData.explanation;
+            updateFitScoreAndSpectrum(resData);
 
             breakdownList.innerHTML = '';
             if (resData.fit_breakdown) {
@@ -460,6 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)";
         explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
         breakdownList.innerHTML = '';
+        updateFitScoreAndSpectrum({});
         
         const debugInfo = `(Scraped: ${context.scrapedImagesCount} images, ${context.tableHtml.length > 0 ? 'tables found' : 'no tables'} across ${context.frameCount} frame modules)`;
         warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}<br/><br/><small style="color: #94a3b8; font-size: 10px;">Diagnostics: ${debugInfo}</small>`;
@@ -468,6 +504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         recSize.textContent = resData.recommended_size;
         recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)";
         explanation.textContent = resData.explanation;
+        updateFitScoreAndSpectrum(resData);
 
         breakdownList.innerHTML = '';
         if (resData.fit_breakdown) {
@@ -1129,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         recSize.style.background = "linear-gradient(135deg, #475569 0%, #334155 100%)";
         explanation.textContent = resData.explanation || "We couldn't detect a size chart image or table on this page.";
         breakdownList.innerHTML = '';
+        updateFitScoreAndSpectrum({});
         
         warningText.innerHTML = `${resData.warning || "Please locate the size chart on the page first, make sure it is open/visible, and try running the analysis again."}`;
         warningContainer.style.display = "block";
@@ -1136,6 +1174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         recSize.textContent = resData.recommended_size;
         recSize.style.background = "linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)";
         explanation.textContent = resData.explanation;
+        updateFitScoreAndSpectrum(resData);
 
         breakdownList.innerHTML = '';
         if (resData.fit_breakdown) {
