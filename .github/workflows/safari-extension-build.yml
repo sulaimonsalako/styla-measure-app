@@ -1,0 +1,32 @@
+name: Build Safari Web Extension
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  convert-and-build:
+    name: Convert to Safari Web Extension
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Convert Chrome Extension to Safari
+        run: |
+          echo "Converting chrome-extension to Safari Web Extension project..."
+          xcrun safari-web-extension-converter chrome-extension --non-interactive --swift --project-name STYLA-Safari
+          
+      - name: Compress Xcode Project Artifact
+        run: |
+          zip -r styla-safari-extension.zip STYLA-Safari/
+          
+      - name: Upload Safari Extension Xcode Project
+        uses: actions/upload-artifact@v4
+        with:
+          name: styla-safari-extension
+          path: styla-safari-extension.zip
+          if-no-files-found: error
