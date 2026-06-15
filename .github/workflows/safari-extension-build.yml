@@ -18,7 +18,7 @@ jobs:
       - name: Convert Chrome Extension to Safari
         run: |
           echo "Converting chrome-extension to Safari Web Extension project..."
-          xcrun safari-web-extension-converter chrome-extension --non-interactive --swift --project-name STYLA-Safari
+          xcrun safari-web-extension-converter chrome-extension --bundle-identifier com.styla.measure.safari --app-name STYLA-Safari --swift --copy-resources
           
       - name: Compress Xcode Project Artifact
         run: |
