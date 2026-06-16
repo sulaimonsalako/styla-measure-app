@@ -1154,10 +1154,192 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
       
-      msgDiv.textContent = text;
+            msgDiv.textContent = text;
       chatMessages.appendChild(msgDiv);
       chatMessages.scrollTop = chatMessages.scrollHeight;
       return msgDiv;
     }
-});
 
+    // Estimator Modal Handling
+    const btnRunEstimate = document.getElementById('btn-run-estimate');
+    if (btnRunEstimate) {
+      btnRunEstimate.addEventListener('click', async () => {
+        const heightFeet = document.getElementById('est-height-ft').value;
+        const heightInches = document.getElementById('est-height-in').value;
+        const weight = document.getElementById('est-weight').value;
+        const age = document.getElementById('est-age').value;
+        const bellyShape = document.getElementById('est-belly').value;
+        const hipShape = document.getElementById('est-hips').value;
+        const fitPreference = document.getElementById('est-fit').value;
+        const estError = document.getElementById('est-error');
+
+        if (!weight || !age) {
+          estError.textContent = "Please fill in both Weight and Age.";
+          estError.style.display = "block";
+          return;
+        }
+
+        estError.style.display = "none";
+        btnRunEstimate.disabled = true;
+        btnRunEstimate.textContent = "Estimating measurements...";
+
+        try {
+          const res = await fetch('/api/estimate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ heightFeet, heightInches, weight, age, bellyShape, hipShape, fitPreference })
+          });
+
+          const data = await res.json();
+          btnRunEstimate.disabled = false;
+          btnRunEstimate.textContent = "Generate Digital Twin Specs";
+
+          if (res.ok) {
+            // Set input values
+            document.getElementById('val-chest').value = data.chest;
+            document.getElementById('val-waist').value = data.waist;
+            document.getElementById('val-belly').value = data.belly;
+            document.getElementById('val-hips').value = data.hips;
+            document.getElementById('val-inseam').value = data.inseam;
+            document.getElementById('val-height-ft').value = heightFeet;
+            document.getElementById('val-height-in').value = heightInches;
+
+            // Save to localStorage
+            localStorage.setItem('styla_twin_chest', data.chest);
+            localStorage.setItem('styla_twin_waist', data.waist);
+            localStorage.setItem('styla_twin_belly', data.belly);
+            localStorage.setItem('styla_twin_hips', data.hips);
+            localStorage.setItem('styla_twin_inseam', data.inseam);
+            localStorage.setItem('styla_twin_height', data.height);
+
+            // Display disclaimer banner
+            const banner = document.getElementById('accuracy-warning-banner');
+            if (banner) banner.style.display = 'flex';
+
+            // Close modal
+            document.getElementById('estimate-modal').style.display = 'none';
+
+            // Trigger sync to Supabase if logged in
+            if (typeof triggerSyncDebounce === 'function') {
+              triggerSyncDebounce();
+            }
+          } else {
+            estError.textContent = data.error || "Estimation failed.";
+            estError.style.display = "block";
+          }
+        } catch (err) {
+                    btnRunEstimate.disabled = false;
+          btnRunEstimate.textContent = "Generate Digital Twin Specs";
+          estError.textContent = "Network error occurred.";
+          estError.style.display = "block";
+          console.error(err);
+        }
+      });
+    }
+
+    // Brand Size Estimator Handling
+    const btnRunBrandEstimate = document.getElementById('btn-run-brand-estimate');
+    if (btnRunBrandEstimate) {
+      btnRunBrandEstimate.addEventListener('click', async () => {
+        const estError = document.getElementById('est-error');
+        const brandLoader = document.getElementById('brand-loader');
+        
+        const gender = document.getElementById('est-brand-gender').value;
+        const heightFeet = document.getElementById('est-brand-height-ft').value;
+        const heightInches = document.getElementById('est-brand-height-in').value;
+        const weight = document.getElementById('est-brand-weight').value;
+
+        if (!weight) {
+          estError.textContent = "Please enter your weight.";
+          estError.style.display = "block";
+          return;
+        }
+
+        estError.style.display = "none";
+        btnRunBrandEstimate.style.display = "none";
+        if (brandLoader) {
+          brandLoader.style.display = "block";
+        }
+
+        const payload = {
+          gender,
+          heightFeet,
+          heightInches,
+          weight,
+          maleApparel: document.getElementById('est-brand-male-apparel').value,
+          maleSize: document.getElementById('est-brand-male-size').value,
+          maleBrand: document.getElementById('est-brand-male-brand').value,
+          maleFit: document.getElementById('est-brand-male-fit').value,
+          maleWaist: document.getElementById('est-brand-male-waist').value,
+          maleLength: document.getElementById('est-brand-male-length').value,
+          femaleDress: document.getElementById('est-brand-female-dress').value,
+          femalePants: document.getElementById('est-brand-female-pants').value,
+          femaleBrand: document.getElementById('est-brand-female-brand').value,
+          femaleFit: document.getElementById('est-brand-female-fit').value
+        };
+
+        try {
+          const res = await fetch('/api/estimate-brand', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json();
+
+          if (brandLoader) {
+            brandLoader.style.display = "none";
+          }
+          btnRunBrandEstimate.style.display = "block";
+
+          if (res.ok) {
+            // Set inputs on main page
+            document.getElementById('val-chest').value = data.chest;
+            document.getElementById('val-waist').value = data.waist;
+            document.getElementById('val-belly').value = data.belly;
+            document.getElementById('val-hips').value = data.hips;
+            document.getElementById('val-inseam').value = data.inseam;
+            document.getElementById('val-height-ft').value = heightFeet;
+            document.getElementById('val-height-in').value = heightInches;
+
+            // Save to localStorage
+            localStorage.setItem('styla_twin_chest', data.chest);
+            localStorage.setItem('styla_twin_waist', data.waist);
+            localStorage.setItem('styla_twin_belly', data.belly);
+            localStorage.setItem('styla_twin_hips', data.hips);
+            localStorage.setItem('styla_twin_inseam', data.inseam);
+            localStorage.setItem('styla_twin_height', data.height);
+
+            // Display disclaimer banner
+            const banner = document.getElementById('accuracy-warning-banner');
+            if (banner) {
+              banner.style.display = 'flex';
+              banner.querySelector('div').innerHTML = `
+                <strong>Estimated Twin Active:</strong> These measurements are estimated via Brand Sizing. For 95%+ accuracy, using a tape to provide those measurements works better.
+              `;
+            }
+
+            // Close modal
+            document.getElementById('estimate-modal').style.display = 'none';
+
+            // Trigger sync
+            if (typeof triggerSyncDebounce === 'function') {
+              triggerSyncDebounce();
+            }
+          } else {
+            estError.textContent = data.error || "Estimation failed.";
+            estError.style.display = "block";
+          }
+
+        } catch (err) {
+          if (brandLoader) {
+            brandLoader.style.display = "none";
+          }
+          btnRunBrandEstimate.style.display = "block";
+          estError.textContent = "Network error occurred.";
+          estError.style.display = "block";
+          console.error(err);
+        }
+      });
+    }
+  });
