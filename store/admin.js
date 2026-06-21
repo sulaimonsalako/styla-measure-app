@@ -326,7 +326,7 @@ async function loadInventory() {
       `;
     }).join('');
     
-    document.querySelectorAll('.btn-delete-prod').forEach(btn => {
+    inventoryContainer.querySelectorAll('.btn-delete-prod').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.target.getAttribute('data-id');
         if (confirm(`Are you sure you want to delete this product?`)) {
@@ -335,7 +335,7 @@ async function loadInventory() {
       });
     });
 
-    document.querySelectorAll('.btn-pause-prod').forEach(btn => {
+    inventoryContainer.querySelectorAll('.btn-pause-prod').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.target.getAttribute('data-id');
         const status = e.target.getAttribute('data-status');
@@ -343,14 +343,14 @@ async function loadInventory() {
       });
     });
 
-    document.querySelectorAll('.btn-replicate-prod').forEach(btn => {
+    inventoryContainer.querySelectorAll('.btn-replicate-prod').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         replicateProduct(id);
       });
     });
 
-    document.querySelectorAll('.btn-edit-prod').forEach(btn => {
+    inventoryContainer.querySelectorAll('.btn-edit-prod').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.target.getAttribute('data-id');
         editProduct(id);
