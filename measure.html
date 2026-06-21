@@ -330,9 +330,36 @@
         </div>
       </div>
 
+      <!-- Manage Profile Section (only shown when logged in) -->
+      <div id="manage-profile-box" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="margin: 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">👤 My Digital Twin Profile</h4>
+            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
+            <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
+          </div>
+        </div>
+
+        <div>
+          <h5 style="color: #fff; margin: 0 0 10px 0; font-size: 0.95rem;">3D Body Scans History</h5>
+          <div id="scan-history-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Rendered dynamically -->
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">No 3D body scans saved yet.</p>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom: 1rem;">
         <label style="display: block; font-weight: 700; color: #fff; font-size: 1.1rem; margin-bottom: 4px;">1. Enter your measurements</label>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">(These will be securely saved for your future use)</p>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; margin-bottom: 12px;">(These will be securely saved for your future use)</p>
+        
+        <!-- 3D Scan Active Badge -->
+        <div id="active-scan-badge" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
+          ✅ <strong>3D Body Scan Active:</strong> Using 80+ measurements from 3DLook scan.
+        </div>
       </div>
 
         <div class="input-row">

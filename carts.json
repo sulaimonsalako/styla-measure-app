@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cart_em7ojtzrj",
+    "creatorItems": [
+      {
+        "productId": "prod_1",
+        "name": "Oversized Cotton Hoodie",
+        "bulkPrice": 85,
+        "quantity": 1,
+        "size": "L"
+      }
+    ],
+    "friendItems": [
+      {
+        "productId": "prod_2",
+        "name": "Relaxed Wool Trousers",
+        "bulkPrice": 110,
+        "quantity": 1,
+        "size": "M"
+      }
+    ],
+    "creatorPaid": true,
+    "friendPaid": true,
+    "paymentStatus": "paid",
+    "amountPaid": 195,
+    "creatorNotified": true,
+    "creatorEmail": "alice@example.com",
+    "friendEmail": "bob@example.com",
+    "friendNotified": true,
+    "batchPaidEmailSent": true
+  },
+  {
+    "id": "cart_test_123",
+    "creatorUsername": "alex",
+    "creatorItems": [
+      {
+        "productId": "prod_1",
+        "quantity": 2,
+        "bulkPrice": 10,
+        "singlePrice": 15
+      }
+    ],
+    "friendItems": [
+      {
+        "productId": "prod_2",
+        "quantity": 2,
+        "bulkPrice": 20,
+        "singlePrice": 25
+      }
+    ],
+    "creatorPaid": false,
+    "friendPaid": false,
+    "paymentStatus": "unpaid",
+    "amountPaid": 0
+  }
+]

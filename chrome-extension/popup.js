@@ -22,6 +22,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   const warningContainer = document.getElementById('warning-container');
   const warningText = document.getElementById('warning-text');
 
+  // Guest 3D Scan / Manual references
+  const btnModeManual = document.getElementById('btn-mode-manual');
+  const btnModeScan = document.getElementById('btn-mode-scan');
+  const manualProfileCard = document.getElementById('manual-profile-card');
+  const scanSetupCard = document.getElementById('scan-setup-card');
+  const scanFrontFile = document.getElementById('scan-front-file');
+  const scanSideFile = document.getElementById('scan-side-file');
+  const labelFrontText = document.getElementById('label-front-text');
+  const labelSideText = document.getElementById('label-side-text');
+  const btnUploadFront = document.getElementById('btn-upload-front');
+  const btnUploadSide = document.getElementById('btn-upload-side');
+  const btnRun3dlook = document.getElementById('btn-run-3dlook');
+
+  // Cloud signup references
+  const btnAuthModeLogin = document.getElementById('btn-auth-mode-login');
+  const btnAuthModeSignup = document.getElementById('btn-auth-mode-signup');
+  const cloudLoginForm = document.getElementById('cloud-login-form');
+  const cloudSignupForm = document.getElementById('cloud-signup-form');
+  const btnCloudSignup = document.getElementById('btn-cloud-signup');
+  const cloudSignupError = document.getElementById('cloud-signup-error');
+  const signupEmailInput = document.getElementById('signup-email');
+  const signupPasswordInput = document.getElementById('signup-password');
+
+  let frontBase64 = null;
+  let sideBase64 = null;
+
 
   let activeApiHost = '';
   let pushTimeout = null;
@@ -145,6 +171,300 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function updateActiveScanBadge(measurements) {
+    const badge = document.getElementById('active-scan-badge');
+    if (!badge) return;
+    const activeScan = measurements && measurements.api_scans && Array.isArray(measurements.api_scans)
+      ? measurements.api_scans.find(s => s.is_active)
+      : null;
+    if (activeScan) {
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // Toggle Scan vs Manual inputs
+  if (btnModeManual && btnModeScan && manualProfileCard && scanSetupCard) {
+    btnModeManual.addEventListener('click', () => {
+      btnModeManual.classList.add('active');
+      btnModeScan.classList.remove('active');
+      manualProfileCard.style.display = 'block';
+      scanSetupCard.style.display = 'none';
+    });
+
+    btnModeScan.addEventListener('click', () => {
+      btnModeScan.classList.add('active');
+      btnModeManual.classList.remove('active');
+      manualProfileCard.style.display = 'none';
+      scanSetupCard.style.display = 'block';
+    });
+  }
+
+  // Handle Photo selection & compression
+  if (scanFrontFile && btnUploadFront) {
+    scanFrontFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        labelFrontText.textContent = "Loading...";
+        btnUploadFront.style.borderColor = "var(--accent)";
+        try {
+          frontBase64 = await compressFileImage(file);
+          labelFrontText.textContent = "Front Loaded!";
+          btnUploadFront.style.borderColor = "var(--success)";
+        } catch (err) {
+          labelFrontText.textContent = "Error!";
+          btnUploadFront.style.borderColor = "var(--error)";
+        }
+      }
+    });
+  }
+
+  if (scanSideFile && btnUploadSide) {
+    scanSideFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        labelSideText.textContent = "Loading...";
+        btnUploadSide.style.borderColor = "var(--accent)";
+        try {
+          sideBase64 = await compressFileImage(file);
+          labelSideText.textContent = "Side Loaded!";
+          btnUploadSide.style.borderColor = "var(--success)";
+        } catch (err) {
+          labelSideText.textContent = "Error!";
+          btnUploadSide.style.borderColor = "var(--error)";
+        }
+      }
+    });
+  }
+
+  if (btnRun3dlook) {
+    btnRun3dlook.addEventListener('click', async () => {
+      const gender = document.getElementById('scan-gender').value;
+      const weight = Number(document.getElementById('scan-weight').value) || 140;
+      const ft = Number(document.getElementById('scan-height-ft').value) || 5;
+      const inch = Number(document.getElementById('scan-height-in').value) || 4;
+      const heightInches = (ft * 12) + inch;
+      const heightCm = Math.round(heightInches * 2.54);
+
+      if (!frontBase64 || !sideBase64) {
+        alert("Please upload both front and side photos for the 3D body scan.");
+        return;
+      }
+
+      btnRun3dlook.disabled = true;
+      btnRun3dlook.textContent = "Initializing Scan...";
+
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+        let host = activeApiHost;
+        if (!host) {
+          if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
+            host = 'http://localhost:3000';
+          } else {
+            host = 'https://styla-measure-app.vercel.app';
+          }
+        }
+
+        const initRes = await fetch(`${host}/api/3dlook/init-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gender,
+            height: heightCm,
+            weight: Math.round(weight * 0.453592),
+            front_image: frontBase64,
+            side_image: sideBase64
+          })
+        });
+
+        if (!initRes.ok) {
+          const errData = await initRes.json();
+          throw new Error(errData.error || "Failed to initialize 3DLook session.");
+        }
+
+        const session = await initRes.json();
+        btnRun3dlook.textContent = "Processing Body (10s)...";
+
+        let pollUrl = session.task_set_url;
+        if (pollUrl && !pollUrl.startsWith('http')) {
+          pollUrl = `${host}${pollUrl}`;
+        }
+
+        const pollStatus = async () => {
+          try {
+            const statusRes = await fetch(pollUrl);
+            const statusData = await statusRes.json();
+            if (statusData.is_ready && statusData.is_successful) {
+              btnRun3dlook.textContent = "Finalizing Measurements...";
+              
+              let saveUrl = statusData.redirect_to;
+              if (saveUrl && !saveUrl.startsWith('http')) {
+                saveUrl = `${host}${saveUrl}`;
+              }
+              
+              const sessionData = await chrome.storage.local.get(['supabaseSession']);
+              const username = sessionData.supabaseSession ? sessionData.supabaseSession.user.email : 'guest';
+              
+              const saveRes = await fetch(`${saveUrl}&username=${username}`);
+              const saveData = await saveRes.json();
+              
+              if (saveData.success) {
+                const currentMeasurements = (await chrome.storage.local.get(['measurements'])).measurements || {};
+                const updatedMeasurements = {
+                  ...currentMeasurements,
+                  chest: saveData.twin.chest,
+                  waist: saveData.twin.waist,
+                  belly: saveData.twin.belly || saveData.twin.waist,
+                  hips: saveData.twin.hips,
+                  height: heightInches.toString(),
+                  inseam: saveData.twin.inseam,
+                  api_scans: saveData.api_scans,
+                  measurement_overrides: currentMeasurements.measurement_overrides || {}
+                };
+                
+                await chrome.storage.local.set({ measurements: updatedMeasurements });
+                
+                chestInput.value = saveData.twin.chest;
+                waistInput.value = saveData.twin.waist;
+                bellyInput.value = saveData.twin.belly || saveData.twin.waist;
+                hipsInput.value = saveData.twin.hips;
+                setHeightFields(heightInches.toString());
+                inseamInput.value = saveData.twin.inseam;
+                
+                updateActiveScanBadge(updatedMeasurements);
+                alert("3D Body Scan complete! 80+ measurements loaded into local digital twin.");
+                btnModeManual.click();
+              } else {
+                throw new Error("Failed to save measurements.");
+              }
+            } else {
+              setTimeout(pollStatus, 2000);
+            }
+          } catch (pollErr) {
+            btnRun3dlook.disabled = false;
+            btnRun3dlook.textContent = "Run 3D Body Scan";
+            alert("Polling Error: " + pollErr.message);
+          }
+        };
+
+        setTimeout(pollStatus, 2000);
+
+      } catch (err) {
+        alert("Scanner Error: " + err.message);
+        btnRun3dlook.disabled = false;
+        btnRun3dlook.textContent = "Run 3D Body Scan";
+      }
+    });
+  }
+
+  // Toggle Login vs Signup form
+  if (btnAuthModeLogin && btnAuthModeSignup && cloudLoginForm && cloudSignupForm) {
+    btnAuthModeLogin.addEventListener('click', () => {
+      btnAuthModeLogin.classList.add('active');
+      btnAuthModeSignup.classList.remove('active');
+      cloudLoginForm.style.display = 'block';
+      cloudSignupForm.style.display = 'none';
+    });
+
+    btnAuthModeSignup.addEventListener('click', () => {
+      btnAuthModeSignup.classList.add('active');
+      btnAuthModeLogin.classList.remove('active');
+      cloudLoginForm.style.display = 'none';
+      cloudSignupForm.style.display = 'block';
+    });
+  }
+
+  // Handle Cloud Sign Up Click
+  if (btnCloudSignup) {
+    btnCloudSignup.addEventListener('click', async () => {
+      const email = signupEmailInput.value.trim();
+      const password = signupPasswordInput.value;
+
+      if (!email || !password || password.length < 6) {
+        cloudSignupError.textContent = "Please fill in a valid email and a password (min 6 characters).";
+        cloudSignupError.style.display = 'block';
+        return;
+      }
+
+      btnCloudSignup.disabled = true;
+      btnCloudSignup.textContent = "Creating Account...";
+      cloudSignupError.style.display = 'none';
+
+      try {
+        const storageData = await chrome.storage.local.get(['measurements']);
+        const m = storageData.measurements || {};
+        
+        const payload = {
+          email,
+          password,
+          options: {
+            data: {
+              chest: m.chest ? parseFloat(m.chest) : null,
+              waist: m.waist ? parseFloat(m.waist) : null,
+              belly: m.belly ? parseFloat(m.belly) : null,
+              hips: m.hips ? parseFloat(m.hips) : null,
+              height: m.height ? parseFloat(m.height) : null,
+              inseam: m.inseam ? parseFloat(m.inseam) : null,
+              api_scans: m.api_scans || [],
+              measurement_overrides: m.measurement_overrides || {}
+            }
+          }
+        };
+
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error_description || errData.error || "Signup failed.");
+        }
+
+        // Auto-login after signup to get session
+        const loginRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (loginRes.ok) {
+          const session = await loginRes.json();
+          if (!session.expires_at && session.expires_in) {
+            session.expires_at = Math.floor(Date.now() / 1000) + session.expires_in;
+          }
+          await chrome.storage.local.set({ supabaseSession: session });
+          cloudProfilePanel.style.display = 'block';
+          cloudUserEmail.textContent = session.user.email;
+          cloudSignupForm.style.display = 'none';
+          
+          await pushMeasurements(session);
+        } else {
+          alert("Account created! Please log in on the Cloud tab to sync.");
+          btnAuthModeLogin.click();
+        }
+
+        signupEmailInput.value = '';
+        signupPasswordInput.value = '';
+
+      } catch (err) {
+        cloudSignupError.textContent = err.message;
+        cloudSignupError.style.display = 'block';
+      } finally {
+        btnCloudSignup.disabled = false;
+        btnCloudSignup.textContent = "Sign Up & Sync";
+      }
+    });
+  }
+
   // 1. Load cached measurements and connection host
   const data = await chrome.storage.local.get(['measurements', 'apiHost']);
   if (data.measurements) {
@@ -155,12 +475,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (m.hips) hipsInput.value = m.hips;
     if (m.inseam) inseamInput.value = m.inseam;
     if (m.height) setHeightFields(m.height);
+    updateActiveScanBadge(m);
 
     // Show synced badge
     syncStatus.classList.remove('unsynced');
     syncDot.classList.remove('unsynced');
     syncText.textContent = "Synced";
   }
+
+  // Listen for storage changes to sync in real-time if popup is open
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.measurements) {
+      const m = changes.measurements.newValue;
+      if (m) {
+        if (m.chest) chestInput.value = m.chest;
+        if (m.waist) waistInput.value = m.waist;
+        if (m.belly) bellyInput.value = m.belly;
+        if (m.hips) hipsInput.value = m.hips;
+        if (m.inseam) inseamInput.value = m.inseam;
+        if (m.height) setHeightFields(m.height);
+        updateActiveScanBadge(m);
+      }
+    }
+  });
 
   if (data.apiHost) {
     activeApiHost = data.apiHost;
@@ -453,15 +790,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const apiUrl = `${host}/api/extension-decode`;
 
       // Post payload to backend
+      const storageData = await chrome.storage.local.get(['measurements']);
+      const api_scans = storageData.measurements?.api_scans || [];
+      const measurement_overrides = storageData.measurements?.measurement_overrides || {};
+
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chest, waist, belly, hips, height, inseam,
+          api_scans,
+          measurement_overrides,
           pageTitle: context.pageTitle,
           pageText: context.pageText,
           tableHtml: context.tableHtml,
-          imagesBase64: context.imagesBase64
+          imagesBase64: context.imagesBase64,
+          url: context.url
         })
       });
 
@@ -878,9 +1222,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           belly: bellyInput.value,
           hips: hipsInput.value,
           height: getTotalHeightInches(),
-          inseam: inseamInput.value
+          inseam: inseamInput.value,
+          api_scans: profile.api_scans || [],
+          measurement_overrides: profile.measurement_overrides || {}
         };
         await chrome.storage.local.set({ measurements: updatedMeasurements });
+        updateActiveScanBadge(updatedMeasurements);
 
         if (!silent) {
           showSyncMsg("Measurements successfully imported!");
@@ -932,6 +1279,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const inseam = inseamInput.value.trim();
       const height = getTotalHeightInches();
 
+      const storageData = await chrome.storage.local.get(['measurements']);
+      const m = storageData.measurements || {};
+      const api_scans = m.api_scans || [];
+      const measurement_overrides = m.measurement_overrides || {};
+
       // Direct REST call (PATCH) to update user profile
       const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${session.user.id}`, {
         method: 'PATCH',
@@ -948,6 +1300,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           hips: hips ? parseFloat(hips) : null,
           inseam: inseam ? parseFloat(inseam) : null,
           height: height ? parseFloat(height) : null,
+          api_scans,
+          measurement_overrides,
           updated_at: new Date().toISOString()
         })
       });
@@ -1124,15 +1478,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const apiUrl = `${host}/api/extension-decode`;
 
       // Post payload to backend
+      const storageData = await chrome.storage.local.get(['measurements']);
+      const api_scans = storageData.measurements?.api_scans || [];
+      const measurement_overrides = storageData.measurements?.measurement_overrides || {};
+
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chest, waist, belly, hips, height, inseam,
+          api_scans,
+          measurement_overrides,
           pageTitle: context.pageTitle,
           pageText: context.pageText,
           tableHtml: context.tableHtml,
-          imagesBase64: context.imagesBase64
+          imagesBase64: context.imagesBase64,
+          url: context.url
         })
       });
 

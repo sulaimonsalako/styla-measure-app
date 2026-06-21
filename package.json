@@ -1,0 +1,29 @@
+{
+  "name": "styla-measure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sulaimonsalako/styla-measure-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sulaimonsalako/styla-measure-app/issues"
+  },
+  "homepage": "https://github.com/sulaimonsalako/styla-measure-app#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "stripe": "^22.2.1"
+  },
+  "devDependencies": {
+    "@stripe/cli": "^1.42.13"
+  }
+}

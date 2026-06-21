@@ -123,9 +123,40 @@ async function init() {
 // Load session from Local Storage
 function loadUserSession() {
   const savedUser = localStorage.getItem('styla_ps_user');
+  const badgeEl = document.getElementById('active-scan-badge');
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
-    twin = currentUser.twin;
+    
+    // Update active scan badge and build twin measurements object
+    const activeScan = currentUser.api_scans ? currentUser.api_scans.find(s => s.is_active) : null;
+    if (activeScan) {
+      if (badgeEl) badgeEl.style.display = 'block';
+      twin = {
+        chest: activeScan.volume_params.chest,
+        waist: activeScan.volume_params.waist,
+        belly: activeScan.volume_params.abdomen || activeScan.volume_params.waist,
+        hips: activeScan.volume_params.low_hips,
+        height: currentUser.twin ? currentUser.twin.height : 64.0,
+        shoulder: activeScan.front_params.shoulders,
+        sleeve: activeScan.front_params.sleeve_length,
+        inseam: activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam,
+        neck: activeScan.volume_params.neck,
+        thigh: activeScan.volume_params.thigh,
+        bicep: activeScan.volume_params.bicep,
+        wrist: activeScan.volume_params.wrist,
+        length: activeScan.front_params.new_jacket_length || 29.4
+      };
+    } else {
+      if (badgeEl) badgeEl.style.display = 'none';
+      twin = currentUser.twin;
+    }
+
+    if (currentUser.measurement_overrides) {
+      twin = {
+        ...twin,
+        ...currentUser.measurement_overrides
+      };
+    }
 
     // Show logged-in UI
     if (loginTriggerBtn) loginTriggerBtn.classList.add('hidden');
@@ -149,6 +180,11 @@ function loadUserSession() {
     twin = null;
     if (loginTriggerBtn) loginTriggerBtn.classList.remove('hidden');
     if (loggedInBox) loggedInBox.classList.add('hidden');
+    if (badgeEl) badgeEl.style.display = 'none';
+    if (twinBtn) {
+      twinBtn.style.backgroundColor = "#ff2a75";
+      twinBtn.style.borderColor = "#ff2a75";
+    }
   }
 }
 
@@ -367,9 +403,198 @@ function initializeNewCart() {
 
 // Event Listeners Setup
 function setupEventListeners() {
+  // 3D Scanner UI event listeners
+  const btn3dlookScan = document.getElementById('btn-3dlook-scan');
+  const scanContainer = document.getElementById('scan-container');
+  const btnStartCameraScan = document.getElementById('btn-start-camera-scan');
+  const scanSetup = document.getElementById('scan-setup');
+  const scanProcessing = document.getElementById('scan-processing');
+  const scanTimer = document.getElementById('scan-timer');
+  const btnDeactivateScan = document.getElementById('btn-deactivate-scan');
+
+  if (btn3dlookScan && scanContainer) {
+    btn3dlookScan.addEventListener('click', () => {
+      scanContainer.style.display = scanContainer.style.display === 'none' ? 'block' : 'none';
+    });
+  }
+
+  if (btnStartCameraScan) {
+    btnStartCameraScan.addEventListener('click', async () => {
+      const gender = document.getElementById('scan-gender').value;
+      const weight = document.getElementById('scan-weight').value || 140;
+
+      scanSetup.style.display = 'none';
+      scanProcessing.style.display = 'block';
+
+      let count = 3;
+      scanTimer.innerText = `Simulating 3DLook camera flow (${count}s)...`;
+      
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          scanTimer.innerText = `Simulating 3DLook camera flow (${count}s)...`;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      setTimeout(async () => {
+        try {
+          const username = currentUser ? currentUser.username : 'guest';
+          const initRes = await fetch('/api/3dlook/init-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gender, height: 162, weight })
+          });
+          const session = await initRes.json();
+          
+          let pollUrl = session.task_set_url;
+          
+          const statusRes = await fetch(`${pollUrl}&gender=${gender}&height=64&weight=${weight}`);
+          const statusData = await statusRes.json();
+          
+          if (statusData.is_ready && statusData.is_successful) {
+            const saveRes = await fetch(`${statusData.redirect_to}&username=${username}`);
+            const saveData = await saveRes.json();
+            
+            if (saveData.success) {
+              if (currentUser) {
+                currentUser.twin = saveData.twin;
+                currentUser.api_scans = saveData.api_scans;
+                localStorage.setItem('styla_ps_user', JSON.stringify(currentUser));
+              } else {
+                const guestUser = {
+                  username: 'guest',
+                  twin: saveData.twin,
+                  api_scans: saveData.api_scans,
+                  measurement_overrides: {}
+                };
+                localStorage.setItem('styla_ps_user', JSON.stringify(guestUser));
+              }
+              loadUserSession();
+              
+              // Sync styla_twin_* keys
+              localStorage.setItem('styla_twin_chest', saveData.twin.chest);
+              localStorage.setItem('styla_twin_waist', saveData.twin.waist);
+              localStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
+              localStorage.setItem('styla_twin_hips', saveData.twin.hips);
+              localStorage.setItem('styla_twin_height', '64');
+              localStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
+              localStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
+              localStorage.removeItem('styla_twin_measurement_overrides');
+              
+              // Populate fields
+              document.getElementById('twin-chest').value = saveData.twin.chest || '';
+              document.getElementById('twin-waist').value = saveData.twin.waist || '';
+              document.getElementById('twin-hips').value = saveData.twin.hips || '';
+              document.getElementById('twin-height-ft').value = '5';
+              document.getElementById('twin-height-in').value = '4';
+              document.getElementById('twin-inseam').value = saveData.twin.inseam || '';
+              document.getElementById('twin-shoulder').value = saveData.twin.shoulder || '';
+              document.getElementById('twin-sleeve').value = saveData.twin.sleeve || '';
+              document.getElementById('twin-neck').value = saveData.twin.neck || '';
+              document.getElementById('twin-thigh').value = saveData.twin.thigh || '';
+              document.getElementById('twin-bicep').value = saveData.twin.bicep || '';
+              document.getElementById('twin-wrist').value = saveData.twin.wrist || '';
+              document.getElementById('twin-length').value = saveData.twin.length || '';
+
+              alert("3D Body Scan complete! 80+ measurements imported into your Styla digital twin.");
+              scanContainer.style.display = 'none';
+              scanSetup.style.display = 'block';
+              scanProcessing.style.display = 'none';
+              
+              const detailNameEl = detailsModalContent.querySelector('.detail-name');
+              if (detailNameEl) {
+                const activeProd = products.find(p => p.name === detailNameEl.innerText);
+                if (activeProd) {
+                  openProductDetails(activeProd.id);
+                }
+              }
+              renderProducts();
+              updateCartUI();
+            } else {
+              throw new Error("Failed to save measurements.");
+            }
+          } else {
+            throw new Error("Scan processing failed.");
+          }
+        } catch (err) {
+          alert("Scanner Error: " + err.message);
+          scanSetup.style.display = 'block';
+          scanProcessing.style.display = 'none';
+        }
+      }, 3000);
+    });
+  }
+
+  if (btnDeactivateScan) {
+    btnDeactivateScan.addEventListener('click', async () => {
+      if (!currentUser) {
+        const savedUser = localStorage.getItem('styla_ps_user');
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.api_scans) {
+            parsed.api_scans.forEach(s => s.is_active = false);
+          }
+          localStorage.setItem('styla_ps_user', JSON.stringify(parsed));
+        }
+        localStorage.removeItem('styla_twin_api_scans');
+        loadUserSession();
+        alert("3D Body Scan deactivated.");
+        
+        const detailNameEl = detailsModalContent.querySelector('.detail-name');
+        if (detailNameEl) {
+          const activeProd = products.find(p => p.name === detailNameEl.innerText);
+          if (activeProd) {
+            openProductDetails(activeProd.id);
+          }
+        }
+        renderProducts();
+        updateCartUI();
+        return;
+      }
+      if (currentUser.api_scans) {
+        currentUser.api_scans.forEach(s => s.is_active = false);
+      }
+      try {
+        const res = await fetch('/api/store-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update-profile',
+            username: currentUser.username,
+            twin: currentUser.twin,
+            api_scans: currentUser.api_scans
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentUser.api_scans = data.api_scans;
+          localStorage.setItem('styla_ps_user', JSON.stringify(currentUser));
+          loadUserSession();
+          
+          alert("3D Body Scan deactivated. Recommendations will now use your manual entry values.");
+          
+          const detailNameEl = detailsModalContent.querySelector('.detail-name');
+          if (detailNameEl) {
+            const activeProd = products.find(p => p.name === detailNameEl.innerText);
+            if (activeProd) {
+              openProductDetails(activeProd.id);
+            }
+          }
+          renderProducts();
+          updateCartUI();
+        }
+      } catch (err) {
+        console.error("Failed to deactivate scan:", err);
+      }
+    });
+  }
+
   document.querySelectorAll('#tags-categories-container button, #sidebar-categories-container a').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
+      const cat = el.getAttribute('data-cat') || el.getAttribute('data-cat-side');
       const cat = el.getAttribute('data-cat') || el.getAttribute('data-cat-side');
       
       document.querySelectorAll('#tags-categories-container button, #sidebar-categories-container a').forEach(item => {
@@ -584,19 +809,50 @@ if (authForm) {
         alert("Validation Error: Passwords do not match.");
         return;
       }
+
+      let guestTwin = null;
+      let guestScans = [];
+      let guestOverrides = {};
+      let guestManual = {};
+      try {
+        const savedUser = localStorage.getItem('styla_ps_user');
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.username === 'guest') {
+            guestTwin = parsed.twin;
+            guestScans = parsed.api_scans || [];
+            guestOverrides = parsed.measurement_overrides || {};
+            guestManual = parsed.manual_measurements || {};
+          }
+        }
+      } catch (e) {}
       
       try {
         const res = await fetch('/api/store-auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'signup', username, password })
+          body: JSON.stringify({
+            action: 'signup',
+            username,
+            password,
+            twin: guestTwin,
+            api_scans: guestScans,
+            measurement_overrides: guestOverrides,
+            manual_measurements: guestManual
+          })
         });
         if (!res.ok) {
           const errData = await res.json();
           throw new Error(errData.error || "Signup failed.");
         }
         const data = await res.json();
-        currentUser = { username: data.username, twin: null };
+        currentUser = { 
+          username: data.username, 
+          twin: data.twin || guestTwin,
+          api_scans: data.api_scans || guestScans,
+          measurement_overrides: data.measurement_overrides || guestOverrides,
+          manual_measurements: data.manual_measurements || guestManual
+        };
         localStorage.setItem("styla_ps_user", JSON.stringify(currentUser));
         loadUserSession();
         authModal.classList.remove("open");
@@ -744,8 +1000,64 @@ if (authForm) {
   if (twinForm) {
     twinForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const getVal = (id) => {
+        const val = document.getElementById(id).value;
+        return val ? Number(val) : null;
+      };
+
+      const chest = Number(document.getElementById('twin-chest').value);
+      const waist = Number(document.getElementById('twin-waist').value);
+      const belly = Number(document.getElementById('twin-belly').value);
+      const hips = Number(document.getElementById('twin-hips').value);
+      const heightFt = Number(document.getElementById('twin-height-ft').value);
+      const heightIn = Number(document.getElementById('twin-height-in').value);
+      const height = (heightFt * 12) + heightIn;
+      const inseam = Number(document.getElementById('twin-inseam').value);
+      
+      const shoulder = getVal('twin-shoulder');
+      const sleeve = getVal('twin-sleeve');
+      const neck = getVal('twin-neck');
+      const thigh = getVal('twin-thigh');
+      const bicep = getVal('twin-bicep');
+      const wrist = getVal('twin-wrist');
+      const length = getVal('twin-length');
+      
+      const newTwin = { chest, waist, belly, hips, height, shoulder, sleeve, inseam, neck, thigh, bicep, wrist, length };
+
       if (!currentUser) {
-        alert("Please log in first before saving measurements.");
+        // Guest mode: save to guest session
+        const guestUser = {
+          username: 'guest',
+          twin: newTwin,
+          api_scans: [],
+          measurement_overrides: {}
+        };
+        localStorage.setItem('styla_ps_user', JSON.stringify(guestUser));
+        loadUserSession();
+        
+        // Sync styla_twin_* keys for bookmarklet & extension compatibility
+        localStorage.setItem('styla_twin_chest', chest.toString());
+        localStorage.setItem('styla_twin_waist', waist.toString());
+        localStorage.setItem('styla_twin_belly', belly.toString());
+        localStorage.setItem('styla_twin_hips', hips.toString());
+        localStorage.setItem('styla_twin_height', height.toString());
+        localStorage.setItem('styla_twin_inseam', inseam.toString());
+        localStorage.removeItem('styla_twin_api_scans');
+        localStorage.removeItem('styla_twin_measurement_overrides');
+
+        alert("Twin measurements saved to browser locally! Sizing suggestions are now active.");
+        twinModal.classList.remove('open');
+        
+        const detailNameEl = detailsModalContent.querySelector('.detail-name');
+        if (detailNameEl) {
+          const activeProd = products.find(p => p.name === detailNameEl.innerText);
+          if (activeProd) {
+            openProductDetails(activeProd.id);
+          }
+        }
+        renderProducts();
+        updateCartUI();
         return;
       }
 
@@ -1139,6 +1451,11 @@ function openProductDetails(productId) {
   const prod = products.find(p => p.id === productId);
   if (!prod) return;
 
+  const initialColor = (prod.colors && prod.colors.length > 0) ? prod.colors[0] : 'Standard';
+  const initialImages = (prod.colorImages && prod.colorImages[initialColor] && prod.colorImages[initialColor].length > 0)
+    ? prod.colorImages[initialColor]
+    : prod.images;
+
   // Sizing display logic based on Digital Twin profile status
   let sizingPanelHtml = '';
   let autoSizeValue = '';
@@ -1235,10 +1552,10 @@ function openProductDetails(productId) {
       <!-- Images section -->
       <div class="detail-img-section">
         <div class="main-img-wrap">
-          <img id="detail-main-img" src="${prod.images && prod.images[0] ? prod.images[0] : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop'}" alt="${prod.name}">
+          <img id="detail-main-img" src="${initialImages && initialImages[0] ? initialImages[0] : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop'}" alt="${prod.name}">
         </div>
         <div class="thumbnails-strip">
-          ${prod.images && prod.images.length > 1 ? prod.images.map((img, index) => `
+          ${initialImages && initialImages.length > 1 ? initialImages.map((img, index) => `
             <div class="thumb-wrap ${index === 0 ? 'active' : ''}" data-index="${index}">
               <img src="${img}" alt="${prod.name} thumbnail ${index + 1}">
             </div>
@@ -1321,24 +1638,63 @@ function openProductDetails(productId) {
     });
   }
 
-  // Bind color controls
+  // Bind color & gallery controls
   const colorBtns = detailsModalContent.querySelectorAll('.color-btn');
+  const mainImg = detailsModalContent.querySelector('#detail-main-img');
+  const thumbsContainer = detailsModalContent.querySelector('.thumbnails-strip');
+
+  const updateGallery = (images) => {
+    if (!mainImg) return;
+    if (images && images.length > 0) {
+      mainImg.src = images[0];
+    } else {
+      mainImg.src = 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop';
+    }
+    
+    if (!thumbsContainer) return;
+    if (images && images.length > 1) {
+      thumbsContainer.innerHTML = images.map((img, index) => `
+        <div class="thumb-wrap ${index === 0 ? 'active' : ''}" data-index="${index}">
+          <img src="${img}" alt="${prod.name} thumbnail ${index + 1}">
+        </div>
+      `).join('');
+      
+      const thumbs = thumbsContainer.querySelectorAll('.thumb-wrap');
+      thumbs.forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          thumbs.forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+          const idx = parseInt(thumb.getAttribute('data-index'), 10);
+          mainImg.src = images[idx];
+        });
+      });
+    } else {
+      thumbsContainer.innerHTML = '';
+    }
+  };
+
+  // Bind initial thumbnails click handler if there are any
+  if (initialImages && initialImages.length > 1) {
+    const thumbs = thumbsContainer.querySelectorAll('.thumb-wrap');
+    thumbs.forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        thumbs.forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        const idx = parseInt(thumb.getAttribute('data-index'), 10);
+        mainImg.src = initialImages[idx];
+      });
+    });
+  }
+
   colorBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       colorBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-    });
-  });
-
-  // Bind thumbnail controls
-  const thumbs = detailsModalContent.querySelectorAll('.thumb-wrap');
-  const mainImg = detailsModalContent.querySelector('#detail-main-img');
-  thumbs.forEach(thumb => {
-    thumb.addEventListener('click', () => {
-      thumbs.forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
-      const idx = thumb.getAttribute('data-index');
-      mainImg.src = prod.images[idx];
+      const selectedColor = btn.getAttribute('data-color');
+      const colorImages = (prod.colorImages && prod.colorImages[selectedColor] && prod.colorImages[selectedColor].length > 0)
+        ? prod.colorImages[selectedColor]
+        : prod.images;
+      updateGallery(colorImages);
     });
   });
 
@@ -1392,7 +1748,7 @@ function addToCart(product, size, color) {
     cart[itemsField].push({
       productId: product.id,
       name: product.name,
-      image: product.images[0] || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop',
+      image: (product.colorImages && product.colorImages[color] && product.colorImages[color][0]) ? product.colorImages[color][0] : (product.images[0] || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop'),
       supplier: product.supplier,
       singlePrice: product.singlePrice,
       bulkPrice: product.bulkPrice,

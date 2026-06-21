@@ -4,13 +4,27 @@
     return;
   }
 
+  let api_scans = [];
+  try {
+    const rawScans = localStorage.getItem('styla_twin_api_scans');
+    if (rawScans) api_scans = JSON.parse(rawScans);
+  } catch (e) {}
+
+  let measurement_overrides = {};
+  try {
+    const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
+    if (rawOverrides) measurement_overrides = JSON.parse(rawOverrides);
+  } catch (e) {}
+
   const measurements = {
     chest: localStorage.getItem('styla_twin_chest'),
     waist: localStorage.getItem('styla_twin_waist'),
     belly: localStorage.getItem('styla_twin_belly'),
     hips: localStorage.getItem('styla_twin_hips'),
     height: localStorage.getItem('styla_twin_height'),
-    inseam: localStorage.getItem('styla_twin_inseam')
+    inseam: localStorage.getItem('styla_twin_inseam'),
+    api_scans,
+    measurement_overrides
   };
 
   if (measurements.chest || measurements.waist || measurements.hips) {

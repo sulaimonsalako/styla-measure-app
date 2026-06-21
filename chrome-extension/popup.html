@@ -430,6 +430,11 @@
     <div id="sizing-tab-content">
       <div class="section-title">Your Digital Twin</div>
       
+      <!-- 3D Body Scan Active Badge -->
+      <div id="active-scan-badge" class="warning-box" style="display: none; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); color: #a7f3d0; margin-top: 0; margin-bottom: 8px; padding: 6px 10px; font-size: 11px;">
+        ✅ <strong>3D Body Scan Active:</strong> Using 80+ measurements from 3DLook scan.
+      </div>
+
       <div class="profile-card">
       <div class="measurements-grid">
         <div class="input-wrapper">
@@ -467,10 +472,10 @@
     <button id="analyze-btn">Analyze Fit on this Page</button>
     
     <div id="manual-upload-container" style="margin-top: 6px; text-align: center;">
-      <button id="btn-trigger-upload" class="btn-run" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2); font-size: 11px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+      <label id="btn-trigger-upload" class="btn-run" for="ext-file-upload" style="background: transparent; border: 1px dashed rgba(255,255,255,0.2); font-size: 11px; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; cursor: pointer; box-sizing: border-box;">
         <span>&#128209;</span> Or Upload Size Chart Image
-      </button>
-      <input type="file" id="ext-file-upload" accept="image/*" style="display: none;" />
+      </label>
+      <input type="file" id="ext-file-upload" accept="image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden;" />
     </div>
 
     <div id="loader-panel" class="loader">
@@ -538,7 +543,13 @@
 
     <!-- Cloud Sync Tab Content -->
     <div id="cloud-tab-content" style="display: none;">
-      <div class="section-title">Cloud Login</div>
+      <!-- Toggle buttons for Login vs Signup -->
+      <div class="auth-toggle-tabs" style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+        <button id="btn-auth-mode-login" class="tab-btn active" style="flex: 1; font-size: 11px; padding: 6px;">Log In</button>
+        <button id="btn-auth-mode-signup" class="tab-btn" style="flex: 1; font-size: 11px; padding: 6px;">Sign Up</button>
+      </div>
+
+      <!-- Cloud Login Form -->
       <div class="profile-card" id="cloud-login-form">
         <p style="font-size: 11px; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">
           Log in with your STYLA account to sync your measurements across all devices and tab sessions.
@@ -552,10 +563,24 @@
           <input type="password" id="cloud-password" placeholder="Password">
         </div>
         <button id="btn-cloud-login" style="margin-top: 4px;">Log In & Pull</button>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 12px; margin-bottom: 0; text-align: center;">
-          Don't have an account? <a href="https://styla.ca/measure.html?action=signup" target="_blank" style="color: var(--accent); text-decoration: underline;">Create one on styla.ca</a>
-        </p>
         <div id="cloud-login-error" class="warning-box" style="display: none; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; margin-top: 8px; padding: 8px;"></div>
+      </div>
+
+      <!-- Cloud Signup Form -->
+      <div class="profile-card" id="cloud-signup-form" style="display: none;">
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">
+          Create a cloud account to sync your current measurements and scans so you never lose them.
+        </p>
+        <div class="input-wrapper" style="margin-bottom: 8px;">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" placeholder="email@example.com">
+        </div>
+        <div class="input-wrapper" style="margin-bottom: 12px;">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" placeholder="Password (min 6 chars)">
+        </div>
+        <button id="btn-cloud-signup" style="margin-top: 4px;">Sign Up & Sync</button>
+        <div id="cloud-signup-error" class="warning-box" style="display: none; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; margin-top: 8px; padding: 8px;"></div>
       </div>
 
       <div class="profile-card" id="cloud-profile-panel" style="display: none;">

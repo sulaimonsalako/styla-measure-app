@@ -27,6 +27,339 @@ let chatHistory = [];
 const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
 
+// Global sync helpers
+let syncTimeout = null;
+async function syncMeasurementsToSupabase() {
+  try {
+    if (window.supabase) {
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        const chest = document.getElementById('val-chest').value;
+        const waist = document.getElementById('val-waist').value;
+        const belly = document.getElementById('val-belly').value;
+        const hips = document.getElementById('val-hips').value;
+        const inseam = document.getElementById('val-inseam').value;
+        
+        const ftStr = document.getElementById('val-height-ft').value;
+        const inStr = document.getElementById('val-height-in').value;
+        let height = null;
+        if (ftStr !== "" && inStr !== "") {
+            height = (parseInt(ftStr, 10) * 12) + parseInt(inStr, 10);
+        }
+        
+        const syncSpan = document.getElementById('cloud-sync-status') || document.querySelector('#logged-in-status span');
+        if (syncSpan) {
+          syncSpan.style.color = '#38bdf8'; // light blue
+          syncSpan.innerHTML = 'Syncing...';
+        }
+
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            chest: chest ? parseFloat(chest) : null,
+            waist: waist ? parseFloat(waist) : null,
+            belly: belly ? parseFloat(belly) : null,
+            hips: hips ? parseFloat(hips) : null,
+            height: height ? parseFloat(height) : null,
+            inseam: inseam ? parseFloat(inseam) : null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.user.id);
+          
+        if (error) throw error;
+        
+        if (syncSpan) {
+          syncSpan.style.color = '#10b981'; // green
+          syncSpan.innerHTML = '&#10004; Synced';
+        }
+        console.log("Successfully synced measurements to Supabase cloud.");
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to sync measurements to Supabase:", err);
+    const syncSpan = document.getElementById('cloud-sync-status') || document.querySelector('#logged-in-status span');
+    if (syncSpan) {
+      syncSpan.style.color = '#f87171'; // red
+      syncSpan.innerHTML = '&#9888; Sync Failed';
+    }
+  }
+}
+
+function triggerSyncDebounce() {
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(syncMeasurementsToSupabase, 1500);
+}
+
+function onUserLoggedIn(user, profile) {
+  if (!profile) return;
+  
+  if (profile.chest) {
+      document.getElementById('val-chest').value = profile.chest;
+      localStorage.setItem('styla_twin_chest', profile.chest);
+  }
+  if (profile.waist) {
+      document.getElementById('val-waist').value = profile.waist;
+      localStorage.setItem('styla_twin_waist', profile.waist);
+  }
+  if (profile.belly) {
+      document.getElementById('val-belly').value = profile.belly;
+      localStorage.setItem('styla_twin_belly', profile.belly);
+  }
+  if (profile.hips) {
+      document.getElementById('val-hips').value = profile.hips;
+      localStorage.setItem('styla_twin_hips', profile.hips);
+  }
+  if (profile.inseam) {
+      document.getElementById('val-inseam').value = profile.inseam;
+      localStorage.setItem('styla_twin_inseam', profile.inseam);
+  }
+  if (profile.height) {
+      const ft = Math.floor(profile.height / 12);
+      const inches = Math.round(profile.height % 12);
+      document.getElementById('val-height-ft').value = ft;
+      document.getElementById('val-height-in').value = inches;
+      localStorage.setItem('styla_twin_height', profile.height);
+  }
+  if (profile.api_scans) {
+      localStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans));
+  } else {
+      localStorage.removeItem('styla_twin_api_scans');
+  }
+  if (profile.measurement_overrides) {
+      localStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides));
+  } else {
+      localStorage.removeItem('styla_twin_measurement_overrides');
+  }
+
+  // Update UI to show they are logged in
+  document.getElementById('btn-show-login').style.display = 'none';
+  document.getElementById('logged-in-status').style.display = 'flex';
+  
+  const saveBox = document.getElementById('save-profile-box');
+  if (saveBox) saveBox.style.display = 'none';
+  
+  const manageBox = document.getElementById('manage-profile-box');
+  if (manageBox) {
+      manageBox.style.display = 'block';
+      const emailText = document.getElementById('profile-email-text');
+      if (emailText) emailText.textContent = user.email;
+  }
+
+  const badge = document.getElementById('active-scan-badge');
+  if (badge) {
+      const activeScan = profile.api_scans && Array.isArray(profile.api_scans) ? profile.api_scans.find(s => s.is_active) : null;
+      if (activeScan) {
+          badge.style.display = 'block';
+      } else {
+          badge.style.display = 'none';
+      }
+  }
+  
+  renderScanHistory(profile);
+}
+
+function renderScanHistory(profile) {
+  const scanList = document.getElementById('scan-history-list');
+  if (!scanList) return;
+
+  const scans = profile.api_scans || [];
+  if (scans.length === 0) {
+      scanList.innerHTML = '<p style="font-size: 0.85rem; color: #64748b; margin: 0;">No 3D body scans saved yet.</p>';
+      return;
+  }
+
+  // Sort scans: newest first
+  const sortedScans = [...scans].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  let html = '';
+  sortedScans.forEach(scan => {
+      const dateStr = new Date(scan.timestamp).toLocaleString();
+      const isActive = scan.is_active;
+      const vp = scan.volume_params || {};
+      const fp = scan.front_params || {};
+      
+      const chestVal = vp.chest ? vp.chest + '"' : 'N/A';
+      const waistVal = vp.waist ? vp.waist + '"' : 'N/A';
+      const hipsVal = vp.low_hips ? vp.low_hips + '"' : 'N/A';
+      const heightVal = fp.body_height ? fp.body_height + '"' : 'N/A';
+      
+      html += `
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.1)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'">
+          <div style="flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">Scan from ${dateStr}</span>
+              ${isActive 
+                ? `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 100px; border: 1px solid rgba(16, 185, 129, 0.2);">Active</span>` 
+                : `<span style="background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.1);">Inactive</span>`
+              }
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0; line-height: 1.4;">
+              <strong>Measurements:</strong> Chest: ${chestVal} | Waist: ${waistVal} | Hips: ${hipsVal} | Height: ${heightVal}
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            ${!isActive 
+              ? `<button class="btn-set-active-scan" data-scan-id="${scan.scan_id}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Set Active</button>` 
+              : ''
+            }
+            <button class="btn-delete-scan" data-scan-id="${scan.scan_id}" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; padding: 6px; text-decoration: underline;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#f87171'">Delete</button>
+          </div>
+        </div>
+      `;
+  });
+  
+  scanList.innerHTML = html;
+  
+  // Bind click events
+  scanList.querySelectorAll('.btn-set-active-scan').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+          const scanId = e.currentTarget.getAttribute('data-scan-id');
+          await setActiveScanInCloud(scanId);
+      });
+  });
+
+  scanList.querySelectorAll('.btn-delete-scan').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+          const scanId = e.currentTarget.getAttribute('data-scan-id');
+          if (confirm("Are you sure you want to delete this scan from your history?")) {
+              await deleteScanFromCloud(scanId);
+          }
+      });
+  });
+}
+
+async function setActiveScanInCloud(scanId) {
+  try {
+      if (!window.supabase) return;
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      let scans = JSON.parse(localStorage.getItem('styla_twin_api_scans') || '[]');
+      scans.forEach(s => {
+          s.is_active = (s.scan_id === scanId);
+      });
+      
+      localStorage.setItem('styla_twin_api_scans', JSON.stringify(scans));
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({ api_scans: scans })
+        .eq('id', session.user.id);
+        
+      if (error) throw error;
+      
+      // Find the new active scan to update inputs
+      const activeScan = scans.find(s => s.is_active);
+      if (activeScan) {
+          if (activeScan.volume_params.chest) document.getElementById('val-chest').value = activeScan.volume_params.chest;
+          if (activeScan.volume_params.waist) document.getElementById('val-waist').value = activeScan.volume_params.waist;
+          if (activeScan.volume_params.abdomen || activeScan.volume_params.waist) {
+              document.getElementById('val-belly').value = activeScan.volume_params.abdomen || activeScan.volume_params.waist;
+          }
+          if (activeScan.volume_params.low_hips) document.getElementById('val-hips').value = activeScan.volume_params.low_hips;
+          if (activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam) {
+              document.getElementById('val-inseam').value = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam;
+          }
+          if (activeScan.front_params.body_height) {
+              const ht = activeScan.front_params.body_height;
+              const ft = Math.floor(ht / 12);
+              const inches = Math.round(ht % 12);
+              document.getElementById('val-height-ft').value = ft;
+              document.getElementById('val-height-in').value = inches;
+          }
+          
+          triggerSyncDebounce();
+      }
+
+      const badge = document.getElementById('active-scan-badge');
+      if (badge) badge.style.display = activeScan ? 'block' : 'none';
+
+      // Refresh UI
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (profile) renderScanHistory(profile);
+      
+  } catch (err) {
+      console.error("Failed to set active scan:", err);
+      alert("Failed to set active scan: " + err.message);
+  }
+}
+
+async function deleteScanFromCloud(scanId) {
+  try {
+      if (!window.supabase) return;
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      let scans = JSON.parse(localStorage.getItem('styla_twin_api_scans') || '[]');
+      const wasActive = scans.some(s => s.scan_id === scanId && s.is_active);
+      
+      scans = scans.filter(s => s.scan_id !== scanId);
+      
+      // If we deleted the active scan, and we still have other scans, make the newest one active
+      if (wasActive && scans.length > 0) {
+          scans[0].is_active = true;
+      }
+      
+      localStorage.setItem('styla_twin_api_scans', JSON.stringify(scans));
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({ api_scans: scans })
+        .eq('id', session.user.id);
+        
+      if (error) throw error;
+      
+      // Refresh inputs if active scan changed
+      const activeScan = scans.find(s => s.is_active);
+      const badge = document.getElementById('active-scan-badge');
+      if (badge) badge.style.display = activeScan ? 'block' : 'none';
+      
+      if (wasActive) {
+          if (activeScan) {
+              if (activeScan.volume_params.chest) document.getElementById('val-chest').value = activeScan.volume_params.chest;
+              if (activeScan.volume_params.waist) document.getElementById('val-waist').value = activeScan.volume_params.waist;
+              if (activeScan.volume_params.abdomen || activeScan.volume_params.waist) {
+                  document.getElementById('val-belly').value = activeScan.volume_params.abdomen || activeScan.volume_params.waist;
+              }
+              if (activeScan.volume_params.low_hips) document.getElementById('val-hips').value = activeScan.volume_params.low_hips;
+              if (activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam) {
+                  document.getElementById('val-inseam').value = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam;
+              }
+              if (activeScan.front_params.body_height) {
+                  const ht = activeScan.front_params.body_height;
+                  const ft = Math.floor(ht / 12);
+                  const inches = Math.round(ht % 12);
+                  document.getElementById('val-height-ft').value = ft;
+                  document.getElementById('val-height-in').value = inches;
+              }
+          }
+          triggerSyncDebounce();
+      }
+
+      // Refresh UI
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (profile) renderScanHistory(profile);
+      
+  } catch (err) {
+      console.error("Failed to delete scan:", err);
+      alert("Failed to delete scan: " + err.message);
+  }
+}
+
 // Load saved Digital Twin measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
   const savedChest = localStorage.getItem('styla_twin_chest');
@@ -57,7 +390,6 @@ window.addEventListener('DOMContentLoaded', async () => {
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
-              // User is logged in! Fetch their profile.
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('*')
@@ -65,38 +397,7 @@ window.addEventListener('DOMContentLoaded', async () => {
                 .single();
                 
               if (profile) {
-                  if (profile.chest) {
-                      document.getElementById('val-chest').value = profile.chest;
-                      localStorage.setItem('styla_twin_chest', profile.chest);
-                  }
-                  if (profile.waist) {
-                      document.getElementById('val-waist').value = profile.waist;
-                      localStorage.setItem('styla_twin_waist', profile.waist);
-                  }
-                  if (profile.belly) {
-                      document.getElementById('val-belly').value = profile.belly;
-                      localStorage.setItem('styla_twin_belly', profile.belly);
-                  }
-                  if (profile.hips) {
-                      document.getElementById('val-hips').value = profile.hips;
-                      localStorage.setItem('styla_twin_hips', profile.hips);
-                  }
-                  if (profile.inseam) {
-                      document.getElementById('val-inseam').value = profile.inseam;
-                      localStorage.setItem('styla_twin_inseam', profile.inseam);
-                  }
-                  if (profile.height) {
-                      const ft = Math.floor(profile.height / 12);
-                      const inches = profile.height % 12;
-                      document.getElementById('val-height-ft').value = ft;
-                      document.getElementById('val-height-in').value = inches;
-                      localStorage.setItem('styla_twin_height', profile.height);
-                  }
-                  
-                  // Update UI to show they are logged in
-                  document.getElementById('btn-show-login').style.display = 'none';
-                  document.getElementById('logged-in-status').style.display = 'flex';
-                  document.getElementById('save-profile-box').style.display = 'none'; // Don't ask them to save again
+                  onUserLoggedIn(session.user, profile);
               }
           }
       }
@@ -104,70 +405,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       console.log("Supabase session check skipped or failed.", err);
   }
 
-  // Debounced cloud sync helper for logged in users
-  let syncTimeout = null;
-  async function syncMeasurementsToSupabase() {
-    try {
-      if (window.supabase) {
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          const chest = document.getElementById('val-chest').value;
-          const waist = document.getElementById('val-waist').value;
-          const belly = document.getElementById('val-belly').value;
-          const hips = document.getElementById('val-hips').value;
-          const inseam = document.getElementById('val-inseam').value;
-          
-          const ftStr = document.getElementById('val-height-ft').value;
-          const inStr = document.getElementById('val-height-in').value;
-          let height = null;
-          if (ftStr !== "" && inStr !== "") {
-              height = (parseInt(ftStr, 10) * 12) + parseInt(inStr, 10);
-          }
-          
-          const syncSpan = document.getElementById('cloud-sync-status') || document.querySelector('#logged-in-status span');
-          if (syncSpan) {
-            syncSpan.style.color = '#38bdf8'; // light blue
-            syncSpan.innerHTML = 'Syncing...';
-          }
 
-          const { error } = await supabase
-            .from('profiles')
-            .update({
-              chest: chest ? parseFloat(chest) : null,
-              waist: waist ? parseFloat(waist) : null,
-              belly: belly ? parseFloat(belly) : null,
-              hips: hips ? parseFloat(hips) : null,
-              height: height ? parseFloat(height) : null,
-              inseam: inseam ? parseFloat(inseam) : null,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', session.user.id);
-            
-          if (error) throw error;
-          
-          if (syncSpan) {
-            syncSpan.style.color = '#10b981'; // green
-            syncSpan.innerHTML = '&#10004; Synced';
-          }
-          console.log("Successfully synced measurements to Supabase cloud.");
-        }
-      }
-    } catch (err) {
-      console.warn("Failed to sync measurements to Supabase:", err);
-      const syncSpan = document.getElementById('cloud-sync-status') || document.querySelector('#logged-in-status span');
-      if (syncSpan) {
-        syncSpan.style.color = '#f87171'; // red
-        syncSpan.innerHTML = '&#9888; Sync Failed';
-      }
-    }
-  }
-
-  function triggerSyncDebounce() {
-    if (syncTimeout) clearTimeout(syncTimeout);
-    syncTimeout = setTimeout(syncMeasurementsToSupabase, 1500); // sync after 1.5 seconds of inactivity
-  }
 
   // Auto-save measurements to localStorage on input change
   const inputsToWatch = [
@@ -440,6 +678,18 @@ btnDecode.addEventListener('click', async () => {
 
   startLoader();
 
+  let api_scans = [];
+  try {
+    const rawScans = localStorage.getItem('styla_twin_api_scans');
+    if (rawScans) api_scans = JSON.parse(rawScans);
+  } catch (e) {}
+
+  let measurement_overrides = {};
+  try {
+    const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
+    if (rawOverrides) measurement_overrides = JSON.parse(rawOverrides);
+  } catch (e) {}
+
   try {
     const res = await fetch('/api/decode', {
       method: 'POST',
@@ -448,6 +698,8 @@ btnDecode.addEventListener('click', async () => {
       },
       body: JSON.stringify({
         chest, waist, belly, hips, height, inseam,
+        api_scans,
+        measurement_overrides,
         chartImagesBase64: chartBase64Images,
         styleImagesBase64: styleBase64Images
       })
@@ -808,36 +1060,11 @@ if (btnLoginSubmit) {
               .single();
               
             if (profile) {
-                if (profile.chest) {
-                    document.getElementById('val-chest').value = profile.chest;
-                    localStorage.setItem('styla_twin_chest', profile.chest);
-                }
-                if (profile.waist) {
-                    document.getElementById('val-waist').value = profile.waist;
-                    localStorage.setItem('styla_twin_waist', profile.waist);
-                }
-                if (profile.hips) {
-                    document.getElementById('val-hips').value = profile.hips;
-                    localStorage.setItem('styla_twin_hips', profile.hips);
-                }
-                if (profile.inseam) {
-                    document.getElementById('val-inseam').value = profile.inseam;
-                    localStorage.setItem('styla_twin_inseam', profile.inseam);
-                }
-                if (profile.height) {
-                    const ft = Math.floor(profile.height / 12);
-                    const inches = profile.height % 12;
-                    document.getElementById('val-height-ft').value = ft;
-                    document.getElementById('val-height-in').value = inches;
-                    localStorage.setItem('styla_twin_height', profile.height);
-                }
+                onUserLoggedIn(data.user, profile);
             }
             
             // Update UI
             loginModal.style.display = 'none';
-            document.getElementById('btn-show-login').style.display = 'none';
-            document.getElementById('logged-in-status').style.display = 'flex';
-            document.getElementById('save-profile-box').style.display = 'none';
             
         } catch (err) {
             let msg = err.message;
@@ -916,9 +1143,14 @@ if (btnSignupSubmit) {
             loginModal.style.display = 'none';
             
             if (data && data.session) {
-                document.getElementById('btn-show-login').style.display = 'none';
-                document.getElementById('logged-in-status').style.display = 'flex';
-                document.getElementById('save-profile-box').style.display = 'none';
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', data.user.id)
+                  .single();
+                if (profile) {
+                    onUserLoggedIn(data.user, profile);
+                }
                 alert("Account created and profile saved successfully!");
             } else {
                 alert("Account created! A confirmation email has been sent. Please confirm your email to activate your account.");
@@ -1038,9 +1270,17 @@ if (btnLogout) {
                 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 await supabase.auth.signOut();
             }
+            localStorage.removeItem('styla_twin_api_scans');
+            localStorage.removeItem('styla_twin_measurement_overrides');
+            const badge = document.getElementById('active-scan-badge');
+            if (badge) badge.style.display = 'none';
+
             // Reset UI
             document.getElementById('btn-show-login').style.display = 'block';
             document.getElementById('logged-in-status').style.display = 'none';
+            
+            const manageBox = document.getElementById('manage-profile-box');
+            if (manageBox) manageBox.style.display = 'none';
             // Clear inputs
             document.getElementById('val-chest').value = '';
             document.getElementById('val-waist').value = '';
@@ -1343,3 +1583,132 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+  // Handle Clear Profile
+  const btnClearProfile = document.getElementById('btn-clear-profile');
+  if (btnClearProfile) {
+      btnClearProfile.addEventListener('click', async () => {
+          if (!confirm("Are you sure you want to clear all manual measurements and scan history? This action cannot be undone.")) {
+              return;
+          }
+          
+          try {
+              if (!window.supabase) return;
+              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              const { data: { session } } = await supabase.auth.getSession();
+              
+              // Reset local storage
+              localStorage.removeItem('styla_twin_chest');
+              localStorage.removeItem('styla_twin_waist');
+              localStorage.removeItem('styla_twin_belly');
+              localStorage.removeItem('styla_twin_hips');
+              localStorage.removeItem('styla_twin_height');
+              localStorage.removeItem('styla_twin_inseam');
+              localStorage.removeItem('styla_twin_api_scans');
+              localStorage.removeItem('styla_twin_measurement_overrides');
+              
+              // Reset inputs in UI
+              document.getElementById('val-chest').value = '';
+              document.getElementById('val-waist').value = '';
+              document.getElementById('val-belly').value = '';
+              document.getElementById('val-hips').value = '';
+              document.getElementById('val-height-ft').value = '';
+              document.getElementById('val-height-in').value = '';
+              document.getElementById('val-inseam').value = '';
+              
+              const badge = document.getElementById('active-scan-badge');
+              if (badge) badge.style.display = 'none';
+              
+              if (session) {
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                      chest: null,
+                      waist: null,
+                      belly: null,
+                      hips: null,
+                      height: null,
+                      inseam: null,
+                      api_scans: [],
+                      measurement_overrides: {}
+                    })
+                    .eq('id', session.user.id);
+                  
+                  if (error) throw error;
+                  
+                  // Refresh UI
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                  if (profile) renderScanHistory(profile);
+              }
+              
+              alert("All dimensions and scans successfully cleared.");
+              
+          } catch (err) {
+              console.error("Failed to clear profile dimensions:", err);
+              alert("Error: " + err.message);
+          }
+      });
+  }
+
+  // Handle Delete Profile & Account
+  const btnDeleteProfile = document.getElementById('btn-delete-profile');
+  if (btnDeleteProfile) {
+      btnDeleteProfile.addEventListener('click', async () => {
+          if (!confirm("Are you sure you want to delete your profile permanently? This will delete all measurements, scans, and your account.")) {
+              return;
+          }
+          
+          try {
+              if (!window.supabase) return;
+              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              const { data: { session } } = await supabase.auth.getSession();
+              
+              if (session) {
+                  const { error: dbError } = await supabase
+                    .from('profiles')
+                    .delete()
+                    .eq('id', session.user.id);
+                    
+                  if (dbError) throw dbError;
+                  await supabase.auth.signOut();
+              }
+              
+              // Clear everything locally
+              localStorage.removeItem('styla_twin_chest');
+              localStorage.removeItem('styla_twin_waist');
+              localStorage.removeItem('styla_twin_belly');
+              localStorage.removeItem('styla_twin_hips');
+              localStorage.removeItem('styla_twin_height');
+              localStorage.removeItem('styla_twin_inseam');
+              localStorage.removeItem('styla_twin_api_scans');
+              localStorage.removeItem('styla_twin_measurement_overrides');
+              
+              // Clear inputs
+              document.getElementById('val-chest').value = '';
+              document.getElementById('val-waist').value = '';
+              document.getElementById('val-belly').value = '';
+              document.getElementById('val-hips').value = '';
+              document.getElementById('val-height-ft').value = '';
+              document.getElementById('val-height-in').value = '';
+              document.getElementById('val-inseam').value = '';
+              
+              const badge = document.getElementById('active-scan-badge');
+              if (badge) badge.style.display = 'none';
+              
+              document.getElementById('btn-show-login').style.display = 'block';
+              document.getElementById('logged-in-status').style.display = 'none';
+              
+              const manageBox = document.getElementById('manage-profile-box');
+              if (manageBox) manageBox.style.display = 'none';
+              
+              alert("Your profile and account have been deleted.");
+              
+          } catch (err) {
+              console.error("Failed to delete profile:", err);
+              alert("Error: " + err.message);
+          }
+      });
+  }

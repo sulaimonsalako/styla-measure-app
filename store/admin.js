@@ -50,6 +50,51 @@ fileInput.addEventListener('change', () => {
   });
 });
 
+// Color Variations dynamic showcase images
+const colorsInput = document.getElementById('prod-colors');
+const showcasesContainer = document.getElementById('color-showcases-container');
+const showcasesList = document.getElementById('color-showcases-list');
+
+if (colorsInput) {
+  colorsInput.addEventListener('input', () => {
+    updateColorShowcaseInputs();
+  });
+}
+
+function updateColorShowcaseInputs(existingColorImages = {}) {
+  if (!colorsInput || !showcasesContainer || !showcasesList) return;
+  const val = colorsInput.value.trim();
+  const colors = val ? val.split(',').map(c => c.trim()).filter(c => c.length > 0) : [];
+  
+  if (colors.length === 0 || (colors.length === 1 && colors[0].toLowerCase() === 'standard')) {
+    showcasesContainer.style.display = 'none';
+    showcasesList.innerHTML = '';
+    return;
+  }
+  
+  showcasesContainer.style.display = 'block';
+  
+  const currentValues = {};
+  showcasesList.querySelectorAll('.color-images-input').forEach(textarea => {
+    const col = textarea.getAttribute('data-color');
+    currentValues[col] = textarea.value;
+  });
+  
+  showcasesList.innerHTML = colors.map(color => {
+    const existingUrls = existingColorImages[color] || [];
+    const textVal = currentValues[color] !== undefined 
+      ? currentValues[color] 
+      : (existingUrls.length > 0 ? existingUrls.join('\n') : '');
+      
+    return `
+      <div class="color-image-group" style="background:#f4f4f5; border:1px solid #e4e4e7; padding:10px; border-radius:6px; margin-bottom:10px;">
+        <label style="font-weight:600; color:#333; margin-bottom:4px; display:block; font-size:0.8rem;">Images for color: <span style="color:#ff2a75;">${color}</span></label>
+        <textarea class="color-images-input" data-color="${color}" rows="2" style="width:100%; border:1px solid #d4d4d8; border-radius:4px; padding:6px; font-family:monospace; font-size:0.75rem;" placeholder="Paste image URLs (one per line)">${textVal}</textarea>
+      </div>
+    `;
+  }).join('');
+}
+
 // Size Chart Input Generator (Dynamic columns based on prod-poms text field)
 const sizesCheckboxes = document.querySelectorAll('input[name="sizes"]');
 const sizeChartInputsContainer = document.getElementById('size-chart-inputs-container');
@@ -121,6 +166,7 @@ function resetEditMode() {
   if (btnSubmitProd) btnSubmitProd.innerText = "Publish Product";
   if (btnCancelEdit) btnCancelEdit.classList.add('hidden');
   updateSizeChartInputs(); // Reset grid inputs
+  updateColorShowcaseInputs(); // Reset color showcase inputs
 }
 
 function populateForm(prod) {
@@ -131,6 +177,7 @@ function populateForm(prod) {
   document.getElementById('prod-single-price').value = prod.singlePrice;
   document.getElementById('prod-bulk-price').value = prod.bulkPrice;
   document.getElementById('prod-colors').value = prod.colors ? prod.colors.join(', ') : 'Standard';
+  updateColorShowcaseInputs(prod.colorImages || {});
 
   // Set sizes checkboxes
   sizesCheckboxes.forEach(cb => {
@@ -487,6 +534,15 @@ form.addEventListener('submit', async (e) => {
     images = [...base64Images];
   }
   
+  const colorImages = {};
+  document.querySelectorAll('.color-images-input').forEach(textarea => {
+    const color = textarea.getAttribute('data-color');
+    const urls = textarea.value.trim().split('\n').map(u => u.trim()).filter(u => u.length > 0);
+    if (urls.length > 0) {
+      colorImages[color] = urls;
+    }
+  });
+
   const payload = {
     name,
     category,
@@ -496,6 +552,7 @@ form.addEventListener('submit', async (e) => {
     bulkPrice,
     sizes,
     colors,
+    colorImages,
     sizeChart,
     images
   };

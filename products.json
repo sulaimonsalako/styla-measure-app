@@ -1,0 +1,291 @@
+[
+  {
+    "id": "prod_1",
+    "name": "Oversized Heavyweight Cotton Hoodie",
+    "category": "Knitwear",
+    "supplier": "Guangzhou Denim Lab",
+    "description": "Crafted from 480gsm ultra-soft French terry cotton. Features dropped shoulders, a double-lined hood without drawstrings, and kangaroo pocket. Made in Guangzhou, China.",
+    "images": [
+      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop"
+    ],
+    "singlePrice": 140,
+    "bulkPrice": 85,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Charcoal",
+      "Off-White",
+      "Dusty Pink"
+    ],
+    "sizeChart": {
+      "S": {
+        "chest": 38,
+        "waist": 30,
+        "hips": 36
+      },
+      "M": {
+        "chest": 40,
+        "waist": 32,
+        "hips": 38
+      },
+      "L": {
+        "chest": 42,
+        "waist": 34,
+        "hips": 40
+      },
+      "XL": {
+        "chest": 44,
+        "waist": 36,
+        "hips": 42
+      }
+    },
+    "status": "active",
+    "colorImages": {
+      "Charcoal": [
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Off-White": [
+        "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Dusty Pink": [
+        "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=600&auto=format&fit=crop"
+      ]
+    }
+  },
+  {
+    "id": "prod_2",
+    "name": "Relaxed Tailored Wool Trousers",
+    "category": "Pants",
+    "supplier": "Zhejiang Silk Mills",
+    "description": "Double-pleated trousers in a fluid virgin wool blend. Mid-rise with a wide-leg cut, slash pockets, and rear button welt pockets. Premium stitching from Huzhou, China.",
+    "images": [
+      "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=600&auto=format&fit=crop"
+    ],
+    "singlePrice": 195,
+    "bulkPrice": 110,
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Black",
+      "Taupe",
+      "Ivory"
+    ],
+    "sizeChart": {
+      "XS": {
+        "chest": 36,
+        "waist": 28,
+        "hips": 34
+      },
+      "S": {
+        "chest": 38,
+        "waist": 30,
+        "hips": 36
+      },
+      "M": {
+        "chest": 40,
+        "waist": 32,
+        "hips": 38
+      },
+      "L": {
+        "chest": 42,
+        "waist": 34,
+        "hips": 40
+      },
+      "XL": {
+        "chest": 44,
+        "waist": 36,
+        "hips": 42
+      }
+    },
+    "status": "active",
+    "colorImages": {
+      "Black": [
+        "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Taupe": [
+        "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Ivory": [
+        "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=600&auto=format&fit=crop"
+      ]
+    }
+  },
+  {
+    "id": "prod_3",
+    "name": "Cropped Boxy Denim Jacket",
+    "category": "Outerwear",
+    "supplier": "Guangzhou Denim Lab",
+    "description": "14oz raw selvedge denim jacket in a washed vintage charcoal. Features a boxy cropped silhouette, classic button chest pockets, and adjustable waist tabs.",
+    "images": [
+      "https://images.unsplash.com/photo-1611312449412-6cefac5dc3e4?q=80&w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=600&auto=format&fit=crop"
+    ],
+    "singlePrice": 220,
+    "bulkPrice": 135,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Vintage Charcoal",
+      "Raw Indigo"
+    ],
+    "sizeChart": {
+      "S": {
+        "chest": 38,
+        "waist": 30,
+        "hips": 36
+      },
+      "M": {
+        "chest": 40,
+        "waist": 32,
+        "hips": 38
+      },
+      "L": {
+        "chest": 42,
+        "waist": 34,
+        "hips": 40
+      }
+    },
+    "status": "active",
+    "colorImages": {
+      "Vintage Charcoal": [
+        "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1611312449412-6cefac5dc3e4?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Raw Indigo": [
+        "https://images.unsplash.com/photo-1516257984-b1b4d707412e?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1481966115753-963394078c2e?q=80&w=600&auto=format&fit=crop"
+      ]
+    }
+  },
+  {
+    "id": "prod_4",
+    "name": "Ribbed Silk-Mockneck Tee",
+    "category": "Shirts",
+    "supplier": "Shenzhen Knitwear Co.",
+    "description": "Fine-knit mockneck shirt in a premium mulberry silk and long-staple cotton blend. Offers a body-skimming fit with a subtle lustrous finish. Sourced from Shenzhen, China.",
+    "images": [
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=600&auto=format&fit=crop"
+    ],
+    "singlePrice": 110,
+    "bulkPrice": 65,
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Burgundy",
+      "Sand",
+      "Slate Black"
+    ],
+    "sizeChart": {
+      "S": {
+        "chest": 38,
+        "waist": 30,
+        "hips": 36
+      },
+      "M": {
+        "chest": 40,
+        "waist": 32,
+        "hips": 38
+      },
+      "L": {
+        "chest": 42,
+        "waist": 34,
+        "hips": 40
+      },
+      "XL": {
+        "chest": 44,
+        "waist": 36,
+        "hips": 42
+      }
+    },
+    "status": "active",
+    "colorImages": {
+      "Burgundy": [
+        "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Sand": [
+        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Slate Black": [
+        "https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?q=80&w=600&auto=format&fit=crop"
+      ]
+    }
+  },
+  {
+    "id": "prod_5",
+    "name": "Technical Nylon Trench Coat",
+    "category": "Outerwear",
+    "supplier": "Sichuan Leather Crafts",
+    "description": "Water-resistant double-breasted trench coat in technical nylon canvas. Features a storm flap, detachable belt, adjustable wrist cuffs, and deep buttoned pockets.",
+    "images": [
+      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=600&auto=format&fit=crop"
+    ],
+    "singlePrice": 280,
+    "bulkPrice": 165,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Khaki",
+      "Olive Green"
+    ],
+    "sizeChart": {
+      "S": {
+        "chest": 38,
+        "waist": 30,
+        "hips": 36
+      },
+      "M": {
+        "chest": 40,
+        "waist": 32,
+        "hips": 38
+      },
+      "L": {
+        "chest": 42,
+        "waist": 34,
+        "hips": 40
+      }
+    },
+    "status": "active",
+    "colorImages": {
+      "Khaki": [
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=600&auto=format&fit=crop"
+      ],
+      "Olive Green": [
+        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1580657018990-2d226e88813d?q=80&w=600&auto=format&fit=crop"
+      ]
+    }
+  }
+]

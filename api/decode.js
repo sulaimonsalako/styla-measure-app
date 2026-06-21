@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, chartImagesBase64, styleImagesBase64 } = req.body;
+    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, chartImagesBase64, styleImagesBase64 } = req.body;
 
     if (!chartImagesBase64 || chartImagesBase64.length === 0) {
       return res.status(400).json({ error: 'No size chart provided.' });
@@ -26,25 +26,64 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured on server.' });
     }
 
+    const activeScan = api_scans ? api_scans.find(s => s.is_active) : null;
+    let pChest = chest;
+    let pWaist = waist;
+    let pBelly = belly || waist;
+    let pHips = hips;
+    let pHeight = height;
+    let pInseam = inseam;
+    let pShoulder = null;
+    let pSleeve = null;
+    let pThigh = null;
+
+    if (activeScan) {
+      pChest = activeScan.volume_params.chest || pChest;
+      pWaist = activeScan.volume_params.waist || pWaist;
+      pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
+      pHips = activeScan.volume_params.low_hips || pHips;
+      pShoulder = activeScan.front_params.shoulders || pShoulder;
+      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
+      pThigh = activeScan.volume_params.thigh || pThigh;
+    }
+
+    if (measurement_overrides) {
+      if (measurement_overrides.chest) pChest = measurement_overrides.chest;
+      if (measurement_overrides.waist) pWaist = measurement_overrides.waist;
+      if (measurement_overrides.hips) pHips = measurement_overrides.hips;
+      if (measurement_overrides.shoulder) pShoulder = measurement_overrides.shoulder;
+      if (measurement_overrides.sleeve) pSleeve = measurement_overrides.sleeve;
+      if (measurement_overrides.inseam) pInseam = measurement_overrides.inseam;
+      if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
+    }
+
     const prompt = `You are an expert fashion tailor and sizing assistant. 
 The user has the following body measurements:
-- Chest / Bust: ${chest}"
-- Waist: ${waist}"
-${belly ? `- Belly: ${belly}"` : ''}
-- Hips: ${hips}"
-${height ? `- Total Height: ${height}"` : ''}
-${inseam ? `- Inseam: ${inseam}"` : ''}
+- Chest / Bust: ${pChest}"
+- Waist: ${pWaist}"
+${pBelly ? `- Belly: ${pBelly}"` : ''}
+- Hips: ${pHips}"
+${pHeight ? `- Total Height: ${pHeight}"` : ''}
+${pInseam ? `- Inseam: ${pInseam}"` : ''}
+${pShoulder ? `- Across Back Shoulder Width: ${pShoulder}"` : ''}
+${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
+${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
 
-${(height && inseam) ? `IMPORTANT RATIO: The user's estimated torso length is Total Height - Inseam - 11 inches. Compare their leg length to their torso length to determine if they are proportionally long-legged, short-legged, or average.` : ''}
+${(pHeight && pInseam) ? `IMPORTANT RATIO: The user's estimated torso length is Total Height - Inseam - 11 inches. Compare their leg length to their torso length to determine if they are proportionally long-legged, short-legged, or average.` : ''}
 
 Look at the attached size chart image(s) as your primary sizing data.
 Determine the absolute best size for this user.
 
 PROFESSIONAL SIZING & APPAREL MATCHING RULES:
 1. IDENTIFY CHART TYPE (CRITICAL):
-   - Detect if the size chart contains "Product Measurements", "Garment Dimensions", "Flat Measurements", or "how a garment is measured".
-   - If so, it is a GARMENT SPECIFICATION CHART (contains finished garment dimensions). Note: Chest values like 19.7" or 20.5" are flat lay half-chest measurements; you must multiply them by 2 to get the finished garment chest circumference (e.g. 39.4" or 41").
-   - Otherwise, it is a BODY SIZE CHART (contains recommended target body measurements, like chest circumferences 36", 38", 40").
+   - Detect if the size chart represents body measurements or garment measurements using these rules:
+     * CHARTS WITH LENGTH (Usually Garment Measurements): If a chart includes any "Length" attributes (like top length, body length, inseam, outseam, or sleeve length), it almost always reflects actual physical GARMENT DIMENSIONS. This is because body length doesn't change based on fit preference. In this case, treat it as a GARMENT SPECIFICATION CHART. A length measurement tells the user exactly where the fabric will hit their body (e.g., a 70 cm shirt length tells them how far down their torso the shirt hangs).
+     * CHARTS WITH ONLY CIRCUMFERENCES (Usually Body Measurements): If a chart only lists circumferences (like chest, waist, and hips) without any length measurements, it typically reflects BODY MEASUREMENTS. In this case, treat it as a BODY SIZE CHART. Brands use these to tell what size human body the item was designed to fit, leaving length and "ease" up to the clothing style.
+     * EXCEPTIONS TO WATCH OUT FOR:
+       a) Unisex/Oversized Streetwear: These charts might list only circumferences (like "Chest Width" or "Bust Width") but represent finished GARMENT MEASUREMENTS (usually flat half-chest width) to show exactly how baggy/oversized the item is.
+       b) Knitwear and Leggings (High-stretch): High-stretch items sometimes list flat finished garment circumferences that look impossibly small (e.g., a 24" chest for an adult shirt) because the fabric is meant to stretch out on the body. Do not confuse these small dimensions for children's sizes; identify them as unstretched garment measurements.
+   - Note: In a GARMENT SPECIFICATION CHART, flat lay half-chest/waist values (e.g., 19.7" or 20.5") must be multiplied by 2 to get the finished garment circumference (e.g., 39.4" or 41").
 
 2. MATCHING LOGIC AND TRUE PHYSICAL EASE:
    - CASE A: BODY SIZE CHART (Recommended Target Body Dimensions, e.g. M is for 38" chest)

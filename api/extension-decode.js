@@ -1,198 +1,409 @@
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '4mb',
-    },
-  },
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  try {
-    const { 
-      chest, 
-      waist, 
-      belly, 
-      hips, 
-      height, 
-      inseam, 
-      pageTitle, 
-      pageText, 
-      imagesBase64, 
-      tableHtml 
-    } = req.body;
-
-    if (!chest || !waist || !belly || !hips) {
-      return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Belly, Hips are required).' });
-    }
-
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured on server.' });
-    }
-
-    const prompt = `You are an expert fashion tailor and sizing assistant for STYLA.
-The user has the following body measurements:
-- Chest / Bust: ${chest}"
-- Waist: ${waist}"
-${belly ? `- Belly: ${belly}"` : ''}
-- Hips: ${hips}"
-${height ? `- Total Height: ${height}"` : ''}
-${inseam ? `- Inseam: ${inseam}"` : ''}
-
-We are analyzing a product page for a garment:
-Product Title: "${pageTitle || 'Unknown Product'}"
-
-Product Details & Description:
-"""
-${pageText || 'No description found.'}
-"""
-
-HTML Sizing Tables found on page:
-"""
-${tableHtml || 'None'}
-"""
-
-YOUR TARGET:
-Check the HTML sizing tables above and the attached images to locate the size chart.
-
-PROFESSIONAL SIZING & APPAREL MATCHING RULES:
-1. IDENTIFY CHART TYPE (CRITICAL):
-   - Detect if the size chart contains "Product Measurements", "Garment Dimensions", "Flat Measurements", or "how a garment is measured".
-   - If so, it is a GARMENT SPECIFICATION CHART (contains finished garment dimensions). Note: Chest values like 19.7" or 20.5" are flat lay half-chest measurements; you must multiply them by 2 to get the finished garment chest circumference (e.g. 39.4" or 41").
-   - Otherwise, it is a BODY SIZE CHART (contains recommended target body measurements, like chest circumferences 36", 38", 40").
-
-2. MATCHING LOGIC AND TRUE PHYSICAL EASE:
-   - CASE A: BODY SIZE CHART (Recommended Target Body Dimensions, e.g. M is for 38" chest)
-     - Compare the user's body measurements directly to the recommended target body sizes in the chart. The brand has already built styling ease into the garment patterns for that target body size.
-     - The ideal fit (fit_spectrum: 'ideal', fit_match_score: 100) is when the user's body size matches the recommended body spec exactly.
-     - If the user's body is smaller than the recommended body size (e.g., user is 35" chest, recommended is 39.4" chest), they get EXTRA ease:
-       True Physical Ease = Brand's Pre-Factored Ease (approx 2" for regular tops) + (Recommended Body Spec - User Body).
-       For example, a 35" user buying a size designed for a 39.4" body gets 2" + 4.4" = 6.4" of physical ease. This fits looser than designed!
-       - In this case, recommend the size that matches their body closest (e.g., Size S designed for a 36.2" chest is a much better match than M). 
-       - If M is recommended because S does not exist or is unavailable, set fit_spectrum to 'relaxed' or 'oversized', deduct score points (e.g., -6% per inch of body difference, so fit_match_score is ~74%), and explain that it fits looser than designed.
-       - If the user's body is larger than the recommended body spec, they get LESS ease (fit_spectrum: 'slim' or 'tight'). Deduct score points proportionally.
-
-   - CASE B: GARMENT SPECIFICATION CHART (Finished Garment Dimensions, e.g. flat measurements)
-     - Flat measurements represent the fabric itself. The brand has already built styling ease into these dimensions.
-     - To find the target body size the garment was designed for, subtract the standard design ease from the finished garment circumference:
-       - Regular Fit Knit / Polo: Standard design ease is 1.5" to 2.5". (e.g. M with 39.4" finished chest is designed for a ~37.4" body chest).
-       - Slim Fit: Standard design ease is 0.5" to 1.5".
-       - Oversized Fit: Standard design ease is 4" to 6".
-       - Woven Shirt / Jacket: Standard design ease is 3" to 4".
-     - Calculate the user's difference from the target body chest:
-       Difference = Target Body Spec - User Body.
-       - If the difference is close to 0 (within +/- 1"), the fit is 'ideal' (fit_match_score: 95-100, fit_spectrum: 'ideal').
-       - If the user's body is significantly smaller than the target body spec, the fit is 'relaxed' or 'oversized' (score is lower, fit_spectrum is 'relaxed' or 'oversized').
-       - If the user's body is larger than the target body spec, the fit is 'slim' or 'tight' (score is lower, fit_spectrum is 'slim' or 'tight').
-       - Example: A polo with finished chest 39.4" (Size M) is designed for a ~37.4" body chest. A 35" chest user is 2.4" smaller than the target body. Thus, M is a 'relaxed' fit (score ~85%). S (finished chest ~37.4", designed for a ~35.4" body) is the 'ideal' fit (score ~97%). Recommending M as 100% ideal is wrong when S is available.
-
-3. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's body spec or target body size):
-   - Woven / Structured: Max tolerance of +0.5". The user's body measurement must not exceed the target body size by more than 0.5", otherwise size up.
-   - Knits / Stretch: Max tolerance of +1.5". Since knits stretch, the user's body can exceed the body size spec by up to 1.5".
-   - Activewear / Compression: Max tolerance of +3.0".
-
-4. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
-   - Pants/Bottoms (Waist): User's body must not be smaller than the body spec by more than -1.5" (otherwise they fall off).
-   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5" (otherwise too loose/droopy).
-   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0" (for an oversized look).
-   - Compression Activewear: User's body must not be smaller than the spec by more than -1.0".
-
-5. BELLY & WAIST INTEGRATION:
-   - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
-   - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
-   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
-
-6. DECISION ENGINE & NO EXTRAPOLATION:
-   - Recommend the size that is closest to an 'ideal' fit (closest target body spec to user's body).
-   - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size (e.g. M) and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available/manufactured. Do NOT suggest sizing down if that size does not exist.
-
-CRITICAL SIZING RULES:
-1. First, check if there is a product-specific size chart table in the HTML or if one is visible in the attached images. Set "size_chart_detected" to true if a specific size chart is found. Set it to false if no size chart exists or if you cannot read it.
-2. If "size_chart_detected" is false, you MUST set "recommended_size" to null. You are strictly FORBIDDEN from guessing, estimating, or recommending any size based on standard sizing.
-3. If "size_chart_detected" is true, you MUST only recommend a size that actually exists in that size chart. For example, if the size chart only lists M, L, XL, 2XL, 3XL, do NOT recommend a size 'Small' or 'XS'. If they are smaller than the smallest size, recommend the closest available size (e.g. Medium) and explain that the brand does not make a smaller size.
-4. HEADERS/LABELS AS SIZE NAMES: Ensure your recommended size matches the exact label in the main size headers or option labels of the size chart (which could be column headers OR row headers/labels in the first column, e.g., 'S', 'M', 'L', 'XL', etc.). Do NOT use internal measurement metrics from data cells (like collar size '38' or chest size '46') as the recommended size name. Always identify which axis (rows or columns) represents the size options, and which axis represents the measurement types, and select the name of the recommended size option only.
-5. STRICT SIZE EXISTENCE: The recommended size name MUST exist as a size option name in the provided size chart. Do NOT output a standard size letter (like 'M') if the chart only lists numerical sizes (like '38', '40', '42'). You are strictly forbidden from inventing size names or mapping them to standard sizes unless they are written in the chart. Output the EXACT size name/number that the customer needs to select from the checkout button options.
-6. MATCH THE CORRECT PRODUCT: If there are multiple size charts or tables present (e.g. for different product categories, men vs women, tops vs bottoms, or unrelated products), you MUST look at the Product Title and Description, identify what type of garment it is (e.g., blazer, pants, shirt), and only use the size chart/table that matches this garment type. Ignore all unrelated or non-matching size charts.
-7. CONCISE & STRUCTURED RESPONSES: Keep the explanation under 30 words total.
-
-You MUST return ONLY valid JSON. Do not include markdown code blocks or any other text.
-The JSON must have this exact structure:
-{
-  "size_chart_detected": false, // boolean: true if a product-specific size chart is found in the HTML or images, false otherwise
-  "recommended_size": null, // MUST be null if size_chart_detected is false. If size_chart_detected is true, must be a size from the chart.
-  "fit_match_score": 75, // integer 0-100 representing how close the recommended size's measurements are to the user's body measurements, taking brand pre-factored ease into account.
-  "fit_spectrum": "relaxed", // string: MUST be one of: 'tight', 'slim', 'ideal', 'relaxed', 'oversized'
-  "fit_breakdown": {
-    "chest": "Comfortably relaxed (7.4\" physical ease)",
-    "waist": "Comfortable",
-    "hips": "Relaxed"
-  },
-  "explanation": "Size M fits but will be looser than the designer's intended fit.",
-  "warning": "Warning message if user is smaller than the smallest size and cannot size down. Otherwise null."
-}`;
-
-    const parts = [{ text: prompt }];
-    
-    if (Array.isArray(imagesBase64)) {
-      imagesBase64.forEach(imgData => {
-        const match = imgData.match(/^data:(image\/\w+);base64,(.+)$/);
-        if (match) {
-          parts.push({
-            inlineData: {
-              mimeType: match[1],
-              data: match[2]
-            }
-          });
-        }
-      });
-    }
-
-    const geminiPayload = {
-      contents: [{ parts: parts }],
-      generationConfig: {
-        temperature: 0.1
-      }
-    };
-
-    // Call Gemini 2.5 Flash API
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiPayload)
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Gemini API Error:", data.error);
-      return res.status(500).json({ error: data.error.message });
-    }
-
-    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-      console.error("Gemini empty response payload:", data);
-      return res.status(500).json({ error: "Empty or invalid response from Gemini." });
-    }
-
-    let textAnswer = data.candidates[0].content.parts[0].text;
-    textAnswer = textAnswer.replace(/```json/g, "").replace(/```/g, "").trim();
-
-    try {
-      const jsonAnswer = JSON.parse(textAnswer);
-      if (jsonAnswer.size_chart_detected === false || jsonAnswer.size_chart_detected === "false") {
-        jsonAnswer.recommended_size = null;
-      }
-      res.status(200).json(jsonAnswer);
-    } catch (e) {
-      console.error("Failed to parse Gemini response as JSON. Raw text:", textAnswer);
-      res.status(500).json({ error: "AI returned invalid format.", raw: textAnswer });
-    }
-
-  } catch (error) {
-    console.error("Extension decode handler error:", error);
-    res.status(500).json({ error: 'Server error processing sizing request.' });
-  }
-}
+import { runSizingEngine } from './_helpers/sizing-engine.js';
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '4mb',
+    },
+  },
+};
+
+async function saveToCache(url, pageTitle, supabaseUrl, supabaseAnonKey, parsedData) {
+  try {
+    const { brand_name, garment_category, fabric_type, chart_type, sizes } = parsedData;
+    if (!brand_name || !sizes || sizes.length === 0) return;
+
+    const cleanCategory = garment_category || 'unspecified';
+    const cleanFabric = fabric_type || 'woven';
+    const cleanChartType = chart_type || 'body';
+
+    // 1. Check/Insert brand
+    let brandId = null;
+    const brandCheckUrl = `${supabaseUrl}/rest/v1/brands?name=eq.${encodeURIComponent(brand_name)}&select=id`;
+    const brandCheckRes = await fetch(brandCheckUrl, {
+      headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
+    });
+    const brandCheck = await brandCheckRes.json();
+    
+    if (brandCheck && brandCheck.length > 0) {
+      brandId = brandCheck[0].id;
+    } else {
+      const brandInsertRes = await fetch(`${supabaseUrl}/rest/v1/brands`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ name: brand_name })
+      });
+      const brandInsert = await brandInsertRes.json();
+      if (brandInsert && brandInsert.length > 0) {
+        brandId = brandInsert[0].id;
+      }
+    }
+
+    if (!brandId) return;
+
+    // 2. Check/Insert size chart
+    let sizeChartId = null;
+    const chartCheckUrl = `${supabaseUrl}/rest/v1/size_charts?brand_id=eq.${brandId}&category=eq.${encodeURIComponent(cleanCategory)}&select=id`;
+    const chartCheckRes = await fetch(chartCheckUrl, {
+      headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
+    });
+    const chartCheck = await chartCheckRes.json();
+
+    if (chartCheck && chartCheck.length > 0) {
+      sizeChartId = chartCheck[0].id;
+    } else {
+      const chartInsertRes = await fetch(`${supabaseUrl}/rest/v1/size_charts`, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          brand_id: brandId,
+          category: cleanCategory,
+          gender: 'Unisex',
+          chart_data: { chart_type: cleanChartType, garment_category: cleanCategory, fabric_type: cleanFabric, sizes }
+        })
+      });
+      const chartInsert = await chartInsertRes.json();
+      if (chartInsert && chartInsert.length > 0) {
+        sizeChartId = chartInsert[0].id;
+      }
+    }
+
+    if (!sizeChartId) return;
+
+    // 3. Insert product cache
+    await fetch(`${supabaseUrl}/rest/v1/products_cache`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url,
+        brand_id: brandId,
+        size_chart_id: sizeChartId,
+        title: pageTitle || 'Cached Product'
+      })
+    });
+  } catch (err) {
+    console.error("Failed to write size chart cache to Supabase:", err);
+  }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  try {
+    const { 
+      chest, 
+      waist, 
+      belly, 
+      hips, 
+      height, 
+      inseam, 
+      shoulder,
+      sleeve,
+      thigh,
+      api_scans,
+      measurement_overrides,
+      pageTitle, 
+      pageText, 
+      imagesBase64, 
+      tableHtml,
+      url
+    } = req.body;
+
+    if (!chest || !waist || !belly || !hips) {
+      return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Belly, Hips are required).' });
+    }
+
+    const apiKey = process.env.GOOGLE_API_KEY;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: 'API key not configured on server.' });
+    }
+
+    // 1. Cache hit check
+    if (url && supabaseUrl && supabaseAnonKey) {
+      try {
+        const cacheUrl = `${supabaseUrl}/rest/v1/products_cache?url=eq.${encodeURIComponent(url)}&select=brand_id,size_chart_id`;
+        const cacheRes = await fetch(cacheUrl, {
+          headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
+        });
+        const cacheData = await cacheRes.json();
+
+        if (cacheData && cacheData.length > 0 && cacheData[0].size_chart_id) {
+          const chartId = cacheData[0].size_chart_id;
+          const chartUrl = `${supabaseUrl}/rest/v1/size_charts?id=eq.${chartId}&select=chart_data`;
+          const chartRes = await fetch(chartUrl, {
+            headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
+          });
+          const chartData = await chartRes.json();
+
+          if (chartData && chartData.length > 0 && chartData[0].chart_data) {
+            const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
+            const localResult = runSizingEngine(user, chartData[0].chart_data);
+            console.log("Sizing cache HIT! Loading instantly...", url);
+            return res.status(200).json({
+              ...localResult,
+              size_chart_detected: true,
+              cached: true
+            });
+          }
+        }
+      } catch (cacheErr) {
+        console.error("Cache lookup failure, falling back to Gemini:", cacheErr);
+      }
+    }
+
+    // 2. Cache miss: Call Gemini Sizing Engine
+    // Resolve measurements for prompt text representation
+    const activeScan = api_scans ? api_scans.find(s => s.is_active) : null;
+    let pChest = chest;
+    let pWaist = waist;
+    let pBelly = belly || waist;
+    let pHips = hips;
+    let pHeight = height;
+    let pInseam = inseam;
+    let pShoulder = shoulder;
+    let pSleeve = sleeve;
+    let pThigh = thigh;
+
+    if (activeScan) {
+      pChest = activeScan.volume_params.chest || pChest;
+      pWaist = activeScan.volume_params.waist || pWaist;
+      pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
+      pHips = activeScan.volume_params.low_hips || pHips;
+      pShoulder = activeScan.front_params.shoulders || pShoulder;
+      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
+      pThigh = activeScan.volume_params.thigh || pThigh;
+    }
+
+    if (measurement_overrides) {
+      if (measurement_overrides.chest) pChest = measurement_overrides.chest;
+      if (measurement_overrides.waist) pWaist = measurement_overrides.waist;
+      if (measurement_overrides.hips) pHips = measurement_overrides.hips;
+      if (measurement_overrides.shoulder) pShoulder = measurement_overrides.shoulder;
+      if (measurement_overrides.sleeve) pSleeve = measurement_overrides.sleeve;
+      if (measurement_overrides.inseam) pInseam = measurement_overrides.inseam;
+      if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
+    }
+
+    const prompt = `You are an expert fashion tailor and sizing assistant for STYLA.
+The user has the following body measurements:
+- Chest / Bust: ${pChest}"
+- Waist: ${pWaist}"
+- Belly: ${pBelly}"
+- Hips: ${pHips}"
+${pHeight ? `- Total Height: ${pHeight}"` : ''}
+${pInseam ? `- Inseam: ${pInseam}"` : ''}
+${pShoulder ? `- Shoulder Width: ${pShoulder}"` : ''}
+${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
+${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
+
+We are analyzing a product page for a garment:
+Product Title: "${pageTitle || 'Unknown Product'}"
+
+Product Details & Description:
+"""
+${pageText || 'No description found.'}
+"""
+
+HTML Sizing Tables found on page:
+"""
+${tableHtml || 'None'}
+"""
+
+YOUR TARGET:
+Check the HTML sizing tables above and the attached images to locate the size chart.
+Determine the absolute best size for this user.
+
+PROFESSIONAL SIZING & APPAREL MATCHING RULES:
+1. IDENTIFY CHART TYPE (CRITICAL):
+   - Detect if the size chart represents body measurements or garment measurements using these rules:
+     * CHARTS WITH LENGTH (Usually Garment Measurements): If a chart includes any "Length" attributes (like top length, body length, inseam, outseam, or sleeve length), it almost always reflects actual physical GARMENT DIMENSIONS. This is because body length doesn't change based on fit preference. In this case, treat it as a GARMENT SPECIFICATION CHART. A length measurement tells the user exactly where the fabric will hit their body (e.g., a 70 cm shirt length tells them how far down their torso the shirt hangs).
+     * CHARTS WITH ONLY CIRCUMFERENCES (Usually Body Measurements): If a chart only lists circumferences (like chest, waist, and hips) without any length measurements, it typically reflects BODY MEASUREMENTS. In this case, treat it as a BODY SIZE CHART. Brands use these to tell what size human body the item was designed to fit, leaving length and "ease" up to the clothing style.
+     * EXCEPTIONS TO WATCH OUT FOR:
+       a) Unisex/Oversized Streetwear: These charts might list only circumferences (like "Chest Width" or "Bust Width") but represent finished GARMENT MEASUREMENTS (usually flat half-chest width) to show exactly how baggy/oversized the item is.
+       b) Knitwear and Leggings (High-stretch): High-stretch items sometimes list flat finished garment circumferences that look impossibly small (e.g., a 24" chest for an adult shirt) because the fabric is meant to stretch out on the body. Do not confuse these small dimensions for children's sizes; identify them as unstretched garment measurements.
+   - Note: In a GARMENT SPECIFICATION CHART, flat lay half-chest/waist values (e.g., 19.7" or 20.5") must be multiplied by 2 to get the finished garment circumference (e.g., 39.4" or 41").
+
+2. MATCHING LOGIC AND TRUE PHYSICAL EASE:
+   - CASE A: BODY SIZE CHART (Recommended Target Body Dimensions, e.g. M is for 38" chest)
+     - Compare the user's body measurements directly to the recommended target body sizes in the chart. The brand has already built styling ease into the garment patterns for that target body size.
+     - The ideal fit (fit_spectrum: 'ideal', fit_match_score: 100) is when the user's body size matches the recommended body spec exactly.
+     - If the user's body is smaller than the recommended body size (e.g., user is 35" chest, recommended is 39.4" chest), they get EXTRA ease:
+       True Physical Ease = Brand's Pre-Factored Ease (approx 2" for regular tops) + (Recommended Body Spec - User Body).
+       For example, a 35" user buying a size designed for a 39.4" body gets 2" + 4.4" = 6.4" of physical ease. This fits looser than designed!
+       - In this case, recommend the size that matches their body closest (e.g., Size S designed for a 36.2" chest is a much better match than M). 
+       - If M is recommended because S does not exist or is unavailable, set fit_spectrum to 'relaxed' or 'oversized', deduct score points (e.g., -6% per inch of body difference, so fit_match_score is ~74%), and explain that it fits looser than designed.
+       - If the user's body is larger than the recommended body spec, they get LESS ease (fit_spectrum: 'slim' or 'tight'). Deduct score points proportionally.
+
+   - CASE B: GARMENT SPECIFICATION CHART (Finished Garment Dimensions, e.g. flat measurements)
+     - Flat measurements represent the fabric itself. The brand has already built styling ease into these dimensions.
+     - To find the target body size the garment was designed for, subtract the standard design ease from the finished garment circumference:
+       - Regular Fit Knit / Polo: Standard design ease is 1.5" to 2.5". (e.g. M with 39.4" finished chest is designed for a ~37.4" body chest).
+       - Slim Fit: Standard design ease is 0.5" to 1.5".
+       - Oversized Fit: Standard design ease is 4" to 6".
+       - Woven Shirt / Jacket: Standard design ease is 3" to 4".
+     - Calculate the user's difference from the target body chest:
+       Difference = Target Body Spec - User Body.
+       - If the difference is close to 0 (within +/- 1"), the fit is 'ideal' (fit_match_score: 95-100, fit_spectrum: 'ideal').
+       - If the user's body is significantly smaller than the target body spec, the fit is 'relaxed' or 'oversized' (score is lower, fit_spectrum is 'relaxed' or 'oversized').
+       - If the user's body is larger than the target body spec, the fit is 'slim' or 'tight' (score is lower, fit_spectrum is 'slim' or 'tight').
+
+3. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's body spec or target body size):
+   - Woven / Structured: Max tolerance of +0.5". The user's body measurement must not exceed the target body size by more than 0.5", otherwise size up.
+   - Knits / Stretch: Max tolerance of +1.5". Since knits stretch, the user's body can exceed the body size spec by up to 1.5".
+   - Activewear / Compression: Max tolerance of +3.0".
+
+4. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
+   - Pants/Bottoms (Waist): User's body must not be smaller than the body spec by more than -1.5" (otherwise they fall off).
+   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5" (otherwise too loose/droopy).
+   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0" (for an oversized look).
+   - Compression Activewear: User's body must not be smaller than the spec by more than -1.0".
+
+5. BELLY & WAIST INTEGRATION:
+   - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
+   - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
+   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
+
+6. DECISION ENGINE & NO EXTRAPOLATION:
+   - Recommend the size that is closest to an 'ideal' fit.
+   - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available. Do NOT suggest sizing down if that size does not exist.
+
+You MUST parse and extract the entire size chart and output BOTH the sizing recommendation for the current user and the parsed structured size chart details.
+
+Your output must be ONLY valid JSON. Do not include markdown code blocks or any other text.
+The JSON must have this exact structure:
+{
+  "size_chart_detected": true, // false if no size chart can be found in images or tables
+  "brand_name": "Zara", // String: name of the brand
+  "garment_category": "tops", // String: MUST be one of: 'tops', 'bottoms', 'dresses', 'outerwear', 'unspecified'
+  "fabric_type": "knits", // String: MUST be one of: 'knits', 'woven', 'activewear'
+  "chart_type": "body", // String: MUST be one of: 'body', 'garment'
+  "sizes": [
+    {
+      "name": "S",
+      "chest": 36.0, // Number or Array: e.g. 36.0 or [35, 37] representing range
+      "waist": 30.0,
+      "hips": 38.0,
+      "belly": 32.0, // optional
+      "inseam": 30.0 // optional
+    },
+    {
+      "name": "M",
+      "chest": 38.0,
+      "waist": 32.0,
+      "hips": 40.0,
+      "belly": 34.0,
+      "inseam": 30.0
+    }
+  ],
+  "recommended_size": "M",
+  "fit_match_score": 85, // integer 0-100
+  "fit_spectrum": "relaxed", // 'tight', 'slim', 'ideal', 'relaxed', 'oversized'
+  "fit_breakdown": {
+    "chest": "Comfortably relaxed",
+    "waist": "Perfect fit"
+  },
+  "explanation": "Size M fits but will be slightly loose.",
+  "warning": null // or warning string
+}`;
+
+    const parts = [
+      { text: prompt }
+    ];
+
+    if (imagesBase64 && Array.isArray(imagesBase64)) {
+      for (const imgBase64 of imagesBase64) {
+        const cleanBase64 = imgBase64.replace(/^data:image\/\w+;base64,/, "");
+        parts.push({
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: cleanBase64
+          }
+        });
+      }
+    }
+
+    const geminiPayload = {
+      contents: [{ parts: parts }],
+      generationConfig: {
+        temperature: 0.1
+      }
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(geminiPayload)
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("Gemini API Error:", data.error);
+      return res.status(500).json({ error: data.error.message });
+    }
+
+    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
+      console.error("Gemini empty response payload:", data);
+      return res.status(500).json({ error: "Empty or invalid response from Gemini." });
+    }
+
+    let textAnswer = data.candidates[0].content.parts[0].text;
+    textAnswer = textAnswer.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    try {
+      const jsonAnswer = JSON.parse(textAnswer);
+      
+      if (jsonAnswer.size_chart_detected === false || jsonAnswer.size_chart_detected === "false") {
+        jsonAnswer.recommended_size = null;
+      }
+
+      // 3. Cache the parsed size chart asynchronously in Supabase (do not block client response)
+      if (jsonAnswer.size_chart_detected && url && supabaseUrl && supabaseAnonKey) {
+        saveToCache(url, pageTitle, supabaseUrl, supabaseAnonKey, jsonAnswer).catch(err => {
+          console.error("Background caching error:", err);
+        });
+      }
+
+      // Return clean response to user
+      const clientResponse = {
+        size_chart_detected: jsonAnswer.size_chart_detected,
+        recommended_size: jsonAnswer.recommended_size,
+        fit_match_score: jsonAnswer.fit_match_score,
+        fit_spectrum: jsonAnswer.fit_spectrum,
+        fit_breakdown: jsonAnswer.fit_breakdown,
+        explanation: jsonAnswer.explanation,
+        warning: jsonAnswer.warning
+      };
+
+      res.status(200).json(clientResponse);
+
+    } catch (e) {
+      console.error("Failed to parse Gemini response as JSON. Raw text:", textAnswer);
+      res.status(500).json({ error: "AI returned invalid format.", raw: textAnswer });
+    }
+
+  } catch (error) {
+    console.error("Extension decode handler error:", error);
+    res.status(500).json({ error: 'Server error processing sizing request.' });
+  }
+}

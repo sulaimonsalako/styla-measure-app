@@ -12,18 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { 
-      chest, 
-      waist, 
-      hips, 
-      height, 
-      inseam, 
-      pageTitle, 
-      pageText, 
-      imagesBase64, 
-      tableHtml,
-      history
-    } = req.body;
+    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
 
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
@@ -34,13 +23,49 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured on server.' });
     }
 
+    const activeScan = api_scans ? api_scans.find(s => s.is_active) : null;
+    let pChest = chest;
+    let pWaist = waist;
+    let pBelly = belly || waist;
+    let pHips = hips;
+    let pHeight = height;
+    let pInseam = inseam;
+    let pShoulder = null;
+    let pSleeve = null;
+    let pThigh = null;
+
+    if (activeScan) {
+      pChest = activeScan.volume_params.chest || pChest;
+      pWaist = activeScan.volume_params.waist || pWaist;
+      pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
+      pHips = activeScan.volume_params.low_hips || pHips;
+      pShoulder = activeScan.front_params.shoulders || pShoulder;
+      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
+      pThigh = activeScan.volume_params.thigh || pThigh;
+    }
+
+    if (measurement_overrides) {
+      if (measurement_overrides.chest) pChest = measurement_overrides.chest;
+      if (measurement_overrides.waist) pWaist = measurement_overrides.waist;
+      if (measurement_overrides.hips) pHips = measurement_overrides.hips;
+      if (measurement_overrides.shoulder) pShoulder = measurement_overrides.shoulder;
+      if (measurement_overrides.sleeve) pSleeve = measurement_overrides.sleeve;
+      if (measurement_overrides.inseam) pInseam = measurement_overrides.inseam;
+      if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
+    }
+
     const systemPrompt = `You are an expert fashion tailor and sizing/styling assistant for STYLA.
 The user has the following body measurements:
-- Chest / Bust: ${chest}"
-- Waist: ${waist}"
-${belly ? `- Belly: ${belly}"\\n` : ''}- Hips: ${hips}"
-${height ? `- Total Height: ${height}"` : ''}
-${inseam ? `- Inseam: ${inseam}"` : ''}
+- Chest / Bust: ${pChest}"
+- Waist: ${pWaist}"
+- Belly: ${pBelly}"
+- Hips: ${pHips}"
+${pHeight ? `- Total Height: ${pHeight}"` : ''}
+${pInseam ? `- Inseam: ${pInseam}"` : ''}
+${pShoulder ? `- Across Back Shoulder Width: ${pShoulder}"` : ''}
+${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
+${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
 
 We are analyzing a product page for a garment:
 Product Title: "${pageTitle || 'Unknown Product'}"
@@ -100,11 +125,11 @@ CRITICAL RULES:
         
         if (idx === 0) {
           let firstMsgText = `User Profile:
-- Chest: ${chest}"
-- Waist: ${waist}"
-- Hips: ${hips}"
-${height ? `- Height: ${height}"` : ''}
-${inseam ? `- Inseam: ${inseam}"` : ''}
+- Chest: ${pChest}"
+- Waist: ${pWaist}"
+- Hips: ${pHips}"
+${pHeight ? `- Height: ${pHeight}"` : ''}
+${pInseam ? `- Inseam: ${pInseam}"` : ''}
 
 Product Info:
 - Title: "${pageTitle || 'Unknown Product'}"
@@ -180,3 +205,4 @@ User message: ${msg.text}`;
     res.status(500).json({ error: 'Server error processing chat request.' });
   }
 }
+

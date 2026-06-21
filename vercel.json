@@ -1,3 +1,10 @@
 {
-  "name": "styla-measure"
+  "name": "styla-measure",
+  "rewrites": [
+    { "source": "/api/store-auth", "destination": "/api/store-api" },
+    { "source": "/api/store-cart", "destination": "/api/store-api" },
+    { "source": "/api/store-categories", "destination": "/api/store-api" },
+    { "source": "/api/store-payment", "destination": "/api/store-api" },
+    { "source": "/api/store-products", "destination": "/api/store-api" }
+  ]
 }
