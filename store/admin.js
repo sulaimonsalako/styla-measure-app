@@ -57,7 +57,7 @@ const showcasesList = document.getElementById('color-showcases-list');
 let colorBase64Images = {};
 
 if (colorsInput) {
-  colorsInput.addEventListener('input', () => {
+  colorsInput.addEventListener('change', () => {
     updateColorShowcaseInputs();
   });
 }
@@ -172,7 +172,7 @@ function updateSizeChartInputs() {
               <td style="padding:6px 4px; font-weight:700;">${sz}</td>
               ${columns.map(col => `
                 <td style="padding:6px 4px;">
-                  <input type="number" step="0.1" class="size-chart-val" data-size="${sz}" data-field="${col}" placeholder="e.g. 40" required style="width:65px; padding:4px; border:1px solid #ccc; border-radius:4px;">
+                  <input type="number" step="0.1" class="size-chart-val" data-size="${sz}" data-field="${col}" placeholder="e.g. 40" style="width:65px; padding:4px; border:1px solid #ccc; border-radius:4px;">
                 </td>
               `).join('')}
             </tr>
@@ -565,9 +565,11 @@ form.addEventListener('submit', async (e) => {
   document.querySelectorAll('.size-chart-val').forEach(input => {
     const sz = input.getAttribute('data-size');
     const field = input.getAttribute('data-field');
-    const val = Number(input.value);
-    if (!sizeChart[sz]) sizeChart[sz] = {};
-    sizeChart[sz][field] = val;
+    const val = input.value.trim();
+    if (val !== '') {
+      if (!sizeChart[sz]) sizeChart[sz] = {};
+      sizeChart[sz][field] = Number(val);
+    }
   });
 
   let images = [];
