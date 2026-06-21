@@ -1,5 +1,16 @@
 (function() {
-  const STYLA_HOST = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://styla-measure-app.vercel.app';
+  const currentScriptUrl = document.currentScript ? document.currentScript.src : '';
+  let STYLA_HOST = 'https://www.styla.ca'; // default fallback
+  if (currentScriptUrl) {
+    try {
+      const urlObj = new URL(currentScriptUrl);
+      STYLA_HOST = urlObj.origin;
+    } catch (e) {
+      console.warn("Failed to parse currentScript src:", e);
+    }
+  } else if (window.location.origin.includes('localhost')) {
+    STYLA_HOST = 'http://localhost:3000';
+  }
   
   // Prevent duplicate overlays
   const existing = document.getElementById('styla-bookmarklet-container');

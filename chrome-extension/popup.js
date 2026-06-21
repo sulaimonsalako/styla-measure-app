@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
             host = 'http://localhost:3000';
           } else {
-            host = 'https://styla-measure-app.vercel.app';
+            host = 'https://www.styla.ca';
           }
         }
 
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
           host = 'http://localhost:3000';
         } else {
-          host = 'https://styla-measure-app.vercel.app';
+          host = 'https://www.styla.ca';
         }
       }
       const apiUrl = `${host}/api/extension-decode`;
@@ -955,7 +955,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tab.url.includes('localhost') || tab.url.includes('127.0.0.1')) {
           host = 'http://localhost:3000';
         } else {
-          host = 'https://styla-measure-app.vercel.app';
+          host = 'https://www.styla.ca';
         }
       }
       const apiUrl = `${host}/api/extension-chat`;
@@ -1472,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tab && (tab.url.includes('localhost') || tab.url.includes('127.0.0.1'))) {
           host = 'http://localhost:3000';
         } else {
-          host = 'https://styla-measure-app.vercel.app';
+          host = 'https://www.styla.ca';
         }
       }
       const apiUrl = `${host}/api/extension-decode`;

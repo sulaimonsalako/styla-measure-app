@@ -365,7 +365,7 @@
       gap: 4px;
     }
 
-    input[type="number"], .styled-select {
+    input[type="number"], input[type="email"], input[type="password"], .styled-select {
       width: 100%;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -375,9 +375,10 @@
       font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s;
+      box-sizing: border-box;
     }
 
-    input[type="number"]:focus, .styled-select:focus {
+    input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, .styled-select:focus {
       border-color: #ff2a75;
     }
 
@@ -948,11 +949,18 @@
         <!-- Convert Guest to Cloud Profile Box -->
         <div id="save-profile-box" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 42, 117, 0.03); border: 1px solid rgba(255, 42, 117, 0.12); border-radius: 16px; display: none;">
           <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">💾 Save Your Fit Profile</h4>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and AI Stylist recommendations across devices.</p>
-          <div class="input-row" style="margin-bottom: 1rem;">
-            <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
-            <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2);" />
-          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and AI Stylist recommendations across devices.</p>            <div class="input-row" style="margin-bottom: 1rem;">
+              <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
+              <div style="position: relative; width: 100%;">
+                <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2); width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+                <button type="button" onclick="togglePasswordVisibility('auth-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           <button id="btn-save-profile" class="btn-run" style="margin-top: 0.5rem; background: var(--success-gradient);">Create Account & Save Profile</button>
         </div>
       </div>
@@ -1013,17 +1021,27 @@
         <button id="tab-auth-signup" class="auth-tab-btn">Sign Up</button>
       </div>
       <h3 id="auth-modal-title" style="margin-bottom: 0.4rem; color: #fff; font-family: var(--font-outfit); font-size: 1.3rem;">Welcome Back</h3>
-      <p id="auth-modal-desc" style="color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; font-size: 0.85rem;">Log in to sync your AI Tailor measurements from the cloud.</p>
-      
-      <div id="auth-email-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
-        <input type="email" id="login-email" class="styled-input" placeholder="Email Address" style="width: 100%;" />
-      </div>
-      <div id="auth-password-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
-        <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%;" />
-      </div>
-      <div id="auth-confirm-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem; display: none;">
-        <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%;" />
-      </div>
+      <p id="auth-modal-desc" style="color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; font-size: 0.85rem;">Log in to sync your AI Tailor measurements from the cloud.</p>        <div id="auth-email-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
+          <input type="email" id="login-email" class="styled-input" placeholder="Email Address" style="width: 100%;" />
+        </div>
+        <div id="auth-password-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem;">
+          <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+          <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
+        <div id="auth-confirm-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem; display: none;">
+          <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+          <button type="button" onclick="togglePasswordVisibility('login-confirm-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
       
       <button id="btn-login-submit" class="btn-run" style="margin-top: 0.5rem;">Log In & Sync</button>
       <button id="btn-signup-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);">Create Account & Sync</button>
