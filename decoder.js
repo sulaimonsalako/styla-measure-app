@@ -1740,9 +1740,36 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnWidgetOpenDirect) {
-      btnWidgetOpenDirect.addEventListener('click', () => {
-          window.open('https://saia.3dlook.me', '_blank');
-          alert("Opening AI Body Scanner integration dashboard.\n\nIn a production environment, this links to your brand's unique mobile scanning page which guides users through photo capture on their phones.");
+      btnWidgetOpenDirect.addEventListener('click', async () => {
+          let mtmUrl = 'https://saia.3dlook.me';
+          try {
+              const res = await fetch('/api/3dlook/config');
+              if (res.ok) {
+                  const config = await res.json();
+                  mtmUrl = config.mtm_url || mtmUrl;
+              }
+          } catch (e) {
+              console.warn("Failed to load MTM config:", e);
+          }
+
+          let username = 'guest';
+          try {
+              if (window.supabase) {
+                  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (session) {
+                      username = session.user.id;
+                  }
+              }
+          } catch (e) {
+              console.warn("Failed to get session:", e);
+          }
+
+          const separator = mtmUrl.includes('?') ? '&' : '?';
+          const targetUrl = `${mtmUrl}${separator}client_id=${encodeURIComponent(username)}&external_id=${encodeURIComponent(username)}`;
+          window.open(targetUrl, '_blank');
+          
+          alert(`Opening your brand's unique mobile scanning page.\n\nAssigned User ID: ${username}\n\nWebhooks will automatically sync calculated parameters back to your profile.`);
       });
   }
 
