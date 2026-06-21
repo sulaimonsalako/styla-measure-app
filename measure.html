@@ -557,6 +557,48 @@
     .nav-link:hover {
       color: #fff;
     }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 820px) {
+      .hero-container h2 {
+        font-size: 2.2rem !important;
+      }
+      .hero-container {
+        padding: 2.5rem 1.5rem 1.5rem 1.5rem !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 0.8rem 1rem !important;
+      }
+      .brand-logo {
+        font-size: 1.25rem !important;
+      }
+      .brand-logo img {
+        height: 28px !important;
+      }
+      .btn-login {
+        padding: 0.4rem 0.9rem !important;
+        font-size: 0.8rem !important;
+      }
+      .step-card {
+        padding: 1.25rem !important;
+        border-radius: 18px !important;
+      }
+      .widget-modal-content {
+        padding: 1.25rem 1rem !important;
+        border-radius: 20px !important;
+      }
+      .tools-card {
+        min-width: 100% !important;
+        padding: 1.25rem !important;
+      }
+      .portal-workspace {
+        margin-top: 1.5rem !important;
+        padding: 0 1rem !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -587,16 +629,16 @@
       
       <!-- Key benefits -->
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
           <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>End Return Errands:</b> Stop ordering multiple sizes to return. Save hours of return drop-off packaging chores.</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
           <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>Stop Wasting Money:</b> Avoid losing cash on final-sale items that fit your hips but leave gaps at the waist.</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
           <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>Discover New Brands:</b> Shop independently without sizing anxiety. Never miss out on cool new designs.</span>
         </div>
       </div>
@@ -743,9 +785,9 @@
         Now that you have your body measurements saved, you can use them to find your fit automatically on any online store. Choose your preferred tool below:
       </p>
 
-      <div class="input-row" style="gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
+      <div class="tools-container" style="display: flex; flex-direction: row; gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
         <!-- Chrome Extension Card -->
-        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 1.25rem;">🌐</span>
@@ -765,7 +807,7 @@
         </div>
 
         <!-- Bookmarklet Card -->
-        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 1.25rem;">🔖</span>
