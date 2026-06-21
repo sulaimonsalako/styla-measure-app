@@ -1,2 +1,6 @@
 .vercel
 .env
+node_modules
+api/node_modules
+*.zip
+Chrome extension zip/

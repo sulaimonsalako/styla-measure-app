@@ -1712,3 +1712,283 @@ window.addEventListener('DOMContentLoaded', () => {
           }
       });
   }
+
+  // 3D Body Scanning Logic
+  const btnShowScanPanel = document.getElementById('btn-show-scan-panel');
+  const scanPanelContainer = document.getElementById('scan-panel-container');
+  const scanFrontFile = document.getElementById('scan-front-file');
+  const scanSideFile = document.getElementById('scan-side-file');
+  const textScanFront = document.getElementById('text-scan-front');
+  const textScanSide = document.getElementById('text-scan-side');
+  const lblScanFront = document.getElementById('lbl-scan-front');
+  const lblScanSide = document.getElementById('lbl-scan-side');
+  const btnRunCameraScan = document.getElementById('btn-run-camera-scan');
+  const btnRunPhotoScan = document.getElementById('btn-run-photo-scan');
+  const scanLoader = document.getElementById('scan-loader');
+  const scanLoaderStatus = document.getElementById('scan-loader-status');
+
+  let scanFrontBase64 = null;
+  let scanSideBase64 = null;
+
+  if (btnShowScanPanel && scanPanelContainer) {
+      btnShowScanPanel.addEventListener('click', () => {
+          if (scanPanelContainer.style.display === 'none') {
+              scanPanelContainer.style.display = 'block';
+              btnShowScanPanel.textContent = "Hide Scan Panel";
+              btnShowScanPanel.style.background = 'rgba(255,255,255,0.05)';
+              btnShowScanPanel.style.border = '1px solid rgba(255,255,255,0.15)';
+          } else {
+              scanPanelContainer.style.display = 'none';
+              btnShowScanPanel.textContent = "Get 3D Body Scan";
+              btnShowScanPanel.style.background = 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)';
+              btnShowScanPanel.style.border = 'none';
+          }
+      });
+  }
+
+  if (scanFrontFile) {
+      scanFrontFile.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              textScanFront.textContent = "Loading...";
+              lblScanFront.style.borderColor = '#ff2a75';
+              try {
+                  scanFrontBase64 = await compressImage(file);
+                  textScanFront.textContent = "Front Photo Loaded!";
+                  textScanFront.style.color = '#34d399';
+                  lblScanFront.style.borderColor = '#10b981';
+                  lblScanFront.style.background = 'rgba(16,185,129,0.02)';
+              } catch (err) {
+                  console.error(err);
+                  textScanFront.textContent = "Error loading image";
+                  textScanFront.style.color = '#f87171';
+                  lblScanFront.style.borderColor = '#ef4444';
+              }
+          }
+      });
+  }
+
+  if (scanSideFile) {
+      scanSideFile.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              textScanSide.textContent = "Loading...";
+              lblScanSide.style.borderColor = '#ff2a75';
+              try {
+                  scanSideBase64 = await compressImage(file);
+                  textScanSide.textContent = "Side Photo Loaded!";
+                  textScanSide.style.color = '#34d399';
+                  lblScanSide.style.borderColor = '#10b981';
+                  lblScanSide.style.background = 'rgba(16,185,129,0.02)';
+              } catch (err) {
+                  console.error(err);
+                  textScanSide.textContent = "Error loading image";
+                  textScanSide.style.color = '#f87171';
+                  lblScanSide.style.borderColor = '#ef4444';
+              }
+          }
+      });
+  }
+
+  // Camera Scan (Countdown + API call)
+  if (btnRunCameraScan) {
+      btnRunCameraScan.addEventListener('click', async () => {
+          const gender = document.getElementById('scan-gender').value;
+          const ft = document.getElementById('scan-height-ft').value;
+          const inch = document.getElementById('scan-height-in').value;
+          const weight = document.getElementById('scan-weight').value;
+
+          if (!ft || !inch || !weight) {
+              alert("Please fill in height and weight for the scanner.");
+              return;
+          }
+
+          const totalInches = (parseInt(ft, 10) * 12) + parseInt(inch, 10);
+          const heightCm = Math.round(totalInches * 2.54);
+
+          btnRunCameraScan.disabled = true;
+          btnRunPhotoScan.disabled = true;
+          scanLoader.style.display = 'block';
+
+          let seconds = 3;
+          scanLoaderStatus.textContent = `📷 Webcam ready. Get in position... (${seconds}s)`;
+          
+          const countdown = setInterval(() => {
+              seconds--;
+              if (seconds > 0) {
+                  scanLoaderStatus.textContent = `📷 Webcam ready. Get in position... (${seconds}s)`;
+              } else {
+                  clearInterval(countdown);
+                  scanLoaderStatus.textContent = `⚡ Capturing front and side photos...`;
+                  setTimeout(() => {
+                      executeScan(gender, heightCm, totalInches, weight, null, null);
+                  }, 500);
+              }
+          }, 1000);
+      });
+  }
+
+  // Photo Scan (API call using front/side base64)
+  if (btnRunPhotoScan) {
+      btnRunPhotoScan.addEventListener('click', async () => {
+          if (!scanFrontBase64 || !scanSideBase64) {
+              alert("Please select both Front and Side photos to run a real photo scan.");
+              return;
+          }
+
+          const gender = document.getElementById('scan-gender').value;
+          const ft = document.getElementById('scan-height-ft').value;
+          const inch = document.getElementById('scan-height-in').value;
+          const weight = document.getElementById('scan-weight').value;
+
+          if (!ft || !inch || !weight) {
+              alert("Please fill in height and weight for the scanner.");
+              return;
+          }
+
+          const totalInches = (parseInt(ft, 10) * 12) + parseInt(inch, 10);
+          const heightCm = Math.round(totalInches * 2.54);
+
+          btnRunCameraScan.disabled = true;
+          btnRunPhotoScan.disabled = true;
+          scanLoader.style.display = 'block';
+          scanLoaderStatus.textContent = `📤 Uploading body photos to 3DLook API...`;
+
+          executeScan(gender, heightCm, totalInches, weight, scanFrontBase64, scanSideBase64);
+      });
+  }
+
+  async function executeScan(gender, heightCm, heightInches, weightLbs, frontImage, sideImage) {
+      try {
+          if (!window.supabase) throw new Error("Supabase is not loaded.");
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          const { data: { session } } = await supabase.auth.getSession();
+          const username = session ? session.user.id : 'guest';
+
+          // 1. Init Session
+          scanLoaderStatus.textContent = `🧬 Initializing body measurement session...`;
+          const initRes = await fetch('/api/3dlook/init-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  gender,
+                  height: heightCm,
+                  weight: weightLbs,
+                  front_image: frontImage,
+                  side_image: sideImage
+              })
+          });
+          if (!initRes.ok) throw new Error("Failed to initialize session with 3DLook.");
+          const sessionData = await initRes.json();
+
+          // 2. Poll Status
+          let pollUrl = sessionData.task_set_url;
+          let pollCount = 0;
+          const maxPolls = 30;
+          let readyData = null;
+
+          scanLoaderStatus.textContent = `⏳ Processing scan queue (polling 3DLook API)...`;
+
+          while (pollCount < maxPolls) {
+              pollCount++;
+              const checkUrl = pollUrl.includes('mock_id') 
+                ? `${pollUrl}&gender=${gender}&height=${heightInches}&weight=${weightLbs}`
+                : pollUrl;
+                
+              const checkRes = await fetch(checkUrl);
+              const checkData = await checkRes.json();
+
+              if (checkData.is_ready) {
+                  if (checkData.is_successful) {
+                      readyData = checkData;
+                      break;
+                  } else {
+                      throw new Error("3DLook scan task failed during processing.");
+                  }
+              }
+              await new Promise(r => setTimeout(r, 1500));
+          }
+
+          if (!readyData) throw new Error("Scan processing timed out after 45 seconds.");
+
+          // 3. Save Measurements
+          scanLoaderStatus.textContent = `💾 Saving 80+ body measurements to your profile...`;
+          const saveRes = await fetch(`${readyData.redirect_to}&username=${username}`);
+          if (!saveRes.ok) throw new Error("Failed to fetch/save measurements.");
+          const saveData = await saveRes.json();
+
+          if (!saveData.success) throw new Error("Backend save-measurements error.");
+
+          // 4. Update local storage & UI
+          localStorage.setItem('styla_twin_chest', saveData.twin.chest);
+          localStorage.setItem('styla_twin_waist', saveData.twin.waist);
+          localStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
+          localStorage.setItem('styla_twin_hips', saveData.twin.hips);
+          localStorage.setItem('styla_twin_height', heightInches.toString());
+          localStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
+          localStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
+          localStorage.removeItem('styla_twin_measurement_overrides');
+
+          // Set input values in UI
+          document.getElementById('val-chest').value = saveData.twin.chest;
+          document.getElementById('val-waist').value = saveData.twin.waist;
+          document.getElementById('val-belly').value = saveData.twin.belly || saveData.twin.waist;
+          document.getElementById('val-hips').value = saveData.twin.hips;
+          document.getElementById('val-height-ft').value = Math.floor(heightInches / 12);
+          document.getElementById('val-height-in').value = heightInches % 12;
+          document.getElementById('val-inseam').value = saveData.twin.inseam;
+
+          const badge = document.getElementById('active-scan-badge');
+          if (badge) badge.style.display = 'block';
+
+          // If logged in, fetch and render history
+          if (session) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              if (profile) {
+                  onUserLoggedIn(session.user, profile);
+              }
+          }
+
+          alert("🎉 3D body scan completed successfully! Form values have been auto-populated.");
+
+          // Reset scan panel
+          scanPanelContainer.style.display = 'none';
+          btnShowScanPanel.textContent = "Get 3D Body Scan";
+          btnShowScanPanel.style.background = 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)';
+          btnShowScanPanel.style.border = 'none';
+
+          // Reset files
+          scanFrontBase64 = null;
+          scanSideBase64 = null;
+          if (scanFrontFile) scanFrontFile.value = '';
+          if (scanSideFile) scanSideFile.value = '';
+          if (textScanFront) {
+              textScanFront.textContent = "Click to upload Front photo";
+              textScanFront.style.color = '#94a3b8';
+          }
+          if (textScanSide) {
+              textScanSide.textContent = "Click to upload Side photo";
+              textScanSide.style.color = '#94a3b8';
+          }
+          if (lblScanFront) {
+              lblScanFront.style.borderColor = 'rgba(255,255,255,0.15)';
+              lblScanFront.style.background = 'transparent';
+          }
+          if (lblScanSide) {
+              lblScanSide.style.borderColor = 'rgba(255,255,255,0.15)';
+              lblScanSide.style.background = 'transparent';
+          }
+
+      } catch (err) {
+          console.error(err);
+          alert("❌ Scan error: " + err.message);
+      } finally {
+          btnRunCameraScan.disabled = false;
+          btnRunPhotoScan.disabled = false;
+          scanLoader.style.display = 'none';
+      }
+  }

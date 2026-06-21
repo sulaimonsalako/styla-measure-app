@@ -337,6 +337,93 @@
             <h4 style="margin: 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">👤 My Digital Twin Profile</h4>
             <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
           </div>
+
+      <!-- 3D Body Scanning Card -->
+      <div style="margin-bottom: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 1.5rem;" id="scan-trigger-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h4 style="color: #fff; margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">📷 3D Body Scanning (3DLook API)</h4>
+            <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 0.85rem;">Instantly calculate 80+ measurements using your webcam or photos via 3DLook.</p>
+          </div>
+          <button type="button" id="btn-show-scan-panel" class="btn-run" style="margin-top: 0; width: auto; padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); border: none;">Get 3D Body Scan</button>
+        </div>
+
+        <!-- Scan Panel Container -->
+        <div id="scan-panel-container" style="display: none; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+          <div class="input-row" style="margin-bottom: 1.2rem;">
+            <div class="input-group">
+              <label>Gender</label>
+              <select id="scan-gender" class="styled-select">
+                <option value="male" selected>Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Height (Ft / In)</label>
+              <div style="display: flex; gap: 5px;">
+                <select id="scan-height-ft" class="styled-select">
+                  <option value="5" selected>5'</option>
+                  <option value="6">6'</option>
+                  <option value="4">4'</option>
+                  <option value="7">7'</option>
+                </select>
+                <select id="scan-height-in" class="styled-select">
+                  <option value="0">0"</option>
+                  <option value="1">1"</option>
+                  <option value="2">2"</option>
+                  <option value="3">3"</option>
+                  <option value="4" selected>4"</option>
+                  <option value="5">5"</option>
+                  <option value="6">6"</option>
+                  <option value="7">7"</option>
+                  <option value="8">8"</option>
+                  <option value="9">9"</option>
+                  <option value="10">10"</option>
+                  <option value="11">11"</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Weight (lbs)</label>
+              <input type="number" id="scan-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" value="150" />
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem; background: rgba(255,42,117,0.03); border: 1px solid rgba(255,42,117,0.1); border-radius: 12px; padding: 12px; font-size: 0.85rem; color: #ff75a0; line-height: 1.4;">
+            💡 <strong>How to Scan:</strong> Upload Front and Side photos to get real body measurements. Or leave them empty to run a simulated camera scan.
+          </div>
+
+          <!-- Photo Uploads Grid -->
+          <div class="input-row" style="margin-bottom: 1.5rem;">
+            <div class="input-group" style="text-align: center;">
+              <label style="justify-content: center; font-size: 0.85rem;">Front Photo</label>
+              <label id="lbl-scan-front" for="scan-front-file" class="file-drop" style="display: block; padding: 1.2rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);">
+                <span id="text-scan-front" style="color: #94a3b8;">Click to upload Front photo</span>
+              </label>
+              <input type="file" id="scan-front-file" accept="image/*" style="display: none;" />
+            </div>
+            <div class="input-group" style="text-align: center;">
+              <label style="justify-content: center; font-size: 0.85rem;">Side Profile Photo</label>
+              <label id="lbl-scan-side" for="scan-side-file" class="file-drop" style="display: block; padding: 1.2rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);">
+                <span id="text-scan-side" style="color: #94a3b8;">Click to upload Side photo</span>
+              </label>
+              <input type="file" id="scan-side-file" accept="image/*" style="display: none;" />
+            </div>
+          </div>
+
+          <!-- Run Buttons -->
+          <div class="input-row" style="gap: 12px; margin-bottom: 0;">
+            <button type="button" id="btn-run-camera-scan" class="btn-run" style="margin-top: 0; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📷 Start Camera Scan</button>
+            <button type="button" id="btn-run-photo-scan" class="btn-run" style="margin-top: 0; background: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);">⚡ Start Photo Scan</button>
+          </div>
+
+          <!-- Scan Status Loader -->
+          <div id="scan-loader" style="display: none; text-align: center; margin-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 1.5rem;">
+            <div class="spinner" style="width: 32px; height: 32px; border-width: 3px;"></div>
+            <div id="scan-loader-status" class="loader-text" style="font-size: 0.9rem; color: #ff75a0;">Initializing 3D Body Scan...</div>
+          </div>
+        </div>
+      </div>
           <div style="display: flex; gap: 10px;">
             <button id="btn-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
             <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
