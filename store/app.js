@@ -404,7 +404,7 @@ function initializeNewCart() {
 // Event Listeners Setup
 function setupEventListeners() {
   // 3D Scanner UI event listeners
-  const btn3dlookScan = document.getElementById('btn-3dlook-scan');
+  const btnAiScan = document.getElementById('btn-ai-scan');
   const scanContainer = document.getElementById('scan-container');
   const btnStartCameraScan = document.getElementById('btn-start-camera-scan');
   const scanSetup = document.getElementById('scan-setup');
@@ -412,8 +412,8 @@ function setupEventListeners() {
   const scanTimer = document.getElementById('scan-timer');
   const btnDeactivateScan = document.getElementById('btn-deactivate-scan');
 
-  if (btn3dlookScan && scanContainer) {
-    btn3dlookScan.addEventListener('click', () => {
+  if (btnAiScan && scanContainer) {
+    btnAiScan.addEventListener('click', () => {
       scanContainer.style.display = scanContainer.style.display === 'none' ? 'block' : 'none';
     });
   }
@@ -427,12 +427,12 @@ function setupEventListeners() {
       scanProcessing.style.display = 'block';
 
       let count = 3;
-      scanTimer.innerText = `Simulating 3DLook camera flow (${count}s)...`;
+      scanTimer.innerText = `Simulating AI camera scan (${count}s)...`;
       
       const interval = setInterval(() => {
         count--;
         if (count > 0) {
-          scanTimer.innerText = `Simulating 3DLook camera flow (${count}s)...`;
+          scanTimer.innerText = `Simulating AI camera scan (${count}s)...`;
         } else {
           clearInterval(interval);
         }
@@ -498,7 +498,7 @@ function setupEventListeners() {
               document.getElementById('twin-wrist').value = saveData.twin.wrist || '';
               document.getElementById('twin-length').value = saveData.twin.length || '';
 
-              alert("3D Body Scan complete! 80+ measurements imported into your Styla AI Tailor profile.");
+              alert("AI Sizing Scan complete! 80+ measurements imported into your Styla AI Stylist profile.");
               scanContainer.style.display = 'none';
               scanSetup.style.display = 'block';
               scanProcessing.style.display = 'none';
@@ -540,7 +540,7 @@ function setupEventListeners() {
         }
         localStorage.removeItem('styla_twin_api_scans');
         loadUserSession();
-        alert("3D Body Scan deactivated.");
+        alert("AI Sizing Scan deactivated.");
         
         const detailNameEl = detailsModalContent.querySelector('.detail-name');
         if (detailNameEl) {
@@ -573,7 +573,7 @@ function setupEventListeners() {
           localStorage.setItem('styla_ps_user', JSON.stringify(currentUser));
           loadUserSession();
           
-          alert("3D Body Scan deactivated. Recommendations will now use your manual entry values.");
+          alert("AI Sizing Scan deactivated. Recommendations will now use your manual entry values.");
           
           const detailNameEl = detailsModalContent.querySelector('.detail-name');
           if (detailNameEl) {
@@ -594,7 +594,6 @@ function setupEventListeners() {
   document.querySelectorAll('#tags-categories-container button, #sidebar-categories-container a').forEach(el => {
     el.addEventListener('click', (e) => {
       e.preventDefault();
-      const cat = el.getAttribute('data-cat') || el.getAttribute('data-cat-side');
       const cat = el.getAttribute('data-cat') || el.getAttribute('data-cat-side');
       
       document.querySelectorAll('#tags-categories-container button, #sidebar-categories-container a').forEach(item => {
@@ -1001,29 +1000,7 @@ if (authForm) {
     twinForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const getVal = (id) => {
-        const val = document.getElementById(id).value;
-        return val ? Number(val) : null;
-      };
 
-      const chest = Number(document.getElementById('twin-chest').value);
-      const waist = Number(document.getElementById('twin-waist').value);
-      const belly = Number(document.getElementById('twin-belly').value);
-      const hips = Number(document.getElementById('twin-hips').value);
-      const heightFt = Number(document.getElementById('twin-height-ft').value);
-      const heightIn = Number(document.getElementById('twin-height-in').value);
-      const height = (heightFt * 12) + heightIn;
-      const inseam = Number(document.getElementById('twin-inseam').value);
-      
-      const shoulder = getVal('twin-shoulder');
-      const sleeve = getVal('twin-sleeve');
-      const neck = getVal('twin-neck');
-      const thigh = getVal('twin-thigh');
-      const bicep = getVal('twin-bicep');
-      const wrist = getVal('twin-wrist');
-      const length = getVal('twin-length');
-      
-      const newTwin = { chest, waist, belly, hips, height, shoulder, sleeve, inseam, neck, thigh, bicep, wrist, length };
 
       if (!currentUser) {
         // Guest mode: save to guest session

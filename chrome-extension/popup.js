@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const labelSideText = document.getElementById('label-side-text');
   const btnUploadFront = document.getElementById('btn-upload-front');
   const btnUploadSide = document.getElementById('btn-upload-side');
-  const btnRun3dlook = document.getElementById('btn-run-3dlook');
+  const btnRunScan = document.getElementById('btn-run-scan');
 
   // Cloud signup references
   const btnAuthModeLogin = document.getElementById('btn-auth-mode-login');
@@ -238,8 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  if (btnRun3dlook) {
-    btnRun3dlook.addEventListener('click', async () => {
+  if (btnRunScan) {
+    btnRunScan.addEventListener('click', async () => {
       const gender = document.getElementById('scan-gender').value;
       const weight = Number(document.getElementById('scan-weight').value) || 140;
       const ft = Number(document.getElementById('scan-height-ft').value) || 5;
@@ -248,12 +248,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const heightCm = Math.round(heightInches * 2.54);
 
       if (!frontBase64 || !sideBase64) {
-        alert("Please upload both front and side photos for the 3D body scan.");
+        alert("Please upload both front and side photos for the AI Sizing scan.");
         return;
       }
 
-      btnRun3dlook.disabled = true;
-      btnRun3dlook.textContent = "Initializing Scan...";
+      btnRunScan.disabled = true;
+      btnRunScan.textContent = "Initializing Scan...";
 
       try {
         const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
@@ -280,11 +280,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!initRes.ok) {
           const errData = await initRes.json();
-          throw new Error(errData.error || "Failed to initialize 3DLook session.");
+          throw new Error(errData.error || "Failed to initialize AI Sizing session.");
         }
 
         const session = await initRes.json();
-        btnRun3dlook.textContent = "Processing Body (10s)...";
+        btnRunScan.textContent = "Processing Body (10s)...";
 
         let pollUrl = session.task_set_url;
         if (pollUrl && !pollUrl.startsWith('http')) {
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const statusRes = await fetch(pollUrl);
             const statusData = await statusRes.json();
             if (statusData.is_ready && statusData.is_successful) {
-              btnRun3dlook.textContent = "Finalizing Measurements...";
+              btnRunScan.textContent = "Finalizing Measurements...";
               
               let saveUrl = statusData.redirect_to;
               if (saveUrl && !saveUrl.startsWith('http')) {
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 inseamInput.value = saveData.twin.inseam;
                 
                 updateActiveScanBadge(updatedMeasurements);
-                alert("3D Body Scan complete! 80+ measurements loaded into local AI Tailor Profile.");
+                alert("AI Sizing Scan complete! 80+ measurements loaded into local AI Tailor Profile.");
                 btnModeManual.click();
               } else {
                 throw new Error("Failed to save measurements.");
@@ -342,8 +342,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               setTimeout(pollStatus, 2000);
             }
           } catch (pollErr) {
-            btnRun3dlook.disabled = false;
-            btnRun3dlook.textContent = "Run 3D Body Scan";
+            btnRunScan.disabled = false;
+            btnRunScan.textContent = "Run AI Sizing Scan";
             alert("Polling Error: " + pollErr.message);
           }
         };
@@ -352,8 +352,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       } catch (err) {
         alert("Scanner Error: " + err.message);
-        btnRun3dlook.disabled = false;
-        btnRun3dlook.textContent = "Run 3D Body Scan";
+        btnRunScan.disabled = false;
+        btnRunScan.textContent = "Run AI Sizing Scan";
       }
     });
   }
