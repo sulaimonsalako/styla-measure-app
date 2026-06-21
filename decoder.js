@@ -3,9 +3,31 @@ window.MTM_WIDGET_OPTIONS = {
   defaultValues: { email: 'guest@styla.ca' },
   onMeasurementsReady: (m) => {
     console.log("Measurements complete:", m);
-    alert("AI body scan completed! Syncing your measurements...");
     
-    // Reload profile after a brief delay to allow the webhook to finish writing
+    // Pre-fill signup email input in login modal
+    const scanEmailVal = document.getElementById('scan-email').value;
+    if (scanEmailVal) {
+      const loginEmailInput = document.getElementById('login-email');
+      if (loginEmailInput) loginEmailInput.value = scanEmailVal;
+      const authEmailInput = document.getElementById('auth-email');
+      if (authEmailInput) authEmailInput.value = scanEmailVal;
+    }
+    
+    // Open signup/auth modal to choose a password
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) {
+      loginModal.style.display = 'flex';
+      if (typeof switchToSignup === 'function') {
+        switchToSignup();
+      }
+      
+      const modalDesc = document.getElementById('auth-modal-desc');
+      if (modalDesc) {
+        modalDesc.innerHTML = `<span style="color: #34d399; font-weight: 700;">✓ Scan Successful!</span> Set a password below to securely save your measurements to your cloud profile.`;
+      }
+    }
+    
+    // Refresh profile state after a short delay for webhook execution
     setTimeout(async () => {
       if (window.supabase) {
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -20,8 +42,6 @@ window.MTM_WIDGET_OPTIONS = {
             onUserLoggedIn(session.user, profile);
           }
         }
-      } else {
-        window.location.reload();
       }
     }, 3000);
   }
@@ -1795,4 +1815,58 @@ window.addEventListener('DOMContentLoaded', () => {
           manualWorkspace.style.display = 'block';
           scanWorkspace.style.display = 'none';
       });
+  }
+
+
+  // Handle scan email input validation
+  const scanEmailInput = document.getElementById('scan-email');
+  const widgetContainer = document.querySelector('.saia-widget-container');
+  const scanEmailError = document.getElementById('scan-email-error');
+
+  function validateScanEmail() {
+      if (!scanEmailInput || !widgetContainer) return;
+      
+      // If user is already logged in, bypass validation
+      if (window.supabase) {
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session) {
+                  const container = document.getElementById('scan-email-container');
+                  if (container) container.style.display = 'none';
+                  widgetContainer.style.pointerEvents = 'auto';
+                  widgetContainer.style.opacity = '1';
+                  return;
+              }
+          });
+      }
+
+      const email = scanEmailInput.value.trim();
+      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      
+      if (emailRegex.test(email)) {
+          if (scanEmailError) scanEmailError.style.display = 'none';
+          widgetContainer.style.pointerEvents = 'auto';
+          widgetContainer.style.opacity = '1';
+          
+          if (window.MTM_WIDGET_OPTIONS) {
+              window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
+              window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
+          }
+      } else {
+          widgetContainer.style.pointerEvents = 'none';
+          widgetContainer.style.opacity = '0.4';
+          if (email && scanEmailError) {
+              scanEmailError.textContent = "Please enter a valid email address.";
+              scanEmailError.style.display = 'block';
+          } else if (scanEmailError) {
+              scanEmailError.style.display = 'none';
+          }
+      }
+  }
+
+  if (scanEmailInput) {
+      scanEmailInput.addEventListener('input', validateScanEmail);
+      scanEmailInput.addEventListener('blur', validateScanEmail);
+      // Run once on load
+      validateScanEmail();
   }
