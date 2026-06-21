@@ -43,7 +43,7 @@ const checkoutUnlockedSummary = document.getElementById('checkout-unlocked-summa
 const simAddFriend = document.getElementById('sim-add-friend');
 const simResetCart = document.getElementById('sim-reset-cart');
 
-// Authentication & Digital Twin DOM Elements
+// Authentication & AI Tailor DOM Elements
 const loginTriggerBtn = document.getElementById('login-trigger-btn');
 const loggedInBox = document.getElementById('logged-in-box');
 const twinStatusText = document.getElementById('twin-status');
@@ -163,7 +163,7 @@ function loadUserSession() {
     if (loggedInBox) loggedInBox.classList.remove('hidden');
     if (twinStatusText) twinStatusText.innerText = `@${currentUser.username}`;
     
-    // Activate Digital Twin badge color if profile measurements are complete
+    // Activate AI Tailor badge color if profile measurements are complete
     if (twin && twin.chest && twin.waist && twin.belly && twin.hips) {
       if (twinBtn) {
         twinBtn.style.backgroundColor = "#16a34a"; // green
@@ -498,7 +498,7 @@ function setupEventListeners() {
               document.getElementById('twin-wrist').value = saveData.twin.wrist || '';
               document.getElementById('twin-length').value = saveData.twin.length || '';
 
-              alert("3D Body Scan complete! 80+ measurements imported into your Styla digital twin.");
+              alert("3D Body Scan complete! 80+ measurements imported into your Styla AI Tailor profile.");
               scanContainer.style.display = 'none';
               scanSetup.style.display = 'block';
               scanProcessing.style.display = 'none';
@@ -962,7 +962,7 @@ if (authForm) {
     });
   }
   
-  // Digital Twin modal events
+  // AI Tailor modal events
   if (twinBtn) {
     twinBtn.addEventListener('click', () => {
       // Populate form values if twin exists
@@ -1245,7 +1245,7 @@ if (authForm) {
   }
 }
 
-// Normalize size chart columns to Digital Twin metrics keys
+// Normalize size chart columns to AI Tailor metrics keys
 function normalizeMeasurementKey(key) {
   const k = key.toLowerCase();
   if (k.includes('chest') || k.includes('bust')) return 'chest';
@@ -1456,7 +1456,7 @@ function openProductDetails(productId) {
     ? prod.colorImages[initialColor]
     : prod.images;
 
-  // Sizing display logic based on Digital Twin profile status
+  // Sizing display logic based on AI Tailor profile status
   let sizingPanelHtml = '';
   let autoSizeValue = '';
   
@@ -1471,7 +1471,7 @@ function openProductDetails(productId) {
           <span style="font-family:var(--font-mono); font-weight:700; font-size:1.1rem; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:4px;">Size: ${recommended.size}</span>
         </div>
         <p style="color: #15803d; line-height:1.4;">
-          Your Digital Twin sizing profile determines **Garment Size ${recommended.size}** is the best match.
+          Your AI Tailor sizing profile determines **Garment Size ${recommended.size}** is the best match.
         </p>
         <p style="font-size:0.75rem; color:#166534; font-style:italic; margin-top:4px;">
           Fit details: ${recommended.fitNotes}
@@ -1709,7 +1709,7 @@ function openProductDetails(productId) {
     }
 
     if (!twin || !twin.chest || !twin.waist || !twin.belly || !twin.hips) {
-      alert("Please enter your Digital Twin body measurements first so we can determine your size.");
+      alert("Please enter your AI Tailor body measurements first so we can determine your size.");
       detailsModal.classList.remove('open');
       twinBtn.click();
       return;

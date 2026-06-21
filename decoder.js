@@ -360,7 +360,7 @@ async function deleteScanFromCloud(scanId) {
   }
 }
 
-// Load saved Digital Twin measurements on page load
+// Load saved AI Tailor measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
   const savedChest = localStorage.getItem('styla_twin_chest');
   const savedWaist = localStorage.getItem('styla_twin_waist');
@@ -925,7 +925,7 @@ const linkBackLogin = document.getElementById('link-back-login');
 function switchToLogin() {
     if (authTabsContainer) authTabsContainer.style.display = 'flex';
     if (authModalTitle) authModalTitle.textContent = "Welcome Back";
-    if (authModalDesc) authModalDesc.textContent = "Log in to sync your Digital Twin measurements from the cloud.";
+    if (authModalDesc) authModalDesc.textContent = "Log in to sync your AI Tailor measurements from the cloud.";
     
     if (authEmailContainer) authEmailContainer.style.display = 'block';
     if (authPasswordContainer) authPasswordContainer.style.display = 'block';
@@ -947,7 +947,7 @@ function switchToLogin() {
 function switchToSignup() {
     if (authTabsContainer) authTabsContainer.style.display = 'flex';
     if (authModalTitle) authModalTitle.textContent = "Create Account";
-    if (authModalDesc) authModalDesc.textContent = "Create a free cloud profile to save your Digital Twin measurements.";
+    if (authModalDesc) authModalDesc.textContent = "Create a free cloud profile to save your AI Tailor measurements.";
     
     if (authEmailContainer) authEmailContainer.style.display = 'block';
     if (authPasswordContainer) authPasswordContainer.style.display = 'block';
@@ -1432,7 +1432,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
           const data = await res.json();
           btnRunEstimate.disabled = false;
-          btnRunEstimate.textContent = "Generate Digital Twin Specs";
+          btnRunEstimate.textContent = "Generate AI Tailor Specs";
 
           if (res.ok) {
             // Set input values
@@ -1469,7 +1469,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         } catch (err) {
                     btnRunEstimate.disabled = false;
-          btnRunEstimate.textContent = "Generate Digital Twin Specs";
+          btnRunEstimate.textContent = "Generate AI Tailor Specs";
           estError.textContent = "Network error occurred.";
           estError.style.display = "block";
           console.error(err);

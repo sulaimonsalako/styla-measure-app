@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 inseamInput.value = saveData.twin.inseam;
                 
                 updateActiveScanBadge(updatedMeasurements);
-                alert("3D Body Scan complete! 80+ measurements loaded into local digital twin.");
+                alert("3D Body Scan complete! 80+ measurements loaded into local AI Tailor Profile.");
                 btnModeManual.click();
               } else {
                 throw new Error("Failed to save measurements.");
