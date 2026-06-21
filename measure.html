@@ -113,28 +113,99 @@
       text-decoration: underline;
     }
 
+        /* Grid background & Fade-in animations */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Hero intro */
     .hero-container {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 3rem;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 3.5rem;
       align-items: center;
       max-width: 1100px;
       margin: 0 auto;
       padding: 4.5rem 2rem 2rem 2rem;
       text-align: left;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     
-    @media (max-width: 768px) {
+    @media (max-width: 820px) {
       .hero-container {
         grid-template-columns: 1fr;
         text-align: center;
-        gap: 2rem;
+        gap: 2.5rem;
         padding-top: 2rem;
       }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 42, 117, 0.08);
+      border: 1px solid rgba(255, 42, 117, 0.2);
+      color: #ff75a0;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    @media (max-width: 820px) {
       .hero-badge {
         align-self: center !important;
       }
+    }
+
+    .hero-container h2 {
+      font-family: var(--font-outfit);
+      font-size: 3.2rem;
+      font-weight: 900;
+      margin: 0 0 1.2rem 0;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-container p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0 0 2rem 0;
+    }
+
+    /* Step Card interactive glow */
+    .step-card {
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .step-card:hover {
+      border-color: rgba(255, 42, 117, 0.25);
+      box-shadow: 0 25px 50px rgba(255, 42, 117, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .portal-workspace {
+      animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* 3DLook Widget Modal styling */
@@ -159,41 +230,6 @@
       box-shadow: 0 30px 60px rgba(0,0,0,0.6);
       padding: 2.2rem;
       position: relative;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255, 42, 117, 0.08);
-      border: 1px solid rgba(255, 42, 117, 0.2);
-      color: #ff75a0;
-      padding: 6px 16px;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .hero-container h2 {
-      font-family: var(--font-outfit);
-      font-size: 3.2rem;
-      font-weight: 900;
-      margin: 0 0 1.2rem 0;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-container p {
-      font-size: 1.15rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin: 0 auto 2.5rem auto;
-      max-width: 620px;
     }
 
     .benefits-grid {
@@ -543,24 +579,39 @@
 
   <!-- Hero Intro -->
   <section class="hero-container">
-    <div class="hero-badge">⚡ Powered by Vision AI & 3DLook</div>
-    <h2>Meet Your AI Stylist</h2>
-    <p>Upload a brand's size chart and we'll instantly check if it fits your 3D body measurements. Say goodbye to sizing returns and buy with 100% confidence.</p>
-    
-    <div class="benefits-grid">
-      <div class="benefit-item">
-        <span>👗</span> 99% Sizing Accuracy
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <h2 style="font-family: var(--font-outfit); font-size: 3rem; font-weight: 900; line-height: 1.15; margin: 0 0 1rem 0; background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Tired of Online Sizing Roulette?</h2>
+      <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 2rem 0;">
+        Forget manual sizing calculations and reading confusing brand tables. Our browser extensions and bookmarklet automatically read sizing charts on retail sites in real-time, matching them instantly with your 3D body outline. Just shop normally, and see your recommended fit on the page!
+      </p>
+      
+      <!-- Key benefits -->
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>End Sizing Returns:</b> Save hours of return packaging and drop-off chores.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>Stop "Bracketing" Orders:</b> Quit purchasing multiple sizes to test fits.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">✓</span>
+          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>No Sizing Math:</b> Real-time overlays on retail clothing pages.</span>
+        </div>
       </div>
-      <div class="benefit-item">
-        <span>🔒</span> Privacy Protected
-      </div>
-      <div class="benefit-item">
-        <span>🛍️</span> Works on Any Brand
-      </div>
+    </div>
+
+    <!-- Right Column: Relatable Fashion Tech Hero Image -->
+    <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+      <!-- Glowing glass container background for the image -->
+      <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
+      <img src="images/ai_stylist_hero.png" alt="STYLA AI Stylist Sizing Fit" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; z-index: 1;" />
     </div>
   </section>
 
   <!-- Main Workspace -->
+  <main class="portal-workspace">
   <main class="portal-workspace">
 
     <!-- Manage Profile Box (only shown when logged in) -->
@@ -606,72 +657,15 @@
       </div>
 
       <!-- TAB CONTENT: 3D SCAN WORKSPACE -->
-      <div id="scan-panel-workspace" style="display: block;">
-        <div class="input-row" style="margin-bottom: 1rem;">
-          <div class="input-group">
-            <label>Gender</label>
-            <select id="scan-gender" class="styled-select">
-              <option value="male" selected>Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label>Height (Ft / In)</label>
-            <div style="display: flex; gap: 5px;">
-              <select id="scan-height-ft" class="styled-select">
-                <option value="5" selected>5'</option>
-                <option value="6">6'</option>
-                <option value="4">4'</option>
-                <option value="7">7'</option>
-              </select>
-              <select id="scan-height-in" class="styled-select">
-                <option value="0">0"</option>
-                <option value="1">1"</option>
-                <option value="2">2"</option>
-                <option value="3">3"</option>
-                <option value="4" selected>4"</option>
-                <option value="5">5"</option>
-                <option value="6">6"</option>
-                <option value="7">7"</option>
-                <option value="8">8"</option>
-                <option value="9">9"</option>
-                <option value="10">10"</option>
-                <option value="11">11"</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Weight (lbs)</label>
-            <input type="number" id="scan-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" value="150" />
-          </div>
-        </div>
-
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.2rem 0; line-height: 1.4;">
-          Upload a Front and Side photo of yourself to calculate 80+ dimensions. Or run a webcam simulator scan immediately.
+      <div id="scan-panel-workspace" style="display: block; text-align: center; padding: 1.5rem 0;">
+        <p style="font-size: 1rem; color: #fff; font-weight: 600; margin-bottom: 0.5rem;">Fastest & Most Accurate Method</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 2rem 0; line-height: 1.5; max-width: 420px; margin-left: auto; margin-right: auto;">
+          Get measured in 30 seconds using your phone camera. The AI Stylist scanner automatically captures your height, weight, gender, and 80+ measurements securely.
         </p>
 
-        <!-- Dropzones Grid -->
-        <div class="input-row" style="margin-bottom: 1.5rem;">
-          <div class="input-group" style="text-align: center;">
-            <label style="justify-content: center; font-size: 0.85rem;">Front Photo</label>
-            <label id="lbl-scan-front" for="scan-front-file" class="file-drop" style="display: flex; padding: 1.5rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.12);">
-              <span id="text-scan-front" style="color: #94a3b8;">Click to upload Front photo</span>
-            </label>
-            <input type="file" id="scan-front-file" accept="image/*" style="display: none;" />
-          </div>
-          <div class="input-group" style="text-align: center;">
-            <label style="justify-content: center; font-size: 0.85rem;">Side Profile Photo</label>
-            <label id="lbl-scan-side" for="scan-side-file" class="file-drop" style="display: flex; padding: 1.5rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.12);">
-              <span id="text-scan-side" style="color: #94a3b8;">Click to upload Side photo</span>
-            </label>
-            <input type="file" id="scan-side-file" accept="image/*" style="display: none;" />
-          </div>
-        </div>
-
-        <div class="input-row" style="gap: 12px; margin-bottom: 0;">
-          <button type="button" id="btn-run-camera-scan" class="btn-run" style="margin-top: 0; background: var(--success-gradient);">📷 Start Camera Scan</button>
-          <button type="button" id="btn-run-photo-scan" class="btn-run" style="margin-top: 0; background: var(--primary-gradient);">⚡ Start Photo Scan</button>
-        </div>
+        <button type="button" id="btn-launch-widget" class="btn-run" style="max-width: 320px; margin: 0 auto; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span>📸</span> Launch 3D Body Scan (3DLook Widget)
+        </button>
 
         <!-- Scan Loader -->
         <div id="scan-loader" class="loader-container">
@@ -796,71 +790,77 @@
     </div>
 
     <!-- STEP 3: UPLOAD BRAND SIZE CHART & GARMENT -->
-    <div class="step-card">
-      <div class="step-header">
-        <div class="step-num">3</div>
-        <h3 class="step-title">Upload Size Chart & Garment (Web Alternative)</h3>
-      </div>
-      
-      <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 16px; padding: 1.2rem; margin-bottom: 2rem;">
-        <p style="font-size: 0.85rem; color: var(--accent-light); margin: 0; line-height: 1.5;">
-          ⚠️ <b>Alternative / Legacy Flow:</b> This portal upload process is redundant and will be removed in a future release. For the best experience, use the <b>3DLook Widget (Step 1)</b> to scan, then shop directly on retail websites using the <b>Extension / Bookmarklet (Step 2)</b>.
-        </p>
+    <div class="step-card" id="step-3-container" style="border-style: dashed; opacity: 0.8; transition: all 0.3s ease;">
+      <!-- Toggle Header -->
+      <div id="step-3-toggle-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+        <div class="step-header" style="margin-bottom: 0;">
+          <div class="step-num" style="background: rgba(255,255,255,0.1); color: var(--text-muted);">3</div>
+          <h3 class="step-title" style="color: var(--text-muted);">Upload Size Chart & Garment (Legacy Alternative)</h3>
+        </div>
+        <span id="step-3-toggle-arrow" style="font-size: 1.25rem; color: var(--text-muted); transition: transform 0.3s;">▼</span>
       </div>
 
-      <div class="input-row" style="gap: 1.5rem; margin-bottom: 0;">
-        <div class="input-group">
-          <label style="font-size: 0.9rem;">1. Size Chart Image (Required)</label>
-          <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
-            <span id="drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop size chart</span>
+      <!-- Expandable Body (Hidden by default) -->
+      <div id="step-3-expandable-body" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem;">
+        <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 16px; padding: 1.2rem; margin-bottom: 2rem;">
+          <p style="font-size: 0.85rem; color: var(--accent-light); margin: 0; line-height: 1.5;">
+            ⚠️ <b>Legacy Flow:</b> This manual upload option is redundant and will be deprecated. For the best experience, use the <b>3DLook Widget (Step 1)</b> and shop directly on retail websites using the <b>Extension / Bookmarklet (Step 2)</b>.
+          </p>
+        </div>
+
+        <div class="input-row" style="gap: 1.5rem; margin-bottom: 0;">
+          <div class="input-group">
+            <label style="font-size: 0.9rem;">1. Size Chart Image (Required)</label>
+            <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
+              <span id="drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop size chart</span>
+            </div>
+            <input type="file" id="file-upload" accept="image/*" style="display: none;" />
+            <div id="chart-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
           </div>
-          <input type="file" id="file-upload" accept="image/*" style="display: none;" />
-          <div id="chart-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
-        </div>
 
-        <div class="input-group">
-          <label style="font-size: 0.9rem;">2. Garment Photos (Required)</label>
-          <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
-            <span id="style-drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop garment photos</span>
+          <div class="input-group">
+            <label style="font-size: 0.9rem;">2. Garment Photos (Required)</label>
+            <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
+              <span id="style-drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop garment photos</span>
+            </div>
+            <input type="file" id="style-file-upload" accept="image/*" multiple style="display: none;" />
+            <div id="style-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
           </div>
-          <input type="file" id="style-file-upload" accept="image/*" multiple style="display: none;" />
-          <div id="style-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+        </div>
+
+        <button id="btn-decode" class="btn-run" style="margin-top: 2rem;">⚡ Check My Sizing Recommendation</button>
+
+        <!-- Sizing Loader -->
+        <div id="loader" class="loader-container">
+          <div class="spinner"></div>
+          <div id="loader-status" class="loader-text">Reading size chart...</div>
+        </div>
+
+        <!-- Sizing Output -->
+        <div id="result-box"></div>
+
+        <!-- AI Chat Widget -->
+        <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
+          <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; max-height: 250px;">
+            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; color: #94a3b8; align-self: flex-start;">Ask Tailor AI any follow-up questions about the fit.</div>
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <input type="text" id="chat-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" style="flex: 1; padding: 10px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; outline: none;" />
+            <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 10px 20px; font-size: 0.9rem; border-radius: 120px;">Send</button>
+          </div>
+        </div>
+
+        <!-- Convert Guest to Cloud Profile Box -->
+        <div id="save-profile-box" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 42, 117, 0.03); border: 1px solid rgba(255, 42, 117, 0.12); border-radius: 16px; display: none;">
+          <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">💾 Save Your Fit Profile</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and AI Stylist recommendations across devices.</p>
+          <div class="input-row" style="margin-bottom: 1rem;">
+            <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
+            <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2);" />
+          </div>
+          <button id="btn-save-profile" class="btn-run" style="margin-top: 0.5rem; background: var(--success-gradient);">Create Account & Save Profile</button>
         </div>
       </div>
-
-      <button id="btn-decode" class="btn-run" style="margin-top: 2rem;">⚡ Check My Sizing Recommendation</button>
-
-      <!-- Sizing Loader -->
-      <div id="loader" class="loader-container">
-        <div class="spinner"></div>
-        <div id="loader-status" class="loader-text">Reading size chart...</div>
-      </div>
-
-      <!-- Sizing Output -->
-      <div id="result-box"></div>
-
-      <!-- AI Chat Widget -->
-      <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
-        <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; max-height: 250px;">
-          <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; color: #94a3b8; align-self: flex-start;">Ask Tailor AI any follow-up questions about the fit.</div>
-        </div>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-          <input type="text" id="chat-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" style="flex: 1; padding: 10px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; outline: none;" />
-          <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 10px 20px; font-size: 0.9rem; border-radius: 120px;">Send</button>
-        </div>
-      </div>
-
-      <!-- Convert Guest to Cloud Profile Box -->
-      <div id="save-profile-box" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 42, 117, 0.03); border: 1px solid rgba(255, 42, 117, 0.12); border-radius: 16px; display: none;">
-        <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">💾 Save Your Fit Profile</h4>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and twin size recommendations across devices.</p>
-        <div class="input-row" style="margin-bottom: 1rem;">
-          <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
-          <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2);" />
-        </div>
-        <button id="btn-save-profile" class="btn-run" style="margin-top: 0; padding: 0.8rem; font-size: 0.95rem;">Save Profile to Cloud</button>
-      </div>
-
     </div>
 
     <!-- Navigation Hub links -->
