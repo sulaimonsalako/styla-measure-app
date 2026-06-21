@@ -141,6 +141,118 @@ function triggerSyncDebounce() {
   syncTimeout = setTimeout(syncMeasurementsToSupabase, 1500);
 }
 
+async function syncStoreScansToPortal(user, profile) {
+  try {
+    if (!window.supabase || !user || !user.email) return profile;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    const email = user.email.toLowerCase();
+    const { data: storeProfile, error: fetchError } = await supabase
+      .from('store_profiles')
+      .select('api_scans, twin')
+      .eq('username', email)
+      .maybeSingle();
+      
+    if (fetchError) {
+      console.warn("Error fetching store profile for sync:", fetchError);
+      return profile;
+    }
+    
+    if (storeProfile && storeProfile.api_scans && storeProfile.api_scans.length > 0) {
+      console.log("Found store scans to sync:", storeProfile.api_scans);
+      
+      const portalScans = profile.api_scans || [];
+      let mergedScans = [...portalScans];
+      let updated = false;
+      
+      for (const scan of storeProfile.api_scans) {
+        if (!mergedScans.some(s => s.scan_id === scan.scan_id || s.timestamp === scan.timestamp)) {
+          mergedScans.push(scan);
+          updated = true;
+        }
+      }
+      
+      if (updated) {
+        mergedScans.forEach((s, idx) => {
+          s.is_active = (idx === mergedScans.length - 1);
+        });
+        
+        const activeScan = mergedScans.find(s => s.is_active);
+        let chest = profile.chest;
+        let waist = profile.waist;
+        let belly = profile.belly;
+        let hips = profile.hips;
+        let height = profile.height;
+        let inseam = profile.inseam;
+        
+        if (activeScan) {
+          if (activeScan.volume_params.chest) chest = activeScan.volume_params.chest;
+          if (activeScan.volume_params.waist) waist = activeScan.volume_params.waist;
+          if (activeScan.volume_params.abdomen || activeScan.volume_params.waist) {
+            belly = activeScan.volume_params.abdomen || activeScan.volume_params.waist;
+          }
+          if (activeScan.volume_params.low_hips) hips = activeScan.volume_params.low_hips;
+          if (activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam) {
+            inseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam;
+          }
+          if (activeScan.front_params.body_height) {
+            height = activeScan.front_params.body_height;
+          }
+        }
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            chest: chest ? parseFloat(chest) : null,
+            waist: waist ? parseFloat(waist) : null,
+            belly: belly ? parseFloat(belly) : null,
+            hips: hips ? parseFloat(hips) : null,
+            height: height ? parseFloat(height) : null,
+            inseam: inseam ? parseFloat(inseam) : null,
+            api_scans: mergedScans,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error("Error updating portal profile during sync:", updateError);
+        } else {
+          console.log("Successfully synced scans from store_profiles to portal profile.");
+          if (chest) document.getElementById('val-chest').value = chest;
+          if (waist) document.getElementById('val-waist').value = waist;
+          if (belly) document.getElementById('val-belly').value = belly;
+          if (hips) document.getElementById('val-hips').value = hips;
+          if (inseam) document.getElementById('val-inseam').value = inseam;
+          if (height) {
+            const ft = Math.floor(height / 12);
+            const Math_round = Math.round(height % 12);
+            document.getElementById('val-height-ft').value = ft;
+            document.getElementById('val-height-in').value = Math_round;
+          }
+          localStorage.setItem('styla_twin_api_scans', JSON.stringify(mergedScans));
+          if (chest) localStorage.setItem('styla_twin_chest', chest);
+          if (waist) localStorage.setItem('styla_twin_waist', waist);
+          if (belly) localStorage.setItem('styla_twin_belly', belly);
+          if (hips) localStorage.setItem('styla_twin_hips', hips);
+          if (height) localStorage.setItem('styla_twin_height', height);
+          if (inseam) localStorage.setItem('styla_twin_inseam', inseam);
+          
+          profile.chest = chest;
+          profile.waist = waist;
+          profile.belly = belly;
+          profile.hips = hips;
+          profile.height = height;
+          profile.inseam = inseam;
+          profile.api_scans = mergedScans;
+        }
+      }
+    }
+  } catch (syncErr) {
+    console.error("Failed to sync store scans to portal:", syncErr);
+  }
+  return profile;
+}
+
 function onUserLoggedIn(user, profile) {
   if (!profile) return;
   
@@ -906,7 +1018,7 @@ btnSaveProfile.addEventListener('click', async () => {
           email: email,
           password: password,
           options: {
-              emailRedirectTo: window.location.origin + '/measure.html',
+              emailRedirectTo: window.location.origin + '/index.html',
               data: {
                   chest: chest,
                   waist: waist,
@@ -1182,7 +1294,7 @@ if (btnSignupSubmit) {
                 email: email,
                 password: password,
                 options: {
-                    emailRedirectTo: window.location.origin + '/measure.html',
+                    emailRedirectTo: window.location.origin + '/index.html',
                     data: {
                         chest: chest || null,
                         waist: waist || null,
@@ -1244,7 +1356,7 @@ if (btnForgotSubmit) {
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + '/measure.html?action=reset',
+                redirectTo: window.location.origin + '/index.html?action=reset',
             });
             
             if (error) throw error;

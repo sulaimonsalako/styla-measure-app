@@ -34,11 +34,38 @@ export default async function handler(req, res) {
       // Check if user exists
       const { data: existing } = await supabase
         .from('store_profiles')
-        .select('username')
+        .select('username, password, twin')
         .eq('username', cleanedUsername)
         .maybeSingle();
 
       if (existing) {
+        if (existing.password === 'temp_guest_placeholder') {
+          // Allow completing the signup by upgrading the guest profile
+          const { error } = await supabase
+            .from('store_profiles')
+            .update({
+              password: password,
+              created_at: new Date().toISOString()
+            })
+            .eq('username', cleanedUsername);
+            
+          if (error) throw error;
+          
+          let parsedTwin = null;
+          if (existing.twin) {
+            try {
+              parsedTwin = typeof existing.twin === 'string' ? JSON.parse(existing.twin) : existing.twin;
+            } catch (e) {
+              parsedTwin = existing.twin;
+            }
+          }
+
+          return res.status(201).json({
+            success: true,
+            username: cleanedUsername,
+            twin: parsedTwin
+          });
+        }
         return res.status(400).json({ error: 'Username already exists.' });
       }
 

@@ -256,30 +256,56 @@ export default async function handler(req, res) {
         } else {
           console.log(`Saved measurements for ${cleanedUsername} in store_profiles table via webhook.`);
         }
+      } else {
+        // Insert guest profile placeholder
+        const { error: insertError } = await supabase
+          .from('store_profiles')
+          .insert({
+            username: cleanedUsername,
+            password: 'temp_guest_placeholder',
+            twin: JSON.stringify(legacyTwin),
+            api_scans: [scanData],
+            manual_measurements: {},
+            measurement_overrides: {}
+          });
+        if (insertError) {
+          console.error("Error inserting guest store_profile:", insertError);
+        } else {
+          console.log(`Created guest store_profile for ${cleanedUsername} in store_profiles via webhook.`);
+        }
       }
     } else {
       const profilesPath = path.resolve(process.cwd(), 'profiles.json');
       const fileContent = fs.readFileSync(profilesPath, 'utf8');
       const profiles = JSON.parse(fileContent);
 
-      const profile = profiles.find(p => 
+      let profile = profiles.find(p => 
         p.username.toLowerCase() === cleanedUsername || 
         (p.email && p.email.toLowerCase() === cleanedUsername)
       );
       if (!profile) {
-        console.warn(`Profile for ${cleanedUsername} not found to save webhook measurements.`);
-        return res.status(404).json({ error: 'User profile not found.' });
+        // Create a guest placeholder profile in profiles.json
+        profile = {
+          username: cleanedUsername,
+          email: cleanedUsername,
+          password: 'temp_guest_placeholder',
+          twin: legacyTwin,
+          api_scans: [scanData],
+          created_at: new Date().toISOString()
+        };
+        profiles.push(profile);
+        console.log(`Created guest profile for ${cleanedUsername} in profiles.json via webhook.`);
+      } else {
+        const existingScans = profile.api_scans || [];
+        existingScans.forEach(s => s.is_active = false);
+        existingScans.push(scanData);
+
+        profile.twin = legacyTwin;
+        profile.api_scans = existingScans;
+        console.log(`Saved measurements for ${cleanedUsername} in profiles.json via webhook.`);
       }
 
-      const existingScans = profile.api_scans || [];
-      existingScans.forEach(s => s.is_active = false);
-      existingScans.push(scanData);
-
-      profile.twin = legacyTwin;
-      profile.api_scans = existingScans;
-
       fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));
-      console.log(`Saved measurements for ${cleanedUsername} in profiles.json via webhook.`);
     }
 
     return res.status(200).json({ success: true });
