@@ -3,1056 +3,825 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Discover Your Exact Size | STYLA Measure</title>
-  <!-- Same styles as main site + simple styles for this tool -->
+  <title>Meet Your Digital Fit Twin | STYLA Measure</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
-  
-  <!-- Supabase CDN -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
-    .decoder-container {
-      max-width: 600px;
-      margin: 4rem auto;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 2.5rem;
-      text-align: left;
+    :root {
+      --bg-dark: #07070c;
+      --card-bg: rgba(255, 255, 255, 0.02);
+      --card-border: rgba(255, 255, 255, 0.07);
+      --text-white: #ffffff;
+      --text-muted: #94a3b8;
+      --primary-gradient: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);
+      --scan-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --font-outfit: 'Outfit', sans-serif;
+      --font-inter: 'Inter', sans-serif;
     }
-    .decoder-container h2 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #fff 0%, #ff75a0 100%);
+    
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(255, 42, 117, 0.07) 0%, transparent 40%);
+      font-family: var(--font-inter);
+      color: var(--text-white);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7, 7, 12, 0.8);
+    }
+
+    .brand-logo {
+      color: #fff;
+      font-family: var(--font-outfit);
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .brand-logo img {
+      height: 32px;
+      width: auto;
+      border-radius: 50%;
+    }
+
+    .brand-logo span {
+      color: #ff75a0;
+      font-weight: 400;
+    }
+
+    .btn-login {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-login:hover {
+      border-color: #ff2a75;
+      color: #ff75a0;
+      background: rgba(255, 42, 117, 0.03);
+    }
+
+    .logged-in-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logged-in-email {
+      font-size: 0.85rem;
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    .btn-logout-link {
+      background: transparent;
+      border: none;
+      color: #f87171;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-decoration: underline;
+    }
+
+    /* Hero intro */
+    .hero-container {
+      text-align: center;
+      padding: 4.5rem 1.5rem 2rem 1.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 42, 117, 0.08);
+      border: 1px solid rgba(255, 42, 117, 0.2);
+      color: #ff75a0;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .hero-container h2 {
+      font-family: var(--font-outfit);
+      font-size: 3.2rem;
+      font-weight: 900;
+      margin: 0 0 1.2rem 0;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .decoder-container p {
-      color: #94a3b8;
-      margin-bottom: 2rem;
-      line-height: 1.5;
+
+    .hero-container p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 0 auto 2.5rem auto;
+      max-width: 620px;
     }
-    .input-group {
-      margin-bottom: 1.5rem;
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      max-width: 680px;
+      margin: 0 auto;
     }
-    .input-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: #fff;
-      font-size: 0.9rem;
+
+    .benefit-item {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.85rem;
+      color: #cbd5e1;
       display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 550;
     }
+
+    /* Main Container */
+    .portal-workspace {
+      max-width: 660px;
+      margin: 3rem auto 6rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2.2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      backdrop-filter: blur(16px);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.8rem;
+    }
+
+    .step-num {
+      background: var(--primary-gradient);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .step-title {
+      font-family: var(--font-outfit);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+
+    /* Tabs */
+    .tab-container {
+      display: flex;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 100px;
+      padding: 4px;
+      margin-bottom: 1.8rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab-btn.active {
+      background: #1e1e2d;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .tab-btn span.badge {
+      background: #ff2a75;
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-weight: 700;
+    }
+
+    /* Form Fields */
+    .input-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    input[type="number"], .styled-select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="number"]:focus, .styled-select:focus {
+      border-color: #ff2a75;
+    }
+
+    .file-drop {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 1.8rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .file-drop:hover {
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.02);
+    }
+
     .info-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 16px;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.2);
+      width: 14px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 50%;
-      font-size: 10px;
+      font-size: 9px;
       cursor: pointer;
-      color: #fff;
+      color: #94a3b8;
+      vertical-align: middle;
     }
+
     .info-icon:hover {
       background: #ff2a75;
-    }
-    .input-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-    }
-    @media (max-width: 600px) {
-      .input-row {
-        grid-template-columns: 1fr;
-      }
-    }
-    @media (max-width: 600px) {
-      .input-row {
-        grid-template-columns: 1fr;
-      }
-    }
-    input[type="number"], input[type="file"] {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 0.8rem 1rem;
       color: #fff;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.3s;
     }
-    input[type="number"]:focus, .styled-select:focus {
-      border-color: #ff2a75;
-    }
-    .styled-select {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 0.8rem 1rem;
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
-      width: 100%;
-      appearance: none;
-    }
-    .styled-select option {
-      color: #000;
-    }
-    .styled-input {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 1rem;
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
-      width: 100%;
-      margin-bottom: 0.8rem;
-      transition: border-color 0.3s;
-    }
-    .styled-input:focus {
-      border-color: #ff2a75;
-    }
-    .file-drop {
-      border: 2px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
-      padding: 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      background: rgba(0,0,0,0.2);
-    }
-    .file-drop:hover {
-      border-color: #ff2a75;
-      background: rgba(255, 42, 117, 0.05);
-    }
+
+    /* Buttons */
     .btn-run {
       width: 100%;
-      background: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);
+      background: var(--primary-gradient);
       color: #fff;
       border: none;
       padding: 1rem;
       border-radius: 100px;
-      font-weight: 600;
-      font-size: 1.1rem;
+      font-weight: 700;
+      font-size: 1.05rem;
       cursor: pointer;
-      margin-top: 1rem;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+
     .btn-run:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(255, 42, 117, 0.4);
     }
+
     .btn-run:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-    #result-box {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      background: rgba(255, 42, 117, 0.08);
-      border: 1px solid rgba(255, 42, 117, 0.25);
-      border-radius: 16px;
-      display: none;
-      color: #fff;
-      font-size: 1.1rem;
-      line-height: 1.6;
+
+    /* Badges & Modals */
+    #active-scan-badge {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #a7f3d0;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
-    #preview-img {
-      max-width: 100%;
-      max-height: 200px;
-      margin-top: 1rem;
-      border-radius: 8px;
-      display: none;
-    }
-    
-    /* Loading State */
+
+    /* Loader styling */
     .loader-container {
       display: none;
       text-align: center;
-      margin-top: 1rem;
+      padding: 1.5rem 0;
     }
+
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255,255,255,0.1);
+      width: 36px;
+      height: 36px;
+      border: 3.5px solid rgba(255,255,255,0.06);
       border-radius: 50%;
       border-top-color: #ff2a75;
       animation: spin 1s ease-in-out infinite;
-      margin: 0 auto 10px auto;
+      margin: 0 auto 12px auto;
     }
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
     .loader-text {
       color: #ff75a0;
       font-weight: 500;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      font-size: 0.95rem;
     }
 
-    /* Save Profile Form */
-    #save-profile-box {
-      margin-top: 1.5rem;
+    #result-box {
+      margin-top: 2rem;
       padding: 1.5rem;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 42, 117, 0.06);
+      border: 1px solid rgba(255, 42, 117, 0.2);
       border-radius: 16px;
       display: none;
-    }
-    #save-profile-box h4 {
-      margin-bottom: 10px;
       color: #fff;
+      font-size: 1.05rem;
+      line-height: 1.6;
     }
-    
-    /* Modal styles */
+
+    /* Modal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(5px);
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
       z-index: 100;
       display: none;
       align-items: center;
       justify-content: center;
-    }
-    .modal-content {
-      background: #1e293b;
-      padding: 2rem;
-      border-radius: 16px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 10px; right: 15px;
-      cursor: pointer;
-      font-size: 20px;
-      color: #94a3b8;
-    }
-    .auth-tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 0.5rem;
-      justify-content: center;
-    }
-    .auth-tab-btn {
-      background: transparent;
-      border: none;
-      color: #94a3b8;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 6px 16px;
-      font-size: 1rem;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-    .auth-tab-btn.active {
-      color: #ff2a75;
-      border-bottom: 2px solid #ff2a75;
-    }
-    .toggle-password-btn, .toggle-password-btn-confirm {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      color: #94a3b8;
-      font-size: 1.1rem;
-      opacity: 0.5;
-      user-select: none;
-      transition: opacity 0.2s ease;
-    }
-    .toggle-password-btn:hover, .toggle-password-btn-confirm:hover {
-      opacity: 0.8;
+      padding: 1rem;
     }
 
-    
-    
+    .modal-content {
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 2.2rem;
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-bottom: 2px solid transparent;
+    }
+
+    .auth-tab-btn.active {
+      color: #fff;
+      border-bottom-color: #ff2a75;
+    }
+
     .nav-link {
-        display: inline-block;
-        margin-top: 1rem;
-        color: #94a3b8;
-        text-decoration: none;
-        font-weight: 500;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
     }
     .nav-link:hover {
-        color: #fff;
+      color: #fff;
     }
   </style>
-  <!-- Vercel Analytics -->
-  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
-  <header style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-    <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;"><h1 style="color: #fff; font-size: 1.5rem; letter-spacing: 1px; margin: 0; display: flex; align-items: center; gap: 10px; cursor: pointer;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span style="color: #ff75a0; font-weight: 400;">Measure</span></h1></a>
+  <!-- Header -->
+  <header>
+    <a href="index.html" class="brand-logo">
+      <img src="logo.png" alt="STYLA Logo" />
+      STYLA <span>Measure</span>
+    </a>
     <div id="auth-status-container" style="display: flex; align-items: center; gap: 1.5rem;">
-        <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">Home</a>
-        <a href="landing.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">About STYLA</a>
-        <button id="btn-show-login" class="btn-run" style="margin-top: 0; padding: 0.5rem 1rem; width: auto; font-size: 0.9rem; background: transparent; border: 1px solid rgba(255,255,255,0.2);">Log In</button>
-        <div id="logged-in-status" style="display: none; align-items: center; gap: 10px;">
-            <span id="cloud-sync-status" style="color: #10b981; font-weight: 600; font-size: 0.9rem;">&#10004; Synced</span>
-            <button id="btn-logout" style="background: transparent; border: none; color: #fca5a5; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">Log out</button>
-        </div>
+      <a href="index.html" class="nav-link">Home</a>
+      <button id="btn-show-login" class="btn-login">Log In</button>
+      <div id="logged-in-status" style="display: none; align-items: center; gap: 12px;">
+        <span id="cloud-sync-status" class="logged-in-email">&#10004; Synced</span>
+        <button id="btn-logout" class="btn-logout-link">Log out</button>
+      </div>
     </div>
   </header>
 
-  <main class="decoder-container">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <h2 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.8rem;">Check Your Fit <span style="display: inline-block; white-space: nowrap; font-size: 0.8rem; background: #ff2a75; padding: 4px 10px; border-radius: 12px; vertical-align: middle; margin-left: 10px; -webkit-text-fill-color: #fff; color: #fff;">v2.0 Vision AI Live &#10024;</span></h2>
-      <p style="color: #94a3b8; font-size: 1rem; line-height: 1.5;">Found a deal? Upload the brand's size chart to see if it fits your Digital Twin.</p>
-          </div>
-  
-      <div style="margin-bottom: 1.5rem; background: rgba(255,42,117,0.05); border: 1px solid rgba(255,42,117,0.2); border-radius: 12px; padding: 1rem; display: flex; align-items: flex-start; gap: 12px;">
-        <svg style="width: 24px; height: 24px; color: #ff2a75; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+  <!-- Hero Intro -->
+  <section class="hero-container">
+    <div class="hero-badge">⚡ Powered by Vision AI & 3DLook</div>
+    <h2>Meet Your Digital Fit Twin</h2>
+    <p>Upload a brand's size chart and we'll instantly check if it fits your 3D body measurements. Say goodbye to sizing returns and buy with 100% confidence.</p>
+    
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <span>👗</span> 99% Sizing Accuracy
+      </div>
+      <div class="benefit-item">
+        <span>🔒</span> Privacy Protected
+      </div>
+      <div class="benefit-item">
+        <span>🛍️</span> Works on Any Brand
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <main class="portal-workspace">
+
+    <!-- Manage Profile Box (only shown when logged in) -->
+    <div id="manage-profile-box" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
         <div>
-          <span style="font-weight: 600; color: #fff; font-size: 0.95rem;">Need help measuring?</span><br/>
-          <span style="color: #94a3b8; font-size: 0.85rem; line-height: 1.4; display: inline-block; margin-top: 2px;">Click the <span class="info-icon" style="position: static; margin: 0 2px; transform: scale(0.9); display: inline-flex;">?</span> icons next to each field below for a visual guide.</span>
+          <h4 style="margin: 0; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">👤 My Digital Twin Profile</h4>
+          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
+          <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
         </div>
       </div>
-
-      <!-- Manage Profile Section (only shown when logged in) -->
-      <div id="manage-profile-box" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h4 style="margin: 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">👤 My Digital Twin Profile</h4>
-            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
-          </div>
-
-      <!-- 3D Body Scanning Card -->
-      <div style="margin-bottom: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 1.5rem;" id="scan-trigger-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <h4 style="color: #fff; margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">📷 3D Body Scanning (3DLook API)</h4>
-            <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 0.85rem;">Instantly calculate 80+ measurements using your webcam or photos via 3DLook.</p>
-          </div>
-          <button type="button" id="btn-show-scan-panel" class="btn-run" style="margin-top: 0; width: auto; padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); border: none;">Get 3D Body Scan</button>
+      <div>
+        <h5 style="color: #fff; margin: 0 0 10px 0; font-size: 0.95rem;">3D Body Scans History</h5>
+        <div id="scan-history-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <p style="font-size: 0.85rem; color: #64748b; margin: 0;">No 3D body scans saved yet.</p>
         </div>
+      </div>
+    </div>
 
-        <!-- Scan Panel Container -->
-        <div id="scan-panel-container" style="display: none; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
-          <div class="input-row" style="margin-bottom: 1.2rem;">
-            <div class="input-group">
-              <label>Gender</label>
-              <select id="scan-gender" class="styled-select">
-                <option value="male" selected>Male</option>
-                <option value="female">Female</option>
+    <!-- STEP 1: CREATE YOUR TWIN -->
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <h3 class="step-title">Create Your Digital Twin</h3>
+      </div>
+
+      <!-- 3D Scan Active Badge -->
+      <div id="active-scan-badge" style="display: none;">
+        <span>✅ <strong>3D Body Scan Active:</strong> Using 80+ measurements from 3DLook.</span>
+      </div>
+
+      <!-- Tab Toggle (Scan vs Manual) -->
+      <div class="tab-container">
+        <button type="button" id="btn-tab-scan" class="tab-btn active">
+          📷 3D Body Scan <span class="badge">Recommended</span>
+        </button>
+        <button type="button" id="btn-tab-manual" class="tab-btn">
+          ✏️ Manual Entry
+        </button>
+      </div>
+
+      <!-- TAB CONTENT: 3D SCAN WORKSPACE -->
+      <div id="scan-panel-workspace" style="display: block;">
+        <div class="input-row" style="margin-bottom: 1rem;">
+          <div class="input-group">
+            <label>Gender</label>
+            <select id="scan-gender" class="styled-select">
+              <option value="male" selected>Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Height (Ft / In)</label>
+            <div style="display: flex; gap: 5px;">
+              <select id="scan-height-ft" class="styled-select">
+                <option value="5" selected>5'</option>
+                <option value="6">6'</option>
+                <option value="4">4'</option>
+                <option value="7">7'</option>
+              </select>
+              <select id="scan-height-in" class="styled-select">
+                <option value="0">0"</option>
+                <option value="1">1"</option>
+                <option value="2">2"</option>
+                <option value="3">3"</option>
+                <option value="4" selected>4"</option>
+                <option value="5">5"</option>
+                <option value="6">6"</option>
+                <option value="7">7"</option>
+                <option value="8">8"</option>
+                <option value="9">9"</option>
+                <option value="10">10"</option>
+                <option value="11">11"</option>
               </select>
             </div>
-            <div class="input-group">
-              <label>Height (Ft / In)</label>
-              <div style="display: flex; gap: 5px;">
-                <select id="scan-height-ft" class="styled-select">
-                  <option value="5" selected>5'</option>
-                  <option value="6">6'</option>
-                  <option value="4">4'</option>
-                  <option value="7">7'</option>
-                </select>
-                <select id="scan-height-in" class="styled-select">
-                  <option value="0">0"</option>
-                  <option value="1">1"</option>
-                  <option value="2">2"</option>
-                  <option value="3">3"</option>
-                  <option value="4" selected>4"</option>
-                  <option value="5">5"</option>
-                  <option value="6">6"</option>
-                  <option value="7">7"</option>
-                  <option value="8">8"</option>
-                  <option value="9">9"</option>
-                  <option value="10">10"</option>
-                  <option value="11">11"</option>
-                </select>
-              </div>
-            </div>
-            <div class="input-group">
-              <label>Weight (lbs)</label>
-              <input type="number" id="scan-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" value="150" />
-            </div>
           </div>
-
-          <div style="margin-bottom: 1.5rem; background: rgba(255,42,117,0.03); border: 1px solid rgba(255,42,117,0.1); border-radius: 12px; padding: 12px; font-size: 0.85rem; color: #ff75a0; line-height: 1.4;">
-            💡 <strong>How to Scan:</strong> Upload Front and Side photos to get real body measurements. Or leave them empty to run a simulated camera scan.
-          </div>
-
-          <!-- Photo Uploads Grid -->
-          <div class="input-row" style="margin-bottom: 1.5rem;">
-            <div class="input-group" style="text-align: center;">
-              <label style="justify-content: center; font-size: 0.85rem;">Front Photo</label>
-              <label id="lbl-scan-front" for="scan-front-file" class="file-drop" style="display: block; padding: 1.2rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);">
-                <span id="text-scan-front" style="color: #94a3b8;">Click to upload Front photo</span>
-              </label>
-              <input type="file" id="scan-front-file" accept="image/*" style="display: none;" />
-            </div>
-            <div class="input-group" style="text-align: center;">
-              <label style="justify-content: center; font-size: 0.85rem;">Side Profile Photo</label>
-              <label id="lbl-scan-side" for="scan-side-file" class="file-drop" style="display: block; padding: 1.2rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);">
-                <span id="text-scan-side" style="color: #94a3b8;">Click to upload Side photo</span>
-              </label>
-              <input type="file" id="scan-side-file" accept="image/*" style="display: none;" />
-            </div>
-          </div>
-
-          <!-- Run Buttons -->
-          <div class="input-row" style="gap: 12px; margin-bottom: 0;">
-            <button type="button" id="btn-run-camera-scan" class="btn-run" style="margin-top: 0; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📷 Start Camera Scan</button>
-            <button type="button" id="btn-run-photo-scan" class="btn-run" style="margin-top: 0; background: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);">⚡ Start Photo Scan</button>
-          </div>
-
-          <!-- Scan Status Loader -->
-          <div id="scan-loader" style="display: none; text-align: center; margin-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 1.5rem;">
-            <div class="spinner" style="width: 32px; height: 32px; border-width: 3px;"></div>
-            <div id="scan-loader-status" class="loader-text" style="font-size: 0.9rem; color: #ff75a0;">Initializing 3D Body Scan...</div>
-          </div>
-        </div>
-      </div>
-          <div style="display: flex; gap: 10px;">
-            <button id="btn-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
-            <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
+          <div class="input-group">
+            <label>Weight (lbs)</label>
+            <input type="number" id="scan-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" value="150" />
           </div>
         </div>
 
-        <div>
-          <h5 style="color: #fff; margin: 0 0 10px 0; font-size: 0.95rem;">3D Body Scans History</h5>
-          <div id="scan-history-list" style="display: flex; flex-direction: column; gap: 10px;">
-            <!-- Rendered dynamically -->
-            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">No 3D body scans saved yet.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.2rem 0; line-height: 1.4;">
+          Upload a Front and Side photo of yourself to calculate 80+ dimensions. Or run a webcam simulator scan immediately.
+        </p>
+
+        <!-- Dropzones Grid -->
+        <div class="input-row" style="margin-bottom: 1.5rem;">
+          <div class="input-group" style="text-align: center;">
+            <label style="justify-content: center; font-size: 0.85rem;">Front Photo</label>
+            <label id="lbl-scan-front" for="scan-front-file" class="file-drop" style="display: flex; padding: 1.5rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.12);">
+              <span id="text-scan-front" style="color: #94a3b8;">Click to upload Front photo</span>
+            </label>
+            <input type="file" id="scan-front-file" accept="image/*" style="display: none;" />
           </div>
+          <div class="input-group" style="text-align: center;">
+            <label style="justify-content: center; font-size: 0.85rem;">Side Profile Photo</label>
+            <label id="lbl-scan-side" for="scan-side-file" class="file-drop" style="display: flex; padding: 1.5rem 1rem; border-radius: 12px; font-size: 0.8rem; border-color: rgba(255,255,255,0.12);">
+              <span id="text-scan-side" style="color: #94a3b8;">Click to upload Side photo</span>
+            </label>
+            <input type="file" id="scan-side-file" accept="image/*" style="display: none;" />
+          </div>
+        </div>
+
+        <div class="input-row" style="gap: 12px; margin-bottom: 0;">
+          <button type="button" id="btn-run-camera-scan" class="btn-run" style="margin-top: 0; background: var(--success-gradient);">📷 Start Camera Scan</button>
+          <button type="button" id="btn-run-photo-scan" class="btn-run" style="margin-top: 0; background: var(--primary-gradient);">⚡ Start Photo Scan</button>
+        </div>
+
+        <!-- Scan Loader -->
+        <div id="scan-loader" class="loader-container">
+          <div class="spinner"></div>
+          <div id="scan-loader-status" class="loader-text">Initializing 3D Body Scan...</div>
         </div>
       </div>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-weight: 700; color: #fff; font-size: 1.1rem; margin-bottom: 4px;">1. Enter your measurements</label>
-        <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; margin-bottom: 12px;">(These will be securely saved for your future use)</p>
+      <!-- TAB CONTENT: MANUAL PANEL WORKSPACE -->
+      <div id="manual-panel-workspace" style="display: none;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.2rem 0;">Enter your dimensions manually if you already know them.</p>
         
-        <!-- 3D Scan Active Badge -->
-        <div id="active-scan-badge" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; margin-bottom: 16px;">
-          ✅ <strong>3D Body Scan Active:</strong> Using 80+ measurements from 3DLook scan.
-        </div>
-      </div>
-
         <div class="input-row">
-        <div class="input-group">
-          <label>Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
-          <input type="number" id="val-chest" placeholder="e.g. 38" autocomplete="off" />
-        </div>
-        <div class="input-group">
-          <label>Waist (inches) <span class="info-icon" onclick="showMeasureModal('waist')">?</span></label>
-          <input type="number" id="val-waist" placeholder="e.g. 32" autocomplete="off" />
-        </div>
-        <div class="input-group">
-          <label>Belly (inches) <span class="info-icon" onclick="showMeasureModal('belly')">?</span></label>
-          <input type="number" id="val-belly" placeholder="e.g. 36" autocomplete="off" />
-        </div>
-      </div>
-      
-      <div class="input-row" style="margin-top: 1rem;">
-        <div class="input-group">
-          <label>Hips (inches) <span class="info-icon" onclick="showMeasureModal('hips')">?</span></label>
-          <input type="number" id="val-hips" placeholder="e.g. 40" autocomplete="off" />
-        </div>
-        <div class="input-group">
-          <label>Height <span class="info-icon" onclick="showMeasureModal('height')">?</span></label>
-          <div style="display: flex; gap: 0.5rem;">
-            <select id="val-height-ft" class="styled-select" style="flex: 1;">
-              <option value="">ft</option>
-              <option value="4">4'</option>
-              <option value="5">5'</option>
-              <option value="6">6'</option>
-              <option value="7">7'</option>
-            </select>
-            <select id="val-height-in" class="styled-select" style="flex: 1;">
-              <option value="">in</option>
-              <option value="0">0"</option>
-              <option value="1">1"</option>
-              <option value="2">2"</option>
-              <option value="3">3"</option>
-              <option value="4">4"</option>
-              <option value="5">5"</option>
-              <option value="6">6"</option>
-              <option value="7">7"</option>
-              <option value="8">8"</option>
-              <option value="9">9"</option>
-              <option value="10">10"</option>
-              <option value="11">11"</option>
-            </select>
+          <div class="input-group">
+            <label>Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
+            <input type="number" id="val-chest" placeholder="e.g. 38" autocomplete="off" />
+          </div>
+          <div class="input-group">
+            <label>Waist (inches) <span class="info-icon" onclick="showMeasureModal('waist')">?</span></label>
+            <input type="number" id="val-waist" placeholder="e.g. 32" autocomplete="off" />
+          </div>
+          <div class="input-group">
+            <label>Belly (inches) <span class="info-icon" onclick="showMeasureModal('belly')">?</span></label>
+            <input type="number" id="val-belly" placeholder="e.g. 36" autocomplete="off" />
           </div>
         </div>
-        <div class="input-group">
-          <label>Inseam (inches) <span class="info-icon" onclick="showMeasureModal('inseam')">?</span></label>
-          <input type="number" id="val-inseam" placeholder="e.g. 30" autocomplete="off" />
+        
+        <div class="input-row" style="margin-top: 1rem; margin-bottom: 0;">
+          <div class="input-group">
+            <label>Hips (inches) <span class="info-icon" onclick="showMeasureModal('hips')">?</span></label>
+            <input type="number" id="val-hips" placeholder="e.g. 40" autocomplete="off" />
+          </div>
+          <div class="input-group">
+            <label>Height <span class="info-icon" onclick="showMeasureModal('height')">?</span></label>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="val-height-ft" class="styled-select" style="flex: 1;">
+                <option value="">ft</option>
+                <option value="4">4'</option>
+                <option value="5">5'</option>
+                <option value="6">6'</option>
+                <option value="7">7'</option>
+              </select>
+              <select id="val-height-in" class="styled-select" style="flex: 1;">
+                <option value="">in</option>
+                <option value="0">0"</option>
+                <option value="1">1"</option>
+                <option value="2">2"</option>
+                <option value="3">3"</option>
+                <option value="4">4"</option>
+                <option value="5">5"</option>
+                <option value="6">6"</option>
+                <option value="7">7"</option>
+                <option value="8">8"</option>
+                <option value="9">9"</option>
+                <option value="10">10"</option>
+                <option value="11">11"</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Inseam (inches) <span class="info-icon" onclick="showMeasureModal('inseam')">?</span></label>
+            <input type="number" id="val-inseam" placeholder="e.g. 30" autocomplete="off" />
+          </div>
         </div>
       </div>
 
+    </div>
 
-      <div class="input-row" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.5rem; gap: 1.5rem;">
+    <!-- STEP 2: UPLOAD BRAND SIZE CHART & GARMENT -->
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <h3 class="step-title">Upload Size Chart & Garment</h3>
+      </div>
+
+      <div class="input-row" style="gap: 1.5rem; margin-bottom: 0;">
         <div class="input-group">
-          <label style="font-size: 1.1rem;">2. Upload Size Chart(s) (Required)</label>
+          <label style="font-size: 0.9rem;">1. Size Chart Image (Required)</label>
           <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
-            <span id="drop-text">Click or drag & drop size charts</span>
-            <input type="file" id="file-upload" style="display: none;" accept="image/*" multiple />
-            <div id="chart-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem;"></div>
+            <span id="drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop size chart</span>
           </div>
+          <input type="file" id="file-upload" accept="image/*" style="display: none;" />
+          <div id="chart-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
         </div>
 
         <div class="input-group">
-          <label style="font-size: 1.1rem;">3. Upload Garment Photos (Required)</label>
-          <p style="font-size: 0.8rem; color: #94a3b8; margin-top: -5px; margin-bottom: 8px;">The more screenshots of the garment & model you upload, the better the AI can deduce the intended fit.</p>
+          <label style="font-size: 0.9rem;">2. Garment Photos (Required)</label>
           <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
-            <span id="style-drop-text">Click or drag & drop garment photos</span>
-            <input type="file" id="style-file-upload" style="display: none;" accept="image/*" multiple />
-            <div id="style-preview-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem;"></div>
+            <span id="style-drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop garment photos</span>
           </div>
+          <input type="file" id="style-file-upload" accept="image/*" multiple style="display: none;" />
+          <div id="style-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
         </div>
       </div>
 
-      <button id="btn-decode" class="btn-run">Decode My Size</button>
+      <button id="btn-decode" class="btn-run" style="margin-top: 2rem;">⚡ Check My Sizing Recommendation</button>
 
+      <!-- Sizing Loader -->
       <div id="loader" class="loader-container">
         <div class="spinner"></div>
         <div id="loader-status" class="loader-text">Reading size chart...</div>
       </div>
 
+      <!-- Sizing Output -->
       <div id="result-box"></div>
 
-      <!-- Integrated Chat Assistant (Appears after result) -->
-      <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
-        <h4 style="color: #fff; margin-bottom: 0.8rem; font-family: var(--font-head); font-weight: 700; text-align: left;">Ask follow-up questions</h4>
-        <div class="chat-container" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; display: flex; flex-direction: column; height: 260px; margin-top: 8px;">
-          <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem;">
-            <!-- Greeting message goes here -->
-          </div>
-          <div class="chat-input-container" style="display: flex; border-top: 1px solid rgba(255,255,255,0.07); padding: 8px; background: rgba(0,0,0,0.3); border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; gap: 8px;">
-            <input type="text" id="chat-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')...." autocomplete="off" style="flex: 1; padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#ff2a75'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
-            <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 8px 16px; font-size: 0.9rem; border-radius: 8px; font-weight: 600;">Send</button>
-          </div>
+      <!-- AI Chat Widget -->
+      <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
+        <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; max-height: 250px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; color: #94a3b8; align-self: flex-start;">Ask Tailor AI any follow-up questions about the fit.</div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <input type="text" id="chat-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" style="flex: 1; padding: 10px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; outline: none;" />
+          <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 10px 20px; font-size: 0.9rem; border-radius: 120px;">Send</button>
         </div>
       </div>
-      
-      <!-- Save Profile Box (Appears after result) -->
-      <div id="save-profile-box">
-        <h4>&#128190; Save your Digital Twin</h4>
-        <p style="font-size: 0.9rem; margin-bottom: 1rem;">Create a free cloud profile so you never have to measure yourself again. Access your Twin on any device.</p>
-        <div class="input-group">
-          <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" />
-          <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" />
+
+      <!-- Convert Guest to Cloud Profile Box -->
+      <div id="save-profile-box" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 42, 117, 0.03); border: 1px solid rgba(255, 42, 117, 0.12); border-radius: 16px; display: none;">
+        <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">💾 Save Your Fit Profile</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and twin size recommendations across devices.</p>
+        <div class="input-row" style="margin-bottom: 1rem;">
+          <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
+          <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2);" />
         </div>
-        <button id="btn-save-profile" class="btn-run" style="margin-top: 0; padding: 0.8rem;">Save Profile to Cloud</button>
+        <button id="btn-save-profile" class="btn-run" style="margin-top: 0; padding: 0.8rem; font-size: 0.95rem;">Save Profile to Cloud</button>
       </div>
-      
+
     </div>
-    
-    <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-            <a href="landing.html" class="nav-link" style="margin-top: 0; display: inline-block;">About STYLA</a>
-            <a href="tools/pricing-calculator.html" class="nav-link" style="margin-top: 0; display: inline-block;">MOQ Pricing Calculator</a>
-            <a href="tools/size-chart-maker.html" class="nav-link" style="margin-top: 0; display: inline-block;">AI Size Chart Maker</a>
-            <a href="seo/guides.html" class="nav-link" style="margin-top: 0; display: inline-block;">Sizing & Sourcing Hub</a>
-        </div>
+
+    <!-- Navigation Hub links -->
+    <div style="margin-top: 3rem; display: flex; flex-direction: column; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+        <a href="landing.html" class="nav-link">About STYLA</a>
+        <a href="tools/pricing-calculator.html" class="nav-link">MOQ Pricing Calculator</a>
+        <a href="tools/size-chart-maker.html" class="nav-link">AI Size Chart Maker</a>
+        <a href="seo/guides.html" class="nav-link">Sizing & Sourcing Hub</a>
+      </div>
     </div>
 
   </main>
 
-  <!-- Estimation Modal -->
-  <div class="modal-overlay" id="estimate-modal" onclick="document.getElementById('estimate-modal').style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px;">
-      <span class="modal-close" onclick="document.getElementById('estimate-modal').style.display='none'">&times;</span>
-      <h3 style="margin-bottom: 0.5rem; color: #ff75a0; font-family: var(--font-head); font-weight: 800; font-size: 1.6rem;">Estimate Your Twin 👤</h3>
-      
-      <!-- Tabs for Modal -->
-      <div style="display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 1.5rem; gap: 10px;">
-        <button id="tab-est-demo" class="auth-tab-btn active" onclick="switchEstTab('demo')" style="padding: 10px; background: none; border: none; color: #fff; border-bottom: 2px solid #ff2a75; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Demographics</button>
-        <button id="tab-est-brand" class="auth-tab-btn" onclick="switchEstTab('brand')" style="padding: 10px; background: none; border: none; color: #94a3b8; border-bottom: 2px solid transparent; font-weight: 600; cursor: pointer; font-size: 0.95rem;">🏷️ Brand Sizing</button>
-      </div>
-
-      <!-- Tab Content: Demographics -->
-      <div id="est-content-demo">
-        <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.4; margin-bottom: 1.5rem;">
-          Don't have a tape measure? Fill in these quick demographics, and our tailor AI will estimate your measurements instantly.
-        </p>
-
-        <div style="background: rgba(255, 42, 117, 0.08); border: 1px solid rgba(255, 42, 117, 0.25); border-radius: 12px; padding: 0.8rem; margin-bottom: 1.5rem; display: flex; gap: 8px; align-items: flex-start;">
-          <span style="font-size: 1.1rem; line-height: 1;">💡</span>
-          <p style="font-size: 0.8rem; color: #ff75a0; margin: 0; line-height: 1.3;">
-            <strong>Accuracy Notice:</strong> These estimates are based on global clothing size databases. Verifying your measurements with a physical tape measure increases sizing accuracy to over 95%.
-          </p>
-        </div>
-
-        <div class="input-row" style="margin-bottom: 1rem;">
-          <div class="input-group">
-            <label>Height (Ft / In)</label>
-            <div style="display: flex; gap: 5px;">
-              <select id="est-height-ft" class="styled-select">
-                <option value="5">5'</option>
-                <option value="6">6'</option>
-                <option value="4">4'</option>
-                <option value="7">7'</option>
-              </select>
-              <select id="est-height-in" class="styled-select">
-                <option value="0">0"</option>
-                <option value="1">1"</option>
-                <option value="2">2"</option>
-                <option value="3">3"</option>
-                <option value="4">4"</option>
-                <option value="5">5"</option>
-                <option value="6">6"</option>
-                <option value="7">7"</option>
-                <option value="8" selected>8"</option>
-                <option value="9">9"</option>
-                <option value="10">10"</option>
-                <option value="11">11"</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Weight (lbs)</label>
-            <input type="number" id="est-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" />
-          </div>
-        </div>
-
-        <div class="input-row" style="margin-bottom: 1rem;">
-          <div class="input-group">
-            <label>Age (years)</label>
-            <input type="number" id="est-age" placeholder="e.g. 28" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" />
-          </div>
-          <div class="input-group">
-            <label>Fit Preference</label>
-            <select id="est-fit" class="styled-select">
-              <option value="regular" selected>Regular Fit</option>
-              <option value="slim">Slim Fit</option>
-              <option value="relaxed">Relaxed / Oversized</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="input-row" style="margin-bottom: 1.5rem;">
-          <div class="input-group">
-            <label>Belly Profile</label>
-            <select id="est-belly" class="styled-select">
-              <option value="average" selected>Average</option>
-              <option value="flat">Flat / Toned</option>
-              <option value="rounded">Rounded / Full</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label>Hip Profile</label>
-            <select id="est-hips" class="styled-select">
-              <option value="average" selected>Average</option>
-              <option value="narrow">Narrow</option>
-              <option value="curvy">Curvy / Pear</option>
-            </select>
-          </div>
-        </div>
-
-        <button id="btn-run-estimate" class="btn-run" style="margin-top: 0;">Generate Digital Twin Specs</button>
-      </div>
-
-      <!-- Tab Content: Brand Sizing -->
-      <div id="est-content-brand" style="display: none;">
-        <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.4; margin-bottom: 1rem;">
-          Select sizes of clothes you already own from specific brands, and we will estimate your digital twin measurements.
-        </p>
-
-        <!-- Gender Selection Segment Toggle -->
-        <div style="display: flex; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 100px; padding: 4px; margin-bottom: 1.2rem;">
-          <button type="button" id="gender-male-btn" onclick="switchGender('male')" style="flex: 1; padding: 8px; border-radius: 100px; border: none; background: #ff2a75; color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Men's Sizing</button>
-          <button type="button" id="gender-female-btn" onclick="switchGender('female')" style="flex: 1; padding: 8px; border-radius: 100px; border: none; background: transparent; color: #94a3b8; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Women's Sizing</button>
-        </div>
-        <input type="hidden" id="est-brand-gender" value="male" />
-
-        <!-- Men's Fields -->
-        <div id="est-brand-male-fields" style="display: block;">
-          <div class="input-row" style="margin-bottom: 1rem;">
-            <div class="input-group">
-              <label>Upper Apparel Type</label>
-              <select id="est-brand-male-apparel" class="styled-select" onchange="onMaleApparelChange()">
-                <option value="tshirt" selected>T-Shirt / Polo</option>
-                <option value="blazer">Blazer / Suit Jacket</option>
-                <option value="buttondown">Button-down Shirt</option>
-                <option value="hoodie">Hoodie / Sweatshirt</option>
-                <option value="none">None (Skip Upper)</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>Apparel Size</label>
-              <select id="est-brand-male-size" class="styled-select">
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M" selected>M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="XXXL">XXXL</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="input-row" style="margin-bottom: 1rem;">
-            <div class="input-group">
-              <label>Brand</label>
-              <select id="est-brand-male-brand" class="styled-select">
-                <option value="Uniqlo" selected>Uniqlo</option>
-                <option value="Zara">Zara</option>
-                <option value="H&M">H&M</option>
-                <option value="Nike">Nike</option>
-                <option value="Adidas">Adidas</option>
-                <option value="Ralph Lauren">Ralph Lauren</option>
-                <option value="Tommy Hilfiger">Tommy Hilfiger</option>
-                <option value="Calvin Klein">Calvin Klein</option>
-                <option value="Lululemon">Lululemon</option>
-                <option value="Patagonia">Patagonia</option>
-                <option value="Levi's">Levi's</option>
-                <option value="Other">Other / Custom</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>How It Fits You</label>
-              <select id="est-brand-male-fit" class="styled-select">
-                <option value="fitted">Fitted / Tight</option>
-                <option value="regular" selected>Regular / Standard</option>
-                <option value="loose">Loose / Relaxed</option>
-                <option value="oversized">Oversized</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="input-row" style="margin-bottom: 1.2rem;">
-            <div class="input-group">
-              <label>Pants Waist (Perfect fit no belt)</label>
-              <select id="est-brand-male-waist" class="styled-select">
-                <option value="28">28"</option>
-                <option value="29">29"</option>
-                <option value="30">30"</option>
-                <option value="31">31"</option>
-                <option value="32" selected>32"</option>
-                <option value="33">33"</option>
-                <option value="34">34"</option>
-                <option value="35">35"</option>
-                <option value="36">36"</option>
-                <option value="38">38"</option>
-                <option value="40">40"</option>
-                <option value="42">42"</option>
-                <option value="44">44"</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>Pants Inseam / Length</label>
-              <select id="est-brand-male-length" class="styled-select">
-                <option value="28">28"</option>
-                <option value="29">29"</option>
-                <option value="30" selected>30"</option>
-                <option value="31">31"</option>
-                <option value="32">32"</option>
-                <option value="33">33"</option>
-                <option value="34">34"</option>
-                <option value="36">36"</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Women's Fields -->
-        <div id="est-brand-female-fields" style="display: none;">
-          <div class="input-row" style="margin-bottom: 1rem;">
-            <div class="input-group">
-              <label>US Dress Size (Number)</label>
-              <select id="est-brand-female-dress" class="styled-select">
-                <option value="00">00</option>
-                <option value="0">0</option>
-                <option value="2">2</option>
-                <option value="4" selected>4</option>
-                <option value="6">6</option>
-                <option value="8">8</option>
-                <option value="10">10</option>
-                <option value="12">12</option>
-                <option value="14">14</option>
-                <option value="16">16</option>
-                <option value="18">18</option>
-                <option value="20">20</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>Brand</label>
-              <select id="est-brand-female-brand" class="styled-select">
-                <option value="Zara" selected>Zara</option>
-                <option value="H&M">H&M</option>
-                <option value="Uniqlo">Uniqlo</option>
-                <option value="Madewell">Madewell</option>
-                <option value="Lululemon">Lululemon</option>
-                <option value="Aritzia">Aritzia</option>
-                <option value="Anthropologie">Anthropologie</option>
-                <option value="ASOS">ASOS</option>
-                <option value="Banana Republic">Banana Republic</option>
-                <option value="Gap">Gap</option>
-                <option value="Nordstrom">Nordstrom</option>
-                <option value="Other">Other / Custom</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="input-row" style="margin-bottom: 1.2rem;">
-            <div class="input-group">
-              <label>How It Fits You</label>
-              <select id="est-brand-female-fit" class="styled-select">
-                <option value="fitted">Fitted / Tight</option>
-                <option value="regular" selected>Regular / Standard</option>
-                <option value="loose">Loose / Relaxed</option>
-                <option value="oversized">Oversized</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label>Pants Size (US/Waist)</label>
-              <select id="est-brand-female-pants" class="styled-select">
-                <option value="24">24 (Size 00)</option>
-                <option value="25">25 (Size 0)</option>
-                <option value="26">26 (Size 2)</option>
-                <option value="27" selected>27 (Size 4 / S)</option>
-                <option value="28">28 (Size 6)</option>
-                <option value="29">29 (Size 8 / M)</option>
-                <option value="30">30 (Size 10)</option>
-                <option value="31">31 (Size 12 / L)</option>
-                <option value="32">32 (Size 14)</option>
-                <option value="33">33 (Size 16)</option>
-                <option value="34">34 (Size 18)</option>
-                <option value="36">36 (Size 20)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Height & Weight for both -->
-        <div class="input-row" style="margin-bottom: 1.2rem;">
-          <div class="input-group">
-            <label>Height (Ft / In)</label>
-            <div style="display: flex; gap: 5px;">
-              <select id="est-brand-height-ft" class="styled-select">
-                <option value="5">5'</option>
-                <option value="6">6'</option>
-                <option value="4">4'</option>
-                <option value="7">7'</option>
-              </select>
-              <select id="est-brand-height-in" class="styled-select">
-                <option value="0">0"</option>
-                <option value="1">1"</option>
-                <option value="2">2"</option>
-                <option value="3">3"</option>
-                <option value="4">4"</option>
-                <option value="5">5"</option>
-                <option value="6">6"</option>
-                <option value="7">7"</option>
-                <option value="8" selected>8"</option>
-                <option value="9">9"</option>
-                <option value="10">10"</option>
-                <option value="11">11"</option>
-              </select>
-            </div>
-          </div>
-          <div class="input-group">
-            <label>Weight (lbs)</label>
-            <input type="number" id="est-brand-weight" placeholder="e.g. 150" class="styled-input" style="margin-bottom: 0; padding: 0.8rem 1rem;" />
-          </div>
-        </div>
-
-        <!-- Brand Estimator Loader -->
-        <div id="brand-loader" class="loader-container" style="display: none; margin-top: 1.5rem; margin-bottom: 1.5rem;">
-          <div class="spinner"></div>
-          <div id="brand-loader-status" class="loader-text">Estimating measurements...</div>
-        </div>
-
-        <button id="btn-run-brand-estimate" class="btn-run" style="margin-top: 0;">Calculate Size</button>
-        
-        <!-- Accuracy Disclaimer -->
-        <div style="background: rgba(255, 42, 117, 0.08); border: 1px solid rgba(255, 42, 117, 0.25); border-radius: 12px; padding: 0.8rem; margin-top: 1.2rem; display: flex; gap: 8px; align-items: flex-start;">
-          <span style="font-size: 1.1rem; line-height: 1;">⚠️</span>
-          <p style="font-size: 0.8rem; color: #ff75a0; margin: 0; line-height: 1.3;">
-            <strong>Accuracy Notice:</strong> Brand sizes provide a solid estimate. For 95%+ accuracy, using a tape to provide those measurements works better.
-          </p>
-        </div>
-      </div>
-
-      <p id="est-error" style="color: #fca5a5; font-size: 0.9rem; margin-top: 1rem; display: none; text-align: center;"></p>
-    </div>
-  </div>
-
-  <script>
-    function switchEstTab(tab) {
-      const demoBtn = document.getElementById('tab-est-demo');
-      const brandBtn = document.getElementById('tab-est-brand');
-      const demoContent = document.getElementById('est-content-demo');
-      const brandContent = document.getElementById('est-content-brand');
-      const estError = document.getElementById('est-error');
-
-      estError.style.display = 'none';
-
-      if (tab === 'demo') {
-        demoBtn.style.color = '#fff';
-        demoBtn.style.borderBottom = '2px solid #ff2a75';
-        brandBtn.style.color = '#94a3b8';
-        brandBtn.style.borderBottom = '2px solid transparent';
-        demoContent.style.display = 'block';
-        brandContent.style.display = 'none';
-      } else {
-        brandBtn.style.color = '#fff';
-        brandBtn.style.borderBottom = '2px solid #ff2a75';
-        demoBtn.style.color = '#94a3b8';
-        demoBtn.style.borderBottom = '2px solid transparent';
-        demoContent.style.display = 'none';
-        brandContent.style.display = 'block';
-      }
-    }
-
-    function switchGender(gender) {
-      const maleBtn = document.getElementById('gender-male-btn');
-      const femaleBtn = document.getElementById('gender-female-btn');
-      const maleFields = document.getElementById('est-brand-male-fields');
-      const femaleFields = document.getElementById('est-brand-female-fields');
-      const genderInput = document.getElementById('est-brand-gender');
-
-      genderInput.value = gender;
-
-      if (gender === 'male') {
-        maleBtn.style.background = '#ff2a75';
-        maleBtn.style.color = '#fff';
-        femaleBtn.style.background = 'transparent';
-        femaleBtn.style.color = '#94a3b8';
-        maleFields.style.display = 'block';
-        femaleFields.style.display = 'none';
-      } else {
-        femaleBtn.style.background = '#ff2a75';
-        femaleBtn.style.color = '#fff';
-        maleBtn.style.background = 'transparent';
-        maleBtn.style.color = '#94a3b8';
-        maleFields.style.display = 'none';
-        femaleFields.style.display = 'block';
-      }
-    }
-
-    function onMaleApparelChange() {
-      const apparel = document.getElementById('est-brand-male-apparel').value;
-      const sizeSelect = document.getElementById('est-brand-male-size');
-      
-      // Clear options
-      sizeSelect.innerHTML = '';
-      
-      if (apparel === 'blazer') {
-        const blazerSizes = [
-          { val: '34S', txt: '34S' },
-          { val: '34R', txt: '34R' },
-          { val: '36S', txt: '36S' },
-          { val: '36R', txt: '36R' },
-          { val: '38S', txt: '38S' },
-          { val: '38R', txt: '38R' },
-          { val: '38L', txt: '38L' },
-          { val: '40S', txt: '40S' },
-          { val: '40R', txt: '40R' },
-          { val: '40L', txt: '40L' },
-          { val: '42S', txt: '42S' },
-          { val: '42R', txt: '42R' },
-          { val: '42L', txt: '42L' },
-          { val: '44S', txt: '44S' },
-          { val: '44R', txt: '44R' },
-          { val: '44L', txt: '44L' },
-          { val: '46R', txt: '46R' },
-          { val: '46L', txt: '46L' }
-        ];
-        blazerSizes.forEach(item => {
-          const opt = document.createElement('option');
-          opt.value = item.val;
-          opt.textContent = item.txt;
-          if (item.val === '40R') opt.selected = true;
-          sizeSelect.appendChild(opt);
-        });
-      } else if (apparel === 'none') {
-        const opt = document.createElement('option');
-        opt.value = 'none';
-        opt.textContent = 'N/A';
-        sizeSelect.appendChild(opt);
-      } else {
-        // tshirt, buttondown, hoodie
-        const stdSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-        stdSizes.forEach(val => {
-          const opt = document.createElement('option');
-          opt.value = val;
-          opt.textContent = val;
-          if (val === 'M') opt.selected = true;
-          sizeSelect.appendChild(opt);
-        });
-      }
-    }
-  </script>
-
-  <!-- How to Measure Modal -->
+  <!-- Visual Measurement Guide Modal -->
   <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="modal-close" onclick="closeMeasureModal(event)">&times;</span>
-      <h3 id="modal-title" style="margin-bottom: 1rem; color: #ff75a0;">How to measure</h3>
-      <img id="modal-image" style="width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 1rem; border-radius: 8px; display: none;" />
-      <p id="modal-desc" style="color: #94a3b8; line-height: 1.5;"></p>
+    <div class="modal-content" style="max-width: 420px;">
+      <h3 id="modal-title" style="margin-bottom: 0.8rem; color: #ff75a0; font-family: var(--font-outfit); font-size: 1.25rem;">How to measure</h3>
+      <img id="modal-image" style="width: 100%; max-height: 220px; object-fit: contain; margin-bottom: 1rem; border-radius: 12px; display: none;" />
+      <p id="modal-desc" style="color: #94a3b8; line-height: 1.5; font-size: 0.9rem; margin: 0;"></p>
     </div>
   </div>
 
-  <!-- Login Modal -->
-  <div class="modal-overlay" id="login-modal" onclick="document.getElementById('login-modal').style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="modal-close" onclick="document.getElementById('login-modal').style.display='none'">&times;</span>
-      
+  <!-- AUTHENTICATION MODAL -->
+  <div class="modal-overlay" id="login-modal" onclick="if (event.target === this) this.style.display='none'">
+    <div class="modal-content">
       <div id="auth-tabs-container" class="auth-tabs">
         <button id="tab-auth-login" class="auth-tab-btn active">Log In</button>
         <button id="tab-auth-signup" class="auth-tab-btn">Sign Up</button>
       </div>
-
-      <h3 id="auth-modal-title" style="margin-bottom: 0.5rem; color: #fff;">Welcome Back</h3>
-      <p id="auth-modal-desc" style="color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem; font-size: 0.9rem;">Log in to sync your Digital Twin measurements from the cloud.</p>
+      <h3 id="auth-modal-title" style="margin-bottom: 0.4rem; color: #fff; font-family: var(--font-outfit); font-size: 1.3rem;">Welcome Back</h3>
+      <p id="auth-modal-desc" style="color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; font-size: 0.85rem;">Log in to sync your Digital Twin measurements from the cloud.</p>
       
       <div id="auth-email-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
         <input type="email" id="login-email" class="styled-input" placeholder="Email Address" style="width: 100%;" />
       </div>
-      
-      <div id="auth-password-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem;">
-        <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%; padding-right: 2.5rem;" />
-        <span class="toggle-password-btn" onclick="togglePasswordVisibility('login-password', this)">&#128065;</span>
+      <div id="auth-password-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
+        <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%;" />
       </div>
-
-      <div id="auth-confirm-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem; display: none;">
-        <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%; padding-right: 2.5rem;" />
-        <span class="toggle-password-btn-confirm" onclick="togglePasswordVisibility('login-confirm-password', this)">&#128065;</span>
+      <div id="auth-confirm-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem; display: none;">
+        <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%;" />
       </div>
       
-      <button id="btn-login-submit" class="btn-run" style="margin-top: 1rem;">Log In & Sync</button>
-      <button id="btn-signup-submit" class="btn-run" style="margin-top: 1rem; display: none; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);">Create Account & Sync</button>
-      <button id="btn-forgot-submit" class="btn-run" style="margin-top: 1rem; display: none; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">Send Reset Link</button>
-      <button id="btn-reset-submit" class="btn-run" style="margin-top: 1rem; display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Update Password</button>
+      <button id="btn-login-submit" class="btn-run" style="margin-top: 0.5rem;">Log In & Sync</button>
+      <button id="btn-signup-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);">Create Account & Sync</button>
+      <button id="btn-forgot-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">Send Reset Link</button>
+      <button id="btn-reset-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: var(--success-gradient);">Update Password</button>
       
-      <a id="link-forgot-password" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.85rem; margin-top: 1rem; display: block;">Forgot password?</a>
-      <a id="link-back-login" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.85rem; margin-top: 1rem; display: none;">Back to Log In</a>
-
-      <p id="login-error" style="color: #fca5a5; font-size: 0.9rem; margin-top: 1rem; display: none;"></p>
+      <a id="link-forgot-password" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.8rem; margin-top: 1rem; display: block; text-align: center;">Forgot password?</a>
+      <a id="link-back-login" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.8rem; margin-top: 1rem; display: none; text-align: center;">Back to Log In</a>
+      <p id="login-error" style="color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; display: none; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 8px; border-radius: 8px;"></p>
     </div>
   </div>
 
-  <script src="decoder.js?v=20260613"></script>
+  <script src="decoder.js?v=20260621"></script>
+  <script>
+    // Visual Measure Guide Modal Closer helper
+    function closeMeasureModal(e) {
+      if (e.target === document.getElementById('measure-modal')) {
+        document.getElementById('measure-modal').style.display = 'none';
+      }
+    }
+  </script>
 </body>
 </html>
-
-
-
-
-

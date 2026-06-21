@@ -1992,3 +1992,25 @@ window.addEventListener('DOMContentLoaded', () => {
           scanLoader.style.display = 'none';
       }
   }
+
+  // Tab Switching between 3D Scan and Manual Entry on portal
+  const btnTabScan = document.getElementById('btn-tab-scan');
+  const btnTabManual = document.getElementById('btn-tab-manual');
+  const scanWorkspace = document.getElementById('scan-panel-workspace');
+  const manualWorkspace = document.getElementById('manual-panel-workspace');
+
+  if (btnTabScan && btnTabManual && scanWorkspace && manualWorkspace) {
+      btnTabScan.addEventListener('click', () => {
+          btnTabScan.classList.add('active');
+          btnTabManual.classList.remove('active');
+          scanWorkspace.style.display = 'block';
+          manualWorkspace.style.display = 'none';
+      });
+
+      btnTabManual.addEventListener('click', () => {
+          btnTabManual.classList.add('active');
+          btnTabScan.classList.remove('active');
+          manualWorkspace.style.display = 'block';
+          scanWorkspace.style.display = 'none';
+      });
+  }
