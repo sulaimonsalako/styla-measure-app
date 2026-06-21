@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
     // Extract person_id and client_id (or external_id)
     const person_id = req.body.person_id || req.body.person || req.body.id;
-    const username = req.body.client_id || req.body.external_id || req.body.username || req.body.user_id;
+    const username = req.body.client_id || req.body.external_id || req.body.email || req.body.customer_email || req.body.username || req.body.user_id;
 
     if (!person_id) {
       return res.status(400).json({ error: 'Missing person_id in payload.' });
@@ -195,32 +195,77 @@ export default async function handler(req, res) {
     const cleanedUsername = username.trim().toLowerCase();
 
     if (supabase) {
-      const { data: existingProf } = await supabase
+      // A. Update public.profiles table (queried by portal measure.html / decoder.js)
+      let portalQuery = supabase.from('profiles').select('api_scans, id, email');
+      if (cleanedUsername.includes('@')) {
+        portalQuery = portalQuery.eq('email', cleanedUsername);
+      } else {
+        portalQuery = portalQuery.eq('id', cleanedUsername);
+      }
+      
+      const { data: userProfile } = await portalQuery.maybeSingle();
+      
+      if (userProfile) {
+        const existingScans = userProfile.api_scans || [];
+        existingScans.forEach(s => s.is_active = false);
+        existingScans.push(scanData);
+        
+        const { error: profError } = await supabase
+          .from('profiles')
+          .update({
+            chest: legacyTwin.chest,
+            waist: legacyTwin.waist,
+            belly: legacyTwin.belly,
+            hips: legacyTwin.hips,
+            height: legacyTwin.height,
+            inseam: legacyTwin.inseam,
+            api_scans: existingScans,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userProfile.id);
+
+        if (profError) {
+          console.error("Error updating public.profiles:", profError);
+        } else {
+          console.log(`Saved measurements for ${cleanedUsername} in public.profiles table via webhook.`);
+        }
+      }
+
+      // B. Update store_profiles table (queried by e-commerce storefront app.js)
+      const { data: existingStoreProf } = await supabase
         .from('store_profiles')
         .select('api_scans')
         .eq('username', cleanedUsername)
         .maybeSingle();
 
-      const existingScans = existingProf?.api_scans || [];
-      existingScans.forEach(s => s.is_active = false);
-      existingScans.push(scanData);
+      if (existingStoreProf) {
+        const existingScans = existingStoreProf.api_scans || [];
+        existingScans.forEach(s => s.is_active = false);
+        existingScans.push(scanData);
 
-      const { error } = await supabase
-        .from('store_profiles')
-        .update({
-          twin: JSON.stringify(legacyTwin),
-          api_scans: existingScans
-        })
-        .eq('username', cleanedUsername);
-
-      if (error) throw error;
-      console.log(`Saved measurements for ${cleanedUsername} in store_profiles table via webhook.`);
+        const { error: storeError } = await supabase
+          .from('store_profiles')
+          .update({
+            twin: JSON.stringify(legacyTwin),
+            api_scans: existingScans
+          })
+          .eq('username', cleanedUsername);
+          
+        if (storeError) {
+          console.error("Error updating store_profiles:", storeError);
+        } else {
+          console.log(`Saved measurements for ${cleanedUsername} in store_profiles table via webhook.`);
+        }
+      }
     } else {
       const profilesPath = path.resolve(process.cwd(), 'profiles.json');
       const fileContent = fs.readFileSync(profilesPath, 'utf8');
       const profiles = JSON.parse(fileContent);
 
-      const profile = profiles.find(p => p.username.toLowerCase() === cleanedUsername);
+      const profile = profiles.find(p => 
+        p.username.toLowerCase() === cleanedUsername || 
+        (p.email && p.email.toLowerCase() === cleanedUsername)
+      );
       if (!profile) {
         console.warn(`Profile for ${cleanedUsername} not found to save webhook measurements.`);
         return res.status(404).json({ error: 'User profile not found.' });

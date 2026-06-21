@@ -885,7 +885,7 @@
         html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.xl}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxl}</td>\n`;
         html += `      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxxl}</td>\n      <td style="padding:10px; border:1px solid #d1d5db;">${row.xxxxl}</td>\n    </tr>\n`;
       });
-      html += `  </tbody>\n</table>\n<p style="font-size:0.85em; color:#6b7280; text-align:right;">Powered by Styla AI Fit Widget</p>`;
+      html += `  </tbody>\n</table>\n`;
 
       navigator.clipboard.writeText(html).then(() => {
         alert("Shopify HTML size table copied to clipboard! You can paste this directly into your Shopify product description HTML editor.");

@@ -1,3 +1,32 @@
+// Initialize 3DLook Mobile Tailor Widget Options
+window.MTM_WIDGET_OPTIONS = {
+  defaultValues: { email: 'guest@styla.ca' },
+  onMeasurementsReady: (m) => {
+    console.log("Measurements complete:", m);
+    alert("AI body scan completed! Syncing your measurements...");
+    
+    // Reload profile after a brief delay to allow the webhook to finish writing
+    setTimeout(async () => {
+      if (window.supabase) {
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (profile) {
+            onUserLoggedIn(session.user, profile);
+          }
+        }
+      } else {
+        window.location.reload();
+      }
+    }, 3000);
+  }
+};
+
 const fileUpload = document.getElementById('file-upload');
 const dropZone = document.getElementById('drop-zone');
 const dropText = document.getElementById('drop-text');
@@ -1720,262 +1749,7 @@ window.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // 3D Body Scanning Widget UI Handlers
-  const btnLaunchWidget = document.getElementById('btn-launch-widget');
-  const widgetModal = document.getElementById('threedlook-widget-modal');
-  const closeWidgetModal = document.getElementById('close-widget-modal');
-  const btnWidgetSimulateWebcam = document.getElementById('btn-widget-simulate-webcam');
-  const btnWidgetOpenDirect = document.getElementById('btn-widget-open-direct');
-
-  if (btnLaunchWidget && widgetModal) {
-      btnLaunchWidget.addEventListener('click', () => {
-          widgetModal.style.display = 'flex';
-      });
-  }
-
-  if (closeWidgetModal && widgetModal) {
-      closeWidgetModal.addEventListener('click', () => {
-          widgetModal.style.display = 'none';
-      });
-  }
-
-  if (btnWidgetOpenDirect) {
-      btnWidgetOpenDirect.addEventListener('click', async () => {
-          let mtmUrl = 'https://saia.3dlook.me';
-          try {
-              const res = await fetch('/api/3dlook/config');
-              if (res.ok) {
-                  const config = await res.json();
-                  mtmUrl = config.mtm_url || mtmUrl;
-              }
-          } catch (e) {
-              console.warn("Failed to load MTM config:", e);
-          }
-
-          let username = 'guest';
-          try {
-              if (window.supabase) {
-                  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                  const { data: { session } } = await supabase.auth.getSession();
-                  if (session) {
-                      username = session.user.id;
-                  }
-              }
-          } catch (e) {
-              console.warn("Failed to get session:", e);
-          }
-
-          const separator = mtmUrl.includes('?') ? '&' : '?';
-          const targetUrl = `${mtmUrl}${separator}client_id=${encodeURIComponent(username)}&external_id=${encodeURIComponent(username)}`;
-          window.open(targetUrl, '_blank');
-          
-          alert(`Opening your brand's unique mobile scanning page.\n\nAssigned User ID: ${username}\n\nWebhooks will automatically sync calculated parameters back to your profile.`);
-      });
-  }
-
-  if (btnWidgetSimulateWebcam) {
-      btnWidgetSimulateWebcam.addEventListener('click', async () => {
-          const gender = document.getElementById('scan-gender').value;
-          const ft = document.getElementById('scan-height-ft').value;
-          const inch = document.getElementById('scan-height-in').value;
-          const weight = document.getElementById('scan-weight').value;
-
-          if (!ft || !inch || !weight) {
-              alert("Please enter height and weight for the scanner.");
-              return;
-          }
-
-          const totalInches = (parseInt(ft, 10) * 12) + parseInt(inch, 10);
-          const heightCm = Math.round(totalInches * 2.54);
-
-          // Get modal screens
-          const screenChoice = document.getElementById('widget-screen-choice');
-          const screenCamera = document.getElementById('widget-screen-camera');
-          const screenProcessing = document.getElementById('widget-screen-processing');
-          const screenSuccess = document.getElementById('widget-screen-success');
-          const countdownEl = document.getElementById('camera-countdown-overlay');
-          const instructionEl = document.getElementById('camera-flow-instruction');
-          const laserLine = document.getElementById('scanning-laser-line');
-          const titleEl = document.getElementById('camera-flow-title');
-          const videoFrame = document.getElementById('camera-simulator-video');
-
-          // Switch to camera capture screen
-          screenChoice.style.display = 'none';
-          screenCamera.style.display = 'block';
-          
-          let count = 3;
-          countdownEl.style.display = 'flex';
-          countdownEl.textContent = count;
-          laserLine.style.display = 'none';
-          instructionEl.textContent = "Align your full body within the frame (Front view)";
-          titleEl.textContent = "Front Profile Capture";
-          
-          const countdownInterval = setInterval(() => {
-              count--;
-              if (count > 0) {
-                  countdownEl.textContent = count;
-              } else {
-                  clearInterval(countdownInterval);
-                  // Flash photo effect
-                  videoFrame.style.background = '#fff';
-                  setTimeout(() => {
-                      videoFrame.style.background = 'linear-gradient(180deg, rgba(79,70,229,0.15) 0%, rgba(255,42,117,0.15) 100%)';
-                      
-                      // Transition to side profile
-                      titleEl.textContent = "Side Profile Capture";
-                      instructionEl.textContent = "Turn 90 degrees to your side";
-                      count = 3;
-                      countdownEl.textContent = count;
-                      
-                      const sideInterval = setInterval(() => {
-                          count--;
-                          if (count > 0) {
-                              countdownEl.textContent = count;
-                          } else {
-                              clearInterval(sideInterval);
-                              // Flash side capture
-                              videoFrame.style.background = '#fff';
-                              setTimeout(() => {
-                                  videoFrame.style.background = 'linear-gradient(180deg, rgba(79,70,229,0.15) 0%, rgba(255,42,117,0.15) 100%)';
-                                  
-                                  // Run scanning line effect
-                                  countdownEl.style.display = 'none';
-                                  laserLine.style.display = 'block';
-                                  instructionEl.textContent = "Analyzing body outline & contours...";
-                                  
-                                  setTimeout(async () => {
-                                      // Switch to API processing
-                                      screenCamera.style.display = 'none';
-                                      screenProcessing.style.display = 'block';
-                                      
-                                      try {
-                                          const savedScan = await run3DLookAPI(gender, heightCm, totalInches, weight);
-                                          
-                                          // Update success screen values
-                                          document.getElementById('scanned-val-chest').textContent = savedScan.twin.chest + '"';
-                                          document.getElementById('scanned-val-waist').textContent = savedScan.twin.waist + '"';
-                                          document.getElementById('scanned-val-hips').textContent = savedScan.twin.hips + '"';
-                                          
-                                          screenProcessing.style.display = 'none';
-                                          screenSuccess.style.display = 'block';
-                                          
-                                          // Success close after a delay
-                                          setTimeout(() => {
-                                              widgetModal.style.display = 'none';
-                                              // Reset screens
-                                              screenSuccess.style.display = 'none';
-                                              screenChoice.style.display = 'block';
-                                              laserLine.style.display = 'none';
-                                              countdownEl.style.display = 'flex';
-                                              
-                                              alert("⚡ AI body scan completed successfully! Sizing variables have been synced to your profile.");
-                                          }, 2000);
-                                          
-                                      } catch (err) {
-                                          screenProcessing.style.display = 'none';
-                                          screenChoice.style.display = 'block';
-                                          alert("Scan failed: " + err.message);
-                                      }
-                                  }, 2000);
-                              }, 150);
-                          }
-                      }, 1000);
-                  }, 150);
-              }
-          }, 1000);
-      });
-  }
-
-  async function run3DLookAPI(gender, heightCm, heightInches, weightLbs) {
-      if (!window.supabase) throw new Error("Supabase is not loaded.");
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { data: { session } } = await supabase.auth.getSession();
-      const username = session ? session.user.id : 'guest';
-
-      // 1. Init Session
-      const initRes = await fetch('/api/3dlook/init-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              gender,
-              height: heightCm,
-              weight: weightLbs
-          })
-      });
-      if (!initRes.ok) throw new Error("Failed to initialize session.");
-      const sessionData = await initRes.json();
-
-      // 2. Poll Status
-      let pollUrl = sessionData.task_set_url;
-      let pollCount = 0;
-      const maxPolls = 30;
-      let readyData = null;
-
-      while (pollCount < maxPolls) {
-          pollCount++;
-          const checkUrl = pollUrl.includes('mock_id') 
-            ? `${pollUrl}&gender=${gender}&height=${heightInches}&weight=${weightLbs}`
-            : pollUrl;
-            
-          const checkRes = await fetch(checkUrl);
-          const checkData = await checkRes.json();
-
-          if (checkData.is_ready) {
-              if (checkData.is_successful) {
-                  readyData = checkData;
-                  break;
-              } else {
-                  throw new Error("AI body scan task failed during processing.");
-              }
-          }
-          await new Promise(r => setTimeout(r, 1500));
-      }
-
-      if (!readyData) throw new Error("Scan processing timed out after 45 seconds.");
-
-      // 3. Save Measurements
-      const saveRes = await fetch(`${readyData.redirect_to}&username=${username}`);
-      if (!saveRes.ok) throw new Error("Failed to fetch/save measurements.");
-      const saveData = await saveRes.json();
-
-      if (!saveData.success) throw new Error("Backend save-measurements error.");
-
-      // 4. Update local storage & UI
-      localStorage.setItem('styla_twin_chest', saveData.twin.chest);
-      localStorage.setItem('styla_twin_waist', saveData.twin.waist);
-      localStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
-      localStorage.setItem('styla_twin_hips', saveData.twin.hips);
-      localStorage.setItem('styla_twin_height', heightInches.toString());
-      localStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
-      localStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
-      localStorage.removeItem('styla_twin_measurement_overrides');
-
-      // Set input values in UI
-      document.getElementById('val-chest').value = saveData.twin.chest;
-      document.getElementById('val-waist').value = saveData.twin.waist;
-      document.getElementById('val-belly').value = saveData.twin.belly || saveData.twin.waist;
-      document.getElementById('val-hips').value = saveData.twin.hips;
-      document.getElementById('val-height-ft').value = Math.floor(heightInches / 12);
-      document.getElementById('val-height-in').value = heightInches % 12;
-      document.getElementById('val-inseam').value = saveData.twin.inseam;
-
-      const badge = document.getElementById('active-scan-badge');
-      if (badge) badge.style.display = 'block';
-
-      // If logged in, fetch and render history
-      if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (profile) {
-              onUserLoggedIn(session.user, profile);
-          }
-      }
-
-      return saveData;
-  }
+  // 3D Body Scanning Widget UI Handlers - Cleaned up for direct MTM integration
 
   // Step 3 Legacy Panel toggle
   const step3Container = document.getElementById('step-3-container');
