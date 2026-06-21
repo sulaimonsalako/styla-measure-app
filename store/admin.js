@@ -54,10 +54,27 @@ fileInput.addEventListener('change', () => {
 const colorsInput = document.getElementById('prod-colors');
 const showcasesContainer = document.getElementById('color-showcases-container');
 const showcasesList = document.getElementById('color-showcases-list');
+let colorBase64Images = {};
 
 if (colorsInput) {
   colorsInput.addEventListener('input', () => {
     updateColorShowcaseInputs();
+  });
+}
+
+function renderColorPreviews(color, imagesArray, container) {
+  if (!container) return;
+  container.innerHTML = '';
+  imagesArray.forEach((imgSrc, index) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    div.innerHTML = `<img src="${imgSrc}"><button type="button" class="remove-prev">&times;</button>`;
+    
+    div.querySelector('.remove-prev').addEventListener('click', () => {
+      imagesArray.splice(index, 1);
+      renderColorPreviews(color, imagesArray, container);
+    });
+    container.appendChild(div);
   });
 }
 
@@ -69,30 +86,59 @@ function updateColorShowcaseInputs(existingColorImages = {}) {
   if (colors.length === 0 || (colors.length === 1 && colors[0].toLowerCase() === 'standard')) {
     showcasesContainer.style.display = 'none';
     showcasesList.innerHTML = '';
+    colorBase64Images = {};
     return;
   }
   
   showcasesContainer.style.display = 'block';
   
-  const currentValues = {};
-  showcasesList.querySelectorAll('.color-images-input').forEach(textarea => {
-    const col = textarea.getAttribute('data-color');
-    currentValues[col] = textarea.value;
+  // Retain existing colorBase64Images if the color is still selected
+  const newColorBase64Images = {};
+  colors.forEach(color => {
+    if (colorBase64Images[color]) {
+      newColorBase64Images[color] = colorBase64Images[color];
+    } else if (existingColorImages[color]) {
+      newColorBase64Images[color] = Array.isArray(existingColorImages[color]) ? [...existingColorImages[color]] : [existingColorImages[color]];
+    } else {
+      newColorBase64Images[color] = [];
+    }
   });
+  colorBase64Images = newColorBase64Images;
   
   showcasesList.innerHTML = colors.map(color => {
-    const existingUrls = existingColorImages[color] || [];
-    const textVal = currentValues[color] !== undefined 
-      ? currentValues[color] 
-      : (existingUrls.length > 0 ? existingUrls.join('\n') : '');
-      
     return `
       <div class="color-image-group" style="background:#f4f4f5; border:1px solid #e4e4e7; padding:10px; border-radius:6px; margin-bottom:10px;">
         <label style="font-weight:600; color:#333; margin-bottom:4px; display:block; font-size:0.8rem;">Images for color: <span style="color:#ff2a75;">${color}</span></label>
-        <textarea class="color-images-input" data-color="${color}" rows="2" style="width:100%; border:1px solid #d4d4d8; border-radius:4px; padding:6px; font-family:monospace; font-size:0.75rem;" placeholder="Paste image URLs (one per line)">${textVal}</textarea>
+        <input type="file" class="color-images-file-input" data-color="${color}" multiple accept="image/*" style="font-size:0.8rem; width:100%;">
+        <div class="previews-grid color-previews-grid" id="color-previews-${color}"></div>
       </div>
     `;
   }).join('');
+
+  // Render previews and bind file inputs
+  colors.forEach(color => {
+    const previewsContainer = document.getElementById(`color-previews-${color}`);
+    renderColorPreviews(color, colorBase64Images[color], previewsContainer);
+  });
+
+  showcasesList.querySelectorAll('.color-images-file-input').forEach(input => {
+    input.addEventListener('change', () => {
+      const color = input.getAttribute('data-color');
+      const previewsContainer = document.getElementById(`color-previews-${color}`);
+      const files = Array.from(input.files);
+      
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64 = e.target.result;
+          if (!colorBase64Images[color]) colorBase64Images[color] = [];
+          colorBase64Images[color].push(base64);
+          renderColorPreviews(color, colorBase64Images[color], previewsContainer);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  });
 }
 
 // Size Chart Input Generator (Dynamic columns based on prod-poms text field)
@@ -166,6 +212,7 @@ function resetEditMode() {
   if (btnSubmitProd) btnSubmitProd.innerText = "Publish Product";
   if (btnCancelEdit) btnCancelEdit.classList.add('hidden');
   updateSizeChartInputs(); // Reset grid inputs
+  colorBase64Images = {};
   updateColorShowcaseInputs(); // Reset color showcase inputs
 }
 
@@ -535,13 +582,11 @@ form.addEventListener('submit', async (e) => {
   }
   
   const colorImages = {};
-  document.querySelectorAll('.color-images-input').forEach(textarea => {
-    const color = textarea.getAttribute('data-color');
-    const urls = textarea.value.trim().split('\n').map(u => u.trim()).filter(u => u.length > 0);
-    if (urls.length > 0) {
-      colorImages[color] = urls;
+  for (const color in colorBase64Images) {
+    if (colorBase64Images[color] && colorBase64Images[color].length > 0) {
+      colorImages[color] = colorBase64Images[color];
     }
-  });
+  }
 
   const payload = {
     name,
@@ -581,6 +626,8 @@ form.addEventListener('submit', async (e) => {
       form.reset();
       document.getElementById('file-previews').innerHTML = '';
       base64Images = [];
+      colorBase64Images = {};
+      updateColorShowcaseInputs();
       alert("Product published successfully!");
       if (prodPomsInput) prodPomsInput.value = "Chest, Waist, Hips, Sleeve Length, Shoulder Width";
       updateSizeChartInputs(); // Reset chart inputs
