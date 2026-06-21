@@ -362,6 +362,13 @@ async function deleteScanFromCloud(scanId) {
 
 // Load saved AI Tailor measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
+  // Set bookmarklet dynamically
+  const btnBookmarklet = document.getElementById('btn-bookmarklet');
+  if (btnBookmarklet) {
+      const bookmarkletHref = `javascript:(function(){const s=document.createElement('script');s.src='${window.location.origin}/tools/bookmarklet-script.js?t='+Date.now();document.body.appendChild(s);})();`;
+      btnBookmarklet.setAttribute('href', bookmarkletHref);
+  }
+
   const savedChest = localStorage.getItem('styla_twin_chest');
   const savedWaist = localStorage.getItem('styla_twin_waist');
   const savedBelly = localStorage.getItem('styla_twin_belly');

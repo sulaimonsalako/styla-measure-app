@@ -115,10 +115,50 @@
 
     /* Hero intro */
     .hero-container {
-      text-align: center;
-      padding: 4.5rem 1.5rem 2rem 1.5rem;
-      max-width: 800px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      max-width: 1100px;
       margin: 0 auto;
+      padding: 4.5rem 2rem 2rem 2rem;
+      text-align: left;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+        padding-top: 2rem;
+      }
+      .hero-badge {
+        align-self: center !important;
+      }
+    }
+
+    /* 3DLook Widget Modal styling */
+    .widget-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(5, 5, 10, 0.96);
+      backdrop-filter: blur(20px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    
+    .widget-modal-content {
+      background: #0d0d15;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      padding: 2.2rem;
+      position: relative;
     }
 
     .hero-badge {
@@ -700,11 +740,72 @@
 
     </div>
 
-    <!-- STEP 2: UPLOAD BRAND SIZE CHART & GARMENT -->
+    <!-- STEP 2: GET SHOPPING TOOLS -->
     <div class="step-card">
       <div class="step-header">
         <div class="step-num">2</div>
-        <h3 class="step-title">Upload Size Chart & Garment</h3>
+        <h3 class="step-title">Get Shopping Extension & Bookmarklet</h3>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0 0 1.5rem 0; line-height: 1.5;">
+        Now that you have your body measurements saved, you can use them to find your fit automatically on any online store. Choose your preferred tool below:
+      </p>
+
+      <div class="input-row" style="gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
+        <!-- Chrome Extension Card -->
+        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 1.25rem;">🌐</span>
+              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Chrome Extension</h4>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
+              The ultimate shopping companion. Works in the background on all supported stores.
+            </p>
+            <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5;">
+              <li>Download the extension package (.zip).</li>
+              <li>Extract it to a folder on your computer.</li>
+              <li>Open Chrome, go to <code>chrome://extensions/</code>, enable <b>Developer mode</b>.</li>
+              <li>Click <b>Load unpacked</b> and select the extracted folder.</li>
+            </ol>
+          </div>
+          <a href="chrome-extension/chrome-extension.zip" download class="btn-run" style="margin-top: 0; text-align: center; text-decoration: none; display: block; width: 100%; padding: 10px; font-size: 0.85rem; background: var(--primary-gradient);">Download Chrome Extension</a>
+        </div>
+
+        <!-- Bookmarklet Card -->
+        <div style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 1.25rem;">🔖</span>
+              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Browser Bookmarklet</h4>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
+              No installation required. Works on any browser (including Safari and mobile browsers).
+            </p>
+            <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5;">
+              <li>Drag the <b>⚡ STYLA Stylist</b> button below to your bookmarks bar.</li>
+              <li>Go to any supported clothing product page.</li>
+              <li>Click the bookmark to open the STYLA fitting room!</li>
+            </ol>
+          </div>
+          <div style="text-align: center; margin-top: auto; padding-top: 0.5rem;">
+            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);" onclick="event.preventDefault(); alert('Drag this button to your browser's Bookmarks Bar!');">⚡ STYLA Stylist</a>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">← Drag me to your Bookmarks bar!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: UPLOAD BRAND SIZE CHART & GARMENT -->
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <h3 class="step-title">Upload Size Chart & Garment (Web Alternative)</h3>
+      </div>
+      
+      <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 16px; padding: 1.2rem; margin-bottom: 2rem;">
+        <p style="font-size: 0.85rem; color: var(--accent-light); margin: 0; line-height: 1.5;">
+          ⚠️ <b>Alternative / Legacy Flow:</b> This portal upload process is redundant and will be removed in a future release. For the best experience, use the <b>3DLook Widget (Step 1)</b> to scan, then shop directly on retail websites using the <b>Extension / Bookmarklet (Step 2)</b>.
+        </p>
       </div>
 
       <div class="input-row" style="gap: 1.5rem; margin-bottom: 0;">
@@ -813,6 +914,109 @@
       <p id="login-error" style="color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; display: none; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 8px; border-radius: 8px;"></p>
     </div>
   </div>
+
+    <!-- 3DLook Scanner Widget Modal -->
+  <div id="threedlook-widget-modal" class="widget-modal-overlay">
+    <div class="widget-modal-content">
+      <button id="close-widget-modal" style="position: absolute; top: 1.2rem; right: 1.2rem; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+      
+      <!-- Screen 1: Scan Choice -->
+      <div id="widget-screen-choice" style="display: block; text-align: center;">
+        <div style="margin-bottom: 1rem;">
+          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; font-size: 0.75rem; font-weight: 700; padding: 6px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px;">3DLOOK Official Widget</span>
+        </div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.5rem; color: #fff; margin: 0 0 0.5rem 0; font-weight: 800;">3D Body Scanning Widget</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0 0 1.5rem 0;">Scan with your phone camera for maximum accuracy. Or run a camera simulation directly on this device.</p>
+        
+        <!-- QR Code Card -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 1px dashed rgba(255, 42, 117, 0.2);">
+          <div style="background: #fff; padding: 10px; border-radius: 14px; display: inline-block;">
+            <svg width="130" height="130" viewBox="0 0 100 100" style="display: block;">
+              <rect x="0" y="0" width="25" height="25" fill="#000"/>
+              <rect x="5" y="5" width="15" height="15" fill="#fff"/>
+              <rect x="8" y="8" width="9" height="9" fill="#000"/>
+              
+              <rect x="75" y="0" width="25" height="25" fill="#000"/>
+              <rect x="80" y="5" width="15" height="15" fill="#fff"/>
+              <rect x="83" y="8" width="9" height="9" fill="#000"/>
+              
+              <rect x="0" y="75" width="25" height="25" fill="#000"/>
+              <rect x="5" y="80" width="15" height="15" fill="#fff"/>
+              <rect x="8" y="83" width="9" height="9" fill="#000"/>
+              
+              <rect x="35" y="10" width="5" height="5" fill="#000"/>
+              <rect x="50" y="15" width="5" height="5" fill="#000"/>
+              <rect x="60" y="5" width="10" height="5" fill="#000"/>
+              <rect x="30" y="30" width="15" height="5" fill="#000"/>
+              <rect x="55" y="40" width="5" height="10" fill="#000"/>
+              <rect x="10" y="45" width="10" height="5" fill="#000"/>
+              <rect x="40" y="60" width="20" height="5" fill="#000"/>
+              <rect x="65" y="50" width="10" height="15" fill="#000"/>
+              <rect x="30" y="70" width="5" height="20" fill="#000"/>
+              <rect x="45" y="80" width="15" height="5" fill="#000"/>
+              <rect x="70" y="80" width="10" height="10" fill="#000"/>
+              <rect x="85" y="45" width="5" height="15" fill="#000"/>
+            </svg>
+          </div>
+          <span style="font-size: 0.85rem; color: #fff; font-weight: 600;">Scan QR with Phone Camera</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.3;">Recommended: Mobile devices utilize hardware-accelerated depth sensing for the 80+ measurements.</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" id="btn-widget-simulate-webcam" class="btn-run" style="margin-top: 0; background: var(--success-gradient);">⚡ Run Web Camera Scan</button>
+          <button type="button" id="btn-widget-open-direct" style="background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #94a3b8; padding: 10px; border-radius: 100px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.color='#94a3b8'; this.style.borderColor='rgba(255,255,255,0.12)'">Open 3DLook Direct Widget Link</button>
+        </div>
+      </div>
+
+      <!-- Screen 2: Interactive Camera Flow -->
+      <div id="widget-screen-camera" style="display: none; text-align: center;">
+        <h3 id="camera-flow-title" style="font-family: var(--font-outfit); font-size: 1.4rem; color: #fff; margin: 0 0 1rem 0; font-weight: 800;">Get in Position</h3>
+        
+        <!-- Webcam Viewbox Simulation -->
+        <div style="position: relative; width: 100%; height: 260px; background: #000; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center;">
+          <div id="camera-simulator-video" style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, rgba(79,70,229,0.15) 0%, rgba(255,42,117,0.15) 100%); display: flex; align-items: center; justify-content: center;">
+            <svg id="camera-human-outline" width="140" height="220" viewBox="0 0 100 100" style="opacity: 0.3; transition: all 0.3s;">
+              <path d="M50 15 C54 15, 57 18, 57 22 C57 26, 54 29, 50 29 C46 29, 43 26, 43 22 C43 18, 46 15, 50 15 Z" fill="none" stroke="#fff" stroke-width="2"/>
+              <path d="M50 29 C45 35, 42 42, 42 55 L42 85 C42 88, 48 88, 48 85 L48 70 L52 70 L52 85 C52 88, 58 88, 58 85 L58 55 C58 42, 55 35, 50 29 Z" fill="none" stroke="#fff" stroke-width="2"/>
+              <path d="M42 35 L33 55 C31 60, 35 62, 37 58 L42 42" fill="none" stroke="#fff" stroke-width="2"/>
+              <path d="M58 35 L67 55 C69 60, 65 62, 63 58 L58 42" fill="none" stroke="#fff" stroke-width="2"/>
+            </svg>
+          </div>
+          <div style="position: absolute; border: 1.5px dashed #ff2a75; width: 85%; height: 90%; opacity: 0.4; border-radius: 12px; pointer-events: none;"></div>
+          <div id="scanning-laser-line" style="display: none; position: absolute; left: 0; width: 100%; height: 3px; background: #ff2a75; box-shadow: 0 0 12px #ff2a75; animation: scanMove 2s ease-in-out infinite;"></div>
+          
+          <div id="camera-countdown-overlay" style="position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); padding: 12px 20px; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; color: #ff75a0; border: 2px solid #ff2a75;">3</div>
+        </div>
+
+        <p id="camera-flow-instruction" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.4; margin: 0;">Align your full body within the frame.</p>
+      </div>
+
+      <!-- Screen 3: Processing & Polling -->
+      <div id="widget-screen-processing" style="display: none; text-align: center; padding: 2rem 0;">
+        <div class="spinner" style="width: 48px; height: 48px; margin-bottom: 1.5rem;"></div>
+        <h3 id="widget-processing-title" style="font-family: var(--font-outfit); font-size: 1.3rem; color: #fff; margin: 0 0 0.5rem 0; font-weight: 800;">Processing Sizing Data</h3>
+        <p id="widget-processing-status" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">3DLook API analyzing body outlines...</p>
+      </div>
+
+      <!-- Screen 4: Success -->
+      <div id="widget-screen-success" style="display: none; text-align: center; padding: 1.5rem 0;">
+        <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1.25rem auto; border: 2px solid #10b981;">✓</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.4rem; color: #fff; margin: 0 0 0.5rem 0; font-weight: 800;">Scan Complete!</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0 0 1.5rem 0;">80+ dimensions extracted and saved to your secure cloud profile.</p>
+        <div style="background: rgba(255,255,255,0.02); border-radius: 12px; padding: 10px; font-size: 0.8rem; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.05); display: inline-block;">
+          Chest: <strong id="scanned-val-chest" style="color: #ff75a0;">--</strong> | Waist: <strong id="scanned-val-waist" style="color: #ff75a0;">--</strong> | Hips: <strong id="scanned-val-hips" style="color: #ff75a0;">--</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    @keyframes scanMove {
+      0% { top: 5%; }
+      50% { top: 90%; }
+      100% { top: 5%; }
+    }
+  </style>
 
   <script src="decoder.js?v=20260621"></script>
   <script>
