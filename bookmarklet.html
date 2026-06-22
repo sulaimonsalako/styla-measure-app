@@ -739,9 +739,9 @@
 
     const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
-    let supabase = null;
+    let stylaSupabase = null;
     if (window.supabase) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      stylaSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           storage: safeStorage,
           persistSession: true,
@@ -802,11 +802,11 @@
     }
 
     async function initSession() {
-      if (!supabase) return;
+      if (!stylaSupabase) return;
       try {
-        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionErr } = await stylaSupabase.auth.getSession();
         if (session && session.user) {
-          const { data: profile, error: dbErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          const { data: profile, error: dbErr } = await stylaSupabase.from('profiles').select('*').eq('id', session.user.id).single();
           if (!dbErr && profile) {
             safeStorage.setItem('styla_twin_chest', profile.chest || '');
             safeStorage.setItem('styla_twin_waist', profile.waist || '');
@@ -1249,8 +1249,8 @@
       if (lnkLogout) {
         lnkLogout.addEventListener('click', async (e) => {
           e.preventDefault();
-          if (supabase) {
-            await supabase.auth.signOut();
+          if (stylaSupabase) {
+            await stylaSupabase.auth.signOut();
           }
           safeStorage.removeItem('styla_twin_chest');
           safeStorage.removeItem('styla_twin_waist');
@@ -1407,7 +1407,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      userId: (await supabase.auth.getSession()).data.session?.user?.id,
+                      userId: (await stylaSupabase.auth.getSession()).data.session?.user?.id,
                       scanId: scan_id,
                       measurements: statusData.measurements
                     })
@@ -1474,11 +1474,11 @@
           btnManualSubmit.textContent = "Saving...";
 
           try {
-            const session = (await supabase.auth.getSession()).data.session;
+            const session = (await stylaSupabase.auth.getSession()).data.session;
             if (!session) throw new Error("Please log in to save measurements.");
 
             // Save to Supabase profile
-            const { error: dbErr } = await supabase.from('profiles').update({
+            const { error: dbErr } = await stylaSupabase.from('profiles').update({
               chest: parseFloat(chest),
               waist: parseFloat(waist),
               belly: parseFloat(belly || waist),
@@ -1527,11 +1527,11 @@
           authError.style.display = 'none';
 
           try {
-            if (!supabase) throw new Error("Supabase is not loaded.");
-            const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
+            if (!stylaSupabase) throw new Error("Supabase is not loaded.");
+            const { data: authData, error: authErr } = await stylaSupabase.auth.signInWithPassword({ email, password });
             if (authErr) throw authErr;
 
-            const { data: profile, error: dbErr } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
+            const { data: profile, error: dbErr } = await stylaSupabase.from('profiles').select('*').eq('id', authData.user.id).single();
             if (dbErr) throw dbErr;
 
             safeStorage.setItem('styla_twin_chest', profile.chest || '');
@@ -1589,9 +1589,9 @@
           authError.style.display = 'none';
 
           try {
-            if (!supabase) throw new Error("Supabase is not loaded.");
+            if (!stylaSupabase) throw new Error("Supabase is not loaded.");
 
-            const { data: authData, error: signupErr } = await supabase.auth.signUp({
+            const { data: authData, error: signupErr } = await stylaSupabase.auth.signUp({
               email,
               password,
               options: {
@@ -1610,7 +1610,7 @@
 
             // Auto-login to sync session
             try {
-              const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+              const { error: loginErr } = await stylaSupabase.auth.signInWithPassword({ email, password });
               if (loginErr) throw loginErr;
               
               safeStorage.setItem('styla_twin_logged_in', 'true');
