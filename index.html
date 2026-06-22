@@ -878,8 +878,22 @@
             </ol>
           </div>
           <div style="text-align: center; margin-top: auto; padding-top: 0.5rem;">
-            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);" onclick="event.preventDefault(); alert('Drag this button to your browser's Bookmarks Bar!');">⚡ STYLA Stylist</a>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">← Drag me to your Bookmarks bar!</p>
+            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag me to your Bookmarks bar!</p>
+            
+            <a href="#" id="lnk-toggle-mobile" style="font-size: 0.8rem; color: var(--accent-pink); text-decoration: underline; display: block; font-weight: 500; margin-top: 10px;">📱 Installing on Mobile? View Guide</a>
+            
+            <div id="mobile-instructions-panel" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.2rem; margin-top: 1rem; text-align: left;">
+              <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 0.9rem; font-family: var(--font-outfit);">How to install on Mobile:</h5>
+              <ol style="font-size: 0.78rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 1.2rem; line-height: 1.55;">
+                <li style="margin-bottom: 6px;">Tap <b>Copy Code</b> below to copy the bookmarklet script.</li>
+                <li style="margin-bottom: 6px;">Bookmark this page (tap your browser's share or menu icon, and tap <b>Add Bookmark</b>).</li>
+                <li style="margin-bottom: 6px;">Edit the bookmark: Change its name to <b>⚡ STYLA Stylist</b>, and paste the copied code into the Address/URL field. Save it.</li>
+                <li>To use: Open any online store, type <b>⚡ STYLA Stylist</b> in your browser's address bar, and tap the bookmark to launch the Stylist popup.</li>
+              </ol>
+              <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--success-gradient); margin-top: 0; border-radius: 8px;">Copy Bookmarklet Code</button>
+              <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+            </div>
           </div>
         </div>
       </div>
