@@ -74,9 +74,6 @@
   iframe.style.border = 'none';
   iframe.style.background = 'transparent';
 
-  container.appendChild(iframe);
-  document.body.appendChild(container);
-
   let dataSent = false;
   const sendScrapedData = () => {
     if (dataSent) return;
@@ -90,7 +87,7 @@
     }, '*');
   };
 
-  // Listen for messages from iframe
+  // Listen for messages from iframe (Register listener BEFORE appending iframe to DOM)
   const messageListener = (event) => {
     if (event.data) {
       if (event.data.type === 'STYLA_WIDGET_CLOSE') {
@@ -102,6 +99,10 @@
     }
   };
   window.addEventListener('message', messageListener);
+
+  // Append iframe to DOM (Starts iframe loading)
+  container.appendChild(iframe);
+  document.body.appendChild(container);
 
   // Fallback onload event
   iframe.onload = () => {

@@ -410,6 +410,30 @@
     .auth-footer a:hover {
       text-decoration: underline;
     }
+
+    /* Password input relative wrapper and eye button */
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      z-index: 10;
+      padding: 4px;
+    }
+    .password-toggle:hover {
+      opacity: 0.9;
+    }
+    .password-toggle svg {
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -422,6 +446,9 @@
       <div id="user-header-status" style="font-size: 10px; color: var(--text-muted); display: none;">
         Logged in as <span id="user-header-email" style="color: var(--accent-light);"></span>
         (<a href="#" id="lnk-logout" style="color: #fca5a5; text-decoration: underline;">Log out</a>)
+      </div>
+      <div id="user-header-guest" style="font-size: 10px; color: var(--text-muted);">
+        Guest Mode (<a href="#" id="lnk-login" style="color: var(--accent-light); text-decoration: underline;">Log in</a>)
       </div>
     </div>
     <button class="close-btn" onclick="closeWidget()">&times;</button>
@@ -441,6 +468,7 @@
     <!-- Setup View (Scanning / Manual Entry) -->
     <div id="setup-view" style="display: none; flex-direction: column;">
       <h3 style="font-family: var(--font-head); font-size: 1.1rem; margin-bottom: 12px; font-weight: 700; color: #fff;">Set Up AI Tailor Profile</h3>
+      <p id="setup-welcome-msg" style="font-size: 0.8rem; color: var(--accent-light); margin-bottom: 12px; display: none; font-weight: 500; line-height: 1.3; text-align: left;"></p>
       
       <div class="toggle-tabs">
         <button class="toggle-tab-btn active" id="btn-guest-mode-scan">3D Body Scan</button>
@@ -576,7 +604,15 @@
 
       <div class="form-group" style="margin-bottom: 16px;">
         <label for="guest-login-password">Password</label>
-        <input type="password" id="guest-login-password" class="form-input" placeholder="Your password">
+        <div style="position: relative;">
+          <input type="password" id="guest-login-password" class="form-input" style="padding-right: 40px;" placeholder="Your password">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility('guest-login-password', this)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="error-box" id="guest-login-error" style="display: none; margin-bottom: 12px; padding: 10px; font-size: 0.8rem;"></div>
@@ -616,6 +652,28 @@
         </div>
       </div>
 
+      <!-- Registration Prompt for guest users to save Twin -->
+      <div class="card" id="guest-signup-card" style="display: none; padding: 16px; margin-top: 12px; border: 1px dashed var(--accent-light); border-radius: 12px; text-align: left; background: rgba(255,255,255,0.02);">
+        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: #fff;">💾 Save Twin to Cloud</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Save these measurements so you never have to enter them again.</p>
+        <div style="display: flex; gap: 8px; flex-direction: column;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <input type="email" id="guest-signup-email" placeholder="Email Address" class="form-input" style="font-size: 0.85rem; padding: 8px 12px;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0; position: relative;">
+            <input type="password" id="guest-signup-password" placeholder="Password (min 6 chars)" class="form-input" style="font-size: 0.85rem; padding: 8px 40px 8px 12px;">
+            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('guest-signup-password', this)" style="top: 50%; transform: translateY(-50%); right: 12px;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
+          <button id="btn-guest-signup-submit" class="btn-submit" style="font-size: 0.85rem; padding: 8px 12px; margin-top: 4px;">Create Account & Save</button>
+        </div>
+        <div id="guest-signup-error" style="color: #fca5a5; font-size: 0.75rem; margin-top: 6px; display: none; padding: 8px; border-radius: 6px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);"></div>
+      </div>
+
       <div class="chat-section">
         <div class="chat-title">💬 Ask Follow-up Questions</div>
         <div class="chat-messages" id="chat-messages">
@@ -630,21 +688,73 @@
   </main>
 
   <script>
+    // Safe storage wrapper to prevent SecurityErrors in cross-origin settings
+    const safeStorage = {
+      getItem(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (e) {
+          console.warn("safeStorage.getItem blocked:", e);
+          return safeStorage.fallback[key] || null;
+        }
+      },
+      setItem(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (e) {
+          console.warn("safeStorage.setItem blocked:", e);
+          safeStorage.fallback[key] = value;
+        }
+      },
+      removeItem(key) {
+        try {
+          window.localStorage.removeItem(key);
+        } catch (e) {
+          console.warn("safeStorage.removeItem blocked:", e);
+          delete safeStorage.fallback[key];
+        }
+      },
+      fallback: {}
+    };
+
     const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
     let supabase = null;
     if (window.supabase) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          storage: safeStorage,
+          persistSession: true,
+          detectSessionInUrl: false
+        }
+      });
     }
 
     function updateUserHeader(email) {
       const statusDiv = document.getElementById('user-header-status');
       const emailSpan = document.getElementById('user-header-email');
+      const guestDiv = document.getElementById('user-header-guest');
+      const signupCard = document.getElementById('guest-signup-card');
+      const welcomeMsg = document.getElementById('setup-welcome-msg');
+
       if (email) {
         if (emailSpan) emailSpan.textContent = email;
         if (statusDiv) statusDiv.style.display = 'block';
+        if (guestDiv) guestDiv.style.display = 'none';
+        if (signupCard) signupCard.style.display = 'none';
+        if (welcomeMsg) {
+          welcomeMsg.textContent = `Welcome back! Please complete your AI Tailor profile below to sync with your account (${email}).`;
+          welcomeMsg.style.display = 'block';
+        }
       } else {
         if (statusDiv) statusDiv.style.display = 'none';
+        if (guestDiv) guestDiv.style.display = 'block';
+        if (signupCard && document.getElementById('result-view').style.display !== 'none') {
+          signupCard.style.display = 'block';
+        }
+        if (welcomeMsg) {
+          welcomeMsg.style.display = 'none';
+        }
       }
     }
 
@@ -655,16 +765,16 @@
         if (session && session.user) {
           const { data: profile, error: dbErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
           if (!dbErr && profile) {
-            localStorage.setItem('styla_twin_chest', profile.chest || '');
-            localStorage.setItem('styla_twin_waist', profile.waist || '');
-            localStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
-            localStorage.setItem('styla_twin_hips', profile.hips || '');
-            localStorage.setItem('styla_twin_height', profile.height || '');
-            localStorage.setItem('styla_twin_inseam', profile.inseam || '');
-            localStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
-            localStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
-            localStorage.setItem('styla_twin_logged_in', 'true');
-            localStorage.setItem('styla_twin_user_email', session.user.email);
+            safeStorage.setItem('styla_twin_chest', profile.chest || '');
+            safeStorage.setItem('styla_twin_waist', profile.waist || '');
+            safeStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
+            safeStorage.setItem('styla_twin_hips', profile.hips || '');
+            safeStorage.setItem('styla_twin_height', profile.height || '');
+            safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+            safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
+            safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
+            safeStorage.setItem('styla_twin_logged_in', 'true');
+            safeStorage.setItem('styla_twin_user_email', session.user.email);
             
             updateUserHeader(session.user.email);
             
@@ -673,8 +783,8 @@
             }
           }
         } else {
-          localStorage.removeItem('styla_twin_logged_in');
-          localStorage.removeItem('styla_twin_user_email');
+          safeStorage.removeItem('styla_twin_logged_in');
+          safeStorage.removeItem('styla_twin_user_email');
           updateUserHeader(null);
         }
       } catch (err) {
@@ -686,6 +796,30 @@
     let chatHistory = [];
     let guestFrontBase64 = null;
     let guestSideBase64 = null;
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isVisible = input.type === 'text';
+      input.type = isVisible ? 'password' : 'text';
+      const size = inputId === 'guest-signup-password' ? '16px' : '18px';
+      
+      if (!isVisible) {
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: ${size}; height: ${size};">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.822 7.822L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+          </svg>
+        `;
+      } else {
+        btn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: ${size}; height: ${size};">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        `;
+      }
+    }
+
 
     // Close bookmarklet widget in parent window
     function closeWidget() {
@@ -751,22 +885,22 @@
       setupView.style.display = 'none';
       guestLoginView.style.display = 'none';
 
-      const chest = localStorage.getItem('styla_twin_chest');
-      const waist = localStorage.getItem('styla_twin_waist');
-      const belly = localStorage.getItem('styla_twin_belly');
-      const hips = localStorage.getItem('styla_twin_hips');
-      const height = localStorage.getItem('styla_twin_height');
-      const inseam = localStorage.getItem('styla_twin_inseam');
+      const chest = safeStorage.getItem('styla_twin_chest');
+      const waist = safeStorage.getItem('styla_twin_waist');
+      const belly = safeStorage.getItem('styla_twin_belly');
+      const hips = safeStorage.getItem('styla_twin_hips');
+      const height = safeStorage.getItem('styla_twin_height');
+      const inseam = safeStorage.getItem('styla_twin_inseam');
 
       let api_scans = [];
       try {
-        const rawScans = localStorage.getItem('styla_twin_api_scans');
+        const rawScans = safeStorage.getItem('styla_twin_api_scans');
         if (rawScans) api_scans = JSON.parse(rawScans);
       } catch (e) {}
 
       let measurement_overrides = {};
       try {
-        const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
+        const rawOverrides = safeStorage.getItem('styla_twin_measurement_overrides');
         if (rawOverrides) measurement_overrides = JSON.parse(rawOverrides);
       } catch (e) {}
 
@@ -819,10 +953,12 @@
 
           // Toggle guest signup card based on login state
           const signupCard = document.getElementById('guest-signup-card');
-          if (localStorage.getItem('styla_twin_logged_in') === 'true') {
-            signupCard.style.display = 'none';
-          } else {
-            signupCard.style.display = 'block';
+          if (signupCard) {
+            if (safeStorage.getItem('styla_twin_logged_in') === 'true') {
+              signupCard.style.display = 'none';
+            } else {
+              signupCard.style.display = 'block';
+            }
           }
         } else {
           alert("Sizing Error: " + (data.error || 'Failed to decode size.'));
@@ -859,13 +995,13 @@
       // Fetch scan history and overrides
       let api_scans = [];
       try {
-        const rawScans = localStorage.getItem('styla_twin_api_scans');
+        const rawScans = safeStorage.getItem('styla_twin_api_scans');
         if (rawScans) api_scans = JSON.parse(rawScans);
       } catch (e) {}
 
       let measurement_overrides = {};
       try {
-        const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
+        const rawOverrides = safeStorage.getItem('styla_twin_measurement_overrides');
         if (rawOverrides) measurement_overrides = JSON.parse(rawOverrides);
       } catch (e) {}
 
@@ -880,13 +1016,13 @@
         }
       }
 
-      // 1. Fetch user measurements from localStorage
-      const chest = localStorage.getItem('styla_twin_chest');
-      const waist = localStorage.getItem('styla_twin_waist');
-      const belly = localStorage.getItem('styla_twin_belly');
-      const hips = localStorage.getItem('styla_twin_hips');
-      const height = localStorage.getItem('styla_twin_height');
-      const inseam = localStorage.getItem('styla_twin_inseam');
+      // 1. Fetch user measurements from safeStorage
+      const chest = safeStorage.getItem('styla_twin_chest');
+      const waist = safeStorage.getItem('styla_twin_waist');
+      const belly = safeStorage.getItem('styla_twin_belly');
+      const hips = safeStorage.getItem('styla_twin_hips');
+      const height = safeStorage.getItem('styla_twin_height');
+      const inseam = safeStorage.getItem('styla_twin_inseam');
 
       if (!chest || !waist || !hips) {
         showSetup();
@@ -944,10 +1080,12 @@
 
           // Toggle guest signup card based on login state
           const signupCard = document.getElementById('guest-signup-card');
-          if (localStorage.getItem('styla_twin_logged_in') === 'true') {
-            signupCard.style.display = 'none';
-          } else {
-            signupCard.style.display = 'block';
+          if (signupCard) {
+            if (safeStorage.getItem('styla_twin_logged_in') === 'true') {
+              signupCard.style.display = 'none';
+            } else {
+              signupCard.style.display = 'block';
+            }
           }
         } else {
           alert("Sizing Error: " + (data.error || 'Failed to decode size.'));
@@ -979,25 +1117,25 @@
       appendBubble(text, 'user');
       const loadingBubble = appendBubble('Tailor AI is thinking...', 'assistant', true);
 
-      const chest = localStorage.getItem('styla_twin_chest');
-      const waist = localStorage.getItem('styla_twin_waist');
-      const belly = localStorage.getItem('styla_twin_belly');
-      const hips = localStorage.getItem('styla_twin_hips');
-      const height = localStorage.getItem('styla_twin_height');
-      const inseam = localStorage.getItem('styla_twin_inseam');
+      const chest = safeStorage.getItem('styla_twin_chest');
+      const waist = safeStorage.getItem('styla_twin_waist');
+      const belly = safeStorage.getItem('styla_twin_belly');
+      const hips = safeStorage.getItem('styla_twin_hips');
+      const height = safeStorage.getItem('styla_twin_height');
+      const inseam = safeStorage.getItem('styla_twin_inseam');
 
       chatHistory.push({ role: 'user', content: text });
 
       try {
         let api_scans = [];
         try {
-          const rawScans = localStorage.getItem('styla_twin_api_scans');
+          const rawScans = safeStorage.getItem('styla_twin_api_scans');
           if (rawScans) api_scans = JSON.parse(rawScans);
         } catch (e) {}
 
         let measurement_overrides = {};
         try {
-          const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
+          const rawOverrides = safeStorage.getItem('styla_twin_measurement_overrides');
           if (rawOverrides) measurement_overrides = JSON.parse(rawOverrides);
         } catch (e) {}
 
@@ -1057,20 +1195,31 @@
           if (supabase) {
             await supabase.auth.signOut();
           }
-          localStorage.removeItem('styla_twin_chest');
-          localStorage.removeItem('styla_twin_waist');
-          localStorage.removeItem('styla_twin_belly');
-          localStorage.removeItem('styla_twin_hips');
-          localStorage.removeItem('styla_twin_height');
-          localStorage.removeItem('styla_twin_inseam');
-          localStorage.removeItem('styla_twin_api_scans');
-          localStorage.removeItem('styla_twin_measurement_overrides');
-          localStorage.removeItem('styla_twin_logged_in');
-          localStorage.removeItem('styla_twin_user_email');
+          safeStorage.removeItem('styla_twin_chest');
+          safeStorage.removeItem('styla_twin_waist');
+          safeStorage.removeItem('styla_twin_belly');
+          safeStorage.removeItem('styla_twin_hips');
+          safeStorage.removeItem('styla_twin_height');
+          safeStorage.removeItem('styla_twin_inseam');
+          safeStorage.removeItem('styla_twin_api_scans');
+          safeStorage.removeItem('styla_twin_measurement_overrides');
+          safeStorage.removeItem('styla_twin_logged_in');
+          safeStorage.removeItem('styla_twin_user_email');
           
           updateUserHeader(null);
           showSetup();
           alert("Logged out successfully.");
+        });
+      }
+
+      // Header login link wiring
+      const lnkLogin = document.getElementById('lnk-login');
+      if (lnkLogin) {
+        lnkLogin.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('result-view').style.display = 'none';
+          document.getElementById('setup-view').style.display = 'none';
+          document.getElementById('guest-login-view').style.display = 'flex';
         });
       }
 
@@ -1151,7 +1300,12 @@
 
       btnBackToSetup.addEventListener('click', () => {
         loginView.style.display = 'none';
-        setupView.style.display = 'flex';
+        const chest = safeStorage.getItem('styla_twin_chest');
+        if (chest) {
+          document.getElementById('result-view').style.display = 'flex';
+        } else {
+          setupView.style.display = 'flex';
+        }
       });
 
       // Guest Scan Submission
@@ -1215,14 +1369,14 @@
                 const saveData = await saveRes.json();
                 
                 if (saveData.success) {
-                  localStorage.setItem('styla_twin_chest', saveData.twin.chest);
-                  localStorage.setItem('styla_twin_waist', saveData.twin.waist);
-                  localStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
-                  localStorage.setItem('styla_twin_hips', saveData.twin.hips);
-                  localStorage.setItem('styla_twin_height', heightInches.toString());
-                  localStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
-                  localStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
-                  localStorage.setItem('styla_twin_measurement_overrides', '{}');
+                  safeStorage.setItem('styla_twin_chest', saveData.twin.chest);
+                  safeStorage.setItem('styla_twin_waist', saveData.twin.waist);
+                  safeStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
+                  safeStorage.setItem('styla_twin_hips', saveData.twin.hips);
+                  safeStorage.setItem('styla_twin_height', heightInches.toString());
+                  safeStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
+                  safeStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
+                  safeStorage.setItem('styla_twin_measurement_overrides', '{}');
 
                   alert("3D Body Scan complete! Measurements loaded.");
                   btnRunScan.disabled = false;
@@ -1267,14 +1421,14 @@
           return;
         }
 
-        localStorage.setItem('styla_twin_chest', chest);
-        localStorage.setItem('styla_twin_waist', waist);
-        localStorage.setItem('styla_twin_belly', belly || waist);
-        localStorage.setItem('styla_twin_hips', hips);
-        localStorage.setItem('styla_twin_height', heightVal.toString());
-        localStorage.setItem('styla_twin_inseam', inseam || '');
-        localStorage.removeItem('styla_twin_api_scans');
-        localStorage.removeItem('styla_twin_measurement_overrides');
+        safeStorage.setItem('styla_twin_chest', chest);
+        safeStorage.setItem('styla_twin_waist', waist);
+        safeStorage.setItem('styla_twin_belly', belly || waist);
+        safeStorage.setItem('styla_twin_hips', hips);
+        safeStorage.setItem('styla_twin_height', heightVal.toString());
+        safeStorage.setItem('styla_twin_inseam', inseam || '');
+        safeStorage.removeItem('styla_twin_api_scans');
+        safeStorage.removeItem('styla_twin_measurement_overrides');
 
         await runSizingDecode();
       });
@@ -1303,16 +1457,16 @@
           const { data: profile, error: dbErr } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
           if (dbErr) throw dbErr;
 
-          localStorage.setItem('styla_twin_chest', profile.chest || '');
-          localStorage.setItem('styla_twin_waist', profile.waist || '');
-          localStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
-          localStorage.setItem('styla_twin_hips', profile.hips || '');
-          localStorage.setItem('styla_twin_height', profile.height || '');
-          localStorage.setItem('styla_twin_inseam', profile.inseam || '');
-          localStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
-          localStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
-          localStorage.setItem('styla_twin_logged_in', 'true');
-          localStorage.setItem('styla_twin_user_email', email);
+          safeStorage.setItem('styla_twin_chest', profile.chest || '');
+          safeStorage.setItem('styla_twin_waist', profile.waist || '');
+          safeStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
+          safeStorage.setItem('styla_twin_hips', profile.hips || '');
+          safeStorage.setItem('styla_twin_height', profile.height || '');
+          safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+          safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
+          safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
+          safeStorage.setItem('styla_twin_logged_in', 'true');
+          safeStorage.setItem('styla_twin_user_email', email);
           updateUserHeader(email);
 
           alert("Logged in successfully! AI Tailor Profile synced.");
@@ -1345,14 +1499,14 @@
           try {
             if (!supabase) throw new Error("Supabase is not loaded.");
 
-            const chest = parseFloat(localStorage.getItem('styla_twin_chest'));
-            const waist = parseFloat(localStorage.getItem('styla_twin_waist'));
-            const belly = parseFloat(localStorage.getItem('styla_twin_belly'));
-            const hips = parseFloat(localStorage.getItem('styla_twin_hips'));
-            const height = parseFloat(localStorage.getItem('styla_twin_height'));
-            const inseam = parseFloat(localStorage.getItem('styla_twin_inseam'));
-            const api_scans = JSON.parse(localStorage.getItem('styla_twin_api_scans') || '[]');
-            const measurement_overrides = JSON.parse(localStorage.getItem('styla_twin_measurement_overrides') || '{}');
+            const chest = parseFloat(safeStorage.getItem('styla_twin_chest'));
+            const waist = parseFloat(safeStorage.getItem('styla_twin_waist'));
+            const belly = parseFloat(safeStorage.getItem('styla_twin_belly'));
+            const hips = parseFloat(safeStorage.getItem('styla_twin_hips'));
+            const height = parseFloat(safeStorage.getItem('styla_twin_height'));
+            const inseam = parseFloat(safeStorage.getItem('styla_twin_inseam'));
+            const api_scans = JSON.parse(safeStorage.getItem('styla_twin_api_scans') || '[]');
+            const measurement_overrides = JSON.parse(safeStorage.getItem('styla_twin_measurement_overrides') || '{}');
 
             const { data: authData, error: signupErr } = await supabase.auth.signUp({
               email,
@@ -1369,14 +1523,27 @@
             if (signupErr) throw signupErr;
 
             // Auto-login to sync session
-            const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
-            
-            localStorage.setItem('styla_twin_logged_in', 'true');
-            localStorage.setItem('styla_twin_user_email', email);
-            updateUserHeader(email);
+            try {
+              const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+              if (loginErr) throw loginErr;
+              
+              safeStorage.setItem('styla_twin_logged_in', 'true');
+              safeStorage.setItem('styla_twin_user_email', email);
+              updateUserHeader(email);
 
-            document.getElementById('guest-signup-card').style.display = 'none';
-            alert("Account created successfully! Sizing saved to Styla Cloud.");
+              const signupCard = document.getElementById('guest-signup-card');
+              if (signupCard) signupCard.style.display = 'none';
+              alert("Account created successfully! Sizing saved to Styla Cloud.");
+            } catch (loginErr) {
+              // If email confirmation is required, signInWithPassword will throw an error
+              if (loginErr.message.includes("confirm") || loginErr.message.includes("Email not confirmed")) {
+                const signupCard = document.getElementById('guest-signup-card');
+                if (signupCard) signupCard.style.display = 'none';
+                alert("Account created! A confirmation email has been sent. Please confirm your email to activate and sync your account.");
+              } else {
+                throw loginErr;
+              }
+            }
           } catch (err) {
             signupError.textContent = err.message;
             signupError.style.display = 'block';
