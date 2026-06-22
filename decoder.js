@@ -523,11 +523,48 @@ async function deleteScanFromCloud(scanId) {
 
 // Load saved AI Tailor measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
-  // Set bookmarklet dynamically
+  // Set bookmarklet dynamically and setup copy button/toggle
   const btnBookmarklet = document.getElementById('btn-bookmarklet');
+  const btnCopyBookmarklet = document.getElementById('btn-copy-bookmarklet');
+  const lnkToggleMobile = document.getElementById('lnk-toggle-mobile');
+  const mobilePanel = document.getElementById('mobile-instructions-panel');
+  const copyMsg = document.getElementById('copy-success-msg');
+
+  const bookmarkletHref = `javascript:(function(){const s=document.createElement('script');s.src='${window.location.origin}/tools/bookmarklet-script.js?t='+Date.now();document.body.appendChild(s);})();`;
+
   if (btnBookmarklet) {
-      const bookmarkletHref = `javascript:(function(){const s=document.createElement('script');s.src='${window.location.origin}/tools/bookmarklet-script.js?t='+Date.now();document.body.appendChild(s);})();`;
       btnBookmarklet.setAttribute('href', bookmarkletHref);
+      btnBookmarklet.addEventListener('click', (e) => {
+        alert("To use STYLA on retail clothing stores, drag this button to your browser's Bookmarks Bar! (If you are on mobile, use the Mobile Guide below)");
+      });
+  }
+
+  if (lnkToggleMobile && mobilePanel) {
+    lnkToggleMobile.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (mobilePanel.style.display === 'none') {
+        mobilePanel.style.display = 'block';
+        lnkToggleMobile.textContent = '❌ Close Mobile Guide';
+      } else {
+        mobilePanel.style.display = 'none';
+        lnkToggleMobile.textContent = '📱 Installing on Mobile? View Guide';
+      }
+    });
+  }
+
+  if (btnCopyBookmarklet) {
+    btnCopyBookmarklet.addEventListener('click', () => {
+      navigator.clipboard.writeText(bookmarkletHref).then(() => {
+        if (copyMsg) {
+          copyMsg.style.display = 'block';
+          setTimeout(() => {
+            copyMsg.style.display = 'none';
+          }, 3000);
+        }
+      }).catch(err => {
+        alert("Failed to copy code: " + err);
+      });
+    });
   }
 
   const savedChest = localStorage.getItem('styla_twin_chest');

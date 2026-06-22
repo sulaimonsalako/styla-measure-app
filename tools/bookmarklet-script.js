@@ -77,17 +77,10 @@
   container.appendChild(iframe);
   document.body.appendChild(container);
 
-  // Listen for close message
-  const closeListener = (event) => {
-    if (event.data && event.data.type === 'STYLA_WIDGET_CLOSE') {
-      container.remove();
-      window.removeEventListener('message', closeListener);
-    }
-  };
-  window.addEventListener('message', closeListener);
-
-  // Send scraped data when iframe loads
-  iframe.onload = () => {
+  let dataSent = false;
+  const sendScrapedData = () => {
+    if (dataSent) return;
+    dataSent = true;
     iframe.contentWindow.postMessage({
       type: 'STYLA_SCRAPE_RESULT',
       pageTitle,
@@ -95,6 +88,24 @@
       tableHtml,
       url
     }, '*');
+  };
+
+  // Listen for messages from iframe
+  const messageListener = (event) => {
+    if (event.data) {
+      if (event.data.type === 'STYLA_WIDGET_CLOSE') {
+        container.remove();
+        window.removeEventListener('message', messageListener);
+      } else if (event.data.type === 'STYLA_WIDGET_READY') {
+        sendScrapedData();
+      }
+    }
+  };
+  window.addEventListener('message', messageListener);
+
+  // Fallback onload event
+  iframe.onload = () => {
+    setTimeout(sendScrapedData, 100);
   };
 })();
 

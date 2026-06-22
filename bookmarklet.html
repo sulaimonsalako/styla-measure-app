@@ -252,12 +252,179 @@
       font-size: 0.85rem;
       cursor: pointer;
     }
+
+    /* Form & Input styles */
+    .form-group {
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .form-col {
+      flex: 1;
+    }
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent-pink);
+    }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 14px;
+      padding-right: 36px;
+    }
+
+    /* Mode selector tabs */
+    .toggle-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+    .toggle-tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-tab-btn.active {
+      background: var(--accent-pink);
+      color: #fff;
+    }
+
+    /* Photo Upload Dropzone */
+    .upload-grid {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .upload-zone {
+      flex: 1;
+      border: 2px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 16px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.01);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .upload-zone:hover {
+      border-color: var(--accent-pink);
+      background: rgba(255, 42, 117, 0.02);
+    }
+    .upload-icon {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+    }
+    .upload-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Action Buttons */
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--accent-pink) 0%, #d90040 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(255, 42, 117, 0.2);
+    }
+    .btn-submit:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      box-shadow: none;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Footer Links */
+    .auth-footer {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .auth-footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="brand">? STYLA Size Finder</div>
-    <button class="close-btn" onclick="closeWidget()">?</button>
+    <div style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
+      <div class="brand">
+        <img src="logo.png" style="height:20px; width:20px; border-radius:50%; vertical-align:middle; margin-right:6px;" />
+        STYLA <span style="font-weight: 400; opacity:0.85;">Measure</span>
+      </div>
+      <div id="user-header-status" style="font-size: 10px; color: var(--text-muted); display: none;">
+        Logged in as <span id="user-header-email" style="color: var(--accent-light);"></span>
+        (<a href="#" id="lnk-logout" style="color: #fca5a5; text-decoration: underline;">Log out</a>)
+      </div>
+    </div>
+    <button class="close-btn" onclick="closeWidget()">&times;</button>
   </header>
 
   <!-- 3D Scan Active Badge -->
@@ -268,12 +435,160 @@
   <main id="main-content">
     <div class="loader-box" id="loader">
       <div class="spinner"></div>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">Scanning page details...</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem;" id="loader-text">Scanning page details...</p>
+    </div>
+
+    <!-- Setup View (Scanning / Manual Entry) -->
+    <div id="setup-view" style="display: none; flex-direction: column;">
+      <h3 style="font-family: var(--font-head); font-size: 1.1rem; margin-bottom: 12px; font-weight: 700; color: #fff;">Set Up AI Tailor Profile</h3>
+      
+      <div class="toggle-tabs">
+        <button class="toggle-tab-btn active" id="btn-guest-mode-scan">3D Body Scan</button>
+        <button class="toggle-tab-btn" id="btn-guest-mode-manual">Manual Entry</button>
+      </div>
+
+      <!-- 3D Body Scan Panel -->
+      <div id="guest-scan-panel">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+          Upload a front and side photo to automatically extract 80+ body measurements using Styla AI.
+        </p>
+        
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-scan-gender">Gender Identity</label>
+              <select id="guest-scan-gender" class="form-input">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-scan-weight">Weight (lbs)</label>
+              <input type="number" id="guest-scan-weight" class="form-input" value="140">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Height</label>
+          <div class="form-row" style="margin-bottom: 0;">
+            <div class="form-col">
+              <input type="number" id="guest-scan-height-ft" class="form-input" placeholder="Feet" value="5">
+            </div>
+            <div class="form-col">
+              <input type="number" id="guest-scan-height-in" class="form-input" placeholder="Inches" value="4">
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-grid">
+          <label class="upload-zone" id="lbl-guest-front" for="guest-front-file">
+            <span class="upload-icon">👤</span>
+            <span class="upload-text" id="text-guest-front">Front Photo</span>
+            <input type="file" id="guest-front-file" accept="image/*" style="display: none;">
+          </label>
+          
+          <label class="upload-zone" id="lbl-guest-side" for="guest-side-file">
+            <span class="upload-icon">🧍</span>
+            <span class="upload-text" id="text-guest-side">Side Photo</span>
+            <input type="file" id="guest-side-file" accept="image/*" style="display: none;">
+          </label>
+        </div>
+
+        <button class="btn-submit" id="btn-guest-run-scan">Run 3D Body Scan</button>
+      </div>
+
+      <!-- Manual Measurements Panel -->
+      <div id="guest-manual-panel" style="display: none;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+          Enter your measurements manually in inches for instant size recommendations.
+        </p>
+
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-manual-chest">Chest (in)</label>
+              <input type="number" id="guest-manual-chest" class="form-input" placeholder="e.g. 38">
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-manual-waist">Waist (in)</label>
+              <input type="number" id="guest-manual-waist" class="form-input" placeholder="e.g. 32">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-manual-belly">Belly (in)</label>
+              <input type="number" id="guest-manual-belly" class="form-input" placeholder="e.g. 33">
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-manual-hips">Hips (in)</label>
+              <input type="number" id="guest-manual-hips" class="form-input" placeholder="e.g. 40">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-col">
+            <div class="form-group">
+              <label>Height</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="number" id="guest-manual-height-ft" class="form-input" placeholder="ft" value="5">
+                <input type="number" id="guest-manual-height-in" class="form-input" placeholder="in" value="4">
+              </div>
+            </div>
+          </div>
+          <div class="form-col">
+            <div class="form-group">
+              <label for="guest-manual-inseam">Inseam (in)</label>
+              <input type="number" id="guest-manual-inseam" class="form-input" placeholder="Optional">
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="btn-guest-manual-submit">Save Measurements</button>
+      </div>
+
+      <div class="auth-footer">
+        Already have a STYLA profile? <a href="#" id="btn-show-guest-login">Log In</a>
+      </div>
+    </div>
+
+    <!-- Login View -->
+    <div id="guest-login-view" style="display: none; flex-direction: column;">
+      <h3 style="font-family: var(--font-head); font-size: 1.1rem; margin-bottom: 12px; font-weight: 700; color: #fff;">Log In to STYLA</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+        Sign in to pull your saved measurements and AI Tailor Profile from Styla Cloud.
+      </p>
+
+      <div class="form-group">
+        <label for="guest-login-email">Email Address</label>
+        <input type="email" id="guest-login-email" class="form-input" placeholder="email@example.com">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label for="guest-login-password">Password</label>
+        <input type="password" id="guest-login-password" class="form-input" placeholder="Your password">
+      </div>
+
+      <div class="error-box" id="guest-login-error" style="display: none; margin-bottom: 12px; padding: 10px; font-size: 0.8rem;"></div>
+
+      <button class="btn-submit" id="btn-guest-login-submit" style="margin-bottom: 16px;">Log In & Sync</button>
+      
+      <button class="btn-submit btn-secondary" id="btn-back-to-setup">Back to Guest Setup</button>
     </div>
 
     <div id="result-view" style="display: none;">
       <div class="card">
-        <div class="verdict-title">?? Recommended Fit</div>
+        <div class="verdict-title">👔 Recommended Fit</div>
         <div class="verdict-size" id="size-verdict">M</div>
         
         <div class="score-container">
@@ -302,7 +617,7 @@
       </div>
 
       <div class="chat-section">
-        <div class="chat-title">?? Ask Follow-up Questions</div>
+        <div class="chat-title">💬 Ask Follow-up Questions</div>
         <div class="chat-messages" id="chat-messages">
           <div class="chat-bubble assistant">Hello! I'm your Tailor AI sizing companion. Ask me anything about how this garment will fit you.</div>
         </div>
@@ -320,6 +635,51 @@
     let supabase = null;
     if (window.supabase) {
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    function updateUserHeader(email) {
+      const statusDiv = document.getElementById('user-header-status');
+      const emailSpan = document.getElementById('user-header-email');
+      if (email) {
+        if (emailSpan) emailSpan.textContent = email;
+        if (statusDiv) statusDiv.style.display = 'block';
+      } else {
+        if (statusDiv) statusDiv.style.display = 'none';
+      }
+    }
+
+    async function initSession() {
+      if (!supabase) return;
+      try {
+        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+        if (session && session.user) {
+          const { data: profile, error: dbErr } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          if (!dbErr && profile) {
+            localStorage.setItem('styla_twin_chest', profile.chest || '');
+            localStorage.setItem('styla_twin_waist', profile.waist || '');
+            localStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
+            localStorage.setItem('styla_twin_hips', profile.hips || '');
+            localStorage.setItem('styla_twin_height', profile.height || '');
+            localStorage.setItem('styla_twin_inseam', profile.inseam || '');
+            localStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
+            localStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
+            localStorage.setItem('styla_twin_logged_in', 'true');
+            localStorage.setItem('styla_twin_user_email', session.user.email);
+            
+            updateUserHeader(session.user.email);
+            
+            if (activeScrapedContext) {
+              await runSizingDecode();
+            }
+          }
+        } else {
+          localStorage.removeItem('styla_twin_logged_in');
+          localStorage.removeItem('styla_twin_user_email');
+          updateUserHeader(null);
+        }
+      } catch (err) {
+        console.error("Auth session recovery error:", err);
+      }
     }
 
     let activeScrapedContext = null;
@@ -340,6 +700,9 @@
         await runSizingDecode();
       }
     });
+
+    // Notify parent window that widget is ready to receive scraped data
+    window.parent.postMessage({ type: 'STYLA_WIDGET_READY' }, '*');
 
     function compressFileImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
       return new Promise((resolve, reject) => {
@@ -684,6 +1047,33 @@
 
     // ----------------- Guest Scanner & Forms Wiring -----------------
     document.addEventListener('DOMContentLoaded', () => {
+      initSession();
+
+      // Logout link wiring
+      const lnkLogout = document.getElementById('lnk-logout');
+      if (lnkLogout) {
+        lnkLogout.addEventListener('click', async (e) => {
+          e.preventDefault();
+          if (supabase) {
+            await supabase.auth.signOut();
+          }
+          localStorage.removeItem('styla_twin_chest');
+          localStorage.removeItem('styla_twin_waist');
+          localStorage.removeItem('styla_twin_belly');
+          localStorage.removeItem('styla_twin_hips');
+          localStorage.removeItem('styla_twin_height');
+          localStorage.removeItem('styla_twin_inseam');
+          localStorage.removeItem('styla_twin_api_scans');
+          localStorage.removeItem('styla_twin_measurement_overrides');
+          localStorage.removeItem('styla_twin_logged_in');
+          localStorage.removeItem('styla_twin_user_email');
+          
+          updateUserHeader(null);
+          showSetup();
+          alert("Logged out successfully.");
+        });
+      }
+
       // Toggle setup modes (scan vs manual)
       const btnModeScan = document.getElementById('btn-guest-mode-scan');
       const btnModeManual = document.getElementById('btn-guest-mode-manual');
@@ -923,6 +1313,7 @@
           localStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
           localStorage.setItem('styla_twin_logged_in', 'true');
           localStorage.setItem('styla_twin_user_email', email);
+          updateUserHeader(email);
 
           alert("Logged in successfully! AI Tailor Profile synced.");
           await runSizingDecode();
@@ -982,6 +1373,7 @@
             
             localStorage.setItem('styla_twin_logged_in', 'true');
             localStorage.setItem('styla_twin_user_email', email);
+            updateUserHeader(email);
 
             document.getElementById('guest-signup-card').style.display = 'none';
             alert("Account created successfully! Sizing saved to Styla Cloud.");
