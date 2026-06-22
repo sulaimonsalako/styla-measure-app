@@ -661,6 +661,18 @@
       <div class="error-box" id="auth-error" style="display: none; margin-top: 12px; padding: 10px; font-size: 0.8rem;"></div>
     </div>
 
+    <!-- Analyze View (Run Sizing Recommendation) -->
+    <div id="analyze-view" style="display: none; flex-direction: column;">
+      <div class="card" style="text-align: center; padding: 24px 16px;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">✨</div>
+        <h3 style="font-family: var(--font-head); font-size: 1.2rem; margin-bottom: 8px; font-weight: 700; color: #fff;">Profile Connected</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; text-align: center;">
+          Your AI Tailor measurements are synced from the cloud. Click below to analyze this product's dimensions and get size recommendations.
+        </p>
+        <button class="btn-submit" id="btn-run-analysis" style="width: 100%;">Get Sizing Recommendation</button>
+      </div>
+    </div>
+
     <div id="result-view" style="display: none;">
       <div class="card">
         <div class="verdict-title">👔 Recommended Fit</div>
@@ -737,6 +749,21 @@
       fallback: {}
     };
 
+    let sessionInitialized = false;
+    let wasAlreadyLoggedInOnLoad = false;
+
+    function showAnalyzeView() {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('result-view').style.display = 'none';
+      document.getElementById('setup-view').style.display = 'none';
+      
+      const authView = document.getElementById('auth-view');
+      if (authView) authView.style.display = 'none';
+      
+      const analyzeView = document.getElementById('analyze-view');
+      if (analyzeView) analyzeView.style.display = 'flex';
+    }
+
     const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
     let stylaSupabase = null;
@@ -782,6 +809,9 @@
       document.getElementById('loader').style.display = 'none';
       document.getElementById('result-view').style.display = 'none';
       document.getElementById('setup-view').style.display = 'none';
+      const analyzeView = document.getElementById('analyze-view');
+      if (analyzeView) analyzeView.style.display = 'none';
+      wasAlreadyLoggedInOnLoad = false;
       
       const authView = document.getElementById('auth-view');
       if (authView) authView.style.display = 'flex';
@@ -820,10 +850,7 @@
             safeStorage.setItem('styla_twin_user_email', session.user.email);
             
             updateUserHeader(session.user.email);
-            
-            if (activeScrapedContext) {
-              await runSizingDecode();
-            }
+            wasAlreadyLoggedInOnLoad = true;
           } else {
             // Profile not found, force log out
             showLoginView();
@@ -837,6 +864,34 @@
       } catch (err) {
         console.error("Auth session recovery error:", err);
         showLoginView();
+      } finally {
+        sessionInitialized = true;
+        await checkReadyToDecode();
+      }
+    }
+
+    async function checkReadyToDecode() {
+      if (!sessionInitialized || !activeScrapedContext) return;
+
+      const isLoggedIn = safeStorage.getItem('styla_twin_logged_in') === 'true';
+      if (!isLoggedIn) {
+        showLoginView();
+        return;
+      }
+
+      const chest = safeStorage.getItem('styla_twin_chest');
+      const waist = safeStorage.getItem('styla_twin_waist');
+      const hips = safeStorage.getItem('styla_twin_hips');
+
+      if (!chest || !waist || !hips) {
+        showSetup();
+        return;
+      }
+
+      if (wasAlreadyLoggedInOnLoad) {
+        await runSizingDecode();
+      } else {
+        showAnalyzeView();
       }
     }
 
@@ -879,7 +934,7 @@
       const payload = event.data;
       if (payload && payload.type === 'STYLA_SCRAPE_RESULT') {
         activeScrapedContext = payload;
-        await runSizingDecode();
+        await checkReadyToDecode();
       }
     });
 
@@ -924,14 +979,14 @@
       const loader = document.getElementById('loader');
       const resultView = document.getElementById('result-view');
       const setupView = document.getElementById('setup-view');
-      const guestLoginView = document.getElementById('guest-login-view');
       const loaderText = document.getElementById('loader-text');
+      const analyzeView = document.getElementById('analyze-view');
 
       loaderText.textContent = "Analyzing uploaded size chart...";
       loader.style.display = 'flex';
       resultView.style.display = 'none';
       setupView.style.display = 'none';
-      guestLoginView.style.display = 'none';
+      if (analyzeView) analyzeView.style.display = 'none';
 
       const chest = safeStorage.getItem('styla_twin_chest');
       const waist = safeStorage.getItem('styla_twin_waist');
@@ -1023,7 +1078,12 @@
     function showSetup() {
       document.getElementById('loader').style.display = 'none';
       document.getElementById('result-view').style.display = 'none';
-      document.getElementById('guest-login-view').style.display = 'none';
+      const analyzeView = document.getElementById('analyze-view');
+      if (analyzeView) analyzeView.style.display = 'none';
+      
+      const authView = document.getElementById('auth-view');
+      if (authView) authView.style.display = 'none';
+      
       document.getElementById('setup-view').style.display = 'flex';
     }
 
@@ -1031,14 +1091,14 @@
       const loader = document.getElementById('loader');
       const resultView = document.getElementById('result-view');
       const setupView = document.getElementById('setup-view');
-      const guestLoginView = document.getElementById('guest-login-view');
       const loaderText = document.getElementById('loader-text');
+      const analyzeView = document.getElementById('analyze-view');
 
       loaderText.textContent = "Scanning page details...";
       loader.style.display = 'flex';
       resultView.style.display = 'none';
       setupView.style.display = 'none';
-      guestLoginView.style.display = 'none';
+      if (analyzeView) analyzeView.style.display = 'none';
 
       // Fetch scan history and overrides
       let api_scans = [];
@@ -1244,6 +1304,14 @@
         });
       }
 
+      // Run analysis button listener
+      const btnRunAnalysis = document.getElementById('btn-run-analysis');
+      if (btnRunAnalysis) {
+        btnRunAnalysis.addEventListener('click', async () => {
+          await runSizingDecode();
+        });
+      }
+
       // Logout link wiring
       const lnkLogout = document.getElementById('lnk-logout');
       if (lnkLogout) {
@@ -1263,6 +1331,7 @@
           safeStorage.removeItem('styla_twin_logged_in');
           safeStorage.removeItem('styla_twin_user_email');
           
+          wasAlreadyLoggedInOnLoad = false;
           updateUserHeader(null);
           showLoginView();
           alert("Logged out successfully.");
@@ -1428,7 +1497,11 @@
                     alert("3D Body Scan complete! Measurements loaded.");
                     btnRunScan.disabled = false;
                     btnRunScan.textContent = "Run 3D Body Scan";
-                    await runSizingDecode();
+                    if (wasAlreadyLoggedInOnLoad) {
+                      await runSizingDecode();
+                    } else {
+                      showAnalyzeView();
+                    }
                   } else {
                     throw new Error("Failed to save measurements.");
                   }
@@ -1499,7 +1572,11 @@
             safeStorage.removeItem('styla_twin_measurement_overrides');
 
             alert("Profile measurements updated!");
-            await runSizingDecode();
+            if (wasAlreadyLoggedInOnLoad) {
+              await runSizingDecode();
+            } else {
+              showAnalyzeView();
+            }
           } catch (err) {
             alert("Error saving profile: " + err.message);
           } finally {
@@ -1550,7 +1627,7 @@
             
             // Check if profile has measurements
             if (profile.chest && profile.waist && profile.hips) {
-              await runSizingDecode();
+              showAnalyzeView();
             } else {
               showSetup();
             }
