@@ -1037,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cloudPasswordInput = document.getElementById('cloud-password');
   const btnCloudLogin = document.getElementById('btn-cloud-login');
   const cloudLoginError = document.getElementById('cloud-login-error');
-  const cloudLoginForm = document.getElementById('cloud-login-form');
+  // cloudLoginForm is already declared at the top scope
   const cloudProfilePanel = document.getElementById('cloud-profile-panel');
   const cloudUserEmail = document.getElementById('cloud-user-email');
   const btnCloudPull = document.getElementById('btn-cloud-pull');
@@ -1091,10 +1091,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           return newSession;
         } else {
           console.warn("Token refresh failed. Response status:", res.status);
-          // If refresh fails with invalid grant, the refresh token might be invalid/revoked.
-          // We will clear session and prompt login
-          await chrome.storage.local.remove('supabaseSession');
-          return null;
+          // Only clear session if the token is explicitly invalid (e.g. 400 or 401)
+          if (res.status === 400 || res.status === 401) {
+            await chrome.storage.local.remove('supabaseSession');
+            return null;
+          }
+          return session; // Keep session rather than logging out on transient errors
         }
       } catch (err) {
         console.error("Failed to refresh token:", err);

@@ -95,6 +95,27 @@
         window.removeEventListener('message', messageListener);
       } else if (event.data.type === 'STYLA_WIDGET_READY') {
         sendScrapedData();
+      } else if (event.data.type === 'STYLA_GET_STORAGE') {
+        const result = {};
+        if (event.data.keys && Array.isArray(event.data.keys)) {
+          event.data.keys.forEach(k => {
+            try {
+              result[k] = window.localStorage.getItem(k);
+            } catch (e) {}
+          });
+        }
+        iframe.contentWindow.postMessage({
+          type: 'STYLA_STORAGE_DATA',
+          data: result
+        }, '*');
+      } else if (event.data.type === 'STYLA_SET_STORAGE') {
+        try {
+          window.localStorage.setItem(event.data.key, event.data.value);
+        } catch (e) {}
+      } else if (event.data.type === 'STYLA_REMOVE_STORAGE') {
+        try {
+          window.localStorage.removeItem(event.data.key);
+        } catch (e) {}
       }
     }
   };

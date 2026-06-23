@@ -712,16 +712,22 @@
           window.localStorage.setItem(key, value);
         } catch (e) {
           console.warn("safeStorage.setItem blocked:", e);
-          safeStorage.fallback[key] = value;
         }
+        safeStorage.fallback[key] = value;
+        try {
+          window.parent.postMessage({ type: 'STYLA_SET_STORAGE', key, value }, '*');
+        } catch (e) {}
       },
       removeItem(key) {
         try {
           window.localStorage.removeItem(key);
         } catch (e) {
           console.warn("safeStorage.removeItem blocked:", e);
-          delete safeStorage.fallback[key];
         }
+        delete safeStorage.fallback[key];
+        try {
+          window.parent.postMessage({ type: 'STYLA_REMOVE_STORAGE', key }, '*');
+        } catch (e) {}
       },
       fallback: {}
     };
@@ -1048,12 +1054,30 @@
       window.parent.postMessage({ type: 'STYLA_WIDGET_CLOSE' }, '*');
     }
 
-    // Listens for scraped payload from parent window
+    let storageLoaded = false;
+
+    // Listens for scraped payload or storage data from parent window
     window.addEventListener('message', async (event) => {
       const payload = event.data;
-      if (payload && payload.type === 'STYLA_SCRAPE_RESULT') {
+      if (!payload) return;
+
+      if (payload.type === 'STYLA_SCRAPE_RESULT') {
         activeScrapedContext = payload;
         await checkReadyToDecode();
+      } else if (payload.type === 'STYLA_STORAGE_DATA') {
+        if (storageLoaded) return;
+        storageLoaded = true;
+
+        // Populate fallback storage with parent data
+        const data = payload.data || {};
+        Object.keys(data).forEach(k => {
+          if (data[k] !== null) {
+            safeStorage.fallback[k] = data[k];
+          }
+        });
+
+        // Now initialize the session
+        await initSession();
       }
     });
 
@@ -1412,7 +1436,34 @@
 
     // ----------------- Guest Scanner & Forms Wiring -----------------
     document.addEventListener('DOMContentLoaded', () => {
-      initSession();
+      // Request storage keys from parent script (Zara.com)
+      const keys = [
+        'sb-tneflxtpmzodauygtslk-auth-token',
+        'styla_twin_chest',
+        'styla_twin_waist',
+        'styla_twin_belly',
+        'styla_twin_hips',
+        'styla_twin_height',
+        'styla_twin_inseam',
+        'styla_twin_api_scans',
+        'styla_twin_measurement_overrides',
+        'styla_twin_logged_in',
+        'styla_twin_user_email'
+      ];
+      
+      try {
+        window.parent.postMessage({ type: 'STYLA_GET_STORAGE', keys }, '*');
+      } catch (e) {
+        console.warn("Failed to request parent storage:", e);
+      }
+      
+      // Fallback timeout in case parent doesn't respond or loaded directly
+      setTimeout(async () => {
+        if (!storageLoaded) {
+          storageLoaded = true;
+          await initSession();
+        }
+      }, 400);
 
       // Programmatic Close Button Event Listener
       const closeBtn = document.querySelector('.close-btn');
