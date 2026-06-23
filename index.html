@@ -686,15 +686,19 @@
       background: rgba(255, 255, 255, 0.8) !important;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
     }
-    h1, h2, h3, h4, h5, p, span, label, div.db-nav-item, .brand-logo {
+    
+    h1, h2, h3, h4, h5, p, label, div.db-nav-item, .brand-logo {
       color: #0f172a !important;
+    }
+    span:not(.badge):not(#cloud-sync-status):not(#profile-email-text):not(#db-user-email) {
+      color: inherit !important;
     }
     h1 em, h2 em, h3 em, h4 em, h5 em, .brand-logo span {
       font-style: italic !important;
       font-weight: 400 !important;
       color: #e11d48 !important;
     }
-    button, .btn-primary, .btn-login, .btn-run, .nav-cta, #saia-mtm-integration button, .btn-logout-link {
+    .btn-primary, .btn-login, .btn-run, .nav-cta, .btn-logout-link, #btn-decode, #chat-send-btn, #btn-save-profile, #btn-db-save-twin, #btn-db-start-scan, #btn-db-change-password, #btn-login-submit, #btn-signup-submit, #btn-forgot-submit, #btn-reset-submit {
       color: #ffffff !important;
     }
     .btn-run:hover {
@@ -764,34 +768,23 @@
 
   <div id="landing-view">
   <!-- Hero Intro -->
-  <section class="hero-container">
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
-      <h1 style="font-family: var(--font-outfit); font-size: 3rem; font-weight: 900; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #0f172a 30%, #334155 70%, #e11d48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Tired of Sizing Roulette?</h1>
-      <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 1rem 0;">
-        Every brand fits differently—a size Medium in one store can be a Large in another. Stop spending hours searching for your fit, buying multiple sizes just to return them, or losing money when you can't return. STYLA matches your 3D body scans to retail size charts in real-time.
+    <section class="hero-container">
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #0f172a 30%, #334155 70%, #e11d48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Know Your Size.<br><em>Everywhere.</em></h1>
+      <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; margin: 0 0 0.5rem 0; max-width: 520px;">
+        Every clothing brand uses a different size chart. STYLA matches your 3D body measurements to size charts in real-time, helping you buy the perfect fit with confidence.
       </p>
-      
-      <!-- Key benefits -->
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(225, 29, 72, 0.06); color: #e11d48; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: var(--text-secondary);"><b>Pants That Fit:</b> No more pants that fit your hips but gap at your waist.</span>
-        </div>
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(225, 29, 72, 0.06); color: #e11d48; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: var(--text-secondary);"><b>Shop Confidently:</b> Buy from brands you don't know without sizing anxiety.</span>
-        </div>
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(225, 29, 72, 0.06); color: #e11d48; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: var(--text-secondary);"><b>End Return Errands:</b> Stop ordering multiple sizes just to return what doesn't work.</span>
-        </div>
+      <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); flex-wrap: wrap;">
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> No return shipping fees</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Scan in 30 seconds</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Universal size profile</span>
       </div>
     </div>
 
-    <!-- Right Column: Relatable Sizing Struggle Image -->
+    <!-- Right Column: 3D Body Scan Visual Mockup (Truetoform Style) -->
     <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
-      <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
-      <img src="images/sizing_struggle.png" alt="Sizing Struggle Return Fatigue" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; z-index: 1;" />
+      <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(225, 29, 72, 0.08) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
+      <img src="images/styla_3d_scan_hero.png" alt="STYLA 3D Scan Avatar" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(15, 23, 42, 0.06); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04); position: relative; z-index: 1;" />
     </div>
   </section>
 

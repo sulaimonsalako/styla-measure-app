@@ -869,8 +869,8 @@ input[type="number"]:focus {
 
 /* Unified Editorial Footer */
 .footer, footer {
-  background: #ffffff !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: #f1f5f9 !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
   padding: 4rem 0 !important;
   width: 100% !important;
   margin-top: 6rem !important;
