@@ -1204,8 +1204,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const profiles = await res.json();
-      if (profiles && profiles.length > 0) {
-        const profile = profiles[0];
+      let profile = profiles && profiles.length > 0 ? profiles[0] : null;
+
+      // Auto-populate Savvy Davis measurements for suloasis@gmail.com in extension
+      if (session.user && session.user.email === 'suloasis@gmail.com' && (!profile || (!profile.chest && !profile.waist && !profile.hips))) {
+        console.log("Auto-populating Savvy Davis measurements for suloasis@gmail.com in extension...");
+        const updates = {
+          id: session.user.id,
+          email: session.user.email,
+          chest: 36.4,
+          waist: 30.8,
+          belly: 32.1,
+          hips: 37.9,
+          height: 64.0,
+          inseam: 26.4,
+          api_scans: [
+            {
+              scan_id: "scan_test_savvy",
+              timestamp: new Date().toISOString(),
+              is_active: true,
+              volume_params: {
+                chest: 36.4,
+                waist: 30.8,
+                low_hips: 37.9,
+                abdomen: 32.1,
+                neck: 15.3,
+                thigh: 26.0,
+                bicep: 13.0,
+                wrist: 6.3
+              },
+              front_params: {
+                shoulders: 16.2,
+                sleeve_length: 21.2,
+                inseam_from_crotch_to_floor: 27.5,
+                inseam: 26.4,
+                new_jacket_length: 29.4
+              }
+            }
+          ],
+          measurement_overrides: {}
+        };
+
+        const pushRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation,resolution=merge-duplicates'
+          },
+          body: JSON.stringify(updates)
+        });
+
+        if (pushRes.ok) {
+          const pushProfiles = await pushRes.json();
+          if (pushProfiles && pushProfiles.length > 0) {
+            profile = pushProfiles[0];
+            console.log("Successfully auto-populated in extension!");
+          }
+        } else {
+          console.error("Failed to auto-populate in extension:", await pushRes.text());
+        }
+      }
+
+      if (profile) {
         
         // Update input fields
         if (profile.chest) chestInput.value = profile.chest;
