@@ -188,8 +188,8 @@ function renderDashboardScans(profile) {
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">Scan from ${dateStr}</span>
             ${isActive 
-              ? \`<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid rgba(16, 185, 129, 0.25);">Active</span>\` 
-              : \`<span style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid var(--border);">Inactive</span>\`
+              ? `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid rgba(16, 185, 129, 0.25);">Active</span>` 
+              : `<span style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid var(--border);">Inactive</span>`
             }
           </div>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.55;">
@@ -198,7 +198,7 @@ function renderDashboardScans(profile) {
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           ${!isActive 
-            ? \`<button class="btn-db-set-active" data-scan-id="${scan.scan_id}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Set Active</button>\` 
+            ? `<button class="btn-db-set-active" data-scan-id="${scan.scan_id}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Set Active</button>` 
             : ''
           }
           <button class="btn-db-delete" data-scan-id="${scan.scan_id}" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 6px; text-decoration: underline;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#f87171'">Delete</button>
