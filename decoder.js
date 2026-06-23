@@ -2377,7 +2377,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       const email = scanEmailInput.value.trim();
-      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       
       if (emailRegex.test(email)) {
           if (scanEmailError) scanEmailError.style.display = 'none';
