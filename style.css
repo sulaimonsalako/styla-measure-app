@@ -3,38 +3,38 @@
    Design: Dark premium, glassmorphism, pain-first
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* === TOKENS === */
 :root {
-  --bg-base: #07070f;
-  --bg-surface: #0e0e1c;
-  --bg-raised: #141428;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-accent: rgba(255, 42, 117, 0.3);
+  --bg-base: #fcfcfd;
+  --bg-surface: #ffffff;
+  --bg-raised: #f3f4f6;
+  --border: rgba(0, 0, 0, 0.06);
+  --border-accent: rgba(225, 29, 72, 0.15);
 
-  --text-primary: #f0f0ff;
-  --text-secondary: #9090b0;
-  --text-muted: #5a5a7a;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
 
-  --accent: #ff2a75;
-  --accent-light: #ff75a0;
-  --accent-dim: rgba(255, 42, 117, 0.15);
-  --accent-glow: rgba(255, 42, 117, 0.25);
+  --accent: #111111;
+  --accent-light: #e11d48;
+  --accent-dim: rgba(225, 29, 72, 0.05);
+  --accent-glow: rgba(225, 29, 72, 0.08);
 
-  --pink: #ff0055;
-  --amber: #f59e0b;
+  --pink: #e11d48;
+  --amber: #d97706;
 
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-xl: 28px;
 
-  --font-head: 'Outfit', sans-serif;
+  --font-head: 'EB Garamond', serif;
   --font-body: 'Inter', sans-serif;
 
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset;
-  --shadow-glow: 0 0 80px rgba(255, 42, 117, 0.2);
+  --shadow-card: 0 4px 20px rgba(0,0,0,0.02), 0 1px 0 rgba(255,255,255,0.9) inset;
+  --shadow-glow: 0 0 40px rgba(225, 29, 72, 0.04);
 }
 
 /* === RESET === */
@@ -122,8 +122,8 @@ a { text-decoration: none; color: inherit; }
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 42, 117, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 42, 117, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
   pointer-events: none;
@@ -138,12 +138,12 @@ a { text-decoration: none; color: inherit; }
 }
 .hero-glow--left {
   width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(255,42,117,0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(225,29,72,0.03) 0%, transparent 70%);
   top: -100px; left: -200px;
 }
 .hero-glow--right {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(225,29,72,0.02) 0%, transparent 70%);
   bottom: -50px; right: -150px;
 }
 .hero-glow--center {
@@ -821,4 +821,47 @@ a { text-decoration: none; color: inherit; }
 @media (max-width: 768px) {
   .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
   .chart-container { height: 180px; }
+}
+
+/* ============================================
+   LIGHT PREMIUM EDITORIAL OVERRIDES
+   ============================================ */
+.nav {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+.hero-headline em, .final-title em, .brand-hero-title em {
+  font-family: var(--font-head);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent-light);
+}
+.step-num {
+  font-family: var(--font-head) !important;
+  font-size: 2.8rem !important;
+  font-weight: 400 !important;
+  font-style: italic !important;
+  opacity: 0.25 !important;
+  color: var(--accent-light) !important;
+}
+.step-card, .who-card, .shortterm-card {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02) !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+}
+.step-card:hover, .who-card:hover, .shortterm-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.05) !important;
+  border-color: rgba(225,29,72,0.15) !important;
+}
+.styled-input, .waitlist-form input {
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #0f172a !important;
+}
+.styled-input:focus, .waitlist-form input:focus {
+  border-color: var(--accent-light) !important;
+  box-shadow: 0 0 0 2px rgba(225,29,72,0.08) !important;
+}
+.logo-accent {
+  font-style: italic;
 }
