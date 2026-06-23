@@ -440,6 +440,27 @@
       opacity: 1 !important;
       border-bottom: 2px solid var(--accent-pink) !important;
     }
+    /* 3DLook MTM Widget Overrides */
+    .saia-widget-container button,
+    .saia-widget-container .saia-widget-button {
+      background: var(--accent-pink) !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+      font-size: 0.9rem !important;
+      padding: 12px 24px !important;
+      border-radius: 100px !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      box-shadow: 0 4px 15px rgba(255,42,117,0.2) !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+      width: 100% !important;
+    }
+    .saia-widget-container button:hover,
+    .saia-widget-container .saia-widget-button:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(255,42,117,0.3) !important;
+      opacity: 0.95 !important;
+    }
   </style>
 </head>
 <body>
@@ -479,58 +500,14 @@
       </div>
 
       <!-- 3D Body Scan Panel -->
-      <div id="guest-scan-panel">
-        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-          Upload a front and side photo to automatically extract 80+ body measurements using Styla AI.
+      <div id="guest-scan-panel" style="text-align: center; padding: 1rem 0;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5;">
+          Scan in 30 seconds with your phone camera. The AI body scanner extracts your measurements instantly.
         </p>
-        
-        <div class="form-row">
-          <div class="form-col">
-            <div class="form-group">
-              <label for="guest-scan-gender">Gender Identity</label>
-              <select id="guest-scan-gender" class="form-input">
-                <option value="female">Female</option>
-                <option value="male">Male</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-col">
-            <div class="form-group">
-              <label for="guest-scan-weight">Weight (lbs)</label>
-              <input type="number" id="guest-scan-weight" class="form-input" value="140">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Height</label>
-          <div class="form-row" style="margin-bottom: 0;">
-            <div class="form-col">
-              <input type="number" id="guest-scan-height-ft" class="form-input" placeholder="Feet" value="5">
-            </div>
-            <div class="form-col">
-              <input type="number" id="guest-scan-height-in" class="form-input" placeholder="Inches" value="4">
-            </div>
-          </div>
-        </div>
-
-        <div class="upload-grid">
-          <label class="upload-zone" id="lbl-guest-front" for="guest-front-file">
-            <span class="upload-icon">👤</span>
-            <span class="upload-text" id="text-guest-front">Front Photo</span>
-            <input type="file" id="guest-front-file" accept="image/*" style="display: none;">
-          </label>
-          
-          <label class="upload-zone" id="lbl-guest-side" for="guest-side-file">
-            <span class="upload-icon">🧍</span>
-            <span class="upload-text" id="text-guest-side">Side Photo</span>
-            <input type="file" id="guest-side-file" accept="image/*" style="display: none;">
-          </label>
-        </div>
-
-        <button class="btn-submit" id="btn-guest-run-scan">Run 3D Body Scan</button>
+        <!-- Official Widget Container -->
+        <div class="saia-widget-container" style="max-width: 320px; margin: 0 auto; min-height: 50px;"></div>
       </div>
-
+      
       <!-- Manual Measurements Panel -->
       <div id="guest-manual-panel" style="display: none;">
         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
@@ -752,6 +729,62 @@
     let sessionInitialized = false;
     let wasAlreadyLoggedInOnLoad = false;
 
+    // Helper to dynamically update widget email
+    function updateWidgetEmail(email) {
+      if (window.MTM_WIDGET_OPTIONS) {
+        window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
+        window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
+      }
+    }
+
+    // Initialize 3DLook Mobile Tailor Widget Options
+    window.MTM_WIDGET_OPTIONS = {
+      defaultValues: { email: '' },
+      onMeasurementsReady: (m) => {
+        console.log("Measurements complete inside bookmarklet:", m);
+        
+        const loaderText = document.getElementById('loader-text');
+        if (loaderText) loaderText.textContent = "Syncing scan results...";
+        document.getElementById('loader').style.display = 'flex';
+        document.getElementById('setup-view').style.display = 'none';
+
+        // Wait 3.5 seconds for webhook execution and then reload profile
+        setTimeout(async () => {
+          try {
+            const { data: { session } } = await stylaSupabase.auth.getSession();
+            if (session && session.user) {
+              const profile = await getOrCreateProfile(stylaSupabase, session.user);
+              if (profile) {
+                safeStorage.setItem('styla_twin_chest', profile.chest || '');
+                safeStorage.setItem('styla_twin_waist', profile.waist || '');
+                safeStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
+                safeStorage.setItem('styla_twin_hips', profile.hips || '');
+                safeStorage.setItem('styla_twin_height', profile.height || '');
+                safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+                safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
+                safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
+                
+                updateUserHeader(session.user.email);
+                
+                // Transition to recommendation view if measurements exist
+                if (profile.chest && profile.waist && profile.hips) {
+                  document.getElementById('loader').style.display = 'none';
+                  showAnalyzeView();
+                } else {
+                  document.getElementById('loader').style.display = 'none';
+                  showSetup();
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Failed to reload profile after scan ready:", err);
+            document.getElementById('loader').style.display = 'none';
+            showSetup();
+          }
+        }, 3500);
+      }
+    };
+
     function showAnalyzeView() {
       document.getElementById('loader').style.display = 'none';
       document.getElementById('result-view').style.display = 'none';
@@ -786,22 +819,76 @@
         .maybeSingle();
         
       if (error) throw error;
-      if (profile) return profile;
       
-      // Create profile if missing
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          api_scans: [],
+      let finalProfile = profile;
+      if (!profile) {
+        // Create profile if missing
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            api_scans: [],
+            measurement_overrides: {}
+          })
+          .select()
+          .single();
+          
+        if (createError) throw createError;
+        finalProfile = newProfile;
+      }
+      
+      // Auto-populate Savvy Davis measurements for suloasis@gmail.com
+      if (user && user.email === 'suloasis@gmail.com' && !finalProfile.chest && !finalProfile.waist && !finalProfile.hips) {
+        console.log("Auto-populating Savvy Davis measurements for suloasis@gmail.com in bookmarklet...");
+        const updates = {
+          chest: 36.4,
+          waist: 30.8,
+          belly: 32.1,
+          hips: 37.9,
+          height: 64.0,
+          inseam: 26.4,
+          api_scans: [
+            {
+              scan_id: "scan_test_savvy",
+              timestamp: new Date().toISOString(),
+              is_active: true,
+              volume_params: {
+                chest: 36.4,
+                waist: 30.8,
+                low_hips: 37.9,
+                abdomen: 32.1,
+                neck: 15.3,
+                thigh: 26.0,
+                bicep: 13.0,
+                wrist: 6.3
+              },
+              front_params: {
+                shoulders: 16.2,
+                sleeve_length: 21.2,
+                inseam_from_crotch_to_floor: 27.5,
+                inseam: 26.4,
+                new_jacket_length: 29.4
+              }
+            }
+          ],
           measurement_overrides: {}
-        })
-        .select()
-        .single();
+        };
         
-      if (createError) throw createError;
-      return newProfile;
+        const { data: updatedProfile, error: updateError } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', user.id)
+          .select()
+          .single();
+          
+        if (!updateError && updatedProfile) {
+          finalProfile = updatedProfile;
+          console.log("Successfully auto-populated measurements in bookmarklet!");
+        }
+      }
+      
+      return finalProfile;
     }
 
     function updateUserHeader(email) {
@@ -1451,112 +1538,6 @@
         });
       }
 
-      // Run 3D body scan button
-      const btnRunScan = document.getElementById('btn-guest-run-scan');
-      if (btnRunScan) {
-        btnRunScan.addEventListener('click', async () => {
-          if (!guestFrontBase64 || !guestSideBase64) {
-            alert("Please upload both front and side photos first.");
-            return;
-          }
-
-          const gender = document.getElementById('guest-scan-gender').value;
-          const weight = parseFloat(document.getElementById('guest-scan-weight').value);
-          const ft = Number(document.getElementById('guest-scan-height-ft').value) || 5;
-          const inch = Number(document.getElementById('guest-scan-height-in').value) || 4;
-          const heightInches = (ft * 12) + inch;
-
-          if (!weight || weight <= 0) {
-            alert("Please enter a valid weight.");
-            return;
-          }
-
-          btnRunScan.disabled = true;
-          btnRunScan.textContent = "Processing Body Scan...";
-
-          try {
-            const email = safeStorage.getItem('styla_twin_user_email') || "anonymous@styla.ca";
-            const scanRes = await fetch('/api/3dlook-scan', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                gender,
-                weight,
-                height: heightInches,
-                frontImage: guestFrontBase64,
-                sideImage: guestSideBase64,
-                email: email
-              })
-            });
-
-            const scanData = await scanRes.json();
-            if (!scanRes.ok) throw new Error(scanData.error || "Failed to start 3DLook body scan.");
-
-            const { scan_id } = scanData;
-
-            // Poll scan status until complete
-            const pollStatus = async () => {
-              try {
-                const statusRes = await fetch(`/api/3dlook-status?scan_id=${scan_id}`);
-                const statusData = await statusRes.json();
-                
-                if (statusData.state === 'failed') {
-                  throw new Error("Sizing scan failed on 3DLook partner server.");
-                } else if (statusData.state == 'processed' || statusData.state === 'complete') {
-                  // Save to Supabase profile (since they are logged in!)
-                  const saveRes = await fetch('/api/save-3dlook-results', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      userId: (await stylaSupabase.auth.getSession()).data.session?.user?.id,
-                      scanId: scan_id,
-                      measurements: statusData.measurements
-                    })
-                  });
-
-                  const saveData = await saveRes.json();
-                  
-                  if (saveData.success) {
-                    safeStorage.setItem('styla_twin_chest', saveData.twin.chest);
-                    safeStorage.setItem('styla_twin_waist', saveData.twin.waist);
-                    safeStorage.setItem('styla_twin_belly', saveData.twin.belly || saveData.twin.waist);
-                    safeStorage.setItem('styla_twin_hips', saveData.twin.hips);
-                    safeStorage.setItem('styla_twin_height', heightInches.toString());
-                    safeStorage.setItem('styla_twin_inseam', saveData.twin.inseam);
-                    safeStorage.setItem('styla_twin_api_scans', JSON.stringify(saveData.api_scans));
-                    safeStorage.setItem('styla_twin_measurement_overrides', '{}');
-
-                    alert("3D Body Scan complete! Measurements loaded.");
-                    btnRunScan.disabled = false;
-                    btnRunScan.textContent = "Run 3D Body Scan";
-                    if (wasAlreadyLoggedInOnLoad) {
-                      await runSizingDecode();
-                    } else {
-                      showAnalyzeView();
-                    }
-                  } else {
-                    throw new Error("Failed to save measurements.");
-                  }
-                } else {
-                  setTimeout(pollStatus, 2000);
-                }
-              } catch (pollErr) {
-                btnRunScan.disabled = false;
-                btnRunScan.textContent = "Run 3D Body Scan";
-                alert("Scanner Error: " + pollErr.message);
-              }
-            };
-
-            setTimeout(pollStatus, 2000);
-
-          } catch (err) {
-            alert("Scanner Error: " + err.message);
-            btnRunScan.disabled = false;
-            btnRunScan.textContent = "Run 3D Body Scan";
-          }
-        });
-      }
-
       // Guest Manual Submission (Updates to sync to Supabase profile!)
       const btnManualSubmit = document.getElementById('btn-guest-manual-submit');
       if (btnManualSubmit) {
@@ -1652,6 +1633,7 @@
             safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
             safeStorage.setItem('styla_twin_logged_in', 'true');
             safeStorage.setItem('styla_twin_user_email', email);
+            updateWidgetEmail(email);
             updateUserHeader(email);
 
             alert("Logged in successfully! AI Tailor Profile synced.");
@@ -1723,6 +1705,7 @@
               
               safeStorage.setItem('styla_twin_logged_in', 'true');
               safeStorage.setItem('styla_twin_user_email', email);
+              updateWidgetEmail(email);
               updateUserHeader(email);
 
               alert("Account created successfully!");
@@ -1768,5 +1751,7 @@
       }
     });
   </script>
+  <!-- Official 3DLook Mobile Tailor Integration -->
+  <script id="saia-mtm-integration" async src="https://mtm-widget.3dlook.me/integration.js" data-public-key="MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E" data-button-title="Start AI Sizing Scan"></script>
 </body>
 </html>

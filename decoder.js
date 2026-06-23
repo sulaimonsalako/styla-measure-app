@@ -83,22 +83,76 @@ async function getOrCreateProfile(supabase, user) {
     .maybeSingle();
     
   if (error) throw error;
-  if (profile) return profile;
   
-  // Create profile if missing
-  const { data: newProfile, error: createError } = await supabase
-    .from('profiles')
-    .insert({
-      id: user.id,
-      email: user.email,
-      api_scans: [],
+  let finalProfile = profile;
+  if (!profile) {
+    // Create profile if missing
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        api_scans: [],
+        measurement_overrides: {}
+      })
+      .select()
+      .single();
+      
+    if (createError) throw createError;
+    finalProfile = newProfile;
+  }
+  
+  // Auto-populate Savvy Davis measurements for suloasis@gmail.com
+  if (user && user.email === 'suloasis@gmail.com' && !finalProfile.chest && !finalProfile.waist && !finalProfile.hips) {
+    console.log("Auto-populating Savvy Davis measurements for suloasis@gmail.com...");
+    const updates = {
+      chest: 36.4,
+      waist: 30.8,
+      belly: 32.1,
+      hips: 37.9,
+      height: 64.0,
+      inseam: 26.4,
+      api_scans: [
+        {
+          scan_id: "scan_test_savvy",
+          timestamp: new Date().toISOString(),
+          is_active: true,
+          volume_params: {
+            chest: 36.4,
+            waist: 30.8,
+            low_hips: 37.9,
+            abdomen: 32.1,
+            neck: 15.3,
+            thigh: 26.0,
+            bicep: 13.0,
+            wrist: 6.3
+          },
+          front_params: {
+            shoulders: 16.2,
+            sleeve_length: 21.2,
+            inseam_from_crotch_to_floor: 27.5,
+            inseam: 26.4,
+            new_jacket_length: 29.4
+          }
+        }
+      ],
       measurement_overrides: {}
-    })
-    .select()
-    .single();
+    };
     
-  if (createError) throw createError;
-  return newProfile;
+    const { data: updatedProfile, error: updateError } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id)
+      .select()
+      .single();
+      
+    if (!updateError && updatedProfile) {
+      finalProfile = updatedProfile;
+      console.log("Successfully auto-populated measurements!");
+    }
+  }
+  
+  return finalProfile;
 }
 
 
