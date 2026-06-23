@@ -4,8 +4,8 @@
    ============================================ */
 
 // ── CONFIG ──────────────────────────────────
-const AIRTABLE_TOKEN  = 'patdr1i4H3Y36NVvm.f2122f67529919a3c23b51416c1fa9da893586a6373440062ed9cc8671213708';
-const AIRTABLE_BASE   = 'appJJrKtsUfZAA0a3';
+const AIRTABLE_TOKEN  = 'patuqcskKn0ND0pAF.e2c4932ac9a25ad9acd248888e3b91f12e5d1a031e27a7d4bfa0cdd1c8d4905b';
+const AIRTABLE_BASE   = 'app42bPMORZ7p5JND';
 const AIRTABLE_TABLE  = 'Waitlist';
 
 // ── WAITLIST FORM SUBMIT ─────────────────────
