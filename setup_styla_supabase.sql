@@ -51,19 +51,31 @@ CREATE POLICY "Users can delete own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides)
+  INSERT INTO public.profiles (
+    id, 
+    email, 
+    chest, 
+    waist, 
+    belly, 
+    hips, 
+    height, 
+    inseam, 
+    api_scans, 
+    measurement_overrides
+  )
   VALUES (
     new.id, 
     new.email,
-    (new.raw_user_meta_data->>'chest')::numeric,
-    (new.raw_user_meta_data->>'waist')::numeric,
-    (new.raw_user_meta_data->>'belly')::numeric,
-    (new.raw_user_meta_data->>'hips')::numeric,
-    (new.raw_user_meta_data->>'height')::numeric,
-    (new.raw_user_meta_data->>'inseam')::numeric,
+    NULLIF(new.raw_user_meta_data->>'chest', '')::numeric,
+    NULLIF(new.raw_user_meta_data->>'waist', '')::numeric,
+    NULLIF(new.raw_user_meta_data->>'belly', '')::numeric,
+    NULLIF(new.raw_user_meta_data->>'hips', '')::numeric,
+    NULLIF(new.raw_user_meta_data->>'height', '')::numeric,
+    NULLIF(new.raw_user_meta_data->>'inseam', '')::numeric,
     COALESCE((new.raw_user_meta_data->'api_scans'), '[]'::jsonb),
     COALESCE((new.raw_user_meta_data->'measurement_overrides'), '{}'::jsonb)
-  );
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

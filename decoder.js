@@ -33,13 +33,11 @@ window.MTM_WIDGET_OPTIONS = {
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (profile) {
+          try {
+            const profile = await getOrCreateProfile(supabase, session.user);
             onUserLoggedIn(session.user, profile);
+          } catch (err) {
+            console.error("Failed to get or create profile on init:", err);
           }
         }
       }
@@ -75,6 +73,160 @@ let chatHistory = [];
 // Initialize Supabase Client Variables
 const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+
+// Helper to get or create user profile in a self-healing way
+async function getOrCreateProfile(supabase, user) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle();
+    
+  if (error) throw error;
+  if (profile) return profile;
+  
+  // Create profile if missing
+  const { data: newProfile, error: createError } = await supabase
+    .from('profiles')
+    .insert({
+      id: user.id,
+      email: user.email,
+      api_scans: [],
+      measurement_overrides: {}
+    })
+    .select()
+    .single();
+    
+  if (createError) throw createError;
+  return newProfile;
+}
+
+
+// =============================================================
+// Premium AI Tailor Dashboard Renderer & Tab Navigation
+// =============================================================
+
+function renderDashboardTwin(profile) {
+  const grid = document.getElementById('db-measurements-grid');
+  if (!grid) return;
+  
+  const measurements = [
+    { key: 'chest', label: 'Chest / Bust 📏', value: profile.chest || '' },
+    { key: 'waist', label: 'Waist 📏', value: profile.waist || '' },
+    { key: 'belly', label: 'Belly 📏', value: profile.belly || '' },
+    { key: 'hips', label: 'Hips 📏', value: profile.hips || '' },
+    { key: 'height', label: 'Total Height 📏', value: profile.height || '', isHeight: true },
+    { key: 'inseam', label: 'Inseam 📏', value: profile.inseam || '' }
+  ];
+  
+  let html = '';
+  measurements.forEach(m => {
+    let valueHtml = '';
+    if (m.isHeight) {
+      const ft = m.value ? Math.floor(m.value / 12) : '';
+      const inches = m.value ? Math.round(m.value % 12) : '';
+      valueHtml = `
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="number" class="db-twin-input-ft" data-key="height-ft" value="${ft}" style="width: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="ft" />
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">ft</span>
+          <input type="number" class="db-twin-input-in" data-key="height-in" value="${inches}" style="width: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="in" />
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">in</span>
+        </div>
+      `;
+    } else {
+      valueHtml = `
+        <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+          <input type="number" step="0.1" class="db-twin-input" data-key="${m.key}" value="${m.value}" style="width: 100px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="N/A" />
+          <span style="color: var(--text-secondary); font-size: 0.9rem;">inches</span>
+        </div>
+      `;
+    }
+    
+    html += `
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); font-family: var(--font-outfit);">${m.label}</span>
+        ${valueHtml}
+      </div>
+    `;
+  });
+  
+  grid.innerHTML = html;
+}
+
+function renderDashboardScans(profile) {
+  const list = document.getElementById('db-scans-list');
+  if (!list) return;
+  
+  const scans = profile.api_scans || [];
+  if (scans.length === 0) {
+    list.innerHTML = `
+      <div style="text-align: center; padding: 3rem 1.5rem; background: rgba(255,255,255,0.01); border: 1px dashed var(--border); border-radius: var(--radius-md);">
+        <p style="font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 1rem 0;">No 3D body scans saved yet.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Get your first body scan using our AI Body Scan tool on the landing page or the mobile widget!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const sortedScans = [...scans].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  let html = '';
+  
+  sortedScans.forEach(scan => {
+    const dateStr = new Date(scan.timestamp).toLocaleString();
+    const isActive = scan.is_active;
+    const vp = scan.volume_params || {};
+    const fp = scan.front_params || {};
+    
+    const chestVal = vp.chest ? vp.chest + '"' : 'N/A';
+    const waistVal = vp.waist ? vp.waist + '"' : 'N/A';
+    const hipsVal = vp.low_hips ? vp.low_hips + '"' : 'N/A';
+    const heightVal = fp.body_height ? fp.body_height + '"' : 'N/A';
+    
+    html += `
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-light)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="flex: 1; min-width: 250px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">Scan from ${dateStr}</span>
+            ${isActive 
+              ? \`<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid rgba(16, 185, 129, 0.25);">Active</span>\` 
+              : \`<span style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; border: 1px solid var(--border);">Inactive</span>\`
+            }
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.55;">
+            <b>Dimensions:</b> Chest: ${chestVal} | Waist: ${waistVal} | Hips: ${hipsVal} | Height: ${heightVal}
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          ${!isActive 
+            ? \`<button class="btn-db-set-active" data-scan-id="${scan.scan_id}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Set Active</button>\` 
+            : ''
+          }
+          <button class="btn-db-delete" data-scan-id="${scan.scan_id}" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 6px; text-decoration: underline;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#f87171'">Delete</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  list.innerHTML = html;
+  
+  // Bind click events
+  list.querySelectorAll('.btn-db-set-active').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const scanId = e.currentTarget.getAttribute('data-scan-id');
+      await setActiveScanInCloud(scanId);
+    });
+  });
+  
+  list.querySelectorAll('.btn-db-delete').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const scanId = e.currentTarget.getAttribute('data-scan-id');
+      if (confirm("Are you sure you want to delete this scan from your history?")) {
+        await deleteScanFromCloud(scanId);
+      }
+    });
+  });
+}
+
 
 // Global sync helpers
 let syncTimeout = null;
@@ -319,6 +471,20 @@ function onUserLoggedIn(user, profile) {
   }
   
   renderScanHistory(profile);
+
+  // Toggle from Landing page to Dashboard page
+  const landingView = document.getElementById('landing-view');
+  const dashboardView = document.getElementById('dashboard-view');
+  if (landingView) landingView.style.display = 'none';
+  if (dashboardView) dashboardView.style.display = 'block';
+
+  // Populate Dashboard Header Email
+  const dbUserEmailText = document.getElementById('db-user-email');
+  if (dbUserEmailText) dbUserEmailText.textContent = user.email;
+
+  // Render Dashboard contents
+  renderDashboardTwin(profile);
+  renderDashboardScans(profile);
 }
 
 function renderScanHistory(profile) {
@@ -440,12 +606,8 @@ async function setActiveScanInCloud(scanId) {
       if (badge) badge.style.display = activeScan ? 'block' : 'none';
 
       // Refresh UI
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      if (profile) renderScanHistory(profile);
+      const profile = await getOrCreateProfile(supabase, session.user);
+      renderScanHistory(profile);
       
   } catch (err) {
       console.error("Failed to set active scan:", err);
@@ -508,12 +670,8 @@ async function deleteScanFromCloud(scanId) {
       }
 
       // Refresh UI
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      if (profile) renderScanHistory(profile);
+      const profile = await getOrCreateProfile(supabase, session.user);
+      renderScanHistory(profile);
       
   } catch (err) {
       console.error("Failed to delete scan:", err);
@@ -537,6 +695,199 @@ window.addEventListener('DOMContentLoaded', async () => {
       btnBookmarklet.addEventListener('click', (e) => {
         alert("To use STYLA on retail clothing stores, drag this button to your browser's Bookmarks Bar! (If you are on mobile, use the Mobile Guide below)");
       });
+  }
+
+  // Bind Dashboard Bookmarklet
+  const dbBtnBookmarklet = document.getElementById('db-btn-bookmarklet');
+  if (dbBtnBookmarklet) {
+      dbBtnBookmarklet.setAttribute('href', bookmarkletHref);
+  }
+
+  const btnDbCopyBookmarklet = document.getElementById('btn-db-copy-bookmarklet');
+  if (btnDbCopyBookmarklet) {
+      btnDbCopyBookmarklet.addEventListener('click', () => {
+          navigator.clipboard.writeText(bookmarkletHref);
+          const dbCopyMsg = document.getElementById('db-copy-success-msg');
+          if (dbCopyMsg) {
+              dbCopyMsg.style.display = 'block';
+              setTimeout(() => { dbCopyMsg.style.display = 'none'; }, 2000);
+          }
+      });
+  }
+
+  // Bind Dashboard tab navigation click handlers
+  document.querySelectorAll('.db-nav-item').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.db-nav-item').forEach(item => {
+        item.classList.remove('active');
+        item.style.background = 'transparent';
+        item.style.borderColor = 'transparent';
+        item.style.color = 'var(--text-secondary)';
+      });
+      
+      const clickedBtn = e.currentTarget;
+      clickedBtn.classList.add('active');
+      clickedBtn.style.background = 'var(--accent-dim)';
+      clickedBtn.style.borderColor = 'var(--border-accent)';
+      clickedBtn.style.color = '#fff';
+      
+      document.querySelectorAll('.db-tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      const tabId = clickedBtn.getAttribute('data-tab');
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) activeTab.style.display = 'block';
+    });
+  });
+
+  // Bind Dashboard Save Twin button
+  const btnDbSaveTwin = document.getElementById('btn-db-save-twin');
+  if (btnDbSaveTwin) {
+    btnDbSaveTwin.addEventListener('click', async () => {
+      btnDbSaveTwin.disabled = true;
+      btnDbSaveTwin.textContent = "Saving...";
+      
+      try {
+        if (!window.supabase) throw new Error("Supabase is not loaded.");
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("No active session.");
+        
+        const updates = {};
+        document.querySelectorAll('#db-measurements-grid .db-twin-input').forEach(input => {
+          const key = input.getAttribute('data-key');
+          const val = input.value.trim();
+          updates[key] = val !== '' ? parseFloat(val) : null;
+        });
+        
+        // Height
+        const ftInput = document.querySelector('#db-measurements-grid .db-twin-input-ft');
+        const inInput = document.querySelector('#db-measurements-grid .db-twin-input-in');
+        if (ftInput && inInput) {
+          const ft = ftInput.value.trim();
+          const inch = inInput.value.trim();
+          if (ft !== '' && inch !== '') {
+            updates.height = (parseInt(ft, 10) * 12) + parseInt(inch, 10);
+          } else {
+            updates.height = null;
+          }
+        }
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', session.user.id);
+          
+        if (error) throw error;
+        
+        localStorage.setItem('styla_twin_chest', updates.chest || '');
+        localStorage.setItem('styla_twin_waist', updates.waist || '');
+        localStorage.setItem('styla_twin_belly', updates.belly || '');
+        localStorage.setItem('styla_twin_hips', updates.hips || '');
+        localStorage.setItem('styla_twin_height', updates.height || '');
+        localStorage.setItem('styla_twin_inseam', updates.inseam || '');
+        
+        alert("Twin measurements successfully saved and synced to cloud!");
+        
+        const profile = await getOrCreateProfile(supabase, session.user);
+        onUserLoggedIn(session.user, profile);
+        
+      } catch (err) {
+        alert("Failed to save measurements: " + err.message);
+      } finally {
+        btnDbSaveTwin.disabled = false;
+        btnDbSaveTwin.textContent = "Save Twin Measurements";
+      }
+    });
+  }
+
+  // Bind Dashboard Start 3D Scan button
+  const btnDbStartScan = document.getElementById('btn-db-start-scan');
+  if (btnDbStartScan) {
+    btnDbStartScan.addEventListener('click', () => {
+      const widgetBtn = document.querySelector('#saia-mtm-integration button, .saia-mtm-btn');
+      if (widgetBtn) {
+        widgetBtn.click();
+      } else {
+        alert("3D body scanner widget failed to initialize. Please try reloading the page.");
+      }
+    });
+  }
+
+  // Bind Dashboard Logout button
+  const btnDbLogout = document.getElementById('btn-db-logout');
+  if (btnDbLogout) {
+    btnDbLogout.addEventListener('click', () => {
+      const originalLogout = document.getElementById('btn-logout');
+      if (originalLogout) originalLogout.click();
+    });
+  }
+
+  // Bind Dashboard Settings actions (clear data, delete profile)
+  const btnDbClearProfile = document.getElementById('btn-db-clear-profile');
+  if (btnDbClearProfile) {
+    btnDbClearProfile.addEventListener('click', () => {
+      const originalBtn = document.getElementById('btn-clear-profile');
+      if (originalBtn) originalBtn.click();
+    });
+  }
+
+  const btnDbDeleteProfile = document.getElementById('btn-db-delete-profile');
+  if (btnDbDeleteProfile) {
+    btnDbDeleteProfile.addEventListener('click', () => {
+      const originalBtn = document.getElementById('btn-delete-profile');
+      if (originalBtn) originalBtn.click();
+    });
+  }
+
+  // Bind Change Password settings form
+  const btnDbChangePassword = document.getElementById('btn-db-change-password');
+  if (btnDbChangePassword) {
+    btnDbChangePassword.addEventListener('click', async () => {
+      const password = document.getElementById('db-new-password').value;
+      const confirmPassword = document.getElementById('db-confirm-password').value;
+      const errorDiv = document.getElementById('db-settings-error');
+      
+      if (errorDiv) errorDiv.style.display = 'none';
+      
+      if (password.length < 6) {
+        if (errorDiv) {
+          errorDiv.textContent = "Password must be at least 6 characters.";
+          errorDiv.style.display = 'block';
+        }
+        return;
+      }
+      if (password !== confirmPassword) {
+        if (errorDiv) {
+          errorDiv.textContent = "Passwords do not match.";
+          errorDiv.style.display = 'block';
+        }
+        return;
+      }
+      
+      btnDbChangePassword.disabled = true;
+      btnDbChangePassword.textContent = "Updating...";
+      
+      try {
+        if (!window.supabase) throw new Error("Supabase is not loaded.");
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { error } = await supabase.auth.updateUser({ password: password });
+        if (error) throw error;
+        
+        alert("Password updated successfully!");
+        document.getElementById('db-new-password').value = '';
+        document.getElementById('db-confirm-password').value = '';
+      } catch (err) {
+        if (errorDiv) {
+          errorDiv.textContent = err.message;
+          errorDiv.style.display = 'block';
+        }
+      } finally {
+        btnDbChangePassword.disabled = false;
+        btnDbChangePassword.textContent = "Update Password";
+      }
+    });
   }
 
   if (lnkToggleMobile && mobilePanel) {
@@ -595,15 +946,8 @@ window.addEventListener('DOMContentLoaded', async () => {
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-                
-              if (profile) {
-                  onUserLoggedIn(session.user, profile);
-              }
+              const profile = await getOrCreateProfile(supabase, session.user);
+              onUserLoggedIn(session.user, profile);
           }
       }
   } catch (err) {
@@ -1077,7 +1421,7 @@ btnSaveProfile.addEventListener('click', async () => {
       document.getElementById('logged-in-status').style.display = 'flex';
       
   } catch (err) {
-      let msg = err.message;
+      let msg = err?.message || err?.error_description || (typeof err === 'object' ? (JSON.stringify(err) === '{}' ? String(err) : JSON.stringify(err)) : String(err));
       if (msg === "Failed to fetch" || msg.includes("Failed to fetch")) {
           msg = "Failed to connect to the cloud database. If this is a free-tier Supabase project, it may have been automatically paused due to inactivity. Please log in to your Supabase dashboard at supabase.com and click 'Resume' to restore it.";
       }
@@ -1258,21 +1602,14 @@ if (btnLoginSubmit) {
             if (error) throw error;
             
             // Login successful! Fetch profile
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', data.user.id)
-              .single();
-              
-            if (profile) {
-                onUserLoggedIn(data.user, profile);
-            }
+            const profile = await getOrCreateProfile(supabase, data.user);
+            onUserLoggedIn(data.user, profile);
             
             // Update UI
             loginModal.style.display = 'none';
             
         } catch (err) {
-            let msg = err.message;
+            let msg = err?.message || err?.error_description || (typeof err === 'object' ? (JSON.stringify(err) === '{}' ? String(err) : JSON.stringify(err)) : String(err));
             if (msg === "Failed to fetch" || msg.includes("Failed to fetch")) {
                 msg = "Failed to connect to the cloud database. If this is a free-tier Supabase project, it may have been automatically paused due to inactivity. Please log in to your Supabase dashboard at supabase.com and click 'Resume' to restore it.";
             }
@@ -1348,21 +1685,15 @@ if (btnSignupSubmit) {
             loginModal.style.display = 'none';
             
             if (data && data.session) {
-                const { data: profile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', data.user.id)
-                  .single();
-                if (profile) {
-                    onUserLoggedIn(data.user, profile);
-                }
+                const profile = await getOrCreateProfile(supabase, data.user);
+                onUserLoggedIn(data.user, profile);
                 alert("Account created and profile saved successfully!");
             } else {
                 alert("Account created! A confirmation email has been sent. Please confirm your email to activate your account.");
             }
             
         } catch (err) {
-            let msg = err.message;
+            let msg = err?.message || err?.error_description || (typeof err === 'object' ? (JSON.stringify(err) === '{}' ? String(err) : JSON.stringify(err)) : String(err));
             if (msg === "Failed to fetch" || msg.includes("Failed to fetch")) {
                 msg = "Failed to connect to the cloud database. If this is a free-tier Supabase project, it may have been automatically paused due to inactivity. Please log in to your Supabase dashboard at supabase.com and click 'Resume' to restore it.";
             }
@@ -1401,7 +1732,7 @@ if (btnForgotSubmit) {
             alert("Password reset email sent! Please check your inbox for the reset link.");
             loginModal.style.display = 'none';
         } catch (err) {
-            let msg = err.message;
+            let msg = err?.message || err?.error_description || (typeof err === 'object' ? (JSON.stringify(err) === '{}' ? String(err) : JSON.stringify(err)) : String(err));
             if (msg === "Failed to fetch" || msg.includes("Failed to fetch")) {
                 msg = "Failed to connect to the cloud database. If this is a free-tier Supabase project, it may have been automatically paused due to inactivity. Please log in to your Supabase dashboard at supabase.com and click 'Resume' to restore it.";
             }
@@ -1455,7 +1786,7 @@ if (btnResetSubmit) {
                 document.getElementById('save-profile-box').style.display = 'none';
             }
         } catch (err) {
-            let msg = err.message;
+            let msg = err?.message || err?.error_description || (typeof err === 'object' ? (JSON.stringify(err) === '{}' ? String(err) : JSON.stringify(err)) : String(err));
             if (msg === "Failed to fetch" || msg.includes("Failed to fetch")) {
                 msg = "Failed to connect to the cloud database. If this is a free-tier Supabase project, it may have been automatically paused due to inactivity. Please log in to your Supabase dashboard at supabase.com and click 'Resume' to restore it.";
             }
@@ -1486,6 +1817,12 @@ if (btnLogout) {
             
             const manageBox = document.getElementById('manage-profile-box');
             if (manageBox) manageBox.style.display = 'none';
+            
+            // Toggle view back to Landing page
+            const landingView = document.getElementById('landing-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            if (landingView) landingView.style.display = 'block';
+            if (dashboardView) dashboardView.style.display = 'none';
             // Clear inputs
             document.getElementById('val-chest').value = '';
             document.getElementById('val-waist').value = '';
@@ -1841,12 +2178,8 @@ window.addEventListener('DOMContentLoaded', () => {
                   if (error) throw error;
                   
                   // Refresh UI
-                  const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-                  if (profile) renderScanHistory(profile);
+                  const profile = await getOrCreateProfile(supabase, session.user);
+                  renderScanHistory(profile);
               }
               
               alert("All dimensions and scans successfully cleared.");
@@ -2019,3 +2352,4 @@ window.addEventListener('DOMContentLoaded', () => {
       // Run once on load
       validateScanEmail();
   }
+

@@ -692,6 +692,7 @@
     </div>
   </header>
 
+  <div id="landing-view">
   <!-- Hero Intro -->
   <section class="hero-container">
     <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -1000,6 +1001,149 @@
     
 
   </main>
+  </div>
+
+  <!-- PREMIUM AI TAILOR DASHBOARD VIEW -->
+  <div id="dashboard-view" style="display: none; width: 100%; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; box-sizing: border-box;">
+    
+    <!-- Dashboard Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ffffff 40%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Tailor Dashboard</h2>
+        <p style="margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-secondary);">Welcome back, <span id="db-user-email" style="color: var(--accent-light); font-weight: 600;"></span></p>
+      </div>
+      <div>
+        <button id="btn-db-logout" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #f87171; padding: 10px 20px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#f87171';">Log Out</button>
+      </div>
+    </div>
+    
+    <!-- Dashboard Columns -->
+    <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+      
+      <!-- Left Column: Navigation Sidebar -->
+      <aside style="width: 100%; max-width: 280px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-sizing: border-box; display: flex; flex-direction: column; gap: 0.5rem;">
+        <button class="db-nav-item active" data-tab="tab-twin" style="display: flex; align-items: center; gap: 12px; background: var(--accent-dim); border: 1px solid var(--border-accent); color: #fff; width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
+          <span>👤</span> My Twin Profile
+        </button>
+        <button class="db-nav-item" data-tab="tab-scans" style="display: flex; align-items: center; gap: 12px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
+          <span>📷</span> 3D Body Scans
+        </button>
+        <button class="db-nav-item" data-tab="tab-bookmarklet" style="display: flex; align-items: center; gap: 12px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
+          <span>🔌</span> Sync Bookmarklet
+        </button>
+        <button class="db-nav-item" data-tab="tab-settings" style="display: flex; align-items: center; gap: 12px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
+          <span>⚙️</span> Account Settings
+        </button>
+      </aside>
+      
+      <!-- Right Column: Main Panel -->
+      <section style="flex: 1; min-width: 320px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; box-sizing: border-box; min-height: 480px;">
+        
+        <!-- Tab 1: My Twin Profile -->
+        <div id="tab-twin" class="db-tab-content">
+          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">My Twin Measurements</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">These measurements are used to recommend your best size on retail stores via the Styla Bookmarklet.</p>
+          
+          <div id="db-measurements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+             <!-- Populated dynamically via JS -->
+          </div>
+          
+          <div style="display: flex; justify-content: flex-end;">
+            <button id="btn-db-save-twin" style="background: var(--primary-gradient); border: none; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,42,117,0.2);">Save Twin Measurements</button>
+          </div>
+        </div>
+        
+        <!-- Tab 2: 3D Body Scans -->
+        <div id="tab-scans" class="db-tab-content" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 style="font-family: var(--font-outfit); color: #fff; margin: 0; font-size: 1.5rem;">3D Body Scans History</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Manage your scans imported from Twilio / 3DLook.</p>
+            </div>
+            <button id="btn-db-start-scan" class="btn-run" style="margin: 0; padding: 10px 20px; font-size: 0.85rem; font-weight: 700; background: var(--success-gradient); border-radius: 10px;">Start New 3D Scan</button>
+          </div>
+          
+          <div id="db-scans-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
+             <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+        
+        <!-- Tab 3: Sync Bookmarklet -->
+        <div id="tab-bookmarklet" class="db-tab-content" style="display: none;">
+          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Sync Bookmarklet</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">Shop on any online store (Azazie, Moores, Zara, H&M, etc.) and let your AI Stylist recommend sizes automatically.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Desktop Guide -->
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">💻 Desktop Installation</h4>
+              <ol style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                <li>Drag the green <b>⚡ STYLA Stylist</b> button below directly into your Bookmarks bar.</li>
+                <li>Go to any clothing product page (e.g. Azazie or Zara).</li>
+                <li>Click the bookmark to open your virtual fitting room!</li>
+              </ol>
+              <div style="text-align: center; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--border);">
+                <a id="db-btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 0 0;">← Drag me to your Bookmarks bar!</p>
+              </div>
+            </div>
+            
+            <!-- Mobile Guide -->
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation (Safari / Chrome)</h4>
+              <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
+                <li>Tap <b>Copy Bookmarklet Code</b> below to copy the integration script.</li>
+                <li>Bookmark this page (tap Share -> Add Bookmark).</li>
+                <li>Edit the bookmark: Name it <b>⚡ STYLA Stylist</b>, and paste the copied code into the Address/URL field.</li>
+                <li>To use: Open any store product page, type <b>⚡ STYLA Stylist</b> in your browser search bar, and tap the bookmark to load.</li>
+              </ol>
+              <button id="btn-db-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--primary-gradient); margin-top: 0; border-radius: 10px;">Copy Bookmarklet Code</button>
+              <div id="db-copy-success-msg" style="display: none; font-size: 0.85rem; color: #10b981; margin-top: 10px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 4: Account Settings -->
+        <div id="tab-settings" class="db-tab-content" style="display: none;">
+          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Account Settings</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">Manage your login credentials, clear your sync data, or permanently delete your account.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Password Form -->
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h4 style="margin: 0 0 1.25rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit);">Change Password</h4>
+              <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+                <div class="input-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.85rem; margin-bottom: 6px;">New Password</label>
+                  <input type="password" id="db-new-password" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem;" />
+                </div>
+                <div class="input-group" style="margin-bottom: 0;">
+                  <label style="font-size: 0.85rem; margin-bottom: 6px;">Confirm New Password</label>
+                  <input type="password" id="db-confirm-password" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem;" />
+                </div>
+                <div id="db-settings-error" style="display: none; font-size: 0.85rem; color: #ef4444; margin-top: 5px;"></div>
+                <button id="btn-db-change-password" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Update Password</button>
+              </div>
+            </div>
+            
+            <!-- Danger Zone -->
+            <div style="background: rgba(239, 68, 68, 0.02); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: #f87171; font-size: 1.15rem; font-family: var(--font-outfit);">Danger Zone</h4>
+              <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-top: 0; margin-bottom: 1.25rem;">Clearing dimensions removes all manual sizes and active scan links. Deleting your profile will permanently erase your account and all associated scan data from the Supabase database.</p>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button id="btn-db-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
+                <button id="btn-db-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile & Account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </section>
+      
+    </div>
+    
+  </div>
+
 
   <!-- FOOTER -->
   <footer style="background: #0b0b14; border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 3rem 0; width: 100%; margin-top: 5rem;">

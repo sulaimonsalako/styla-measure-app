@@ -777,6 +777,33 @@
       });
     }
 
+    // Helper to get or create user profile in a self-healing way
+    async function getOrCreateProfile(supabase, user) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (error) throw error;
+      if (profile) return profile;
+      
+      // Create profile if missing
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          api_scans: [],
+          measurement_overrides: {}
+        })
+        .select()
+        .single();
+        
+      if (createError) throw createError;
+      return newProfile;
+    }
+
     function updateUserHeader(email) {
       const statusDiv = document.getElementById('user-header-status');
       const emailSpan = document.getElementById('user-header-email');
@@ -836,8 +863,13 @@
       try {
         const { data: { session }, error: sessionErr } = await stylaSupabase.auth.getSession();
         if (session && session.user) {
-          const { data: profile, error: dbErr } = await stylaSupabase.from('profiles').select('*').eq('id', session.user.id).single();
-          if (!dbErr && profile) {
+          let profile = null;
+          try {
+            profile = await getOrCreateProfile(stylaSupabase, session.user);
+          } catch (err) {
+            console.error("Failed to get or create profile on init:", err);
+          }
+          if (profile) {
             safeStorage.setItem('styla_twin_chest', profile.chest || '');
             safeStorage.setItem('styla_twin_waist', profile.waist || '');
             safeStorage.setItem('styla_twin_belly', profile.belly || profile.waist || '');
@@ -1608,8 +1640,7 @@
             const { data: authData, error: authErr } = await stylaSupabase.auth.signInWithPassword({ email, password });
             if (authErr) throw authErr;
 
-            const { data: profile, error: dbErr } = await stylaSupabase.from('profiles').select('*').eq('id', authData.user.id).single();
-            if (dbErr) throw dbErr;
+            const profile = await getOrCreateProfile(stylaSupabase, authData.user);
 
             safeStorage.setItem('styla_twin_chest', profile.chest || '');
             safeStorage.setItem('styla_twin_waist', profile.waist || '');
