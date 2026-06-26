@@ -284,6 +284,11 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - Recommend the size that is closest to an 'ideal' fit.
    - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available. Do NOT suggest sizing down if that size does not exist.
 
+7. SLEEVE LENGTH MEASUREMENT TYPE COMPARISON:
+   - Identify whether the brand's sleeve length in the chart represents:
+     a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults. Compare directly to the user's Neck-to-Wrist Sleeve Length.
+     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).
+
 You MUST parse and extract the entire size chart and output BOTH the sizing recommendation for the current user and the parsed structured size chart details.
 
 Your output must be ONLY valid JSON. Do not include markdown code blocks or any other text.

@@ -93,10 +93,21 @@ export function runSizingEngine(user, chart) {
     const scoreDimension = (userVal, chartVal, label, critical = false) => {
       if (!chartVal || !userVal) return;
       
+      let targetUserVal = userVal;
+      if (label === 'sleeve') {
+        // Detect chart sleeve measurement type:
+        // If chartVal is relatively small (typically < 26.5" for adults), it's shoulder-to-wrist.
+        // Otherwise, it's center-back-to-wrist (neck-to-wrist).
+        if (chartVal < 26.5) {
+          const halfShoulder = (userShoulder || 16.0) / 2;
+          targetUserVal = userVal - halfShoulder;
+        }
+      }
+
       // Calculate physical ease
       let physicalEase = 0;
       if (chartType === 'garment') {
-        physicalEase = chartVal - userVal;
+        physicalEase = chartVal - targetUserVal;
       } else {
         // For body charts, estimate physical ease by adding typical brand ease
         let brandEase = 4.5; // default chest/hips tops
@@ -111,7 +122,7 @@ export function runSizingEngine(user, chart) {
         } else if (label === 'shoulder' || label === 'sleeve' || label === 'inseam' || label === 'thigh') {
           brandEase = 0.8;
         }
-        physicalEase = brandEase + (chartVal - userVal);
+        physicalEase = brandEase + (chartVal - targetUserVal);
       }
 
       // Evaluate fit based on label and physicalEase
