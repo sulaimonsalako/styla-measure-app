@@ -1,13 +1,41 @@
 {
   "name": "styla-measure",
   "rewrites": [
-    { "source": "/api/store-auth", "destination": "/api/store-api" },
-    { "source": "/api/store-cart", "destination": "/api/store-api" },
-    { "source": "/api/store-categories", "destination": "/api/store-api" },
-    { "source": "/api/store-payment", "destination": "/api/store-api" },
-    { "source": "/api/store-products", "destination": "/api/store-api" },
-    { "source": "/api/3dlook/init-session", "destination": "/api/3dlook-api" },
-    { "source": "/api/3dlook/check-status", "destination": "/api/3dlook-api" },
-    { "source": "/api/3dlook/save-measurements", "destination": "/api/3dlook-api" }
+    {
+      "source": "/api/store-auth",
+      "destination": "/api/store-api"
+    },
+    {
+      "source": "/api/store-cart",
+      "destination": "/api/store-api"
+    },
+    {
+      "source": "/api/store-categories",
+      "destination": "/api/store-api"
+    },
+    {
+      "source": "/api/store-payment",
+      "destination": "/api/store-api"
+    },
+    {
+      "source": "/api/store-products",
+      "destination": "/api/store-api"
+    },
+    {
+      "source": "/api/3dlook/init-session",
+      "destination": "/api/3dlook-api"
+    },
+    {
+      "source": "/api/3dlook/check-status",
+      "destination": "/api/3dlook-api"
+    },
+    {
+      "source": "/api/3dlook/save-measurements",
+      "destination": "/api/3dlook-api"
+    },
+    {
+      "source": "/api/3dlook/webhook",
+      "destination": "/api/3dlook-api"
+    }
   ]
 }

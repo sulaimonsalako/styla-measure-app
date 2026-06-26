@@ -140,23 +140,19 @@ export default async function handler(req, res) {
     // 1. Cache hit check
     if (url && supabaseUrl && supabaseAnonKey) {
       try {
-        const cacheUrl = `${supabaseUrl}/rest/v1/products_cache?url=eq.${encodeURIComponent(url)}&select=brand_id,size_chart_id`;
+        const cacheUrl = `${supabaseUrl}/rest/v1/products_cache?url=eq.${encodeURIComponent(url)}&select=brand_id,size_charts(chart_data)`;
         const cacheRes = await fetch(cacheUrl, {
           headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
         });
         const cacheData = await cacheRes.json();
 
-        if (cacheData && cacheData.length > 0 && cacheData[0].size_chart_id) {
-          const chartId = cacheData[0].size_chart_id;
-          const chartUrl = `${supabaseUrl}/rest/v1/size_charts?id=eq.${chartId}&select=chart_data`;
-          const chartRes = await fetch(chartUrl, {
-            headers: { 'apikey': supabaseAnonKey, 'Authorization': `Bearer ${supabaseAnonKey}` }
-          });
-          const chartData = await chartRes.json();
-
-          if (chartData && chartData.length > 0 && chartData[0].chart_data) {
+        if (cacheData && cacheData.length > 0 && cacheData[0].size_charts) {
+          const rawChart = cacheData[0].size_charts;
+          const chart_data = Array.isArray(rawChart) ? rawChart[0]?.chart_data : rawChart.chart_data;
+          
+          if (chart_data) {
             const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
-            const localResult = runSizingEngine(user, chartData[0].chart_data);
+            const localResult = runSizingEngine(user, chart_data);
             console.log("Sizing cache HIT! Loading instantly...", url);
             return res.status(200).json({
               ...localResult,
@@ -189,7 +185,7 @@ export default async function handler(req, res) {
       pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
       pHips = activeScan.volume_params.low_hips || pHips;
       pShoulder = activeScan.front_params.shoulders || pShoulder;
-      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pSleeve = activeScan.front_params.back_neck_point_to_wrist_length || activeScan.front_params.sleeve_length || pSleeve;
       pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
       pThigh = activeScan.volume_params.thigh || pThigh;
     }

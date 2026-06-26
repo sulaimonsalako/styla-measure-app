@@ -138,7 +138,7 @@ function loadUserSession() {
         hips: activeScan.volume_params.low_hips,
         height: currentUser.twin ? currentUser.twin.height : 64.0,
         shoulder: activeScan.front_params.shoulders,
-        sleeve: activeScan.front_params.sleeve_length,
+        sleeve: activeScan.front_params.back_neck_point_to_wrist_length || activeScan.front_params.sleeve_length,
         inseam: activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam,
         neck: activeScan.volume_params.neck,
         thigh: activeScan.volume_params.thigh,

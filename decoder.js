@@ -160,9 +160,71 @@ async function getOrCreateProfile(supabase, user) {
 // Premium AI Tailor Dashboard Renderer & Tab Navigation
 // =============================================================
 
+let isEditingTwin = false;
+let currentProfileObj = null;
+
+function renderExtendedMeasurements(profile) {
+  const section = document.getElementById('db-extended-section');
+  const grid = document.getElementById('db-extended-grid');
+  const badge = document.getElementById('extended-count-badge');
+  if (!section || !grid) return;
+  
+  const activeScan = profile.api_scans && Array.isArray(profile.api_scans)
+    ? profile.api_scans.find(s => s.is_active)
+    : null;
+    
+  if (!activeScan) {
+    section.style.display = 'none';
+    return;
+  }
+  
+  const vp = activeScan.volume_params || {};
+  const fp = activeScan.front_params || {};
+  
+  const items = [
+    { label: 'Under Bust', val: vp.under_bust_girth },
+    { label: 'Upper Chest', val: vp.upper_chest_girth },
+    { label: 'Overarm Girth', val: vp.overarm_girth },
+    { label: 'Shoulders (Biacromial)', val: fp.shoulders },
+    { label: 'Sleeve Length (Center Back to Cuff)', val: fp.back_neck_point_to_wrist_length || fp.back_neck_point_to_wrist_length_1_5_inch },
+    { label: 'Arm Length (Shoulder to Wrist)', val: fp.sleeve_length },
+    { label: 'Outseam', val: fp.outseam },
+    { label: 'Abdomen / Belly Girth', val: vp.abdomen },
+    { label: 'Neck Girth', val: vp.neck },
+    { label: 'Bicep Girth', val: vp.bicep },
+    { label: 'Forearm Girth', val: vp.forearm },
+    { label: 'Wrist Girth', val: vp.wrist },
+    { label: 'Thigh Girth', val: vp.thigh },
+    { label: 'Calf Girth', val: vp.calf },
+    { label: 'Ankle Girth', val: vp.ankle }
+  ].filter(i => i.val !== undefined && i.val !== null && i.val !== '');
+  
+  if (items.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  
+  section.style.display = 'block';
+  if (badge) badge.textContent = `${items.length} details`;
+  
+  let html = '';
+  items.forEach(item => {
+    html += `
+      <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">${item.label}</span>
+        <span style="font-size: 0.95rem; color: #fff; font-weight: 700; font-family: var(--font-mono);">${item.val}"</span>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
 function renderDashboardTwin(profile) {
+  currentProfileObj = profile;
   const grid = document.getElementById('db-measurements-grid');
   if (!grid) return;
+  
+  const disabledAttr = isEditingTwin ? '' : 'disabled';
   
   const measurements = [
     { key: 'chest', label: 'Chest / Bust 📏', value: profile.chest || '' },
@@ -181,16 +243,16 @@ function renderDashboardTwin(profile) {
       const inches = m.value ? Math.round(m.value % 12) : '';
       valueHtml = `
         <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="number" class="db-twin-input-ft" data-key="height-ft" value="${ft}" style="width: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="ft" />
+          <input type="number" class="db-twin-input-ft" data-key="height-ft" value="${ft}" ${disabledAttr} style="width: 60px; background: ${isEditingTwin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.01)'}; border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem; opacity: ${isEditingTwin ? '1' : '0.6'};" placeholder="ft" />
           <span style="color: var(--text-secondary); font-size: 0.9rem;">ft</span>
-          <input type="number" class="db-twin-input-in" data-key="height-in" value="${inches}" style="width: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="in" />
+          <input type="number" class="db-twin-input-in" data-key="height-in" value="${inches}" ${disabledAttr} style="width: 60px; background: ${isEditingTwin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.01)'}; border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem; opacity: ${isEditingTwin ? '1' : '0.6'};" placeholder="in" />
           <span style="color: var(--text-secondary); font-size: 0.9rem;">in</span>
         </div>
       `;
     } else {
       valueHtml = `
         <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-          <input type="number" step="0.1" class="db-twin-input" data-key="${m.key}" value="${m.value}" style="width: 100px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem;" placeholder="N/A" />
+          <input type="number" step="0.1" class="db-twin-input" data-key="${m.key}" value="${m.value}" ${disabledAttr} style="width: 100px; background: ${isEditingTwin ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.01)'}; border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: #fff; text-align: center; outline: none; font-size: 0.95rem; opacity: ${isEditingTwin ? '1' : '0.6'};" placeholder="N/A" />
           <span style="color: var(--text-secondary); font-size: 0.9rem;">inches</span>
         </div>
       `;
@@ -205,6 +267,7 @@ function renderDashboardTwin(profile) {
   });
   
   grid.innerHTML = html;
+  renderExtendedMeasurements(profile);
 }
 
 function renderDashboardScans(profile) {
@@ -378,6 +441,14 @@ async function syncStoreScansToPortal(user, profile) {
         }
       }
       
+      // Self-healing: Force recalculation if user profile has incorrect/bugged height or sleeve
+      if (profile && profile.height && profile.height < 36) {
+        updated = true;
+      }
+      if (profile && profile.sleeve && profile.sleeve < 25) {
+        updated = true;
+      }
+      
       if (updated) {
         mergedScans.forEach((s, idx) => {
           s.is_active = (idx === mergedScans.length - 1);
@@ -390,7 +461,22 @@ async function syncStoreScansToPortal(user, profile) {
         let hips = profile.hips;
         let height = profile.height;
         let inseam = profile.inseam;
+        let shoulder = profile.shoulder;
+        let sleeve = profile.sleeve;
+        let neck = profile.neck;
+        let thigh = profile.thigh;
+        let bicep = profile.bicep;
+        let wrist = profile.wrist;
         
+        let twinObj = null;
+        if (storeProfile && storeProfile.twin) {
+          try {
+            twinObj = typeof storeProfile.twin === 'string' ? JSON.parse(storeProfile.twin) : storeProfile.twin;
+          } catch (e) {
+            console.warn("Failed to parse twin:", e);
+          }
+        }
+
         if (activeScan) {
           if (activeScan.volume_params.chest) chest = activeScan.volume_params.chest;
           if (activeScan.volume_params.waist) waist = activeScan.volume_params.waist;
@@ -401,7 +487,23 @@ async function syncStoreScansToPortal(user, profile) {
           if (activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam) {
             inseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam;
           }
-          if (activeScan.front_params.body_height) {
+          if (activeScan.front_params.shoulders) shoulder = activeScan.front_params.shoulders;
+          if (activeScan.front_params.back_neck_point_to_wrist_length) {
+            sleeve = activeScan.front_params.back_neck_point_to_wrist_length;
+          } else if (activeScan.front_params.sleeve_length) {
+            sleeve = activeScan.front_params.sleeve_length + (activeScan.front_params.shoulders / 2);
+          }
+          if (activeScan.volume_params.neck) neck = activeScan.volume_params.neck;
+          if (activeScan.volume_params.thigh) thigh = activeScan.volume_params.thigh;
+          if (activeScan.volume_params.bicep) bicep = activeScan.volume_params.bicep;
+          if (activeScan.volume_params.wrist) wrist = activeScan.volume_params.wrist;
+          
+          // Height Sync Fix
+          if (activeScan.height) {
+            height = activeScan.height;
+          } else if (twinObj && twinObj.height) {
+            height = twinObj.height;
+          } else if (activeScan.front_params.body_height && activeScan.front_params.body_height > 36) {
             height = activeScan.front_params.body_height;
           }
         }
@@ -415,6 +517,12 @@ async function syncStoreScansToPortal(user, profile) {
             hips: hips ? parseFloat(hips) : null,
             height: height ? parseFloat(height) : null,
             inseam: inseam ? parseFloat(inseam) : null,
+            shoulder: shoulder ? parseFloat(shoulder) : null,
+            sleeve: sleeve ? parseFloat(sleeve) : null,
+            neck: neck ? parseFloat(neck) : null,
+            thigh: thigh ? parseFloat(thigh) : null,
+            bicep: bicep ? parseFloat(bicep) : null,
+            wrist: wrist ? parseFloat(wrist) : null,
             api_scans: mergedScans,
             updated_at: new Date().toISOString()
           })
@@ -442,6 +550,8 @@ async function syncStoreScansToPortal(user, profile) {
           if (hips) localStorage.setItem('styla_twin_hips', hips);
           if (height) localStorage.setItem('styla_twin_height', height);
           if (inseam) localStorage.setItem('styla_twin_inseam', inseam);
+          if (shoulder) localStorage.setItem('styla_twin_shoulder', shoulder);
+          if (sleeve) localStorage.setItem('styla_twin_sleeve', sleeve);
           
           profile.chest = chest;
           profile.waist = waist;
@@ -449,6 +559,8 @@ async function syncStoreScansToPortal(user, profile) {
           profile.hips = hips;
           profile.height = height;
           profile.inseam = inseam;
+          profile.shoulder = shoulder;
+          profile.sleeve = sleeve;
           profile.api_scans = mergedScans;
         }
       }
@@ -459,8 +571,15 @@ async function syncStoreScansToPortal(user, profile) {
   return profile;
 }
 
-function onUserLoggedIn(user, profile) {
+async function onUserLoggedIn(user, profile) {
   if (!profile) return;
+  
+  // Try to sync storefront store scans to portal profile
+  try {
+    profile = await syncStoreScansToPortal(user, profile);
+  } catch (syncErr) {
+    console.warn("Auto-sync store scans failed during login:", syncErr);
+  }
   
   if (profile.chest) {
       document.getElementById('val-chest').value = profile.chest;
@@ -499,6 +618,16 @@ function onUserLoggedIn(user, profile) {
   } else {
       localStorage.removeItem('styla_twin_measurement_overrides');
   }
+
+  // Reset editing states
+  isEditingTwin = false;
+  const editToggle = document.getElementById('btn-db-edit-toggle');
+  if (editToggle) editToggle.style.display = 'block';
+  const saveContainer = document.getElementById('db-save-container');
+  if (saveContainer) saveContainer.style.display = 'none';
+
+  // Add body class for styling logged-in states
+  document.body.classList.add('user-logged-in');
 
   // Update UI to show they are logged in
   document.getElementById('btn-show-login').style.display = 'none';
@@ -795,6 +924,34 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Bind Dashboard Edit Toggle buttons
+  const btnDbEditToggle = document.getElementById('btn-db-edit-toggle');
+  if (btnDbEditToggle) {
+    btnDbEditToggle.addEventListener('click', () => {
+      isEditingTwin = true;
+      if (currentProfileObj) {
+        renderDashboardTwin(currentProfileObj);
+      }
+      const saveContainer = document.getElementById('db-save-container');
+      if (saveContainer) saveContainer.style.display = 'flex';
+      btnDbEditToggle.style.display = 'none';
+    });
+  }
+
+  const btnDbCancelEdit = document.getElementById('btn-db-cancel-edit');
+  if (btnDbCancelEdit) {
+    btnDbCancelEdit.addEventListener('click', () => {
+      isEditingTwin = false;
+      if (currentProfileObj) {
+        renderDashboardTwin(currentProfileObj);
+      }
+      const saveContainer = document.getElementById('db-save-container');
+      if (saveContainer) saveContainer.style.display = 'none';
+      const editToggle = document.getElementById('btn-db-edit-toggle');
+      if (editToggle) editToggle.style.display = 'block';
+    });
+  }
+
   // Bind Dashboard Save Twin button
   const btnDbSaveTwin = document.getElementById('btn-db-save-twin');
   if (btnDbSaveTwin) {
@@ -842,6 +999,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('styla_twin_height', updates.height || '');
         localStorage.setItem('styla_twin_inseam', updates.inseam || '');
         
+        // Reset edit mode
+        isEditingTwin = false;
+        const btnEditToggle = document.getElementById('btn-db-edit-toggle');
+        if (btnEditToggle) btnEditToggle.style.display = 'block';
+        const saveContainer = document.getElementById('db-save-container');
+        if (saveContainer) saveContainer.style.display = 'none';
+
         alert("Twin measurements successfully saved and synced to cloud!");
         
         const profile = await getOrCreateProfile(supabase, session.user);
@@ -1002,6 +1166,8 @@ window.addEventListener('DOMContentLoaded', async () => {
           if (session) {
               const profile = await getOrCreateProfile(supabase, session.user);
               onUserLoggedIn(session.user, profile);
+          } else {
+              document.body.classList.remove('user-logged-in');
           }
       }
   } catch (err) {
@@ -1348,7 +1514,7 @@ btnDecode.addEventListener('click', async () => {
           </div>
           ` : ''}
 
-          <p style="margin-bottom: 1rem; font-size: 1rem; line-height: 1.5;">${data.explanation}</p>
+          <p style="margin-bottom: 1rem; font-size: 1rem; line-height: 1.5;">${formatMessageText(data.explanation)}</p>
         `;
 
         if (data.warning && data.warning.toLowerCase() !== "none" && data.warning.trim() !== "") {
@@ -1865,6 +2031,9 @@ if (btnLogout) {
             const badge = document.getElementById('active-scan-badge');
             if (badge) badge.style.display = 'none';
 
+            // Remove body class
+            document.body.classList.remove('user-logged-in');
+
             // Reset UI
             document.getElementById('btn-show-login').style.display = 'block';
             document.getElementById('logged-in-status').style.display = 'none';
@@ -1900,6 +2069,42 @@ if (btnLogout) {
 
 
 
+
+function formatMessageText(text) {
+  if (!text) return '';
+  let escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  const lines = escaped.split('\n');
+  let inList = false;
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+      const content = trimmed.substring(2);
+      if (!inList) {
+        inList = true;
+        return '<ul><li>' + content + '</li>';
+      }
+      return '<li>' + content + '</li>';
+    } else {
+      if (inList) {
+        inList = false;
+        return '</ul>' + (trimmed ? line + '<br>' : '');
+      }
+      return trimmed ? line + '<br>' : '<br>';
+    }
+  });
+  if (inList) {
+    processedLines.push('</ul>');
+  }
+  return processedLines.join('\n');
+}
 
 // ==========================================
 // AI CHAT WIDGET LOGIC
@@ -1990,7 +2195,11 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
       
-            msgDiv.textContent = text;
+      if (role === 'model' && !isTyping) {
+        msgDiv.innerHTML = formatMessageText(text);
+      } else {
+        msgDiv.textContent = text;
+      }
       chatMessages.appendChild(msgDiv);
       chatMessages.scrollTop = chatMessages.scrollHeight;
       return msgDiv;

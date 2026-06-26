@@ -74,6 +74,7 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString(),
       '3dlook_person_id': parseInt(person_id, 10),
       is_active: true,
+      height: toInches(heightCm),
       volume_params: {
         chest: toInches(vp.chest),
         under_bust_girth: toInches(vp.under_bust_girth),
@@ -174,7 +175,7 @@ export default async function handler(req, res) {
       hips: scanData.volume_params.low_hips,
       height: toInches(heightCm) || 64.0,
       shoulder: scanData.front_params.shoulders,
-      sleeve: scanData.front_params.sleeve_length,
+      sleeve: scanData.front_params.back_neck_point_to_wrist_length || (scanData.front_params.sleeve_length + (scanData.front_params.shoulders / 2)),
       inseam: scanData.front_params.inseam,
       neck: scanData.volume_params.neck,
       thigh: scanData.volume_params.thigh,

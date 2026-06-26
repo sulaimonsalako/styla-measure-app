@@ -1,3 +1,4 @@
+import webhookHandler from './_3dlook/webhook.js';
 import initSessionHandler from './_3dlook/init-session.js';
 import checkStatusHandler from './_3dlook/check-status.js';
 import saveMeasurementsHandler from './_3dlook/save-measurements.js';
@@ -21,6 +22,8 @@ export default async function handler(req, res) {
     return checkStatusHandler(req, res);
   } else if (pathname.includes('/save-measurements')) {
     return saveMeasurementsHandler(req, res);
+  } else if (pathname.includes('/webhook')) {
+    return webhookHandler(req, res);
   } else {
     return res.status(404).json({ error: `3DLook API endpoint not found: ${pathname}` });
   }

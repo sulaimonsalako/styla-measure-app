@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "styla-measure": {
+      "command": "python",
+      "args": [
+        "c:/Users/suloa/.gemini/antigravity/DEV Apps/STYLA-measure/mcp-server/server.py"
+      ]
+    }
+  }
+}

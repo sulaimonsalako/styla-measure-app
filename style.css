@@ -822,3 +822,45 @@ a { text-decoration: none; color: inherit; }
   .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
   .chart-container { height: 180px; }
 }
+
+/* === Premium Modernization Upgrades === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent-light);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.8rem;
+  font-weight: 300;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-close-btn:hover {
+  color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.05);
+}

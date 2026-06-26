@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
+    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
 
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
       pHips = activeScan.volume_params.low_hips || pHips;
       pShoulder = activeScan.front_params.shoulders || pShoulder;
-      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pSleeve = activeScan.front_params.back_neck_point_to_wrist_length || activeScan.front_params.sleeve_length || pSleeve;
       pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
       pThigh = activeScan.volume_params.thigh || pThigh;
     }
@@ -86,30 +86,40 @@ Your role is to advise the customer, answer their questions about sizing, fabric
 For example, if they ask about buying a size other than their recommended size (e.g. "What if I buy size XL?"), compare the measurements of that size in the size chart to their body measurements and give a professional, tailored opinion.
 
 PROFESSIONAL SIZING & APPAREL MATCHING RULES:
-1. BODY-TO-BODY MATCHING (DEFAULT): Assume size charts are target body sizes, not finished garment dimensions, unless explicitly labeled "garment specifications".
-   - You MUST compare the user's body measurements directly to the brand's recommended body dimensions in the size chart.
-   - Do NOT add ease requirements (like +3 inches) on top of the chart body values; the brand has already built ease into the sizing patterns.
+1. IDENTIFY CHART TYPE (CRITICAL):
+   - Detect if the size chart represents body measurements or garment measurements using these rules:
+     * CHARTS WITH LENGTH (Usually Garment Measurements): If a chart includes any "Length" attributes (like top length, body length, inseam, outseam, or sleeve length), it almost always reflects actual physical GARMENT DIMENSIONS. Treat it as a GARMENT SPECIFICATION CHART.
+     * CHARTS WITH ONLY CIRCUMFERENCES (Usually Body Measurements): If a chart only lists circumferences (like chest, waist, and hips) without any length measurements, it typically reflects BODY MEASUREMENTS. Treat it as a BODY SIZE CHART.
+     * EXCEPTIONS TO WATCH OUT FOR:
+       a) Unisex/Oversized Streetwear: These charts might list only circumferences (like "Chest Width" or "Bust Width") but represent finished flat half-chest width GARMENT MEASUREMENTS.
+       b) Knitwear and Leggings (High-stretch): High-stretch items sometimes list flat finished garment circumferences that look smaller because the fabric stretches on the body.
+   - Note: In a GARMENT SPECIFICATION CHART, flat lay half-chest/waist values (e.g., 19.7" or 20.5") must be multiplied by 2 to get the finished garment circumference (e.g., 39.4" or 41"). Lengths are never doubled.
 
-2. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's chart spec):
-   - Woven / Structured (Suits, Coats, Blazers, Woven Shirts): Max tolerance of +0.5". The user's body measurement must not exceed the brand's body spec by more than 0.5", otherwise size up.
-   - Knits / Stretch (T-shirts, hoodies, knitwear): Max tolerance of +1.5". Since knits stretch, the user's body can exceed the spec by up to 1.5".
-   - Activewear / Compression (Spandex, Leggings): Max tolerance of +3.0". Since compression items fit tightly, the user can be up to 3.0" larger than the spec.
+2. MATCHING LOGIC AND TRUE PHYSICAL EASE:
+   - CASE A: BODY SIZE CHART (Recommended Target Body Dimensions, e.g. M is for 38" chest)
+     - Compare the user's body measurements directly to the recommended target body sizes in the chart. The brand has already built styling ease into the garment patterns for that target body size.
+   - CASE B: GARMENT SPECIFICATION CHART (Finished Garment Dimensions, e.g. flat measurements)
+     - Flat width measurements represent the fabric itself. Double the flat width to get the finished circumference. Subtract the user's body measurement from the finished circumference to find the ease:
+       Ease = Garment Circumference - User Body.
+     - Compare the calculated ease to standard design ease rules (Woven Chest: 3-5", Slim: 1-3", Knits: 1-3"). If the user's body circumference exceeds the finished garment circumference (negative ease), it will fit extremely tight or stretch, which is only acceptable in stretch knits or compression garments.
 
-3. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
-   - Pants/Bottoms (Waist): User's body must not be smaller than the brand spec by more than -1.5" (otherwise they fall off).
-   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5" (otherwise too loose/droopy).
-   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0" (for an oversized look).
-   - Compression Activewear: User's body must not be smaller than the spec by more than -1.0" (otherwise saggy).
+3. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's chart spec or finished garment circumference):
+   - Woven / Structured (Suits, Coats, Blazers, Woven Shirts): Max tolerance of +0.5" over target body size.
+   - Knits / Stretch (T-shirts, hoodies, knitwear): Max tolerance of +1.5".
+   - Activewear / Compression (Spandex, Leggings): Max tolerance of +3.0".
 
-4. BELLY & WAIST INTEGRATION:
+4. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
+   - Pants/Bottoms (Waist): User's body must not be smaller than the brand waist spec by more than -1.5" (otherwise they fall off).
+   - Woven/Structured Tops: User's body must not be smaller than the chest spec by more than -2.5".
+   - Knits/Casual Tops: User's body must not be smaller than the chest spec by more than -4.0".
+
+5. BELLY & WAIST INTEGRATION:
    - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
    - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
-   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
 
-5. DECISION ENGINE:
-   - Identify the item category and fabric type.
-   - Filter sizes that are compatible (i.e. not too tight, and not too loose).
-   - From the compatible sizes, recommend the one where the difference (UserBody - BrandBody) is closest to 0 (or slightly negative for a comfortable drape).
+6. DECISION ENGINE:
+   - Identify the item category, fabric type, and fit intent.
+   - Recommend the size that is closest to an 'ideal' fit.
 
 CRITICAL RULES:
 1. Always be extremely polite, helpful, and professional.
@@ -122,6 +132,8 @@ CRITICAL RULES:
     if (Array.isArray(history) && history.length > 0) {
       history.forEach((msg, idx) => {
         const parts = [];
+        const msgText = msg.text || msg.content || "";
+        const role = (msg.role === 'model' || msg.role === 'assistant') ? 'model' : 'user';
         
         if (idx === 0) {
           let firstMsgText = `User Profile:
@@ -135,8 +147,9 @@ Product Info:
 - Title: "${pageTitle || 'Unknown Product'}"
 - Details: ${pageText || 'No description.'}
 - Size Chart Table: ${tableHtml || 'None'}
+- Recommended Size by STYLA: "${recommendedSize || 'Unknown'}"
 
-User message: ${msg.text}`;
+User message: ${msgText}`;
 
           parts.push({ text: firstMsgText });
           
@@ -154,11 +167,11 @@ User message: ${msg.text}`;
             });
           }
         } else {
-          parts.push({ text: msg.text });
+          parts.push({ text: msgText });
         }
 
         contents.push({
-          role: msg.role === 'model' ? 'model' : 'user',
+          role: role,
           parts: parts
         });
       });

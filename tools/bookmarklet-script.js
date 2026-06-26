@@ -12,10 +12,14 @@
     STYLA_HOST = 'http://localhost:3000';
   }
   
-  // Prevent duplicate overlays
+  // Prevent duplicate overlays - toggle visibility
   const existing = document.getElementById('styla-bookmarklet-container');
   if (existing) {
-    existing.remove();
+    if (existing.style.display === 'none') {
+      existing.style.display = 'block';
+    } else {
+      existing.style.display = 'none';
+    }
     return;
   }
 
@@ -93,8 +97,32 @@
       if (event.data.type === 'STYLA_WIDGET_CLOSE') {
         container.remove();
         window.removeEventListener('message', messageListener);
+      } else if (event.data.type === 'STYLA_WIDGET_HIDE') {
+        container.style.display = 'none';
       } else if (event.data.type === 'STYLA_WIDGET_READY') {
         sendScrapedData();
+      } else if (event.data.type === 'STYLA_REQUEST_RESCAN') {
+        // Re-scrape dynamic DOM content
+        const freshTitle = document.title || document.querySelector('h1')?.innerText || 'Product Page';
+        let freshText = '';
+        const freshDesc = document.querySelector('.product-description, #description, [class*="description"], [id*="description"]');
+        if (freshDesc) freshText = freshDesc.innerText;
+        else freshText = document.body.innerText.substring(0, 3000);
+
+        let freshTableHtml = '';
+        const freshTables = Array.from(document.querySelectorAll('table'));
+        const freshSizeTables = freshTables.filter(t => /size|chart|measure|guide|fit/i.test(t.innerText));
+        if (freshSizeTables.length > 0) {
+          freshTableHtml = freshSizeTables[0].outerHTML;
+        }
+
+        iframe.contentWindow.postMessage({
+          type: 'STYLA_SCRAPE_RESULT',
+          pageTitle: freshTitle,
+          pageText: freshText,
+          tableHtml: freshTableHtml,
+          url: window.location.href
+        }, '*');
       } else if (event.data.type === 'STYLA_GET_STORAGE') {
         const result = {};
         if (event.data.keys && Array.isArray(event.data.keys)) {
