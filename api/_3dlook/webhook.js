@@ -172,11 +172,12 @@ export default async function handler(req, res) {
     const legacyTwin = {
       chest: scanData.volume_params.chest,
       waist: scanData.volume_params.waist,
+      belly: scanData.volume_params.abdomen || scanData.volume_params.waist,
       hips: scanData.volume_params.low_hips,
       height: toInches(heightCm) || 64.0,
       shoulder: scanData.front_params.shoulders,
       sleeve: scanData.front_params.back_neck_point_to_wrist_length || (scanData.front_params.sleeve_length + (scanData.front_params.shoulders / 2)),
-      inseam: scanData.front_params.inseam,
+      inseam: scanData.front_params.inseam_from_crotch_to_floor || scanData.front_params.inseam,
       neck: scanData.volume_params.neck,
       thigh: scanData.volume_params.thigh,
       bicep: scanData.volume_params.bicep,

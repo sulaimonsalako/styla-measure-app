@@ -44,7 +44,9 @@ export function runSizingEngine(user, chart) {
     userBelly = parseFloat(activeScan.volume_params.abdomen) || parseFloat(activeScan.volume_params.waist) || userBelly;
     userHips = parseFloat(activeScan.volume_params.low_hips) || userHips;
     userShoulder = parseFloat(activeScan.front_params.shoulders) || userShoulder;
-    userSleeve = parseFloat(activeScan.front_params.sleeve_length) || userSleeve;
+    userSleeve = parseFloat(activeScan.front_params.back_neck_point_to_wrist_length) || 
+                 (activeScan.front_params.sleeve_length ? (parseFloat(activeScan.front_params.sleeve_length) + (parseFloat(activeScan.front_params.shoulders || 0) / 2)) : null) || 
+                 userSleeve;
     userInseam = parseFloat(activeScan.front_params.inseam_from_crotch_to_floor) || parseFloat(activeScan.front_params.inseam) || userInseam;
     userThigh = parseFloat(activeScan.volume_params.thigh) || userThigh;
   }
