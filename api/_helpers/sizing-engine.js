@@ -77,7 +77,7 @@ export function runSizingEngine(user, chart) {
     let chartChest = getVal('chest');
     let chartWaist = getVal('waist');
     let chartHips = getVal('hips');
-    let chartBelly = getVal('belly') || chartWaist;
+    let chartBelly = getVal('belly') || (category !== 'bottoms' ? chartWaist : null);
     let chartShoulder = getVal('shoulder') || getVal('shoulder_width') || getVal('shoulders');
     let chartSleeve = getVal('sleeve') || getVal('sleeve_length');
     let chartInseam = getVal('inseam');
