@@ -588,17 +588,36 @@
 
     @media (max-width: 600px) {
       header {
-        padding: 0.8rem 1rem !important;
+        padding: 0.6rem 0.75rem !important;
       }
       .brand-logo {
-        font-size: 1.25rem !important;
+        font-size: 1.1rem !important;
       }
       .brand-logo img {
-        height: 28px !important;
+        height: 22px !important;
       }
+      #auth-status-container {
+        gap: 0.4rem !important;
+      }
+      #auth-status-container .nav-link {
+        display: none !important; /* Hide home link to save space */
+      }
+      #auth-status-container a[href="brands.html"] {
+        padding: 0.4rem 0.65rem !important;
+        font-size: 0.72rem !important;
+      }
+      
+      /* Mobile header cleanup for logged-in users to prevent overlapping */
+      body.user-logged-in #auth-status-container a[href="brands.html"] {
+        display: none !important;
+      }
+      body.user-logged-in #cloud-sync-status {
+        display: none !important;
+      }
+      
       .btn-login {
-        padding: 0.4rem 0.9rem !important;
-        font-size: 0.8rem !important;
+        padding: 0.4rem 0.65rem !important;
+        font-size: 0.72rem !important;
       }
       .step-card {
         padding: 1.25rem !important;
@@ -672,6 +691,85 @@
         font-size: 0.85rem !important;
       }
     }
+
+    /* Premium Modernization Upgrades */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07070c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 42, 117, 0.15);
+      border-color: #ff75a0;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.8rem;
+      font-weight: 300;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.2s ease;
+      padding: 4px 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-close-btn:hover {
+      color: #ff75a0;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.03) !important;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .tools-card {
+      background: rgba(255, 255, 255, 0.03) !important;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .tools-card:hover {
+      border-color: rgba(255, 42, 117, 0.25) !important;
+      box-shadow: 0 20px 45px rgba(255, 42, 117, 0.06);
+      transform: translateY(-2px);
+    }
+
+    input[type="number"], input[type="email"], input[type="password"], .styled-select, .styled-input {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, .styled-select:focus, .styled-input:focus {
+      border-color: #ff75a0 !important;
+      box-shadow: 0 0 0 3px rgba(255, 117, 160, 0.15) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .btn-run, .btn-login, .nav-cta, #saia-mtm-integration button {
+      transition: all 0.2s ease !important;
+    }
+    .btn-run:hover, .nav-cta:hover, #saia-mtm-integration button:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.35) !important;
+    }
   </style>
 </head>
 <body>
@@ -696,33 +794,23 @@
   <div id="landing-view">
   <!-- Hero Intro -->
   <section class="hero-container">
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
-      <h1 style="font-family: var(--font-outfit); font-size: 3rem; font-weight: 900; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Tired of Sizing Roulette?</h1>
-      <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 1rem 0;">
-        Every brand fits differently—a size Medium in one store can be a Large in another. Stop spending hours searching for your fit, buying multiple sizes just to return them, or losing money when you can't return. STYLA matches your 3D body scans to retail size charts in real-time.
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 900; line-height: 1.1; margin: 0; background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Stop Guessing<br>Your Size.</h1>
+      <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; margin: 0; max-width: 520px;">
+        Pants fit your hips but gap at the waist? Sizing charts are a gamble. Scan your body in 30 seconds to lock in your true 3D measurements and match them to any online clothing store instantly.
       </p>
       
-      <!-- Key benefits -->
-      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>Pants That Fit:</b> No more pants that fit your hips but gap at your waist.</span>
-        </div>
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>Shop Confidently:</b> Buy from brands you don't know without sizing anxiety.</span>
-        </div>
-        <div style="display: flex; align-items: flex-start; gap: 10px;">
-          <span style="background: rgba(255, 42, 117, 0.1); color: #ff75a0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; margin-top: 2px;">✓</span>
-          <span style="font-size: 0.95rem; font-weight: 550; color: #cbd5e1;"><b>End Return Errands:</b> Stop ordering multiple sizes just to return what doesn't work.</span>
-        </div>
+      <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; flex-wrap: wrap; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> Lock in Your True Size</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> Zero Return Errands</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> 30-Second Body Scan</span>
       </div>
     </div>
 
     <!-- Right Column: Relatable Sizing Struggle Image -->
     <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
       <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
-      <img src="images/sizing_struggle.png" alt="Sizing Struggle Return Fatigue" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; z-index: 1;" />
+      <img src="images/styla_3d_scan_hero_dark.png" alt="STYLA 3D Body Scan Mannequin with Measurements" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; z-index: 1;" />
     </div>
   </section>
 
@@ -860,59 +948,48 @@
       </p>
 
       <div class="tools-container" style="display: flex; flex-direction: row; gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
-        <!-- Chrome Extension Card -->
+        <!-- Apple Devices Card -->
         <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 1.25rem;">🌐</span>
-              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Chrome Extension</h4>
+              <span style="font-size: 1.25rem;">🍎</span>
+              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Apple Devices (iOS & Mac)</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
-              The ultimate shopping companion. Works in the background on all supported stores.
+              Safari blocks normal extensions and bookmarklets, so we use a native Apple Shortcut. It integrates perfectly into your Share menu!
             </p>
             <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5;">
-              <li>Download the extension package (.zip).</li>
-              <li>Extract it to a folder on your computer.</li>
-              <li>Open Chrome, go to <code>chrome://extensions/</code>, enable <b>Developer mode</b>.</li>
-              <li>Click <b>Load unpacked</b> and select the extracted folder.</li>
+              <li>Tap the button below to install the STYLA Shortcut.</li>
+              <li>Browse any supported clothing store in Safari.</li>
+              <li>Tap the <b>Share</b> icon, and select <b>⚡ STYLA Stylist</b> to launch!</li>
             </ol>
           </div>
-          <a href="chrome-extension/chrome-extension.zip" download class="btn-run" style="margin-top: 0; text-align: center; text-decoration: none; display: block; width: 100%; padding: 10px; font-size: 0.85rem; background: var(--primary-gradient);">Download Chrome Extension</a>
+          <!-- NOTE: Replace '#' with your actual iCloud shortcut link -->
+          <a href="#" class="btn-run" style="margin-top: 1rem; text-align: center; text-decoration: none; display: block; width: 100%; padding: 10px; font-size: 0.85rem; background: var(--primary-gradient);">Install Apple Shortcut</a>
         </div>
 
-        <!-- Bookmarklet Card -->
+        <!-- Windows & Android Card -->
         <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 1.25rem;">🔖</span>
-              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Browser Bookmarklet</h4>
+              <span style="font-size: 1.25rem;">💻</span>
+              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Windows & Android</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
-              No installation required. Works on any browser (including Safari and mobile browsers).
+              Use our smart browser bookmarklet on Chrome, Edge, or Firefox. No installation required.
             </p>
             <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5;">
-              <li>Drag the <b>⚡ STYLA Stylist</b> button below to your bookmarks bar.</li>
-              <li>Go to any supported clothing product page.</li>
-              <li>Click the bookmark to open the STYLA fitting room!</li>
+              <li><b>Desktop:</b> Drag the <b>⚡ STYLA Stylist</b> button below to your Bookmarks bar.</li>
+              <li><b>Mobile:</b> Tap <b>Copy Code</b>, bookmark this page, edit the bookmark's URL, and paste the code.</li>
+              <li>Go to any clothing product page and tap the bookmark to open the fitting room!</li>
             </ol>
           </div>
           <div style="text-align: center; margin-top: auto; padding-top: 0.5rem;">
             <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag me to your Bookmarks bar!</p>
             
-            <a href="#" id="lnk-toggle-mobile" style="font-size: 0.8rem; color: var(--accent-pink); text-decoration: underline; display: block; font-weight: 500; margin-top: 10px;">📱 Installing on Mobile? View Guide</a>
-            
-            <div id="mobile-instructions-panel" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.2rem; margin-top: 1rem; text-align: left;">
-              <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 0.9rem; font-family: var(--font-outfit);">How to install on Mobile:</h5>
-              <ol style="font-size: 0.78rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 1.2rem; line-height: 1.55;">
-                <li style="margin-bottom: 6px;">Tap <b>Copy Code</b> below to copy the bookmarklet script.</li>
-                <li style="margin-bottom: 6px;">Bookmark this page (tap your browser's share or menu icon, and tap <b>Add Bookmark</b>).</li>
-                <li style="margin-bottom: 6px;">Edit the bookmark: Change its name to <b>⚡ STYLA Stylist</b>, and paste the copied code into the Address/URL field. Save it.</li>
-                <li>To use: Open any online store, type <b>⚡ STYLA Stylist</b> in your browser's address bar, and tap the bookmark to launch the Stylist popup.</li>
-              </ol>
-              <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--success-gradient); margin-top: 0; border-radius: 8px;">Copy Bookmarklet Code</button>
-              <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
-            </div>
+            <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--success-gradient); margin-top: 0; border-radius: 8px;">Copy Code (For Mobile Chrome)</button>
+            <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
           </div>
         </div>
       </div>
@@ -1042,15 +1119,32 @@
         
         <!-- Tab 1: My Twin Profile -->
         <div id="tab-twin" class="db-tab-content">
-          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">My Twin Measurements</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 10px;">
+            <h3 style="font-family: var(--font-outfit); color: #fff; margin: 0; font-size: 1.5rem;">My Twin Measurements</h3>
+            <button id="btn-db-edit-toggle" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none; display: block;">Edit Profile</button>
+          </div>
           <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">These measurements are used to recommend your best size on retail stores via the Styla Bookmarklet.</p>
           
           <div id="db-measurements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
              <!-- Populated dynamically via JS -->
           </div>
           
-          <div style="display: flex; justify-content: flex-end;">
+          <div id="db-save-container" style="display: none; justify-content: flex-end; gap: 10px; margin-bottom: 2rem;">
+            <button id="btn-db-cancel-edit" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">Cancel</button>
             <button id="btn-db-save-twin" style="background: var(--primary-gradient); border: none; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,42,117,0.2);">Save Twin Measurements</button>
+          </div>
+
+          <!-- Extended Measurements section -->
+          <div id="db-extended-section" style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem; display: none;">
+            <h4 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+              <span>📏  Extended 3D Scan Measurements</span>
+              <span id="extended-count-badge" style="font-size: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 2px 8px; border-radius: 100px; color: var(--text-secondary);">0 details</span>
+            </h4>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0; margin-bottom: 1.5rem;">These measurements are automatically extracted from your active 3D body scan and can be used for custom tailoring or detailed fit profiles.</p>
+            
+            <div id="db-extended-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+              <!-- Populated dynamically via JS from active scan -->
+            </div>
           </div>
         </div>
         
@@ -1091,15 +1185,27 @@
             
             <!-- Mobile Guide -->
             <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
-              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation (Safari / Chrome)</h4>
-              <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
-                <li>Tap <b>Copy Bookmarklet Code</b> below to copy the integration script.</li>
-                <li>Bookmark this page (tap Share -> Add Bookmark).</li>
-                <li>Edit the bookmark: Name it <b>⚡ STYLA Stylist</b>, and paste the copied code into the Address/URL field.</li>
-                <li>To use: Open any store product page, type <b>⚡ STYLA Stylist</b> in your browser search bar, and tap the bookmark to load.</li>
-              </ol>
-              <button id="btn-db-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--primary-gradient); margin-top: 0; border-radius: 10px;">Copy Bookmarklet Code</button>
-              <div id="db-copy-success-msg" style="display: none; font-size: 0.85rem; color: #10b981; margin-top: 10px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation</h4>
+              
+              <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 1rem; font-family: var(--font-outfit);">🍎 Apple Devices (iOS & Mac)</h5>
+                <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px;">
+                  <li>Tap the button below to install the STYLA Apple Shortcut.</li>
+                  <li>To use: Browse any store in Safari, tap the <b>Share</b> icon, and select <b>⚡ STYLA Stylist</b>.</li>
+                </ol>
+                <a href="#" class="btn-run" style="display: block; text-align: center; text-decoration: none; width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--primary-gradient); border-radius: 10px;">Install Apple Shortcut</a>
+              </div>
+
+              <div>
+                <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 1rem; font-family: var(--font-outfit);">🤖 Android (Chrome)</h5>
+                <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
+                  <li>Tap <b>Copy Code</b> below.</li>
+                  <li>Bookmark this page.</li>
+                  <li>Edit the bookmark: Name it <b>⚡ STYLA Stylist</b>, and paste the code into the URL field.</li>
+                </ol>
+                <button id="btn-db-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--success-gradient); margin-top: 0; border-radius: 10px;">Copy Bookmarklet Code</button>
+                <div id="db-copy-success-msg" style="display: none; font-size: 0.85rem; color: #10b981; margin-top: 10px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1184,7 +1290,8 @@
 
   <!-- AUTHENTICATION MODAL -->
   <div class="modal-overlay" id="login-modal" onclick="if (event.target === this) this.style.display='none'">
-    <div class="modal-content">
+    <div class="modal-content" style="position: relative;">
+      <button class="modal-close-btn" onclick="document.getElementById('login-modal').style.display='none'" aria-label="Close modal">&times;</button>
       <div id="auth-tabs-container" class="auth-tabs">
         <button id="tab-auth-login" class="auth-tab-btn active">Log In</button>
         <button id="tab-auth-signup" class="auth-tab-btn">Sign Up</button>
@@ -1232,6 +1339,85 @@
       0% { top: 5%; }
       50% { top: 90%; }
       100% { top: 5%; }
+    }
+
+    /* Premium Modernization Upgrades */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07070c;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 42, 117, 0.15);
+      border-color: #ff75a0;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.8rem;
+      font-weight: 300;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.2s ease;
+      padding: 4px 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-close-btn:hover {
+      color: #ff75a0;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.03) !important;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .tools-card {
+      background: rgba(255, 255, 255, 0.03) !important;
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .tools-card:hover {
+      border-color: rgba(255, 42, 117, 0.25) !important;
+      box-shadow: 0 20px 45px rgba(255, 42, 117, 0.06);
+      transform: translateY(-2px);
+    }
+
+    input[type="number"], input[type="email"], input[type="password"], .styled-select, .styled-input {
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, .styled-select:focus, .styled-input:focus {
+      border-color: #ff75a0 !important;
+      box-shadow: 0 0 0 3px rgba(255, 117, 160, 0.15) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .btn-run, .btn-login, .nav-cta, #saia-mtm-integration button {
+      transition: all 0.2s ease !important;
+    }
+    .btn-run:hover, .nav-cta:hover, #saia-mtm-integration button:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.35) !important;
     }
   </style>
 
