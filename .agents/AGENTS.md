@@ -372,3 +372,195 @@ Whenever customers report:
 The AI should update its internal ease estimates for that specific brand, garment category, fabric type, and style.
 
 The objective is not to learn average sizes but to learn how each brand constructs garments.
+
+
+---
+
+# Styla Fit Engine — Ease Specification v1.0
+
+## Formula 1: Finished Garment Measurement
+Finished Garment Measurement = Body Measurement + Wearing Ease + Design Ease - Stretch Recovery Compensation
+
+Where:
+- **Wearing Ease** = Required for breathing and movement.
+- **Design Ease** = Fashion/style choice.
+- **Stretch Recovery Compensation** = Reduction allowed because the fabric stretches.
+
+### Stretch Compensation Rules
+- **Woven fabrics**: Stretch Compensation = 0
+- **Stretch fabrics**: Stretch Compensation = Stretch Factor × Body Measurement
+  *(where Stretch Factor typically ranges from 0.02 to 0.10 depending on the fabric).*
+
+---
+
+## Formula 2: Flat Measurements
+If the garment measurement is flat:
+- **Circumference = Flat Width × 2**
+
+Never double linear measurements:
+- Shoulder width
+- Sleeve length
+- Body length
+- Rise
+- Inseam
+- Outseam
+- Neck-to-wrist
+
+---
+
+## Formula 3: Ease
+Ease = Finished Garment − Body
+
+### Ease Interpretation Table
+| Ease Value | Meaning |
+|---|---|
+| **-4"** | Compression |
+| **-2"** | Bodycon |
+| **0"** | Skin fit |
+| **+2"** | Slim |
+| **+4"** | Regular |
+| **+6"** | Relaxed |
+| **+10"+** | Oversized |
+
+---
+
+## Formula 4: Fit Score
+For every critical measurement, evaluate:
+`Difference = Garment − Required Garment`
+
+where `Required Garment = Body + Required Ease`
+
+### Scoring Scale:
+- **Difference < -1"**: ❌ **Reject**
+- **-1" to -0.25"**: ⚠ **Tight**
+- **±0.25"**: ✅ **Excellent**
+- **0.25" to 1"**: **Good**
+- **1" to 3"**: **Loose**
+- **3"+**: **Oversized**
+
+---
+
+## Standard Ease Values (Industry Defaults)
+
+### Men's Dress Shirt
+- **Chest**: 2" Wearing Ease + 2" Design Ease (Total Chest ≈ 4")
+- **Waist**: 1" Wearing Ease + 2" Design Ease
+- **Hip**: 1" Wearing Ease + 1" Design Ease
+- **Bicep**: 1" Wearing Ease + 0.5" Design Ease
+- **Neck**: 0.5" Wearing Ease + 0" Design Ease
+
+### Men's Slim Shirt
+- **Chest**: 2"
+- **Waist**: 1"
+- **Hip**: 1"
+- **Bicep**: 0.5"
+
+### Men's Oversized Shirt
+- **Chest**: 8" to 14"
+- **Shoulder**: 1" to 3"
+- **Length**: 1" to 4"
+- **Bicep**: 2" to 5"
+
+### Women's Blouse
+- **Bust**: 2" to 4"
+- **Waist**: 2" to 3"
+- **Hip**: 2" to 4"
+- **Upper Arm**: 1"
+
+### Women's Bodycon Dress
+- **Bust**: -1" to 0"
+- **Waist**: -2" to 0"
+- **Hip**: -2" to 0"
+
+### Women's Relaxed Dress
+- **Bust**: 4" to 8"
+- **Waist**: 6" to 10"
+- **Hip**: 4" to 8"
+
+### Men's Blazer
+- **Shoulder**: Almost zero ease (shoulder seam should align closely with the natural shoulder).
+- **Chest**: 4" to 6"
+- **Waist**: 2" to 4"
+- **Bicep**: 1.5"
+- **Sleeve**: +0.5"
+
+### Men's Suit Jacket
+- **Chest**: 4"
+- **Waist**: 3"
+- **Hip**: 2"
+
+### Jeans
+*Note: Do NOT use shirt logic. The waistband is designed to sit securely.*
+- **Waist**: 0" (Extra waist ease causes slipping)
+- **Hip**: 2" to 4"
+- **Seat**: 2" to 4"
+- **Thigh**: 1" to 2"
+- **Calf**: 0.5" to 1"
+- *Explanation*: The room in jeans comes from the Seat, Hip, and Rise—not the waist.
+
+### Tailored Dress Pants
+- **Waist**: 0" to 1"
+- **Hip**: 2"
+- **Seat**: 2"
+- **Thigh**: 1.5"
+- **Knee**: 1"
+
+### Leggings
+- **Waist**: -2"
+- **Hip**: -3"
+- **Thigh**: -2"
+- **Calf**: -2"
+
+### Hoodies
+- **Chest**: 8" to 12"
+- **Waist**: 8"
+- **Hip**: 8"
+- **Shoulder**: 2"
+- **Bicep**: 3"
+- **Length**: 2"
+
+### Sweatshirts
+- **Chest**: 6" to 10"
+- **Shoulder**: 1"
+- **Length**: 1"
+
+---
+
+## Fabric Stretch Compensation
+
+| Stretch Category | Material Example | Stretch Factor |
+|---|---|---|
+| **No Stretch** | Woven Cotton | `0.00` |
+| **Slight Stretch** | 2% Elastane | `0.02` |
+| **Moderate Stretch**| 5% Elastane | `0.04` |
+| **High Stretch** | Athletic Knit | `0.07` |
+| **Compression** | Performance Wear| `0.10` |
+
+---
+
+## Linear Measurement Rules
+These should almost never be shorter than the body. Long is always preferable because it can be hemmed.
+
+- **Sleeve**: Body + 0.5" minimum
+- **Jacket Sleeve**: Body + 0.75" minimum
+- **Shirt Length**: Body + 1" minimum
+- **Hoodie**: Body + 2" minimum
+- **Inseam**: Body to +1" minimum
+
+---
+
+## Alteration Priority Table
+
+| Alteration Feasibility | Tailoring Task |
+|---|---|
+| **Easy (High Confidence)** | Hem pants, shorten sleeves, take in waist, take in side seams, taper legs |
+| **Moderate** | Let out waist (typically up to 1-2" if seam allowance exists), shorten jacket body, reduce seat |
+| **Difficult** | Lengthen sleeves, lengthen pants (limited by hem), adjust crotch depth, change collar |
+| **Avoid (Unfeasible)** | Increase shoulders, increase chest, increase hips, increase armhole, increase thigh, change balance |
+
+---
+
+## System Recommendation Strategy (Integration Guidelines)
+These numbers should be treated as industry defaults. Every brand should have its own "ease profile" layered on top of these defaults. 
+
+If the system learns that Brand A consistently cuts T-shirts with +5" chest ease while Brand B cuts them with +2.5" chest ease, those brand-specific values override the generic defaults. Over time, recommendations become tailored to each brand while still using these rules as a reliable baseline.
