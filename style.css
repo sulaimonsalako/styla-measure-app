@@ -14,10 +14,10 @@
   --border-accent: rgba(225, 29, 72, 0.15);
 
   --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
 
-  --accent: #ffffff;
+  --accent: #ff2a75;
   --accent-light: #e11d48;
   --accent-dim: rgba(225, 29, 72, 0.08);
   --accent-glow: rgba(225, 29, 72, 0.15);
@@ -36,7 +36,7 @@
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 40px rgba(225, 29, 72, 0.08);
   
-  --primary-gradient: linear-gradient(135deg, #1e1e2f 0%, #0b0b14 100%);
+  --primary-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
 }
 
 /* === RESET === */
@@ -1017,4 +1017,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .tab-btn.active {
   color: var(--accent-light) !important;
   border-bottom-color: var(--accent-light) !important;
+}
+
+/* Accessibility & Contrast Enhancements */
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
