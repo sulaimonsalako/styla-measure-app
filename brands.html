@@ -12,10 +12,8 @@
   
   <style>
     :root {
-      --purple-glow: rgba(139, 92, 246, 0.12);
-      --pink-glow: rgba(255, 42, 117, 0.12);
-      --indigo-accent: #8b5cf6;
-      --indigo-light: #a78bfa;
+      --purple-glow: rgba(139, 92, 246, 0.04);
+      --pink-glow: rgba(255, 42, 117, 0.03);
     }
 
     body {
@@ -36,11 +34,11 @@
     .brand-hero-title {
       font-family: var(--font-head);
       font-size: clamp(2.2rem, 5.5vw, 3.8rem);
-      font-weight: 900;
+      font-weight: 800;
       line-height: 1.15;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.03em;
       margin-bottom: 20px;
-      background: linear-gradient(135deg, #ffffff 40%, #f472b6 70%, #c084fc 100%);
+      background: linear-gradient(135deg, #0f172a 30%, #334155 70%, #e11d48 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -66,7 +64,7 @@
     .section-badge {
       display: inline-block;
       padding: 6px 14px;
-      background: rgba(255, 42, 117, 0.08);
+      background: rgba(225, 29, 72, 0.04);
       border: 1px solid var(--border-accent);
       border-radius: 100px;
       font-size: 0.72rem;
@@ -93,7 +91,7 @@
     }
 
     .pillar-card {
-      background: rgba(14, 14, 28, 0.45);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 32px 28px;
@@ -108,16 +106,9 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--indigo-accent));
+      background: var(--primary-gradient);
       opacity: 0;
       transition: opacity 0.3s ease;
-    }
-
-    .pillar-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(255, 255, 255, 0.12);
-      background: rgba(14, 14, 28, 0.6);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.3);
     }
 
     .pillar-card:hover::before {
@@ -127,22 +118,22 @@
     .pillar-icon {
       font-size: 1.8rem;
       margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(225, 29, 72, 0.02);
       width: 50px; height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-md);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(225, 29, 72, 0.1);
       color: var(--accent-light);
     }
 
     .pillar-title {
-      font-family: var(--font-head);
-      font-size: 1.25rem;
+      font-family: var(--font-body);
+      font-size: 1.2rem;
       font-weight: 700;
       margin-bottom: 12px;
-      color: #fff;
+      color: var(--text-primary);
     }
 
     .pillar-desc {
@@ -183,10 +174,10 @@
     }
 
     .brand-eco-title {
-      font-family: var(--font-head);
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #fff;
+      font-family: var(--font-body);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-primary);
       margin-bottom: 8px;
     }
 
@@ -206,11 +197,10 @@
     .waitlist-card {
       max-width: 600px;
       margin: 0 auto;
-      background: rgba(14, 14, 28, 0.5);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 40px;
-      backdrop-filter: blur(20px);
       box-shadow: var(--shadow-card);
     }
 
@@ -232,53 +222,6 @@
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-secondary);
-    }
-
-    .styled-select {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: #fff;
-      font-size: 0.9rem;
-      outline: none;
-      transition: all 0.2s;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      background-size: 14px;
-    }
-
-    .styled-select option {
-      background: #0e0e1c;
-      color: #fff;
-    }
-
-    .styled-select:focus {
-      border-color: #ff75a0;
-      box-shadow: 0 0 0 2px rgba(255, 117, 160, 0.15);
-    }
-
-    .styled-textarea {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 10px 14px;
-      color: #fff;
-      font-size: 0.9rem;
-      outline: none;
-      resize: vertical;
-      min-height: 70px;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-
-    .styled-textarea:focus {
-      border-color: #ff75a0;
-      box-shadow: 0 0 0 2px rgba(255, 117, 160, 0.15);
     }
 
     /* RESPONSIVE */
@@ -520,7 +463,7 @@
 
 
       <h1 class="brand-hero-title">
-        Stop Sizing Guesswork.<br />Optimize Your Brand.
+        Smarter Sizing for<br /><em>modern fashion brands.</em>
       </h1>
 
       <p class="brand-hero-sub" style="max-width: 680px; margin-left: auto; margin-right: auto; font-size: 1.15rem;">
@@ -678,7 +621,7 @@
     <div class="container">
       <div class="waitlist-card">
         <div style="text-align: center; margin-bottom: 28px;">
-          <h2 style="font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 10px;">Partner with STYLA</h2>
+          <h2 style="font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 10px;">Partner with STYLA</h2>
           <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 440px; margin: 0 auto;">Join our early pilot program. Settle sizing doubts once and for all and witness immediate ROI.</p>
         </div>
 
@@ -740,9 +683,9 @@
         <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
         
         <div class="footer-socials" style="display: flex; gap: 20px; align-items: center;">
-          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
+          <a href="https://instagram.com/stylaca" target="_blank"  >Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank"  >TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank"  >X (Twitter)</a>
         </div>
 
         <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">

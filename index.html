@@ -7,20 +7,20 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
     :root {
-      --bg-dark: #07070c;
-      --card-bg: rgba(255, 255, 255, 0.02);
-      --card-border: rgba(255, 255, 255, 0.07);
-      --text-white: #ffffff;
-      --text-muted: #94a3b8;
-      --primary-gradient: linear-gradient(135deg, #ff2a75 0%, #d90040 100%);
+      --bg-dark: #fcfcfd;
+      --card-bg: #ffffff;
+      --card-border: rgba(0, 0, 0, 0.06);
+      --text-white: #0f172a;
+      --text-muted: #475569;
+      --primary-gradient: linear-gradient(135deg, #111111 0%, #1f2937 100%);
       --scan-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
       --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      --font-outfit: 'Outfit', sans-serif;
+      --font-outfit: 'EB Garamond', serif;
       --font-inter: 'Inter', sans-serif;
     }
 
@@ -30,7 +30,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 12px 16px;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.95rem;
       outline: none;
       box-sizing: border-box;
@@ -67,7 +67,7 @@
     }
 
     .brand-logo {
-      color: #fff;
+      color: var(--text-primary);
       font-family: var(--font-outfit);
       font-size: 1.4rem;
       font-weight: 800;
@@ -94,7 +94,7 @@
     .btn-login {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.15);
-      color: #fff;
+      color: var(--text-primary);
       padding: 0.5rem 1.2rem;
       border-radius: 100px;
       font-weight: 600;
@@ -263,7 +263,7 @@
       border-radius: 16px;
       padding: 0.8rem 1.2rem;
       font-size: 0.85rem;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -297,7 +297,7 @@
 
     .step-num {
       background: var(--primary-gradient);
-      color: #fff;
+      color: var(--text-primary);
       width: 28px;
       height: 28px;
       border-radius: 50%;
@@ -312,7 +312,7 @@
       font-family: var(--font-outfit);
       font-size: 1.25rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text-primary);
       margin: 0;
     }
 
@@ -345,14 +345,14 @@
 
     .tab-btn.active {
       background: #1e1e2d;
-      color: #fff;
+      color: var(--text-primary);
       box-shadow: 0 4px 12px rgba(0,0,0,0.25);
       border: 1px solid rgba(255,255,255,0.05);
     }
 
     .tab-btn span.badge {
       background: #ff2a75;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.7rem;
       padding: 2px 8px;
       border-radius: 100px;
@@ -376,7 +376,7 @@
     .input-group label {
       font-size: 0.85rem;
       font-weight: 600;
-      color: #cbd5e1;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       gap: 4px;
@@ -388,7 +388,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       padding: 0.8rem 1rem;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s;
@@ -430,20 +430,20 @@
       border-radius: 50%;
       font-size: 9px;
       cursor: pointer;
-      color: #94a3b8;
+      color: var(--text-muted);
       vertical-align: middle;
     }
 
     .info-icon:hover {
       background: #ff2a75;
-      color: #fff;
+      color: var(--text-primary);
     }
 
     /* Buttons */
     .btn-run {
       width: 100%;
       background: var(--primary-gradient);
-      color: #fff;
+      color: var(--text-primary);
       border: none;
       padding: 1rem;
       border-radius: 100px;
@@ -514,7 +514,7 @@
       border: 1px solid rgba(255, 42, 117, 0.2);
       border-radius: 16px;
       display: none;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 1.05rem;
       line-height: 1.6;
     }
@@ -553,7 +553,7 @@
       padding: 10px;
       background: none;
       border: none;
-      color: #94a3b8;
+      color: var(--text-muted);
       cursor: pointer;
       font-weight: 600;
       font-size: 0.95rem;
@@ -561,19 +561,19 @@
     }
 
     .auth-tab-btn.active {
-      color: #fff;
+      color: var(--text-primary);
       border-bottom-color: #ff2a75;
     }
 
     .nav-link {
-      color: #94a3b8;
+      color: var(--text-muted);
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
       transition: color 0.2s;
     }
     .nav-link:hover {
-      color: #fff;
+      color: var(--text-primary);
     }
 
     /* Mobile Responsive Optimizations */
@@ -698,16 +698,14 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #07070c;
+      background: #f8fafc;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.15);
       border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 42, 117, 0.15);
-      border-color: #ff75a0;
+      background: rgba(15, 23, 42, 0.25);
     }
 
     .modal-close-btn {
@@ -716,7 +714,7 @@
       right: 18px;
       background: none;
       border: none;
-      color: #94a3b8;
+      color: #475569;
       font-size: 1.8rem;
       font-weight: 300;
       cursor: pointer;
@@ -730,45 +728,97 @@
       z-index: 100;
     }
     .modal-close-btn:hover {
-      color: #ff75a0;
-      background: rgba(255, 255, 255, 0.05);
+      color: #e11d48;
+      background: rgba(0, 0, 0, 0.05);
     }
 
     .step-card {
-      background: rgba(255, 255, 255, 0.03) !important;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.06) !important;
     }
 
     .tools-card {
-      background: rgba(255, 255, 255, 0.03) !important;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.06) !important;
       transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     }
     .tools-card:hover {
-      border-color: rgba(255, 42, 117, 0.25) !important;
-      box-shadow: 0 20px 45px rgba(255, 42, 117, 0.06);
+      border-color: rgba(225, 29, 72, 0.15) !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.05) !important;
       transform: translateY(-2px);
     }
-
-    input[type="number"], input[type="email"], input[type="password"], .styled-select, .styled-input {
-      background: rgba(255, 255, 255, 0.03) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    
+    /* LIGHT THEME OVERRIDES FOR CONSOLE */
+    body {
+      background-color: #fcfcfd !important;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.03) 0%, transparent 40%) !important;
+      color: #0f172a !important;
     }
-    input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, .styled-select:focus, .styled-input:focus {
-      border-color: #ff75a0 !important;
-      box-shadow: 0 0 0 3px rgba(255, 117, 160, 0.15) !important;
-      background: rgba(255, 255, 255, 0.05) !important;
+    header {
+      background: rgba(255, 255, 255, 0.8) !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
     }
     
-    .btn-run, .btn-login, .nav-cta, #saia-mtm-integration button {
-      transition: all 0.2s ease !important;
+    h1, h2, h3, h4, h5, p, label, div.db-nav-item, .brand-logo {
+      color: #0f172a !important;
     }
-    .btn-run:hover, .nav-cta:hover, #saia-mtm-integration button:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.35) !important;
+    span:not(.badge):not(#cloud-sync-status):not(#profile-email-text):not(#db-user-email) {
+      color: inherit !important;
+    }
+    h1 em, h2 em, h3 em, h4 em, h5 em, .brand-logo span {
+      font-style: italic !important;
+      font-weight: 400 !important;
+      color: #e11d48 !important;
+    }
+    .btn-primary, .btn-login, .btn-run, .nav-cta, .btn-logout-link, #btn-decode, #chat-send-btn, #btn-save-profile, #btn-db-save-twin, #btn-db-start-scan, #btn-db-change-password, #btn-login-submit, #btn-signup-submit, #btn-forgot-submit, #btn-reset-submit {
+      color: #ffffff !important;
+    }
+    .btn-run:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    .styled-input, input[type="number"], input[type="email"], input[type="password"], .styled-select {
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.12) !important;
+      color: #0f172a !important;
+    }
+    .styled-input:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus, .styled-select:focus {
+      border-color: #e11d48 !important;
+      box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.06) !important;
+    }
+    .input-group label {
+      color: #475569 !important;
+    }
+    .card, .dashboard-container, .measurement-card, .twin-card, .modal-content, .db-card, aside, section, .file-drop {
+      background: #ffffff !important;
+      border: 1px solid rgba(0,0,0,0.06) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.02) !important;
+    }
+    .file-drop {
+      border: 2px dashed rgba(0, 0, 0, 0.1) !important;
+    }
+    .db-nav-item {
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      color: #475569 !important;
+    }
+    .db-nav-item.active {
+      background: rgba(225, 29, 72, 0.04) !important;
+      border: 1px solid rgba(225, 29, 72, 0.15) !important;
+      color: #e11d48 !important;
+    }
+    footer {
+      background: #ffffff !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+    }
+    footer p {
+      color: #64748b !important;
+    }
+    /* Modal fix */
+    .modal-content {
+      background-color: #ffffff !important;
+    }
     }
   </style>
 </head>
@@ -776,41 +826,41 @@
 
   <!-- Header -->
   <header>
-    <a href="index.html" class="brand-logo">
-      <img src="logo.png" alt="STYLA Logo" />
-      STYLA <span>Measure</span>
+    <a href="landing.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+      <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+      STYLA <span class="logo-accent">Measure</span>
     </a>
-    <div id="auth-status-container" style="display: flex; align-items: center; gap: 1.5rem;">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="brands.html" class="btn-login" style="border: 1px solid rgba(255,255,255,0.15); color: #fff; background: transparent; padding: 0.5rem 1.2rem; border-radius: 100px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; height: auto;" onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent-light)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.color='#fff'">For Fashion Brands</a>
-      <button id="btn-show-login" class="btn-login">Log In</button>
+    <div id="auth-status-container" style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="landing.html" class="nav-link" style="font-size: 0.85rem; font-weight: 600; text-decoration: none;">Home</a>
+      <a href="brands.html" class="nav-link" style="padding: 8px 18px; border: 1px solid var(--border); border-radius: 100px; font-size: 0.85rem; font-weight: 600; display: inline-block; text-decoration: none;">For Fashion Brands</a>
+      <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600;">Log In</button>
       <div id="logged-in-status" style="display: none; align-items: center; gap: 12px;">
-        <span id="cloud-sync-status" class="logged-in-email">&#10004; Synced</span>
-        <button id="btn-logout" class="btn-logout-link">Log out</button>
+        <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
+        <button id="btn-logout" class="nav-cta" style="font-size: 0.85rem; font-weight: 600;">Log out</button>
       </div>
     </div>
   </header>
 
   <div id="landing-view">
   <!-- Hero Intro -->
-  <section class="hero-container">
+    <section class="hero-container">
     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 900; line-height: 1.1; margin: 0; background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Stop Guessing<br>Your Size.</h1>
-      <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; margin: 0; max-width: 520px;">
-        Pants fit your hips but gap at the waist? Sizing charts are a gamble. Scan your body in 30 seconds to lock in your true 3D measurements and match them to any online clothing store instantly.
+      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #0f172a 30%, #334155 70%, #e11d48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Know Your Size.<br><em>Everywhere.</em></h1>
+      <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; margin: 0 0 0.5rem 0; max-width: 520px;">
+        Every clothing brand uses a different size chart. STYLA matches your 3D body measurements to size charts in real-time, helping you buy the perfect fit with confidence.
       </p>
-      
-      <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; flex-wrap: wrap; margin-top: 0.5rem; margin-bottom: 0.5rem;">
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> Lock in Your True Size</span>
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> Zero Return Errands</span>
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #ff75a0;">✔</span> 30-Second Body Scan</span>
+      <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); flex-wrap: wrap;">
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> No return shipping fees</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Scan in 30 seconds</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Universal size profile</span>
+      </div>
       </div>
     </div>
 
-    <!-- Right Column: Relatable Sizing Struggle Image -->
+    <!-- Right Column: 3D Body Scan Visual Mockup (Truetoform Style) -->
     <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
-      <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255, 42, 117, 0.15) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
-      <img src="images/styla_3d_scan_hero_dark.png" alt="STYLA 3D Body Scan Mannequin with Measurements" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; z-index: 1;" />
+      <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(225, 29, 72, 0.08) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
+      <img src="images/styla_3d_scan_hero.png" alt="STYLA 3D Scan Avatar" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(15, 23, 42, 0.06); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04); position: relative; z-index: 1;" />
     </div>
   </section>
 
@@ -818,19 +868,19 @@
   <main class="portal-workspace">
 
     <!-- Manage Profile Box (only shown when logged in) -->
-    <div id="manage-profile-box" style="display: none; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+    <div id="manage-profile-box" style="display: none;  border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid rgba(15, 23, 42, 0.08); padding-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
         <div>
-          <h4 style="margin: 0; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">👤 My AI Tailor Profile</h4>
-          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
+          <h4 style="margin: 0; color: var(--text-primary); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">👤 My AI Tailor Profile</h4>
+          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Logged in as <span id="profile-email-text" style="color: #ff75a0; font-weight: 600;"></span></p>
         </div>
         <div style="display: flex; gap: 10px;">
           <button id="btn-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
-          <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
+          <button id="btn-delete-profile" style="background: #ef4444; border: none; color: #ffffff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile</button>
         </div>
       </div>
       <div>
-        <h5 style="color: #fff; margin: 0 0 10px 0; font-size: 0.95rem;">3D Body Scans History</h5>
+        <h5 style="color: var(--text-primary); margin: 0 0 10px 0; font-size: 0.95rem;">3D Body Scans History</h5>
         <div id="scan-history-list" style="display: flex; flex-direction: column; gap: 10px;">
           <p style="font-size: 0.85rem; color: #64748b; margin: 0;">No 3D body scans saved yet.</p>
         </div>
@@ -861,15 +911,15 @@
 
       <!-- TAB CONTENT: 3D SCAN WORKSPACE -->
       <div id="scan-panel-workspace" style="display: block; text-align: center; padding: 1.5rem 0;">
-        <p style="font-size: 1rem; color: #fff; font-weight: 600; margin-bottom: 0.5rem;">Fastest & Most Accurate Method</p>
+        <p style="font-size: 1rem; color: var(--text-primary); font-weight: 600; margin-bottom: 0.5rem;">Fastest & Most Accurate Method</p>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.5rem 0; line-height: 1.5; max-width: 420px; margin-left: auto; margin-right: auto;">
           Scan in 30 seconds with your phone camera. The AI body scanner extracts your measurements instantly.
         </p>
 
         <!-- Email Input for Scan -->
         <div id="scan-email-container" style="max-width: 320px; margin: 0 auto 1.25rem auto; text-align: left;">
-          <label for="scan-email" style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 6px;">Enter your email to start scan:</label>
-          <input type="email" id="scan-email" placeholder="email@example.com" class="styled-input" style="margin-bottom: 0; padding: 0.75rem 1rem; font-size: 0.9rem; background: rgba(255,255,255,0.02); text-align: center;" />
+          <label for="scan-email" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Enter your email to start scan:</label>
+          <input class="styled-input" style="text-align: center; margin-bottom: 0;"  type="email" id="scan-email" placeholder="email@example.com" class="styled-input"  />
           <p id="scan-email-error" style="color: #fca5a5; font-size: 0.75rem; margin-top: 6px; display: none; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 4px; border-radius: 6px;"></p>
         </div>
 
@@ -949,11 +999,11 @@
 
       <div class="tools-container" style="display: flex; flex-direction: row; gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
         <!-- Apple Devices Card -->
-        <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="card" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 1.25rem;">🍎</span>
-              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Apple Devices (iOS & Mac)</h4>
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">Apple Devices (iOS & Mac)</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
               Safari blocks normal extensions and bookmarklets, so we use a native Apple Shortcut. It integrates perfectly into your Share menu!
@@ -969,11 +1019,11 @@
         </div>
 
         <!-- Windows & Android Card -->
-        <div class="tools-card" style="flex: 1; min-width: 250px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="card" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 1.25rem;">💻</span>
-              <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-family: var(--font-outfit);">Windows & Android</h4>
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">Windows & Android</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
               Use our smart browser bookmarklet on Chrome, Edge, or Firefox. No installation required.
@@ -985,7 +1035,7 @@
             </ol>
           </div>
           <div style="text-align: center; margin-top: auto; padding-top: 0.5rem;">
-            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
+            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: var(--text-primary); font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag me to your Bookmarks bar!</p>
             
             <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--success-gradient); margin-top: 0; border-radius: 8px;">Copy Code (For Mobile Chrome)</button>
@@ -1046,24 +1096,24 @@
         <div id="result-box"></div>
 
         <!-- AI Chat Widget -->
-        <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
-          <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; max-height: 250px;">
-            <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; color: #94a3b8; align-self: flex-start;">Ask Tailor AI any follow-up questions about the fit.</div>
+        <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(15, 23, 42, 0.08); padding-top: 1.5rem;">
+          <div id="chat-messages" class="chat-messages-container" style="max-height: 250px;">
+            <div class="chat-bubble bot">Ask Tailor AI any follow-up questions about the fit.</div>
           </div>
           <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <input type="text" id="chat-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" style="flex: 1; padding: 10px 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; outline: none;" />
+            <input type="text" id="chat-input" class="styled-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" />
             <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 10px 20px; font-size: 0.9rem; border-radius: 120px;">Send</button>
           </div>
         </div>
 
         <!-- Convert Guest to Cloud Profile Box -->
-        <div id="save-profile-box" style="margin-top: 2rem; padding: 1.5rem; background: rgba(255, 42, 117, 0.03); border: 1px solid rgba(255, 42, 117, 0.12); border-radius: 16px; display: none;">
-          <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem;">💾 Save Your Fit Profile</h4>
+        <div id="save-profile-box" class="card" style="margin-top: 2rem; background: rgba(225, 29, 72, 0.02); border-color: rgba(225, 29, 72, 0.08); display: none;">
+          <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1.05rem; font-family: var(--font-head); font-weight: 700;">💾 Save Your Fit Profile</h4>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and AI Stylist recommendations across devices.</p>            <div class="input-row" style="margin-bottom: 1rem;">
-              <input type="email" id="auth-email" class="styled-input" placeholder="Email Address" style="background: rgba(0,0,0,0.2);" />
+              <input type="email" id="auth-email" class="styled-input" placeholder="Email Address"  />
               <div style="position: relative; width: 100%;">
-                <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="background: rgba(0,0,0,0.2); width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
-                <button type="button" onclick="togglePasswordVisibility('auth-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+                <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+                <button type="button" onclick="togglePasswordVisibility('auth-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1100,7 +1150,7 @@
       
       <!-- Left Column: Navigation Sidebar -->
       <aside style="width: 100%; max-width: 280px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-sizing: border-box; display: flex; flex-direction: column; gap: 0.5rem;">
-        <button class="db-nav-item active" data-tab="tab-twin" style="display: flex; align-items: center; gap: 12px; background: var(--accent-dim); border: 1px solid var(--border-accent); color: #fff; width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
+        <button class="db-nav-item active" data-tab="tab-twin" style="display: flex; align-items: center; gap: 12px; background: var(--accent-dim); border: 1px solid var(--border-accent); color: #ffffff; width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
           <span>👤</span> My Twin Profile
         </button>
         <button class="db-nav-item" data-tab="tab-scans" style="display: flex; align-items: center; gap: 12px; background: transparent; border: 1px solid transparent; color: var(--text-secondary); width: 100%; text-align: left; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none;">
@@ -1120,8 +1170,8 @@
         <!-- Tab 1: My Twin Profile -->
         <div id="tab-twin" class="db-tab-content">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 10px;">
-            <h3 style="font-family: var(--font-outfit); color: #fff; margin: 0; font-size: 1.5rem;">My Twin Measurements</h3>
-            <button id="btn-db-edit-toggle" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none; display: block;">Edit Profile</button>
+            <h3 style="font-family: var(--font-outfit); color: var(--text-primary); margin: 0; font-size: 1.5rem;">My Twin Measurements</h3>
+            <button id="btn-db-edit-toggle" style="background: rgba(0,0,0,0.05); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none; display: block;">Edit Profile</button>
           </div>
           <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">These measurements are used to recommend your best size on retail stores via the Styla Bookmarklet.</p>
           
@@ -1130,8 +1180,8 @@
           </div>
           
           <div id="db-save-container" style="display: none; justify-content: flex-end; gap: 10px; margin-bottom: 2rem;">
-            <button id="btn-db-cancel-edit" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">Cancel</button>
-            <button id="btn-db-save-twin" style="background: var(--primary-gradient); border: none; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,42,117,0.2);">Save Twin Measurements</button>
+            <button id="btn-db-cancel-edit" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">Cancel</button>
+            <button id="btn-db-save-twin" style="background: var(--primary-gradient); border: none; color: #fff; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(225,29,72,0.2);">Save Twin Measurements</button>
           </div>
 
           <!-- Extended Measurements section -->
@@ -1152,7 +1202,7 @@
         <div id="tab-scans" class="db-tab-content" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
             <div>
-              <h3 style="font-family: var(--font-outfit); color: #fff; margin: 0; font-size: 1.5rem;">3D Body Scans History</h3>
+              <h3 style="font-family: var(--font-outfit); color: var(--text-primary); margin: 0; font-size: 1.5rem;">3D Body Scans History</h3>
               <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Manage your scans imported from Twilio / 3DLook.</p>
             </div>
             <button id="btn-db-start-scan" class="btn-run" style="margin: 0; padding: 10px 20px; font-size: 0.85rem; font-weight: 700; background: var(--success-gradient); border-radius: 10px;">Start New 3D Scan</button>
@@ -1165,30 +1215,30 @@
         
         <!-- Tab 3: Sync Bookmarklet -->
         <div id="tab-bookmarklet" class="db-tab-content" style="display: none;">
-          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Sync Bookmarklet</h3>
+          <h3 style="font-family: var(--font-outfit); color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Sync Bookmarklet</h3>
           <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">Shop on any online store (Azazie, Moores, Zara, H&M, etc.) and let your AI Stylist recommend sizes automatically.</p>
           
           <div style="display: flex; flex-direction: column; gap: 2rem;">
             <!-- Desktop Guide -->
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
-              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">💻 Desktop Installation</h4>
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">💻 Desktop Installation</h4>
               <ol style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem;">
                 <li>Drag the green <b>⚡ STYLA Stylist</b> button below directly into your Bookmarks bar.</li>
                 <li>Go to any clothing product page (e.g. Azazie or Zara).</li>
                 <li>Click the bookmark to open your virtual fitting room!</li>
               </ol>
               <div style="text-align: center; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--border);">
-                <a id="db-btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
+                <a id="db-btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: var(--text-primary); font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 0 0;">← Drag me to your Bookmarks bar!</p>
               </div>
             </div>
             
             <!-- Mobile Guide -->
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
-              <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation</h4>
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation</h4>
               
-              <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 1rem; font-family: var(--font-outfit);">🍎 Apple Devices (iOS & Mac)</h5>
+              <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.08);">
+                <h5 style="margin: 0 0 0.6rem 0; color: var(--text-primary); font-size: 1rem; font-family: var(--font-outfit);">🍎 Apple Devices (iOS & Mac)</h5>
                 <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px;">
                   <li>Tap the button below to install the STYLA Apple Shortcut.</li>
                   <li>To use: Browse any store in Safari, tap the <b>Share</b> icon, and select <b>⚡ STYLA Stylist</b>.</li>
@@ -1197,7 +1247,7 @@
               </div>
 
               <div>
-                <h5 style="margin: 0 0 0.6rem 0; color: #fff; font-size: 1rem; font-family: var(--font-outfit);">🤖 Android (Chrome)</h5>
+                <h5 style="margin: 0 0 0.6rem 0; color: var(--text-primary); font-size: 1rem; font-family: var(--font-outfit);">🤖 Android (Chrome)</h5>
                 <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
                   <li>Tap <b>Copy Code</b> below.</li>
                   <li>Bookmark this page.</li>
@@ -1207,39 +1257,40 @@
                 <div id="db-copy-success-msg" style="display: none; font-size: 0.85rem; color: #10b981; margin-top: 10px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
               </div>
             </div>
+            </div>
           </div>
         </div>
         
         <!-- Tab 4: Account Settings -->
         <div id="tab-settings" class="db-tab-content" style="display: none;">
-          <h3 style="font-family: var(--font-outfit); color: #fff; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Account Settings</h3>
+          <h3 style="font-family: var(--font-outfit); color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">Account Settings</h3>
           <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">Manage your login credentials, clear your sync data, or permanently delete your account.</p>
           
           <div style="display: flex; flex-direction: column; gap: 2rem;">
             <!-- Password Form -->
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
-              <h4 style="margin: 0 0 1.25rem 0; color: #fff; font-size: 1.15rem; font-family: var(--font-outfit);">Change Password</h4>
+            <div class="card" style="padding: 1.5rem;">
+              <h4 style="margin: 0 0 1.25rem 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit);">Change Password</h4>
               <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
                 <div class="input-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.85rem; margin-bottom: 6px;">New Password</label>
-                  <input type="password" id="db-new-password" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem;" />
+                  <input type="password" id="db-new-password" class="styled-input" />
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                   <label style="font-size: 0.85rem; margin-bottom: 6px;">Confirm New Password</label>
-                  <input type="password" id="db-confirm-password" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 10px; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem;" />
+                  <input type="password" id="db-confirm-password" class="styled-input" />
                 </div>
                 <div id="db-settings-error" style="display: none; font-size: 0.85rem; color: #ef4444; margin-top: 5px;"></div>
-                <button id="btn-db-change-password" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Update Password</button>
+                <button id="btn-db-change-password" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Update Password</button>
               </div>
             </div>
             
             <!-- Danger Zone -->
-            <div style="background: rgba(239, 68, 68, 0.02); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); padding: 1.5rem;">
-              <h4 style="margin: 0 0 1rem 0; color: #f87171; font-size: 1.15rem; font-family: var(--font-outfit);">Danger Zone</h4>
+            <div class="card" style="background: rgba(239, 68, 68, 0.02) !important; border-color: rgba(239, 68, 68, 0.15) !important; padding: 1.5rem;">
+              <h4 style="margin: 0 0 1rem 0; color: #ef4444 !important; font-size: 1.15rem; font-family: var(--font-head); font-weight: 700;">Danger Zone</h4>
               <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-top: 0; margin-bottom: 1.25rem;">Clearing dimensions removes all manual sizes and active scan links. Deleting your profile will permanently erase your account and all associated scan data from the Supabase database.</p>
               <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                 <button id="btn-db-clear-profile" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">Clear All Dimensions</button>
-                <button id="btn-db-delete-profile" style="background: #ef4444; border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile & Account</button>
+                <button id="btn-db-delete-profile" style="background: #ef4444; border: none; color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Delete Profile & Account</button>
               </div>
             </div>
           </div>
@@ -1255,23 +1306,23 @@
   <!-- FOOTER -->
   <footer style="background: #0b0b14; border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 3rem 0; width: 100%; margin-top: 5rem;">
     <div style="display: flex; flex-direction: column; gap: 24px; align-items: center; max-width: 1100px; margin: 0 auto; padding: 0 24px; box-sizing: border-box;">
-        <div style="display: flex; align-items: center; gap: 10px; justify-content: center; font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; color: #fff;">
+        <div style="display: flex; align-items: center; gap: 10px; justify-content: center; font-family: var(--font-outfit); font-weight: 800; font-size: 1.3rem; color: var(--text-primary);">
           <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
           STYLA <span style="color: #ff75a0; font-weight: 400;">Measure</span>
         </div>
         
         <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
-          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
+          <a href="https://instagram.com/stylaca" target="_blank"  >Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank"  >TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank"  >X (Twitter)</a>
         </div>
 
         <div style="display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; margin: 10px 0;">
-          <a href="brands.html" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#cbd5e1'">For Fashion Brands</a>
-          <a href="store/index.html" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#cbd5e1'">Styla Shop</a>
-          <a href="tools/pricing-calculator.html" style="color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#cbd5e1'">MOQ Price Calculator</a>
-          <a href="tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
-          <a href="seo/guides.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Sizing & Sourcing Hub</a>
+          <a href="brands.html"  >For Fashion Brands</a>
+          <a href="store/index.html"  >Styla Shop</a>
+          <a href="tools/pricing-calculator.html"  >MOQ Price Calculator</a>
+          <a href="tools/size-chart-maker.html"  >AI Size Chart Maker</a>
+          <a href="seo/guides.html"  >Sizing & Sourcing Hub</a>
         </div>
 
         <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 5px 0;">&copy; 2026 STYLA Measure. All rights reserved.</p>
@@ -1280,11 +1331,11 @@
   </footer>
 
   <!-- Visual Measurement Guide Modal -->
-  <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)">
+  <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)" style="display: none;">
     <div class="modal-content" style="max-width: 420px;">
-      <h3 id="modal-title" style="margin-bottom: 0.8rem; color: #ff75a0; font-family: var(--font-outfit); font-size: 1.25rem;">How to measure</h3>
+      <h3 id="modal-title" style="color: var(--accent-light) !important;">How to measure</h3>
       <img id="modal-image" style="width: 100%; max-height: 220px; object-fit: contain; margin-bottom: 1rem; border-radius: 12px; display: none;" />
-      <p id="modal-desc" style="color: #94a3b8; line-height: 1.5; font-size: 0.9rem; margin: 0;"></p>
+      <p id="modal-desc" style="line-height: 1.5; font-size: 0.9rem; margin: 0;"></p>
     </div>
   </div>
 
@@ -1296,13 +1347,13 @@
         <button id="tab-auth-login" class="auth-tab-btn active">Log In</button>
         <button id="tab-auth-signup" class="auth-tab-btn">Sign Up</button>
       </div>
-      <h3 id="auth-modal-title" style="margin-bottom: 0.4rem; color: #fff; font-family: var(--font-outfit); font-size: 1.3rem;">Welcome Back</h3>
+      <h3 id="auth-modal-title" style="margin-bottom: 0.4rem; color: var(--text-primary); font-family: var(--font-outfit); font-size: 1.3rem;">Welcome Back</h3>
       <p id="auth-modal-desc" style="color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; font-size: 0.85rem;">Log in to sync your AI Tailor measurements from the cloud.</p>        <div id="auth-email-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
           <input type="email" id="login-email" class="styled-input" placeholder="Email Address" style="width: 100%;" />
         </div>
         <div id="auth-password-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem;">
           <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
-          <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+          <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1311,7 +1362,7 @@
         </div>
         <div id="auth-confirm-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem; display: none;">
           <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
-          <button type="button" onclick="togglePasswordVisibility('login-confirm-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+          <button type="button" onclick="togglePasswordVisibility('login-confirm-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
