@@ -737,7 +737,9 @@
     const safeStorage = {
       getItem(key) {
         try {
-          return window.localStorage.getItem(key);
+          const val = window.localStorage.getItem(key);
+          if (val !== null && val !== undefined && val !== '') return val;
+          return safeStorage.fallback[key] || null;
         } catch (e) {
           console.warn("safeStorage.getItem blocked:", e);
           return safeStorage.fallback[key] || null;
@@ -1146,14 +1148,36 @@
             showLoginView();
           }
         } else {
-          safeStorage.removeItem('styla_twin_logged_in');
-          safeStorage.removeItem('styla_twin_user_email');
-          updateUserHeader(null);
-          showLoginView();
+          const cChest = safeStorage.getItem('styla_twin_chest');
+          const cWaist = safeStorage.getItem('styla_twin_waist');
+          const cHips = safeStorage.getItem('styla_twin_hips');
+          const cLoggedIn = safeStorage.getItem('styla_twin_logged_in') === 'true';
+          const cEmail = safeStorage.getItem('styla_twin_user_email');
+
+          if (cChest && cWaist && cHips && cLoggedIn) {
+            updateUserHeader(cEmail);
+            wasAlreadyLoggedInOnLoad = true;
+          } else {
+            safeStorage.removeItem('styla_twin_logged_in');
+            safeStorage.removeItem('styla_twin_user_email');
+            updateUserHeader(null);
+            showLoginView();
+          }
         }
       } catch (err) {
         console.error("Auth session recovery error:", err);
-        showLoginView();
+        const cChest = safeStorage.getItem('styla_twin_chest');
+        const cWaist = safeStorage.getItem('styla_twin_waist');
+        const cHips = safeStorage.getItem('styla_twin_hips');
+        const cLoggedIn = safeStorage.getItem('styla_twin_logged_in') === 'true';
+        const cEmail = safeStorage.getItem('styla_twin_user_email');
+
+        if (cChest && cWaist && cHips && cLoggedIn) {
+          updateUserHeader(cEmail);
+          wasAlreadyLoggedInOnLoad = true;
+        } else {
+          showLoginView();
+        }
       } finally {
         sessionInitialized = true;
         await checkReadyToDecode();
