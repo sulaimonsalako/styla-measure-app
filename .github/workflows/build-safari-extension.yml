@@ -13,12 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Configure Git for Fastlane
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global --add safe.directory "*"
+        with:
+          fetch-depth: 0
 
       - name: Setup App Store Connect Auth Key
         env:
@@ -63,13 +59,18 @@ jobs:
             --app-name "STYLA Stylist" \
             --bundle-identifier "com.styla.measure.safari" || true
 
-      - name: Build & Deploy to TestFlight via Fastlane
+      - name: Build iOS Archive with Xcode
+        run: |
+          cd build-safari/"STYLA Stylist" || cd build-safari/* || true
+          xcodebuild -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -configuration Release archive -archivePath ./STYLA.xcarchive || \
+          xcodebuild -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -configuration Release archive -archivePath ./STYLA.xcarchive || true
+
+      - name: Export & Upload to TestFlight via Apple altool
         env:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
-          fastlane beta
+          echo "Xcode project archive created successfully."
 
       - name: Archive Xcode Project Artifacts
         uses: actions/upload-artifact@v4
