@@ -1,3 +1,4 @@
+# Automated Cloud Build for STYLA Safari Web Extension
 name: Build Safari Web Extension for iOS & iPadOS
 
 on:
