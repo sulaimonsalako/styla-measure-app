@@ -1553,6 +1553,14 @@
         wasAlreadyLoggedInOnLoad = false;
         activeScrapedContext = null;
         
+        // Reset chat history and messages list
+        chatHistory = [];
+        if (chatMessages) {
+          chatMessages.innerHTML = `
+            <div class="chat-bubble assistant">Hello! I'm your Tailor AI sizing companion. Ask me anything about how this garment will fit you.</div>
+          `;
+        }
+        
         // Show initial analyze screen (Get Sizing Recommendation button)
         showAnalyzeView();
         
