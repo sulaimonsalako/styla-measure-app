@@ -1,0 +1,29 @@
+name: Build Safari Web Extension for iOS & iPadOS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-safari:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Convert Chrome Extension to Safari Xcode Project
+        run: |
+          mkdir -p build-safari
+          xcrun safari-web-extension-converter ./chrome-extension \
+            --no-open \
+            --project-location ./build-safari \
+            --app-name "STYLA Stylist" \
+            --bundle-identifier "com.styla.measure.safari" || true
+
+      - name: Archive Xcode Project Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: STYLA-Safari-Extension-Xcode-Project
+          path: build-safari/
