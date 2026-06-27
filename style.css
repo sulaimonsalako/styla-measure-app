@@ -22,8 +22,8 @@
   --accent-dim: rgba(225, 29, 72, 0.08);
   --accent-glow: rgba(225, 29, 72, 0.15);
   
+  --purple-glow: rgba(139, 92, 246, 0.06);
   --rose-glow: rgba(225, 29, 72, 0.04);
-  --pink-glow: rgba(255, 42, 117, 0.03);
 
   --pink: #e11d48;
   --amber: #d97706;
@@ -697,8 +697,8 @@ a { text-decoration: none; color: inherit; }
 body {
   background-color: var(--bg-base) !important;
   background-image: 
-    radial-gradient(circle at 10% 20%, var(--rose-glow) 0%, transparent 45%),
-    radial-gradient(circle at 90% 80%, var(--pink-glow) 0%, transparent 45%) !important;
+    radial-gradient(circle at 10% 20%, var(--purple-glow) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, var(--rose-glow) 0%, transparent 45%) !important;
   color: var(--text-primary) !important;
 }
 
