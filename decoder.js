@@ -922,6 +922,19 @@ window.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
+  const btnCopyIpadBookmarklet = document.getElementById('btn-copy-ipad-bookmarklet');
+  if (btnCopyIpadBookmarklet) {
+      btnCopyIpadBookmarklet.addEventListener('click', () => {
+          const bookmarkletCode = `javascript:(function(){const s=document.createElement('script');s.src='https://www.styla.ca/tools/bookmarklet-script.js?t='+Date.now();document.body.appendChild(s);})();`;
+          navigator.clipboard.writeText(bookmarkletCode);
+          const copyMsg = document.getElementById('copy-ipad-bookmarklet-msg');
+          if (copyMsg) {
+              copyMsg.style.display = 'block';
+              setTimeout(() => { copyMsg.style.display = 'none'; }, 2500);
+          }
+      });
+  }
+
   // Handle Custom iCloud Shortcut URL saving and loading
   const inpCustomIcloudUrl = document.getElementById('inp-custom-icloud-url');
   const btnSaveIcloudUrl = document.getElementById('btn-save-icloud-url');
