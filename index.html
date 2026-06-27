@@ -1216,37 +1216,47 @@
 
   <!-- APPLE SHORTCUT SETUP MODAL -->
   <div class="modal-overlay" id="apple-shortcut-modal" onclick="if (event.target === this) this.style.display='none'" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
-    <div class="modal-content" style="position: relative; max-width: 480px; width: 90%; padding: 2rem; background: #121222; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); box-sizing: border-box;">
+    <div class="modal-content" style="position: relative; max-width: 500px; width: 92%; padding: 2rem; background: #121222; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); box-sizing: border-box;">
       <button class="modal-close-btn" onclick="document.getElementById('apple-shortcut-modal').style.display='none'" aria-label="Close modal">&times;</button>
       
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
         <span style="font-size: 1.6rem;">🍎</span>
         <h3 style="margin: 0; color: var(--text-primary); font-family: var(--font-outfit); font-size: 1.35rem; font-weight: 700;">STYLA Apple Shortcut Setup</h3>
       </div>
-      <p style="color: var(--text-muted); line-height: 1.5; margin-top: 0; margin-bottom: 1.5rem; font-size: 0.88rem;">
-        Safari on iOS & Mac blocks standard extensions. Use our native Apple Shortcut to launch STYLA directly from your Safari Share menu!
+      <p style="color: var(--text-muted); line-height: 1.5; margin-top: 0; margin-bottom: 1.25rem; font-size: 0.88rem;">
+        Safari on iOS & Mac blocks standard extensions. Create or link your native Apple Shortcut to launch STYLA directly from your Safari Share menu!
       </p>
 
-      <!-- Section 1: Direct iCloud Shortcut Link -->
-      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
-        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-light); font-size: 1rem; font-family: var(--font-outfit); font-weight: 600;">Option 1: Add via iCloud Link</h4>
-        <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0 0 1rem 0; line-height: 1.4;">
-          Tap below to open Apple Shortcuts and add <b>⚡ STYLA Stylist</b> to your device with one tap.
-        </p>
-        <a id="lnk-icloud-shortcut" href="https://www.icloud.com/shortcuts/" target="_blank" class="btn-run" style="display: block; text-align: center; text-decoration: none; width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--primary-gradient); border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.3); box-sizing: border-box;">🚀 Add to Apple Shortcuts</a>
-      </div>
-
-      <!-- Section 2: 1-Minute Manual Setup -->
-      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
-        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-light); font-size: 1rem; font-family: var(--font-outfit); font-weight: 600;">Option 2: 1-Minute Custom Setup</h4>
-        <ol style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.1rem; margin: 0 0 1rem 0; line-height: 1.5; display: flex; flex-direction: column; gap: 6px;">
-          <li>Open <b>Shortcuts app</b> &rarr; Tap <b>+</b> &rarr; Enable <b>Show in Share Sheet</b> (Safari Pages).</li>
-          <li>Add action: <b>Run JavaScript on Web Page</b>.</li>
-          <li>Copy and paste the STYLA runner code below into the action.</li>
+      <!-- Primary Recommended Method: 1-Minute Custom Setup -->
+      <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <h4 style="margin: 0; color: #ff4081; font-size: 1rem; font-family: var(--font-outfit); font-weight: 700;">✨ 1-Minute Setup (Recommended)</h4>
+          <span style="font-size: 0.75rem; background: rgba(255, 42, 117, 0.2); color: #ff75a0; padding: 2px 8px; border-radius: 10px; font-weight: 600;">Instant</span>
+        </div>
+        <ol style="font-size: 0.83rem; color: var(--text-secondary); padding-left: 1.1rem; margin: 0 0 1rem 0; line-height: 1.5; display: flex; flex-direction: column; gap: 6px;">
+          <li>Open <b>Shortcuts app</b> on iPhone/Mac &rarr; Tap <b>+</b>.</li>
+          <li>Tap details (ℹ️) &rarr; Enable <b>Show in Share Sheet</b> (Safari Web Pages).</li>
+          <li>Add action <b>Run JavaScript on Web Page</b> and paste the code below.</li>
         </ol>
 
-        <button id="btn-copy-shortcut-js" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 600; background: var(--success-gradient); margin-top: 0; border-radius: 8px; cursor: pointer;">📋 Copy JavaScript Runner Code</button>
+        <button id="btn-copy-shortcut-js" class="btn-run" style="width: 100%; padding: 11px; font-size: 0.88rem; font-weight: 700; background: var(--primary-gradient); margin-top: 0; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.25);">📋 Copy JavaScript Runner Code</button>
         <div id="copy-shortcut-js-msg" style="display: none; font-size: 0.82rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+      </div>
+
+      <!-- Secondary Method: Custom iCloud Link -->
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.25rem;">
+        <h4 style="margin: 0 0 0.4rem 0; color: var(--text-primary); font-size: 0.95rem; font-family: var(--font-outfit); font-weight: 600;">🔗 Direct iCloud Shortcut Link</h4>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0 0 0.75rem 0; line-height: 1.4;">
+          Apple requires a unique iCloud share URL generated from your device. Paste your iCloud Shortcut link below:
+        </p>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 0.75rem;">
+          <input type="url" id="inp-custom-icloud-url" class="styled-input" placeholder="https://www.icloud.com/shortcuts/..." style="flex: 1; font-size: 0.82rem; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;" />
+          <button id="btn-save-icloud-url" style="background: var(--card-bg); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 0 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer;">Save</button>
+        </div>
+        <div id="save-icloud-msg" style="display: none; font-size: 0.78rem; color: #10b981; margin-bottom: 8px; text-align: center;">iCloud link saved!</div>
+
+        <a id="lnk-icloud-shortcut" href="javascript:void(0)" target="_blank" class="btn-run" style="display: block; text-align: center; text-decoration: none; width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; box-sizing: border-box; color: var(--text-primary);">🚀 Open iCloud Shortcut Link</a>
       </div>
     </div>
   </div>

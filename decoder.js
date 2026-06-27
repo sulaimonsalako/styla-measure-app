@@ -922,6 +922,32 @@ window.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
+  // Handle Custom iCloud Shortcut URL saving and loading
+  const inpCustomIcloudUrl = document.getElementById('inp-custom-icloud-url');
+  const btnSaveIcloudUrl = document.getElementById('btn-save-icloud-url');
+  const lnkIcloudShortcut = document.getElementById('lnk-icloud-shortcut');
+
+  const savedIcloudUrl = localStorage.getItem('styla_custom_icloud_shortcut');
+  if (savedIcloudUrl && lnkIcloudShortcut) {
+      lnkIcloudShortcut.href = savedIcloudUrl;
+      if (inpCustomIcloudUrl) inpCustomIcloudUrl.value = savedIcloudUrl;
+  }
+
+  if (btnSaveIcloudUrl && inpCustomIcloudUrl) {
+      btnSaveIcloudUrl.addEventListener('click', () => {
+          const urlVal = inpCustomIcloudUrl.value.trim();
+          if (urlVal) {
+              localStorage.setItem('styla_custom_icloud_shortcut', urlVal);
+              if (lnkIcloudShortcut) lnkIcloudShortcut.href = urlVal;
+              const saveMsg = document.getElementById('save-icloud-msg');
+              if (saveMsg) {
+                  saveMsg.style.display = 'block';
+                  setTimeout(() => { saveMsg.style.display = 'none'; }, 2000);
+              }
+          }
+      });
+  }
+
   // Bind Dashboard tab navigation click handlers
   document.querySelectorAll('.db-nav-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
