@@ -898,6 +898,30 @@ window.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
+  // Bind Install Apple Shortcut button click handlers to open setup modal
+  document.querySelectorAll('.btn-apple-shortcut-action').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const appleModal = document.getElementById('apple-shortcut-modal');
+          if (appleModal) {
+              appleModal.style.display = 'flex';
+          }
+      });
+  });
+
+  const btnCopyShortcutJs = document.getElementById('btn-copy-shortcut-js');
+  if (btnCopyShortcutJs) {
+      btnCopyShortcutJs.addEventListener('click', () => {
+          const shortcutJsCode = `const s = document.createElement('script');\ns.src = 'https://www.styla.ca/tools/bookmarklet-script.js?t=' + Date.now();\ndocument.body.appendChild(s);\ncompletion(true);`;
+          navigator.clipboard.writeText(shortcutJsCode);
+          const copyMsg = document.getElementById('copy-shortcut-js-msg');
+          if (copyMsg) {
+              copyMsg.style.display = 'block';
+              setTimeout(() => { copyMsg.style.display = 'none'; }, 2500);
+          }
+      });
+  }
+
   // Bind Dashboard tab navigation click handlers
   document.querySelectorAll('.db-nav-item').forEach(btn => {
     btn.addEventListener('click', (e) => {
