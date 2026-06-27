@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Helper to update Fit Match Score & Fit Spectrum Slider
   function updateFitScoreAndSpectrum(resData) {
+    const fitScoreContainer = document.getElementById('fit-score-container');
+    if (fitScoreContainer) fitScoreContainer.style.display = 'none';
     const fitScoreBadge = document.getElementById('fit-score-badge');
     const fitSpectrumPointer = document.getElementById('fit-spectrum-pointer');
 
