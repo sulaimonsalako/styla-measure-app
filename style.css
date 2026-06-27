@@ -69,7 +69,7 @@ a { text-decoration: none; color: inherit; }
   top: 0; left: 0; right: 0;
   z-index: 100;
   padding: 0 24px;
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(7, 7, 12, 0.8) !important;
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border) !important;
 }
