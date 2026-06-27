@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "STYLA Measure Companion",
+  "name": "Styla Measure Extension",
   "version": "1.0",
   "description": "Your digital twin sizing assistant. Works on any clothing store.",
   "action": {
