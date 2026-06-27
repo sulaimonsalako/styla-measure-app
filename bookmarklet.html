@@ -93,6 +93,7 @@
 
     /* Score Meter */
     .score-container {
+      display: none !important;
       margin-bottom: 16px;
     }
     .score-header {
@@ -1378,7 +1379,7 @@
             return;
           }
 
-          if (scoreContainer) scoreContainer.style.display = 'block';
+          if (scoreContainer) scoreContainer.style.display = 'none';
           document.getElementById('size-verdict').textContent = data.recommended_size;
           document.getElementById('score-val').textContent = `${data.fit_match_score}%`;
           document.getElementById('score-bar').style.width = `${data.fit_match_score}%`;
@@ -1546,7 +1547,7 @@
             return;
           }
 
-          if (scoreContainer) scoreContainer.style.display = 'block';
+          if (scoreContainer) scoreContainer.style.display = 'none';
           document.getElementById('size-verdict').textContent = data.recommended_size;
           document.getElementById('score-val').textContent = `${data.fit_match_score}%`;
           document.getElementById('score-bar').style.width = `${data.fit_match_score}%`;
