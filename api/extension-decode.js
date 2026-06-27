@@ -313,7 +313,8 @@ The JSON must have this exact structure:
       "shoulder": 17.0, // optional (shoulder width across the back)
       "sleeve": 25.0, // optional (sleeve length)
       "belly": 32.0, // optional
-      "inseam": 30.0 // optional
+      "inseam": 30.0, // optional
+      "thigh": 22.0 // optional (thigh circumference)
     },
     {
       "name": "M",
