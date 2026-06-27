@@ -10,13 +10,12 @@ platform :ios do
       is_key_content_base64: false
     )
 
-    get_certificates(api_key: api_key)
-    get_provisioning_profile(api_key: api_key, app_identifier: "com.styla.measure.safari")
-
     build_app(
-      project: "./build-safari/STYLA Stylist/STYLA Stylist.xcodeproj",
-      scheme: "STYLA Stylist",
-      export_method: "app-store"
+      project: "./build-safari/STYLA Stylist.xcodeproj",
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic"
+      }
     )
 
     upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
