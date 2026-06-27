@@ -310,6 +310,8 @@ The JSON must have this exact structure:
       "chest": 36.0, // Number or Array: e.g. 36.0 or [35, 37] representing range
       "waist": 30.0,
       "hips": 38.0,
+      "shoulder": 17.0, // optional (shoulder width across the back)
+      "sleeve": 25.0, // optional (sleeve length)
       "belly": 32.0, // optional
       "inseam": 30.0 // optional
     },
@@ -356,7 +358,7 @@ The JSON must have this exact structure:
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(geminiPayload)
