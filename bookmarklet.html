@@ -769,6 +769,8 @@
 
     let sessionInitialized = false;
     let wasAlreadyLoggedInOnLoad = false;
+    let isWaitingForRescan = false;
+    let textInterval = null;
 
     // Helper to dynamically update widget email
     function updateWidgetEmail(email) {
@@ -1160,7 +1162,8 @@
     async function checkReadyToDecode() {
       // If loader is active, we are already decoding. Do not reset the view to analyze-view.
       const loader = document.getElementById('loader');
-      if (loader && loader.style.display === 'flex') return;
+      if (loader && loader.style.display === 'flex' && !isWaitingForRescan) return;
+      isWaitingForRescan = false; // Reset rescan flag
 
       if (!sessionInitialized || !activeScrapedContext) return;
 
@@ -1304,6 +1307,25 @@
       setupView.style.display = 'none';
       if (analyzeView) analyzeView.style.display = 'none';
 
+      // Cycle progress status messages to advise the user of work in progress
+      let uploadProgressTexts = [
+        "Analyzing uploaded size chart...",
+        "Extracting measurements tables...",
+        "Simulating garment ease on your body...",
+        "Calculating fit match scores...",
+        "Consulting Tailor AI engine..."
+      ];
+      let uploadTextIdx = 0;
+      if (textInterval) clearInterval(textInterval);
+      textInterval = setInterval(() => {
+        if (loader && loader.style.display === 'flex' && loaderText) {
+          loaderText.textContent = uploadProgressTexts[uploadTextIdx % uploadProgressTexts.length];
+          uploadTextIdx++;
+        } else {
+          clearInterval(textInterval);
+        }
+      }, 1500);
+
       const chest = safeStorage.getItem('styla_twin_chest');
       const waist = safeStorage.getItem('styla_twin_waist');
       const belly = safeStorage.getItem('styla_twin_belly');
@@ -1341,6 +1363,7 @@
 
         const data = await res.json();
         loader.style.display = 'none';
+        if (textInterval) clearInterval(textInterval);
 
         if (res.ok) {
           resultView.style.display = 'flex';
@@ -1389,6 +1412,7 @@
         }
       } catch (err) {
         loader.style.display = 'none';
+        if (textInterval) clearInterval(textInterval);
         alert("Network Error: Could not connect to Styla server.");
         showSetup();
         console.error(err);
@@ -1415,11 +1439,37 @@
       const loaderText = document.getElementById('loader-text');
       const analyzeView = document.getElementById('analyze-view');
 
-      loaderText.textContent = "Scanning page details...";
+      const isRescan = loaderText && loaderText.textContent.includes("Re-scanning");
+      loaderText.textContent = isRescan ? "Re-scanning page details..." : "Scanning page details...";
       loader.style.display = 'flex';
       resultView.style.display = 'none';
       setupView.style.display = 'none';
       if (analyzeView) analyzeView.style.display = 'none';
+
+      // Cycle progress status messages to advise the user of work in progress
+      let progressTexts = isRescan ? [
+        "Re-scanning size guide tables...",
+        "Evaluating fabric stretch & recovery...",
+        "Simulating garment ease on your body...",
+        "Calculating fit match scores...",
+        "Consulting Tailor AI engine..."
+      ] : [
+        "Scanning size guide tables...",
+        "Evaluating fabric stretch & recovery...",
+        "Simulating garment ease on your body...",
+        "Calculating fit match scores...",
+        "Consulting Tailor AI engine..."
+      ];
+      let textIdx = 0;
+      if (textInterval) clearInterval(textInterval);
+      textInterval = setInterval(() => {
+        if (loader && loader.style.display === 'flex' && loaderText) {
+          loaderText.textContent = progressTexts[textIdx % progressTexts.length];
+          textIdx++;
+        } else {
+          clearInterval(textInterval);
+        }
+      }, 1500);
 
       // Fetch scan history and overrides
       let api_scans = [];
@@ -1477,6 +1527,7 @@
 
         const data = await res.json();
         loader.style.display = 'none';
+        if (textInterval) clearInterval(textInterval);
 
         if (res.ok) {
           resultView.style.display = 'flex';
@@ -1530,6 +1581,7 @@
         }
       } catch (err) {
         loader.style.display = 'none';
+        if (textInterval) clearInterval(textInterval);
         alert("Network Error: Could not connect to Styla server.");
         showSetup();
         console.error(err);
@@ -2007,6 +2059,7 @@
         if (e.target && e.target.id === 'btn-rescan-page') {
           e.preventDefault();
           wasAlreadyLoggedInOnLoad = true; // Mark as true so checkReadyToDecode auto-decodes the scraped result
+          isWaitingForRescan = true; // Mark as waiting for rescan so loader guard in checkReadyToDecode is bypassed
           const loader = document.getElementById('loader');
           const resultView = document.getElementById('result-view');
           const loaderText = document.getElementById('loader-text');
