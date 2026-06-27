@@ -1371,6 +1371,15 @@
           const scoreContainer = resultView.querySelector('.score-container');
           const breakdownBox = document.getElementById('breakdown-box');
           
+          // Reset chat history and messages list for the newly scanned garment
+          chatHistory = [];
+          const chatMessages = document.getElementById('chat-messages');
+          if (chatMessages) {
+            chatMessages.innerHTML = `
+              <div class="chat-bubble assistant">Hello! I'm your Tailor AI sizing companion. Ask me anything about how this garment will fit you.</div>
+            `;
+          }
+          
           if (!data.recommended_size) {
             document.getElementById('size-verdict').textContent = "Unknown";
             document.getElementById('explanation-text').textContent = "No size chart was detected on this uploaded image.";
@@ -1534,6 +1543,15 @@
           resultView.style.display = 'flex';
           const scoreContainer = resultView.querySelector('.score-container');
           const breakdownBox = document.getElementById('breakdown-box');
+          
+          // Reset chat history and messages list for the newly scanned garment
+          chatHistory = [];
+          const chatMessages = document.getElementById('chat-messages');
+          if (chatMessages) {
+            chatMessages.innerHTML = `
+              <div class="chat-bubble assistant">Hello! I'm your Tailor AI sizing companion. Ask me anything about how this garment will fit you.</div>
+            `;
+          }
           
           if (!data.recommended_size) {
             document.getElementById('size-verdict').textContent = "Unknown";
