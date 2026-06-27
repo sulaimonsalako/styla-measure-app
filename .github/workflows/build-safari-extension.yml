@@ -1,4 +1,4 @@
-# Automated Fastlane Cloud Build & TestFlight Delivery for STYLA
+# Automated Fastlane Build & TestFlight Delivery for STYLA Safari Extension
 name: Build and Deploy Safari Extension to TestFlight
 
 on:
@@ -35,9 +35,9 @@ jobs:
         env:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
         run: |
-          cd build-safari/"STYLA Stylist" || cd build-safari/* || true
-          fastlane pilot upload --key_id "$APPSTORE_KEY_ID" --issuer_id "$APPSTORE_ISSUER_ID" --api_key_path ~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8 --skip_waiting_for_build_processing true || true
+          fastlane beta || true
 
       - name: Archive Xcode Project Artifacts
         uses: actions/upload-artifact@v4
