@@ -20,6 +20,8 @@
       --primary-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
       --scan-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
       --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --rose-glow: rgba(225, 29, 72, 0.04);
+      --pink-glow: rgba(255, 42, 117, 0.03);
       --font-outfit: 'EB Garamond', serif;
       --font-inter: 'Inter', sans-serif;
     }
@@ -44,8 +46,8 @@
     body {
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(225, 29, 72, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(255, 42, 117, 0.07) 0%, transparent 40%);
+        radial-gradient(circle at 10% 20%, var(--rose-glow) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, var(--pink-glow) 0%, transparent 45%);
       font-family: var(--font-inter);
       color: var(--text-white);
       margin: 0;
@@ -130,18 +132,7 @@
       text-decoration: underline;
     }
 
-        /* Grid background & Fade-in animations */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-      background-size: 40px 40px;
-      z-index: -1;
-      pointer-events: none;
-    }
+        /* Fade-in animations */
 
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(24px); }
