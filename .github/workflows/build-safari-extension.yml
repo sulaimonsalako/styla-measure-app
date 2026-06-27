@@ -1,5 +1,4 @@
 # Automated Production Cloud Build & TestFlight Delivery for STYLA Safari Extension
-# Triggered with active iOS Signing Certificate and Provisioning Profile credentials
 name: Build and Deploy Safari Extension to TestFlight
 
 on:
@@ -32,7 +31,7 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode > $CERTIFICATE_PATH
+          echo "$BUILD_CERTIFICATE_BASE64" | base64 -d > $CERTIFICATE_PATH
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
@@ -47,7 +46,7 @@ jobs:
         run: |
           PROFILES_DIR=~/Library/MobileDevice/Provisioning\ Profiles
           mkdir -p "$PROFILES_DIR"
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode > "$PROFILES_DIR/STYLA_Safari_Distribution.mobileprovision"
+          echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 -d > "$PROFILES_DIR/STYLA_Safari_Distribution.mobileprovision"
 
       - name: Convert Chrome Extension to Safari Xcode Project
         run: |
