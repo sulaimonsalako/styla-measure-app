@@ -157,6 +157,10 @@ export function runSizingEngine(user, chart) {
       if (!chartVal || !userVal) return;
       
       let targetUserVal = userVal;
+      if (label === 'belly' && chartType === 'body') {
+        // Anatomical offset: a user's belly is naturally ~1.5" larger than their natural waist spec
+        targetUserVal = userVal - 1.5;
+      }
       if (label === 'sleeve') {
         if (chartVal < 26.5) {
           const halfShoulder = (userShoulder || 16.0) / 2;
