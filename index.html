@@ -12,13 +12,13 @@
   
   <style>
     :root {
-      --bg-dark: #fcfcfd;
-      --card-bg: #ffffff;
-      --card-border: rgba(0, 0, 0, 0.06);
-      --text-white: #0f172a;
-      --text-muted: #475569;
-      --primary-gradient: linear-gradient(135deg, #111111 0%, #1f2937 100%);
-      --scan-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      --bg-dark: #0b0b14;
+      --card-bg: #121222;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-white: #ffffff;
+      --text-muted: #cbd5e1;
+      --primary-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
+      --scan-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
       --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
       --font-outfit: 'EB Garamond', serif;
       --font-inter: 'Inter', sans-serif;
@@ -44,7 +44,7 @@
     body {
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 10% 20%, rgba(225, 29, 72, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(255, 42, 117, 0.07) 0%, transparent 40%);
       font-family: var(--font-inter);
       color: var(--text-white);
@@ -698,14 +698,16 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #f8fafc;
+      background: #07070c;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(15, 23, 42, 0.15);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(15, 23, 42, 0.25);
+      background: rgba(255, 42, 117, 0.15);
+      border-color: #ff75a0;
     }
 
     .modal-close-btn {
@@ -714,7 +716,7 @@
       right: 18px;
       background: none;
       border: none;
-      color: #475569;
+      color: #94a3b8;
       font-size: 1.8rem;
       font-weight: 300;
       cursor: pointer;
@@ -728,8 +730,8 @@
       z-index: 100;
     }
     .modal-close-btn:hover {
-      color: #e11d48;
-      background: rgba(0, 0, 0, 0.05);
+      color: #ff75a0;
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .step-card {
@@ -1298,7 +1300,7 @@
         </div>
       
       <button id="btn-login-submit" class="btn-run" style="margin-top: 0.5rem;">Log In & Sync</button>
-      <button id="btn-signup-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);">Create Account & Sync</button>
+      <button id="btn-signup-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: var(--primary-gradient);">Create Account & Sync</button>
       <button id="btn-forgot-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">Send Reset Link</button>
       <button id="btn-reset-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: var(--success-gradient);">Update Password</button>
       
