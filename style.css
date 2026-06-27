@@ -21,6 +21,9 @@
   --accent-light: #e11d48;
   --accent-dim: rgba(225, 29, 72, 0.08);
   --accent-glow: rgba(225, 29, 72, 0.15);
+  
+  --rose-glow: rgba(225, 29, 72, 0.04);
+  --pink-glow: rgba(255, 42, 117, 0.03);
 
   --pink: #e11d48;
   --amber: #d97706;
@@ -133,9 +136,8 @@ a { text-decoration: none; color: inherit; }
   text-align: center;
   padding: 140px 0 80px;
   overflow: hidden;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(225, 29, 72, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.03) 0%, transparent 40%);
+  background-image: none !important;
+  background-color: transparent !important;
 }
 .hero-bg-grid {
   position: absolute;
@@ -695,8 +697,8 @@ a { text-decoration: none; color: inherit; }
 body {
   background-color: var(--bg-base) !important;
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(225, 29, 72, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.04) 0%, transparent 40%) !important;
+    radial-gradient(circle at 10% 20%, var(--rose-glow) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, var(--pink-glow) 0%, transparent 45%) !important;
   color: var(--text-primary) !important;
 }
 
