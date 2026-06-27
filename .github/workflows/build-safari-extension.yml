@@ -1,4 +1,5 @@
 # Automated Production Cloud Build & TestFlight Delivery for STYLA Safari Extension
+# Triggered with active iOS Signing Certificate and Provisioning Profile credentials
 name: Build and Deploy Safari Extension to TestFlight
 
 on:
