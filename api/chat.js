@@ -63,7 +63,11 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
 6. SLEEVE LENGTH MEASUREMENT TYPE COMPARISON:
    - Identify whether the brand's sleeve length in the chart represents:
      a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults. Compare directly to the user's Neck-to-Wrist Sleeve Length.
-     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).`;
+     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).
+
+7. HONEST TAILOR FIT & SIZE INTEGRATION:
+   - When recommending or discussing sizes, you MUST align 100% with the local sizing engine's recommended size. Do NOT try to override the sizing engine's reject decisions by inventing false "stretch" or "elastic" justifications.
+   - If a size is rejected by the engine (difference from target is < -1"), report honestly that this size is too tight in that specific area (e.g. chest, waist, or hips) and suggest a larger size. Do NOT claim a structured jacket or shirt with negative ease will fit comfortably due to fabric stretch.`;
 
     const geminiPayload = {
       systemInstruction: {
