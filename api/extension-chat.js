@@ -114,12 +114,17 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - Knits/Casual Tops: User's body must not be smaller than the chest spec by more than -4.0".
 
 5. BELLY & WAIST INTEGRATION:
-   - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
-   - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
+   - For shirts, tops, outerwear, and dresses: the user's belly size MUST fit within the midsection/waist specification of the garment. If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
+   - For bottoms (pants, trousers, jeans, shorts, skirts): do NOT evaluate or compare the user's belly size to the waistband or waist spec. Men and women wear pants on the waist/hips, not the belly. The waist ease on bottoms must be snug (0" to 1.5" ease). A garment waist that is 0.1" larger than the user's waist (like a 31.5" waist pant on a 31.4" body waist) is an EXCELLENT/PERFECT fit, and must be recommended over larger sizes. Sizing up to M (33.75") for a 31.4" waist body is incorrect as it creates a loose waist that will slip down.
 
 6. DECISION ENGINE:
    - Identify the item category, fabric type, and fit intent.
    - Recommend the size that is closest to an 'ideal' fit.
+
+7. SLEEVE LENGTH MEASUREMENT TYPE COMPARISON:
+   - Identify whether the brand's sleeve length in the chart represents:
+     a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults. Compare directly to the user's Neck-to-Wrist Sleeve Length.
+     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).
 
 CRITICAL RULES:
 1. Always be extremely polite, helpful, and professional.

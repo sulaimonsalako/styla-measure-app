@@ -130,25 +130,25 @@ export function runSizingEngine(user, chart) {
         // General circumferences (Chest, Bust, Belly, Hips, Waist on tops)
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 20;
+          score -= Math.abs(physicalEase + stretchAllowance) * 10;
           breakdown[label] = `Too tight (Garment is ${Math.abs(physicalEase).toFixed(1)}" smaller than your body)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 10;
+          score -= Math.abs(physicalEase) * 5;
           localSpectrum = 'slim';
           breakdown[label] = `Slim fit (Tightness: ${Math.abs(physicalEase).toFixed(1)}" under target)`;
         } else if (physicalEase <= 3.5) { // e.g. 0" to 3.5" ease
-          if (fabric === 'woven') score -= (3.5 - physicalEase) * 3;
+          if (fabric === 'woven') score -= (3.5 - physicalEase) * 1.5;
           localSpectrum = 'slim';
           breakdown[label] = `Fitted / Slim fit (${physicalEase.toFixed(1)}" ease)`;
         } else if (physicalEase <= 6.5) { // e.g. 3.5" to 6.5" ease (normal fit)
           localSpectrum = 'ideal';
           breakdown[label] = `Regular fit (${physicalEase.toFixed(1)}" ease)`;
         } else if (physicalEase <= 10.0) { // e.g. 6.5" to 10" ease
-          score -= (physicalEase - 6.5) * 4;
+          score -= (physicalEase - 6.5) * 2;
           localSpectrum = 'relaxed';
           breakdown[label] = `Relaxed fit (${physicalEase.toFixed(1)}" ease)`;
         } else { // e.g. 10"+ ease
-          score -= (physicalEase - 10.0) * 8;
+          score -= (physicalEase - 10.0) * 4;
           localSpectrum = 'oversized';
           breakdown[label] = `Oversized (${physicalEase.toFixed(1)}" ease)`;
         }
@@ -156,75 +156,75 @@ export function runSizingEngine(user, chart) {
         // Waist on bottoms (pants)
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 25;
+          score -= Math.abs(physicalEase + stretchAllowance) * 10;
           breakdown[label] = `Too tight (Garment waist is ${Math.abs(physicalEase).toFixed(1)}" smaller than your waist)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 15;
+          score -= Math.abs(physicalEase) * 6;
           localSpectrum = 'slim';
           breakdown[label] = `Snug fit (${Math.abs(physicalEase).toFixed(1)}" under waist size)`;
         } else if (physicalEase <= 1.5) { // e.g. 0" to 1.5" ease
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect fit (${physicalEase.toFixed(1)}" ease)`;
         } else if (physicalEase <= 3.0) { // e.g. 1.5" to 3.0" ease
-          score -= (physicalEase - 1.5) * 10;
+          score -= (physicalEase - 1.5) * 4;
           localSpectrum = 'relaxed';
           breakdown[label] = `Loose waist (${physicalEase.toFixed(1)}" ease)`;
         } else { // e.g. > 3.0" ease
           fits = false; // falls off
-          score -= (physicalEase - 3.0) * 20;
+          score -= (physicalEase - 3.0) * 8;
           breakdown[label] = `Too loose (Garment is ${physicalEase.toFixed(1)}" larger than your waist)`;
         }
       } else if (label === 'sleeve') {
         // Sleeve length
         if (physicalEase < 0) {
           fits = false;
-          score -= Math.abs(physicalEase) * 15;
+          score -= Math.abs(physicalEase) * 8;
           breakdown[label] = `Sleeves too short (Garment sleeve is ${Math.abs(physicalEase).toFixed(1)}" shorter than your arm)`;
         } else if (physicalEase < 0.5) {
-          score -= (0.5 - physicalEase) * 8;
+          score -= (0.5 - physicalEase) * 4;
           breakdown[label] = `Sleeves snug (Garment sleeve is ${physicalEase.toFixed(1)}" over arm length)`;
         } else if (physicalEase <= 2.0) {
           localSpectrum = 'ideal';
           breakdown[label] = `Sleeves perfect (${physicalEase.toFixed(1)}" mobility allowance)`;
         } else if (physicalEase <= 4.0) {
-          score -= (physicalEase - 2.0) * 4;
+          score -= (physicalEase - 2.0) * 2;
           localSpectrum = 'relaxed';
           breakdown[label] = `Sleeves long (${physicalEase.toFixed(1)}" ease)`;
         } else {
-          score -= (physicalEase - 4.0) * 10;
+          score -= (physicalEase - 4.0) * 5;
           localSpectrum = 'oversized';
           breakdown[label] = `Sleeves very long (${physicalEase.toFixed(1)}" ease)`;
         }
       } else if (label === 'inseam') {
         // Inseam length
         if (physicalEase < -2.0) {
-          score -= Math.abs(physicalEase + 2.0) * 10;
+          score -= Math.abs(physicalEase + 2.0) * 5;
           breakdown[label] = `Too short (Garment inseam is ${Math.abs(physicalEase).toFixed(1)}" shorter than your leg)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 2;
+          score -= Math.abs(physicalEase) * 1;
           breakdown[label] = `Cropped fit (Inseam is ${Math.abs(physicalEase).toFixed(1)}" shorter)`;
         } else if (physicalEase <= 1.5) {
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect length (${physicalEase.toFixed(1)}" break)`;
         } else {
-          score -= (physicalEase - 1.5) * 5;
+          score -= (physicalEase - 1.5) * 2.5;
           breakdown[label] = `Long inseam (Puddles by ${physicalEase.toFixed(1)}")`;
         }
       } else {
         // General length/shoulders/thighs
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 15;
+          score -= Math.abs(physicalEase + stretchAllowance) * 8;
           breakdown[label] = `Too narrow (Garment is ${Math.abs(physicalEase).toFixed(1)}" smaller)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 5;
+          score -= Math.abs(physicalEase) * 2.5;
           localSpectrum = 'slim';
           breakdown[label] = `Snug fit (${Math.abs(physicalEase).toFixed(1)}" under target)`;
         } else if (physicalEase <= 1.5) {
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect fit (${physicalEase.toFixed(1)}" ease)`;
         } else {
-          score -= (physicalEase - 1.5) * 3;
+          score -= (physicalEase - 1.5) * 1.5;
           localSpectrum = 'relaxed';
           breakdown[label] = `Relaxed fit (${physicalEase.toFixed(1)}" ease)`;
         }

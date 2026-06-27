@@ -52,14 +52,18 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - Compression Activewear: User's body must not be smaller than the spec by more than -1.0" (otherwise saggy).
 
 4. BELLY & WAIST INTEGRATION:
-   - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
-   - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
-   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
+   - For shirts, tops, outerwear, and dresses: the user's belly size MUST fit within the midsection/waist specification of the garment. If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
+   - For bottoms (pants, trousers, jeans, shorts, skirts): do NOT evaluate or compare the user's belly size to the waistband or waist spec. Men and women wear pants on the waist/hips, not the belly. The waist ease on bottoms must be snug (0" to 1.5" ease). A garment waist that is 0.1" larger than the user's waist (like a 31.5" waist pant on a 31.4" body waist) is an EXCELLENT/PERFECT fit, and must be recommended over larger sizes. Sizing up to M (33.75") for a 31.4" waist body is incorrect as it creates a loose waist that will slip down.
 
 5. DECISION ENGINE:
    - Identify the item category and fabric type.
    - Filter sizes that are compatible (i.e. not too tight, and not too loose).
-   - From the compatible sizes, recommend the one where the difference (UserBody - BrandBody) is closest to 0 (or slightly negative for a comfortable drape).`;
+   - From the compatible sizes, recommend the one where the difference (UserBody - BrandBody) is closest to 0 (or slightly negative for a comfortable drape).
+
+6. SLEEVE LENGTH MEASUREMENT TYPE COMPARISON:
+   - Identify whether the brand's sleeve length in the chart represents:
+     a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults. Compare directly to the user's Neck-to-Wrist Sleeve Length.
+     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).`;
 
     const geminiPayload = {
       systemInstruction: {
