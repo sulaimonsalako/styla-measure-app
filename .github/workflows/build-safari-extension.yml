@@ -80,8 +80,10 @@ jobs:
       - name: Build & Archive iOS App
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO || \
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO
+          xcodebuild -list -project "STYLA Stylist.xcodeproj"
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR CODE_SIGN_STYLE=Automatic || \
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR CODE_SIGN_STYLE=Automatic || \
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO
 
       - name: Export IPA & Upload to TestFlight
         env:
@@ -89,7 +91,9 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export || true
+          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export -allowProvisioningUpdates || \
+          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export
+          
           IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
           echo "IPA Path: $IPA_PATH"
           if [ -n "$IPA_PATH" ]; then
