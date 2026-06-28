@@ -70,16 +70,8 @@ jobs:
       - name: Build & Archive iOS App
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild -project "STYLA Stylist.xcodeproj" \
-                     -scheme "STYLA Stylist (iOS)" \
-                     -configuration Release \
-                     -archivePath ./STYLA.xcarchive \
-                     DEVELOPMENT_TEAM="TLL7636THR" \
-                     CODE_SIGN_STYLE="Automatic" archive || \
-          xcodebuild -project "STYLA Stylist.xcodeproj" \
-                     -configuration Release \
-                     -archivePath ./STYLA.xcarchive \
-                     DEVELOPMENT_TEAM="TLL7636THR" archive
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR || \
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR
 
       - name: Export IPA & Upload to TestFlight
         env:
@@ -88,11 +80,7 @@ jobs:
         run: |
           cd build-safari/"STYLA Stylist"
           if [ -d "./STYLA.xcarchive" ]; then
-            xcodebuild -exportArchive \
-                       -archivePath ./STYLA.xcarchive \
-                       -exportOptionsPlist ../../exportOptions.plist \
-                       -exportPath ./export || true
-            
+            xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist ../../exportOptions.plist -exportPath ./export || true
             IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
             if [ -n "$IPA_PATH" ]; then
               xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
