@@ -67,6 +67,16 @@ jobs:
             --swift \
             --copy-resources
 
+      - name: Update Version & Export Compliance in Info.plist
+        run: |
+          cd build-safari/"STYLA Stylist"
+          BUILD_NUM="${{ github.run_number }}"
+          echo "Updating build version to $BUILD_NUM"
+          find . -name "Info.plist" | while read plist; do
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" "$plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUM" "$plist" || true
+            /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$plist" || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$plist" || true
+          done
+
       - name: Build & Archive iOS App
         run: |
           cd build-safari/"STYLA Stylist"
