@@ -63,28 +63,32 @@ jobs:
             --no-open \
             --project-location ./build-safari \
             --app-name "STYLA Stylist" \
-            --bundle-identifier "com.styla.measure.safari" || true
+            --bundle-identifier "com.styla.measure.safari"
 
       - name: Build & Archive iOS App
         run: |
-          cd build-safari/"STYLA Stylist" || cd build-safari/* || true
-          xcodebuild -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -configuration Release archive -archivePath ./STYLA.xcarchive || \
-          xcodebuild -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -configuration Release archive -archivePath ./STYLA.xcarchive || true
+          cd build-safari/"STYLA Stylist"
+          xcodebuild -project "STYLA Stylist.xcodeproj" \
+                     -scheme "STYLA Stylist (iOS)" \
+                     -configuration Release \
+                     -archivePath ./STYLA.xcarchive \
+                     DEVELOPMENT_TEAM="TLL7636THR" \
+                     CODE_SIGN_STYLE="Automatic" archive
 
       - name: Export IPA & Upload to TestFlight
         env:
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
-          PROJ_DIR=$(find build-safari -name "STYLA.xcarchive" -dir | head -n 1)
-          ARCHIVE_PATH=$(find build-safari -name "STYLA.xcarchive" | head -n 1)
-          if [ -n "$ARCHIVE_PATH" ]; then
-            xcodebuild -exportArchive -archivePath "$ARCHIVE_PATH" -exportOptionsPlist exportOptions.plist -exportPath build-safari/export || true
-            IPA_PATH=$(find build-safari -name "*.ipa" | head -n 1)
-            if [ -n "$IPA_PATH" ]; then
-              xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID" || true
-            fi
-          fi
+          cd build-safari/"STYLA Stylist"
+          xcodebuild -exportArchive \
+                     -archivePath ./STYLA.xcarchive \
+                     -exportOptionsPlist ../../exportOptions.plist \
+                     -exportPath ./export
+          
+          IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
+          echo "Found IPA at: $IPA_PATH"
+          xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
 
       - name: Archive Xcode Project Artifacts
         uses: actions/upload-artifact@v4
