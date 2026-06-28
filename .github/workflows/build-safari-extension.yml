@@ -1,5 +1,4 @@
 # Automated Production Cloud Build & TestFlight Delivery for STYLA Safari Extension
-# Configured with Wildcard Provisioning Profile for full App & Extension signing
 name: Build and Deploy Safari Extension to TestFlight
 
 on:
@@ -71,8 +70,8 @@ jobs:
       - name: Build & Archive iOS App
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR || \
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive DEVELOPMENT_TEAM=TLL7636THR
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO || \
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO
 
       - name: Export IPA & Upload to TestFlight
         env:
