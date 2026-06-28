@@ -89,12 +89,15 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
           cd build-safari/"STYLA Stylist"
-          echo "Current directory: $(pwd)"
-          ls -la
-          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export
+          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export || true
           IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
-          echo "Found IPA file at: $IPA_PATH"
-          xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
+          echo "IPA Path: $IPA_PATH"
+          if [ -n "$IPA_PATH" ]; then
+            xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
+          else
+            echo "IPA file not generated during exportArchive."
+            exit 1
+          fi
 
       - name: Archive Xcode Project Artifacts
         uses: actions/upload-artifact@v4

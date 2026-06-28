@@ -7,15 +7,6 @@
     <key>teamID</key>
     <string>TLL7636THR</string>
     <key>signingStyle</key>
-    <string>manual</string>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.styla.measure.safari</key>
-        <string>STYLA Safari Distribution</string>
-        <key>com.styla.measure.safari.Extension</key>
-        <string>STYLA Safari Distribution</string>
-    </dict>
+    <string>automatic</string>
 </dict>
 </plist>
