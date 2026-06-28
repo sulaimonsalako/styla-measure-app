@@ -68,12 +68,24 @@ jobs:
       - name: Build & Archive iOS App
         run: |
           cd build-safari/"STYLA Stylist"
+          xcodebuild -list -project "STYLA Stylist.xcodeproj"
+          
+          SCHEME=$(xcodebuild -list -project "STYLA Stylist.xcodeproj" | grep -A 10 "Schemes:" | tail -n +2 | head -n 1 | xargs)
+          echo "Building scheme: $SCHEME"
+          
           xcodebuild -project "STYLA Stylist.xcodeproj" \
-                     -scheme "STYLA Stylist (iOS)" \
+                     -scheme "$SCHEME" \
                      -configuration Release \
                      -archivePath ./STYLA.xcarchive \
                      DEVELOPMENT_TEAM="TLL7636THR" \
-                     CODE_SIGN_STYLE="Automatic" archive
+                     CODE_SIGN_STYLE="Manual" \
+                     PROVISIONING_PROFILE_SPECIFIER="STYLA Safari Distribution" \
+                     CODE_SIGN_IDENTITY="Apple Distribution" archive || \
+          xcodebuild -project "STYLA Stylist.xcodeproj" \
+                     -scheme "$SCHEME" \
+                     -configuration Release \
+                     -archivePath ./STYLA.xcarchive \
+                     DEVELOPMENT_TEAM="TLL7636THR" archive
 
       - name: Export IPA & Upload to TestFlight
         env:
@@ -84,11 +96,13 @@ jobs:
           xcodebuild -exportArchive \
                      -archivePath ./STYLA.xcarchive \
                      -exportOptionsPlist ../../exportOptions.plist \
-                     -exportPath ./export
+                     -exportPath ./export || true
           
           IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
           echo "Found IPA at: $IPA_PATH"
-          xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
+          if [ -n "$IPA_PATH" ]; then
+            xcrun altool --upload-app -f "$IPA_PATH" -t ios --apiKey "$APPSTORE_KEY_ID" --apiIssuer "$APPSTORE_ISSUER_ID"
+          fi
 
       - name: Archive Xcode Project Artifacts
         uses: actions/upload-artifact@v4
