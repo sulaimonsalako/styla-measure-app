@@ -1,4 +1,5 @@
 # Automated Production Cloud Build & TestFlight Delivery for STYLA Safari Extension
+# Configured with Wildcard Provisioning Profile for full App & Extension signing
 name: Build and Deploy Safari Extension to TestFlight
 
 on:
