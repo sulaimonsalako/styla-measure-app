@@ -57,7 +57,6 @@ jobs:
           TEMP_PROFILE=$RUNNER_TEMP/temp.mobileprovision
           echo "$BUILD_PROVISION_PROFILE_BASE64" | openssl base64 -d -A > $TEMP_PROFILE
           
-          # Extract UUID from mobileprovision
           UUID=$(grep -aA1 "UUID" $TEMP_PROFILE | grep -oE "[a-f0-9-]{36}" | head -n 1)
           echo "Extracted Profile UUID: $UUID"
           cp $TEMP_PROFILE "$PROFILES_DIR/$UUID.mobileprovision"
@@ -84,11 +83,29 @@ jobs:
             /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$plist" || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$plist" || true
           done
 
-      - name: Build & Archive iOS App
+      - name: Build & Archive iOS App with API Key Auth
+        env:
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist (iOS)" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO || \
-          xcodebuild archive -project "STYLA Stylist.xcodeproj" -scheme "STYLA Stylist" -archivePath ./STYLA.xcarchive CODE_SIGNING_ALLOWED=NO
+          KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" \
+                             -scheme "STYLA Stylist (iOS)" \
+                             -archivePath ./STYLA.xcarchive \
+                             DEVELOPMENT_TEAM=TLL7636THR \
+                             -allowProvisioningUpdates \
+                             -authenticationKeyPath "$KEY_PATH" \
+                             -authenticationKeyID "$APPSTORE_KEY_ID" \
+                             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID" || \
+          xcodebuild archive -project "STYLA Stylist.xcodeproj" \
+                             -scheme "STYLA Stylist" \
+                             -archivePath ./STYLA.xcarchive \
+                             DEVELOPMENT_TEAM=TLL7636THR \
+                             -allowProvisioningUpdates \
+                             -authenticationKeyPath "$KEY_PATH" \
+                             -authenticationKeyID "$APPSTORE_KEY_ID" \
+                             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
 
       - name: Export IPA & Upload to TestFlight
         env:
@@ -96,7 +113,15 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
         run: |
           cd build-safari/"STYLA Stylist"
-          xcodebuild -exportArchive -archivePath ./STYLA.xcarchive -exportOptionsPlist "../../exportOptions.plist" -exportPath ./export
+          KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8
+          xcodebuild -exportArchive \
+                     -archivePath ./STYLA.xcarchive \
+                     -exportOptionsPlist "../../exportOptions.plist" \
+                     -exportPath ./export \
+                     -allowProvisioningUpdates \
+                     -authenticationKeyPath "$KEY_PATH" \
+                     -authenticationKeyID "$APPSTORE_KEY_ID" \
+                     -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
           
           IPA_PATH=$(find ./export -name "*.ipa" | head -n 1)
           echo "IPA Path: $IPA_PATH"
