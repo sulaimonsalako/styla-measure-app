@@ -10,11 +10,10 @@ export const config = {
 
 async function saveToCache(url, pageTitle, supabaseUrl, supabaseAnonKey, parsedData) {
   try {
-    const { brand_name, garment_category, garment_subclass, fabric_type, chart_type, sizes } = parsedData;
+    const { brand_name, garment_category, fabric_type, chart_type, sizes } = parsedData;
     if (!brand_name || !sizes || sizes.length === 0) return;
 
     const cleanCategory = garment_category || 'unspecified';
-    const cleanSubclass = garment_subclass || 'other';
     const cleanFabric = fabric_type || 'woven';
     const cleanChartType = chart_type || 'body';
 
@@ -70,7 +69,7 @@ async function saveToCache(url, pageTitle, supabaseUrl, supabaseAnonKey, parsedD
           brand_id: brandId,
           category: cleanCategory,
           gender: 'Unisex',
-          chart_data: { chart_type: cleanChartType, garment_category: cleanCategory, garment_subclass: cleanSubclass, fabric_type: cleanFabric, sizes }
+          chart_data: { chart_type: cleanChartType, garment_category: cleanCategory, fabric_type: cleanFabric, sizes }
         })
       });
       const chartInsert = await chartInsertRes.json();
@@ -281,9 +280,6 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - For shirts, tops, outerwear, and dresses: the user's belly size MUST fit within the midsection/waist specification of the garment. If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
    - For bottoms (pants, trousers, jeans, shorts, skirts): do NOT evaluate or compare the user's belly size to the waistband or waist spec. Men and women wear pants on the waist/hips, not the belly. The waist ease on bottoms must be snug (0" to 1.5" ease). A garment waist that is 0.1" larger than the user's waist (like a 31.5" waist pant on a 31.4" body waist) is an EXCELLENT/PERFECT fit, and must be recommended over larger sizes. Sizing up to M (33.75") for a 31.4" waist body is incorrect as it creates a loose waist that will slip down.
 
-6. GARMENT SUBCLASS CLASSIFICATION:
-   - Classify the garment into one of the following subclasses based on product text, title, and description: 'blazer', 'suit-jacket', 'dress-shirt', 't-shirt', 'hoodie', 'sweatshirt', 'blouse', 'dress', 'jeans', 'tailored-trousers', 'leggings', 'shorts', 'skirt', 'other'. Write this in the 'garment_subclass' field.
-
 6. DECISION ENGINE & NO EXTRAPOLATION:
    - Recommend the size that is closest to an 'ideal' fit.
    - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available. Do NOT suggest sizing down if that size does not exist.
@@ -301,7 +297,6 @@ The JSON must have this exact structure:
   "size_chart_detected": true, // false if no size chart can be found in images or tables
   "brand_name": "Zara", // String: name of the brand
   "garment_category": "tops", // String: MUST be one of: 'tops', 'bottoms', 'dresses', 'outerwear', 'unspecified'
-  "garment_subclass": "blazer", // String: MUST be one of: 'blazer', 'suit-jacket', 'dress-shirt', 't-shirt', 'hoodie', 'sweatshirt', 'blouse', 'dress', 'jeans', 'tailored-trousers', 'leggings', 'shorts', 'skirt', 'other'
   "fabric_type": "knits", // String: MUST be one of: 'knits', 'woven', 'activewear'
   "chart_type": "body", // String: MUST be one of: 'body', 'garment'
   "sizes": [
@@ -310,11 +305,8 @@ The JSON must have this exact structure:
       "chest": 36.0, // Number or Array: e.g. 36.0 or [35, 37] representing range
       "waist": 30.0,
       "hips": 38.0,
-      "shoulder": 17.0, // optional (shoulder width across the back)
-      "sleeve": 25.0, // optional (sleeve length)
       "belly": 32.0, // optional
-      "inseam": 30.0, // optional
-      "thigh": 22.0 // optional (thigh circumference)
+      "inseam": 30.0 // optional
     },
     {
       "name": "M",
@@ -394,31 +386,15 @@ The JSON must have this exact structure:
         });
       }
 
-      // Resolve local sizing engine recommendation to ensure 100% specification compliance
-      let finalResult = jsonAnswer;
-      if (jsonAnswer.size_chart_detected && jsonAnswer.sizes && jsonAnswer.sizes.length > 0) {
-        const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
-        const localResult = runSizingEngine(user, jsonAnswer);
-        finalResult = {
-          ...jsonAnswer,
-          recommended_size: localResult.recommended_size,
-          fit_match_score: localResult.fit_match_score,
-          fit_spectrum: localResult.fit_spectrum,
-          fit_breakdown: localResult.fit_breakdown,
-          explanation: localResult.explanation,
-          warning: localResult.warning
-        };
-      }
-
       // Return clean response to user
       const clientResponse = {
-        size_chart_detected: finalResult.size_chart_detected,
-        recommended_size: finalResult.recommended_size,
-        fit_match_score: finalResult.fit_match_score,
-        fit_spectrum: finalResult.fit_spectrum,
-        fit_breakdown: finalResult.fit_breakdown,
-        explanation: finalResult.explanation,
-        warning: finalResult.warning
+        size_chart_detected: jsonAnswer.size_chart_detected,
+        recommended_size: jsonAnswer.recommended_size,
+        fit_match_score: jsonAnswer.fit_match_score,
+        fit_spectrum: jsonAnswer.fit_spectrum,
+        fit_breakdown: jsonAnswer.fit_breakdown,
+        explanation: jsonAnswer.explanation,
+        warning: jsonAnswer.warning
       };
 
       res.status(200).json(clientResponse);
