@@ -260,12 +260,42 @@ export function runSizingEngine(user, chart) {
 
   const bestOption = candidateScores[0];
 
+  // Generate dynamic, reassuring styling explanations and alterations advice
+  let explanation = `Size ${bestOption.name} is recommended as your best starting fit (${bestOption.spectrum}).`;
+  let tailoringTips = [];
+  
+  if (bestOption.breakdown) {
+    for (const [key, desc] of Object.entries(bestOption.breakdown)) {
+      if (desc.includes("Loose waist") || desc.includes("ease") && key === 'waist') {
+        const match = desc.match(/([0-9.]+)"/);
+        if (match) {
+          const val = parseFloat(match[1]);
+          if (val >= 1.0) {
+            tailoringTips.push(`**Waist Adjustment:** Expect approximately a ${val.toFixed(1)}" comfort gap at the waist. A tailor can easily take this in for a clean silhouette.`);
+          }
+        }
+      }
+      if (key === 'sleeve' && desc.includes("long")) {
+        tailoringTips.push(`**Sleeve Length:** Sleeves run slightly long. Shortening hem is straightforward if you prefer showing more cuff.`);
+      }
+      if (key === 'inseam' && desc.includes("Long")) {
+        tailoringTips.push(`**Pant Length:** Hemming recommended. Shortening pant legs is simple and highly standard.`);
+      }
+    }
+  }
+
+  if (tailoringTips.length > 0) {
+    explanation += `\n\n**🪡 Tailoring & Stylist Tips:**\n` + tailoringTips.map(t => `- ${t}`).join('\n');
+  } else {
+    explanation += `\n\n**✨ Stylist Tip:** Ready to wear! This item matches your target measurements with comfortable ease.`;
+  }
+
   return {
     recommended_size: bestOption.name,
     fit_match_score: bestOption.score,
     fit_spectrum: bestOption.spectrum,
     fit_breakdown: bestOption.breakdown,
-    explanation: `Size ${bestOption.name} is recommended based on your measurements. Fit is ${bestOption.spectrum}.`,
+    explanation: explanation,
     warning: bestOption.fits ? null : `Warning: Size ${bestOption.name} may be a tight fit.`
   };
 }
