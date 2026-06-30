@@ -1541,67 +1541,106 @@ btnDecode.addEventListener('click', async () => {
     stopLoader();
 
     if (res.ok) {
-        let fitHtml = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-            <div style="font-size: 1.5rem; font-weight: bold; color: #ff2a75;">
-              \u2728 Recommended Size: ${data.recommended_size}
-            </div>
-            ${data.fit_match_score !== undefined && data.fit_match_score !== null ? `
-            <div style="display: flex; flex-direction: column; align-items: flex-end;">
-              <span style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Fit Match Score</span>
-              <span style="font-size: 1.5rem; font-weight: bold; color: ${data.fit_match_score >= 85 ? '#10b981' : data.fit_match_score >= 70 ? '#f59e0b' : '#ef4444'};">${data.fit_match_score}%</span>
-            </div>
-            ` : ''}
-          </div>
-          
-          ${data.fit_spectrum ? `
-          <!-- Fit Spectrum Slider -->
-          <div style="margin: 1rem 0; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px;">
-            <div style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center;">Fit Spectrum</div>
-            <div style="position: relative; height: 6px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 25%, #10b981 50%, #f59e0b 75%, #ef4444 100%); border-radius: 3px; margin: 8px 4px;">
-              <div style="position: absolute; top: -5px; left: ${
-                data.fit_spectrum.toLowerCase() === 'tight' ? '8%' :
-                data.fit_spectrum.toLowerCase() === 'slim' ? '30%' :
-                data.fit_spectrum.toLowerCase() === 'ideal' ? '50%' :
-                (data.fit_spectrum.toLowerCase() === 'relaxed' || data.fit_spectrum.toLowerCase() === 'loose') ? '70%' :
-                data.fit_spectrum.toLowerCase() === 'oversized' ? '92%' : '50%'
-              }; width: 14px; height: 14px; background: #fff; border: 2.5px solid #ff2a75; border-radius: 50%; transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,0.4);"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; padding: 0 2px;">
-              <span>Tight</span>
-              <span>Slim</span>
-              <span style="color: #10b981;">Ideal</span>
-              <span>Loose</span>
-              <span>Oversized</span>
-            </div>
-          </div>
-          ` : ''}
+        // Dynamically compute display spectrum
+        let fitSpectrumName = data.fit_spectrum ? data.fit_spectrum.charAt(0).toUpperCase() + data.fit_spectrum.slice(1) : 'Comfort';
+        if (fitSpectrumName.toLowerCase() === 'ideal') fitSpectrumName = 'Perfect';
 
-          <p style="margin-bottom: 1rem; font-size: 1rem; line-height: 1.5;">${formatMessageText(data.explanation)}</p>
+        // Set verdict category icon dynamically
+        const categoryIconMap = {
+          'dresses': '👗',
+          'outerwear': '🧥',
+          'tops': '👔',
+          'bottoms': '👖'
+        };
+        const category = data.garment_category || 'tops';
+        const verdictIcon = categoryIconMap[category.toLowerCase()] || '👔';
+
+        // Fit breakdown bullet points
+        let breakdownHtml = '';
+        if (data.fit_breakdown) {
+          const labelMap = {
+            'chest': 'Chest / Bust',
+            'waist': 'Waist',
+            'belly': 'Abdomen',
+            'hips': 'Hips',
+            'shoulder': 'Shoulders',
+            'shoulder_width': 'Shoulders',
+            'shoulders': 'Shoulders',
+            'sleeve': 'Sleeve',
+            'sleeve_length': 'Sleeve',
+            'inseam': 'Inseam',
+            'thigh': 'Thigh'
+          };
+          for (const [key, desc] of Object.entries(data.fit_breakdown)) {
+            const displayLabel = labelMap[key.toLowerCase()] || (key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '));
+            let statusText = 'Perfect';
+            let emoji = '✅';
+            const lowerDesc = desc.toLowerCase();
+            
+            if (lowerDesc.includes('too tight') || lowerDesc.includes('too narrow') || lowerDesc.includes('too short')) {
+              statusText = 'Tight';
+              emoji = '⚠️';
+            } else if (lowerDesc.includes('slim') || lowerDesc.includes('snug')) {
+              statusText = 'Snug';
+              emoji = '✅';
+            } else if (lowerDesc.includes('perfect') || lowerDesc.includes('ideal') || lowerDesc.includes('excellent')) {
+              statusText = 'Perfect';
+              emoji = '✅';
+            } else if (lowerDesc.includes('loose') || lowerDesc.includes('relaxed') || lowerDesc.includes('long') || lowerDesc.includes('oversized') || lowerDesc.includes('loose waist')) {
+              statusText = 'Relaxed';
+              emoji = '⚠️';
+            }
+            
+            breakdownHtml += `
+              <li style="margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.5rem; color: #cbd5e1; font-size: 0.9rem;">
+                <span style="color: #64748b;">•</span>
+                <span style="font-weight: 700; color: #ffffff;">${displayLabel}:</span>
+                <span>${emoji} <strong>${statusText}</strong> (${desc})</span>
+              </li>`;
+          }
+        }
+
+        // Format stylist tip box
+        let rawExplanation = data.explanation || '';
+        let tipsContent = '';
+        if (rawExplanation.includes('🪡 Tailoring & Stylist Tips:')) {
+          const parts = rawExplanation.split('🪡 Tailoring & Stylist Tips:');
+          tipsContent = parts[1].trim().replace(/\n/g, '<br>').replace(/^- /gm, '• ').replace(/\*\*/g, '');
+        } else if (rawExplanation.includes('✨ Stylist Tip:')) {
+          const parts = rawExplanation.split('✨ Stylist Tip:');
+          tipsContent = parts[1].trim();
+        } else {
+          tipsContent = rawExplanation;
+        }
+
+        let fitHtml = `
+          <div style="font-size: 1.3rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <span>${verdictIcon}</span> Recommended Size: <span style="color: #ff2a75;">${data.recommended_size}</span>
+          </div>
+          <div style="font-size: 0.95rem; color: #94a3b8; margin-bottom: 20px;">
+            <strong>Fit Profile:</strong> <span style="color: #ffffff; font-weight: 700;">${fitSpectrumName} Fit</span>
+          </div>
+
+          <div style="font-size: 1rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; margin: 20px 0 10px 0;">
+            <span>🔍</span> Fit Assessment
+          </div>
+          <ul style="list-style-type: none; padding-left: 4px; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 6px;">
+            ${breakdownHtml}
+          </ul>
+
+          <div style="background: rgba(255,255,255,0.02); border-left: 3px solid #ff2a75; padding: 14px; border-radius: 4px; font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; margin-top: 16px;">
+            <div style="font-weight: 700; color: #ffffff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>✨</span> Stylist Tip:
+            </div>
+            <div>${tipsContent}</div>
+          </div>
         `;
 
         if (data.warning && data.warning.toLowerCase() !== "none" && data.warning.trim() !== "") {
             fitHtml += `
-            <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; color: #fca5a5;">
-              <strong>\u26A0\uFE0F Warning:</strong> ${data.warning}
+            <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1rem; border-radius: 8px; margin-top: 16px; font-size: 0.9rem; color: #fca5a5;">
+              <strong>⚠️ Warning:</strong> ${data.warning}
             </div>`;
-        }
-
-        if (data.fit_breakdown) {
-            fitHtml += `<h4 style="margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Fit Breakdown</h4>`;
-            fitHtml += `<ul style="list-style-type: none; padding-left: 0;">`;
-            for (const [part, desc] of Object.entries(data.fit_breakdown)) {
-                let icon = "\uD83D\uDCCF";
-                if (desc.toLowerCase().includes("tight") || desc.toLowerCase().includes("small")) icon = "\uD83D\uDD34";
-                if (desc.toLowerCase().includes("perfect") || desc.toLowerCase().includes("great")) icon = "\uD83D\uDFE2";
-                if (desc.toLowerCase().includes("relaxed") || desc.toLowerCase().includes("large") || desc.toLowerCase().includes("oversized")) icon = "\uD83D\uDD35";
-                
-                fitHtml += `<li style="margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.5rem;">
-                              <span>${icon}</span>
-                              <span><strong>${part.charAt(0).toUpperCase() + part.slice(1)}:</strong> ${desc}</span>
-                            </li>`;
-            }
-            fitHtml += `</ul>`;
         }
 
         resultBox.innerHTML = fitHtml;
