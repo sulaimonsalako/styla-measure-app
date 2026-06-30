@@ -386,15 +386,31 @@ The JSON must have this exact structure:
         });
       }
 
+      // Resolve local sizing engine recommendation to ensure 100% stable matching rules
+      let finalResult = jsonAnswer;
+      if (jsonAnswer.size_chart_detected && jsonAnswer.sizes && jsonAnswer.sizes.length > 0) {
+        const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
+        const localResult = runSizingEngine(user, jsonAnswer);
+        finalResult = {
+          ...jsonAnswer,
+          recommended_size: localResult.recommended_size,
+          fit_match_score: localResult.fit_match_score,
+          fit_spectrum: localResult.fit_spectrum,
+          fit_breakdown: localResult.fit_breakdown,
+          explanation: localResult.explanation,
+          warning: localResult.warning
+        };
+      }
+
       // Return clean response to user
       const clientResponse = {
-        size_chart_detected: jsonAnswer.size_chart_detected,
-        recommended_size: jsonAnswer.recommended_size,
-        fit_match_score: jsonAnswer.fit_match_score,
-        fit_spectrum: jsonAnswer.fit_spectrum,
-        fit_breakdown: jsonAnswer.fit_breakdown,
-        explanation: jsonAnswer.explanation,
-        warning: jsonAnswer.warning
+        size_chart_detected: finalResult.size_chart_detected,
+        recommended_size: finalResult.recommended_size,
+        fit_match_score: finalResult.fit_match_score,
+        fit_spectrum: finalResult.fit_spectrum,
+        fit_breakdown: finalResult.fit_breakdown,
+        explanation: finalResult.explanation,
+        warning: finalResult.warning
       };
 
       res.status(200).json(clientResponse);

@@ -128,11 +128,12 @@
       border-bottom: none;
     }
     .breakdown-label {
-      width: 90px;
+      width: 105px;
       flex-shrink: 0;
       color: var(--text-muted);
       font-weight: 700;
       font-size: 0.8rem;
+      letter-spacing: 0.02em;
     }
     .breakdown-val {
       color: #f0f0ff;
@@ -1420,11 +1421,25 @@
 
           breakdownBox.innerHTML = '';
           if (data.fit_breakdown) {
+            const labelMap = {
+              'chest': 'Chest / Bust',
+              'waist': 'Waist',
+              'belly': 'Abdomen',
+              'hips': 'Hips',
+              'shoulder': 'Shoulders',
+              'shoulder_width': 'Shoulders',
+              'shoulders': 'Shoulders',
+              'sleeve': 'Sleeve',
+              'sleeve_length': 'Sleeve',
+              'inseam': 'Inseam',
+              'thigh': 'Thigh'
+            };
             for (const [key, desc] of Object.entries(data.fit_breakdown)) {
               const itemDiv = document.createElement('div');
               itemDiv.className = 'breakdown-item';
+              const displayLabel = labelMap[key.toLowerCase()] || (key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '));
               itemDiv.innerHTML = `
-                <span class="breakdown-label">${key.toUpperCase()}</span>
+                <span class="breakdown-label">${displayLabel}</span>
                 <span class="breakdown-val">${desc}</span>
               `;
               breakdownBox.appendChild(itemDiv);
@@ -1598,11 +1613,25 @@
           // Render breakdown
           breakdownBox.innerHTML = '';
           if (data.fit_breakdown) {
+            const labelMap = {
+              'chest': 'Chest / Bust',
+              'waist': 'Waist',
+              'belly': 'Abdomen',
+              'hips': 'Hips',
+              'shoulder': 'Shoulders',
+              'shoulder_width': 'Shoulders',
+              'shoulders': 'Shoulders',
+              'sleeve': 'Sleeve',
+              'sleeve_length': 'Sleeve',
+              'inseam': 'Inseam',
+              'thigh': 'Thigh'
+            };
             for (const [key, desc] of Object.entries(data.fit_breakdown)) {
               const itemDiv = document.createElement('div');
               itemDiv.className = 'breakdown-item';
+              const displayLabel = labelMap[key.toLowerCase()] || (key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '));
               itemDiv.innerHTML = `
-                <span class="breakdown-label">${key.toUpperCase()}</span>
+                <span class="breakdown-label">${displayLabel}</span>
                 <span class="breakdown-val">${desc}</span>
               `;
               breakdownBox.appendChild(itemDiv);

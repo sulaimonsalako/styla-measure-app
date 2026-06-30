@@ -1,3 +1,5 @@
+import { runSizingEngine } from './_helpers/sizing-engine.js';
+
 export const config = {
   api: {
     bodyParser: {
@@ -12,7 +14,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, chartImagesBase64, styleImagesBase64 } = req.body;
+    const { 
+      chest, 
+      waist, 
+      belly, 
+      hips, 
+      height, 
+      inseam, 
+      shoulder,
+      sleeve,
+      thigh,
+      api_scans, 
+      measurement_overrides, 
+      chartImagesBase64, 
+      styleImagesBase64 
+    } = req.body;
 
     if (!chartImagesBase64 || chartImagesBase64.length === 0) {
       return res.status(400).json({ error: 'No size chart provided.' });
@@ -33,9 +49,9 @@ export default async function handler(req, res) {
     let pHips = hips;
     let pHeight = height;
     let pInseam = inseam;
-    let pShoulder = null;
-    let pSleeve = null;
-    let pThigh = null;
+    let pShoulder = shoulder;
+    let pSleeve = sleeve;
+    let pThigh = thigh;
 
     if (activeScan) {
       pChest = activeScan.volume_params.chest || pChest;
@@ -43,7 +59,9 @@ export default async function handler(req, res) {
       pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
       pHips = activeScan.volume_params.low_hips || pHips;
       pShoulder = activeScan.front_params.shoulders || pShoulder;
-      pSleeve = activeScan.front_params.sleeve_length || pSleeve;
+      pSleeve = activeScan.front_params.back_neck_point_to_wrist_length || 
+                   (activeScan.front_params.sleeve_length ? (activeScan.front_params.sleeve_length + (activeScan.front_params.shoulders || 0) / 2) : null) || 
+                   pSleeve;
       pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
       pThigh = activeScan.volume_params.thigh || pThigh;
     }
@@ -58,7 +76,7 @@ export default async function handler(req, res) {
       if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
     }
 
-    const prompt = `You are an expert fashion tailor and sizing assistant. 
+    const prompt = `You are an expert fashion tailor and sizing assistant.
 The user has the following body measurements:
 - Chest / Bust: ${pChest}"
 - Waist: ${pWaist}"
@@ -69,8 +87,6 @@ ${pInseam ? `- Inseam: ${pInseam}"` : ''}
 ${pShoulder ? `- Across Back Shoulder Width: ${pShoulder}"` : ''}
 ${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
 ${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
-
-${(pHeight && pInseam) ? `IMPORTANT RATIO: The user's estimated torso length is Total Height - Inseam - 11 inches. Compare their leg length to their torso length to determine if they are proportionally long-legged, short-legged, or average.` : ''}
 
 Look at the attached size chart image(s) as your primary sizing data.
 Determine the absolute best size for this user.
@@ -108,48 +124,69 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
        - If the difference is close to 0 (within +/- 1"), the fit is 'ideal' (fit_match_score: 95-100, fit_spectrum: 'ideal').
        - If the user's body is significantly smaller than the target body spec, the fit is 'relaxed' or 'oversized' (score is lower, fit_spectrum is 'relaxed' or 'oversized').
        - If the user's body is larger than the target body spec, the fit is 'slim' or 'tight' (score is lower, fit_spectrum is 'slim' or 'tight').
-       - Example: A polo with finished chest 39.4" (Size M) is designed for a ~37.4" body chest. A 35" chest user is 2.4" smaller than the target body. Thus, M is a 'relaxed' fit (score ~85%). S (finished chest ~37.4", designed for a ~35.4" body) is the 'ideal' fit (score ~97%). Recommending M as 100% ideal is wrong when S is available.
 
-3. STRETCH & COMPRESSION ALLOWANCES (How much larger a user's body can be than the brand's body spec or target body size):
-   - Woven / Structured: Max tolerance of +0.5". The user's body measurement must not exceed the target body size by more than 0.5", otherwise size up.
-   - Knits / Stretch: Max tolerance of +1.5". Since knits stretch, the user's body can exceed the body size spec by up to 1.5".
+3. STRETCH & COMPRESSION ALLOWANCES:
+   - Woven / Structured: Max tolerance of +0.5".
+   - Knits / Stretch: Max tolerance of +1.5".
    - Activewear / Compression: Max tolerance of +3.0".
 
-4. LOOSENESS LIMITS (How much smaller a user's body can be before the item is too loose):
-   - Pants/Bottoms (Waist): User's body must not be smaller than the body spec by more than -1.5" (otherwise they fall off).
-   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5" (otherwise too loose/droopy).
-   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0" (for an oversized look).
-   - Compression Activewear: User's body must not be smaller than the spec by more than -1.0".
+4. LOOSENESS LIMITS:
+   - Pants/Bottoms (Waist): User's body must not be smaller than the body spec by more than -1.5".
+   - Woven/Structured Tops: User's body must not be smaller than the spec by more than -2.5".
+   - Knits/Casual Tops: User's body must not be smaller than the spec by more than -4.0".
 
 5. BELLY & WAIST INTEGRATION:
    - For shirts, tops, outerwear, and high-waisted pants: the user's belly size MUST fit within the midsection/waist specification of the garment.
    - If the chart lacks a separate "Belly" measurement, compare the user's Belly measurement to the brand's Waist specification.
-   - If the user's Belly size exceeds the brand's Waist spec by more than the stretch allowance, that size is TOO TIGHT and must NOT be recommended.
 
 6. DECISION ENGINE & NO EXTRAPOLATION:
-   - Recommend the size that is closest to an 'ideal' fit (closest target body spec to user's body).
-   - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size (e.g. M) and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available/manufactured. Do NOT suggest sizing down if that size does not exist.
+   - Recommend the size that is closest to an 'ideal' fit.
+   - If the user is smaller than the smallest size (or larger than the largest size) in the chart, recommend the closest available size and use the "warning" field to explain that it will fit looser/longer because a smaller size is not available.
 
-CRITICAL SIZING RULES:
-1. SIZE NAMES FROM HEADERS/LABELS: You MUST recommend the size using the exact name from the size chart.
-2. NO EXTRAPOLATION: You MUST ONLY recommend a size that is EXPLICITLY listed in the size chart.
-3. CONCISE & STRUCTURED RESPONSES: Keep the explanation under 30 words total.
+7. SLEEVE LENGTH MEASUREMENT TYPE COMPARISON:
+   - Identify whether the brand's sleeve length in the chart represents:
+     a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults.
+     b) Shoulder to Wrist (Arm Length): Usually < 26" for adults.
 
-IMPORTANT: You MUST return ONLY valid JSON. Do not include markdown code blocks or any other text.
+You MUST parse and extract the entire size chart and output BOTH the sizing recommendation for the current user and the parsed structured size chart details.
+
+Your output must be ONLY valid JSON. Do not include markdown code blocks or any other text.
 The JSON must have this exact structure:
 {
+  "size_chart_detected": true, // false if no size chart can be found in images or tables
+  "brand_name": "Zara", // String: name of the brand
+  "garment_category": "tops", // String: MUST be one of: 'tops', 'bottoms', 'dresses', 'outerwear', 'unspecified'
+  "fabric_type": "knits", // String: MUST be one of: 'knits', 'woven', 'activewear'
+  "chart_type": "body", // String: MUST be one of: 'body', 'garment'
+  "sizes": [
+    {
+      "name": "S",
+      "chest": 36.0, // Number or Array: e.g. 36.0 or [35, 37]
+      "waist": 30.0,
+      "hips": 38.0,
+      "belly": 32.0, // optional
+      "inseam": 30.0 // optional
+    },
+    {
+      "name": "M",
+      "chest": 38.0,
+      "waist": 32.0,
+      "hips": 40.0,
+      "belly": 34.0,
+      "inseam": 30.0
+    }
+  ],
   "recommended_size": "M",
-  "fit_match_score": 75, // integer 0-100 representing how close the recommended size's measurements are to the user's body measurements, taking brand pre-factored ease into account.
-  "fit_spectrum": "relaxed", // string: MUST be one of: 'tight', 'slim', 'ideal', 'relaxed', 'oversized'
+  "fit_match_score": 85, // integer 0-100
+  "fit_spectrum": "relaxed", // 'tight', 'slim', 'ideal', 'relaxed', 'oversized'
   "fit_breakdown": {
-    "chest": "Comfortably relaxed (7.4\" physical ease)",
-    "waist": "Comfortable",
-    "hips": "Relaxed"
+    "chest": "Comfortably relaxed",
+    "waist": "Perfect fit"
   },
-  "explanation": "Size M fits but will be looser than the designer's intended fit.",
-  "warning": "Warning message if user is smaller than the smallest size and cannot size down. Otherwise null."
+  "explanation": "Size M fits but will be slightly loose.",
+  "warning": null // or warning string
 }`;
-    
+
     const parts = [
         { text: prompt }
     ];
@@ -201,16 +238,46 @@ The JSON must have this exact structure:
     }
 
     let textAnswer = data.candidates[0].content.parts[0].text;
-    
-    // Clean up potential markdown code blocks
     textAnswer = textAnswer.replace(/```json/g, "").replace(/```/g, "").trim();
 
     try {
         const jsonAnswer = JSON.parse(textAnswer);
-        res.status(200).json(jsonAnswer);
+        
+        if (jsonAnswer.size_chart_detected === false || jsonAnswer.size_chart_detected === "false") {
+          jsonAnswer.recommended_size = null;
+        }
+
+        // Resolve local sizing engine recommendation to ensure 100% stable matching rules
+        let finalResult = jsonAnswer;
+        if (jsonAnswer.size_chart_detected && jsonAnswer.sizes && jsonAnswer.sizes.length > 0) {
+          const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
+          const localResult = runSizingEngine(user, jsonAnswer);
+          finalResult = {
+            ...jsonAnswer,
+            recommended_size: localResult.recommended_size,
+            fit_match_score: localResult.fit_match_score,
+            fit_spectrum: localResult.fit_spectrum,
+            fit_breakdown: localResult.fit_breakdown,
+            explanation: localResult.explanation,
+            warning: localResult.warning
+          };
+        }
+
+        // Return clean response to user
+        const clientResponse = {
+          size_chart_detected: finalResult.size_chart_detected,
+          recommended_size: finalResult.recommended_size,
+          fit_match_score: finalResult.fit_match_score,
+          fit_spectrum: finalResult.fit_spectrum,
+          fit_breakdown: finalResult.fit_breakdown,
+          explanation: finalResult.explanation,
+          warning: finalResult.warning
+        };
+
+        res.status(200).json(clientResponse);
     } catch (e) {
         console.error("Failed to parse Gemini response as JSON:", textAnswer);
-        res.status(500).json({ error: "AI returned invalid format." });
+        res.status(500).json({ error: "AI returned invalid format.", raw: textAnswer });
     }
 
   } catch (error) {
@@ -218,4 +285,3 @@ The JSON must have this exact structure:
     res.status(500).json({ error: 'Server error processing request.' });
   }
 }
-
