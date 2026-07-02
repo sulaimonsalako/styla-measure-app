@@ -3,10 +3,10 @@ import fs from 'fs';
 import path from 'path';
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 let supabase = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
 }
 
 function toInches(cmVal) {
@@ -95,32 +95,32 @@ export default async function handler(req, res) {
         is_active: true,
         height: toInches(heightCm),
         volume_params: {
-          chest: toInches(vp.chest),
+          chest: toInches(vp.chest || vp.bust || vp.bust_girth || vp.chest_girth),
           under_bust_girth: toInches(vp.under_bust_girth),
           upper_chest_girth: toInches(vp.upper_chest_girth),
           overarm_girth: toInches(vp.overarm_girth),
-          waist: toInches(vp.waist),
-          high_hips: toInches(vp.high_hips),
-          low_hips: toInches(vp.low_hips),
+          waist: toInches(vp.waist || vp.waist_girth),
+          high_hips: toInches(vp.high_hips || vp.upper_hip_girth || vp.high_hip_girth),
+          low_hips: toInches(vp.low_hips || vp.hips || vp.hip_girth),
           waist_green: toInches(vp.waist_green),
           waist_gray: toInches(vp.waist_gray),
           pant_waist: toInches(vp.pant_waist),
-          bicep: toInches(vp.bicep),
+          bicep: toInches(vp.bicep || vp.upper_arm_girth || vp.bicep_girth),
           upper_bicep_girth: toInches(vp.upper_bicep_girth),
-          knee: toInches(vp.knee),
-          ankle: toInches(vp.ankle),
-          wrist: toInches(vp.wrist),
-          calf: toInches(vp.calf),
-          thigh: toInches(vp.thigh),
+          knee: toInches(vp.knee || vp.knee_girth),
+          ankle: toInches(vp.ankle || vp.ankle_girth),
+          wrist: toInches(vp.wrist || vp.wrist_girth),
+          calf: toInches(vp.calf || vp.calf_girth),
+          thigh: toInches(vp.thigh || vp.thigh_girth),
           thigh_1_inch_below_crotch: toInches(vp.thigh_1_inch_below_crotch),
           mid_thigh_girth: toInches(vp.mid_thigh_girth),
-          neck: toInches(vp.neck),
-          abdomen: toInches(vp.abdomen),
+          neck: toInches(vp.neck || vp.neck_girth || vp.neck_base_girth),
+          abdomen: toInches(vp.abdomen || vp.abdomen_girth),
           armscye_girth: toInches(vp.armscye_girth),
-          neck_girth: toInches(vp.neck_girth),
+          neck_girth: toInches(vp.neck_girth || vp.neck_base_girth),
           neck_girth_relaxed: toInches(vp.neck_girth_relaxed),
-          forearm: toInches(vp.forearm),
-          elbow_girth: toInches(vp.elbow_girth)
+          forearm: toInches(vp.forearm || vp.forearm_girth || vp.forearm_girth_flexed),
+          elbow_girth: toInches(vp.elbow_girth || vp.elbow)
         },
         front_params: {
           body_height: toInches(fp.body_height),
@@ -196,7 +196,7 @@ export default async function handler(req, res) {
       hips: scanData.volume_params.low_hips,
       height: toInches(heightCm) || 64.0,
       shoulder: scanData.front_params.shoulders,
-      sleeve: scanData.front_params.back_neck_point_to_wrist_length || (scanData.front_params.sleeve_length + (scanData.front_params.shoulders / 2)),
+      sleeve: scanData.front_params.back_neck_point_to_wrist_length || ((scanData.front_params.sleeve_length && scanData.front_params.shoulders) ? (scanData.front_params.sleeve_length + (scanData.front_params.shoulders / 2)) : null),
       inseam: scanData.front_params.inseam_from_crotch_to_floor || scanData.front_params.inseam,
       neck: scanData.volume_params.neck,
       thigh: scanData.volume_params.thigh,
