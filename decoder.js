@@ -695,9 +695,89 @@ function renderScanHistory(profile) {
       const hipsVal = vp.low_hips ? vp.low_hips + '"' : 'N/A';
       const heightVal = fp.body_height ? fp.body_height + '"' : 'N/A';
       
+      // Generate details HTML for all 80+ measurements
+      let volHtml = '';
+      const volMap = {
+        chest: 'Chest / Bust',
+        under_bust_girth: 'Under Bust Girth',
+        upper_chest_girth: 'Upper Chest Girth',
+        overarm_girth: 'Overarm Girth',
+        waist: 'Waist',
+        high_hips: 'High Hips / Upper Hips',
+        low_hips: 'Low Hips / Hips',
+        waist_green: 'Waist (Green Level)',
+        waist_gray: 'Waist (Gray Level)',
+        pant_waist: 'Pant Waist',
+        bicep: 'Upper Arm / Bicep',
+        upper_bicep_girth: 'Upper Bicep Girth',
+        knee: 'Knee Girth',
+        ankle: 'Ankle Girth',
+        wrist: 'Wrist Girth',
+        calf: 'Calf Girth',
+        thigh: 'Thigh Girth',
+        thigh_1_inch_below_crotch: 'Thigh (1" below crotch)',
+        mid_thigh_girth: 'Mid Thigh Girth',
+        neck: 'Neck Girth',
+        abdomen: 'Abdomen Girth',
+        armscye_girth: 'Armscye Girth',
+        neck_girth: 'Neck Girth',
+        neck_girth_relaxed: 'Neck Girth (Relaxed)',
+        forearm: 'Forearm Girth',
+        elbow_girth: 'Elbow Girth'
+      };
+      
+      for (const [key, label] of Object.entries(volMap)) {
+        if (vp[key] !== undefined && vp[key] !== null) {
+          const cmVal = (vp[key] * 2.54).toFixed(1);
+          volHtml += `
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #cbd5e1; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.03);">
+              <span style="color: #94a3b8;">${label}</span>
+              <span style="font-weight: 600; color: #fff;">${vp[key]}" <span style="font-size: 0.7rem; color: #64748b;">(${cmVal} cm)</span></span>
+            </div>`;
+        }
+      }
+
+      let linearHtml = '';
+      const linMap = {
+        body_height: 'Total Body Height',
+        outseam: 'Outseam',
+        inseam: 'Inseam',
+        shoulders: 'Shoulder Width',
+        sleeve_length: 'Sleeve Length',
+        underarm_length: 'Underarm Length',
+        back_neck_point_to_wrist_length: 'Neck to Wrist Length',
+        back_neck_point_to_wrist_length_1_5_inch: 'Neck to Wrist (1.5" cuff)',
+        crotch_length: 'Crotch Length',
+        rise: 'Crotch Rise',
+        new_jacket_length: 'Jacket Length',
+        nape_to_waist_centre_back: 'Back Neck to Waist',
+        shoulder_to_waist: 'Shoulder to Waist',
+        back_neck_height: 'Back Neck Height',
+        bust_height: 'Bust Height',
+        hip_height: 'Hip Height',
+        knee_height: 'Knee Height',
+        waist_height: 'Waist Height',
+        across_back_shoulder_width: 'Across Back Shoulder',
+        across_back_width: 'Across Back Width',
+        total_crotch_length: 'Total Crotch Length',
+        upper_arm_length: 'Upper Arm Length',
+        lower_arm_length: 'Lower Arm Length'
+      };
+
+      for (const [key, label] of Object.entries(linMap)) {
+        if (fp[key] !== undefined && fp[key] !== null) {
+          const cmVal = (fp[key] * 2.54).toFixed(1);
+          linearHtml += `
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #cbd5e1; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.03);">
+              <span style="color: #94a3b8;">${label}</span>
+              <span style="font-weight: 600; color: #fff;">${fp[key]}" <span style="font-size: 0.7rem; color: #64748b;">(${cmVal} cm)</span></span>
+            </div>`;
+        }
+      }
+
       html += `
         <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.1)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'">
-          <div style="flex: 1; min-width: 200px;">
+          <div style="flex: 1; min-width: 280px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
               <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">Scan from ${dateStr}</span>
               ${isActive 
@@ -708,6 +788,9 @@ function renderScanHistory(profile) {
             <p style="font-size: 0.8rem; color: #94a3b8; margin: 0; line-height: 1.4;">
               <strong>Measurements:</strong> Chest: ${chestVal} | Waist: ${waistVal} | Hips: ${hipsVal} | Height: ${heightVal}
             </p>
+            <button class="btn-toggle-details" data-scan-id="${scan.scan_id}" style="background: none; border: none; color: #ff2a75; font-size: 0.8rem; cursor: pointer; padding: 4px 0; margin-top: 6px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+              View All 80+ AI Measurements ▾
+            </button>
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
             ${!isActive 
@@ -716,11 +799,40 @@ function renderScanHistory(profile) {
             }
             <button class="btn-delete-scan" data-scan-id="${scan.scan_id}" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-size: 0.8rem; padding: 6px; text-decoration: underline;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#f87171'">Delete</button>
           </div>
+
+          <!-- Collapsible details drawer -->
+          <div id="details-${scan.scan_id}" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 12px; padding-top: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #ff2a75; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-family: var(--font-head);">Volumetric (Girths)</div>
+                ${volHtml}
+              </div>
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: #ff2a75; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; font-family: var(--font-head);">Linear & Heights</div>
+                ${linearHtml}
+              </div>
+            </div>
+          </div>
         </div>
       `;
   });
   
   scanList.innerHTML = html;
+
+  // Bind details toggle events
+  scanList.querySelectorAll('.btn-toggle-details').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          const scanId = e.currentTarget.getAttribute('data-scan-id');
+          const panel = document.getElementById(`details-${scanId}`);
+          if (panel) {
+              const isHidden = panel.style.display === 'none';
+              panel.style.display = isHidden ? 'block' : 'none';
+              e.currentTarget.innerHTML = isHidden 
+                ? 'Hide Mapped Measurements ▲' 
+                : 'View All 80+ AI Measurements ▾';
+          }
+      });
+  });
   
   // Bind click events
   scanList.querySelectorAll('.btn-set-active-scan').forEach(btn => {
