@@ -2782,6 +2782,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const widgetContainer = document.querySelector('.saia-widget-container');
   const scanEmailError = document.getElementById('scan-email-error');
 
+  let emailCheckTimeout = null;
+
   function validateScanEmail() {
       if (!scanEmailInput || !widgetContainer) return;
       
@@ -2803,14 +2805,43 @@ window.addEventListener('DOMContentLoaded', () => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       
       if (emailRegex.test(email)) {
-          if (scanEmailError) scanEmailError.style.display = 'none';
-          widgetContainer.style.pointerEvents = 'auto';
-          widgetContainer.style.opacity = '1';
-          
-          if (window.MTM_WIDGET_OPTIONS) {
-              window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
-              window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
-          }
+          if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
+          emailCheckTimeout = setTimeout(() => {
+              if (!window.supabase) return;
+              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              supabase.from('store_profiles')
+                .select('username')
+                .eq('username', email.toLowerCase())
+                .maybeSingle()
+                .then(({ data, error }) => {
+                    if (data) {
+                        widgetContainer.style.pointerEvents = 'none';
+                        widgetContainer.style.opacity = '0.4';
+                        if (scanEmailError) {
+                            scanEmailError.innerHTML = `This email is already registered. Please <a href="#" id="error-login-link" style="color: #ff2a75; font-weight: 700; text-decoration: underline;">log in</a> first to take a new scan.`;
+                            scanEmailError.style.display = 'block';
+                            
+                            const link = document.getElementById('error-login-link');
+                            if (link) {
+                                link.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    const loginModal = document.getElementById('login-modal');
+                                    if (loginModal) loginModal.style.display = 'flex';
+                                });
+                            }
+                        }
+                    } else {
+                        if (scanEmailError) scanEmailError.style.display = 'none';
+                        widgetContainer.style.pointerEvents = 'auto';
+                        widgetContainer.style.opacity = '1';
+                        
+                        if (window.MTM_WIDGET_OPTIONS) {
+                            window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
+                            window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
+                        }
+                    }
+                });
+          }, 300);
       } else {
           widgetContainer.style.pointerEvents = 'none';
           widgetContainer.style.opacity = '0.4';
