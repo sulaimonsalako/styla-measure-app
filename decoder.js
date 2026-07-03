@@ -548,6 +548,10 @@ async function syncStoreScansToPortal(user, profile) {
           if (waist) localStorage.setItem('styla_twin_waist', waist);
           if (belly) localStorage.setItem('styla_twin_belly', belly);
           if (hips) localStorage.setItem('styla_twin_hips', hips);
+          if (shoulder) localStorage.setItem('styla_twin_shoulder', shoulder);
+          if (sleeve) localStorage.setItem('styla_twin_sleeve', sleeve);
+          if (thigh) localStorage.setItem('styla_twin_thigh', thigh);
+          if (neck) localStorage.setItem('styla_twin_neck', neck);
           if (height) localStorage.setItem('styla_twin_height', height);
           if (inseam) localStorage.setItem('styla_twin_inseam', inseam);
           if (shoulder) localStorage.setItem('styla_twin_shoulder', shoulder);
@@ -608,6 +612,10 @@ async function onUserLoggedIn(user, profile) {
       document.getElementById('val-height-in').value = inches;
       localStorage.setItem('styla_twin_height', profile.height);
   }
+  if (profile.shoulder) localStorage.setItem('styla_twin_shoulder', profile.shoulder);
+  if (profile.sleeve) localStorage.setItem('styla_twin_sleeve', profile.sleeve);
+  if (profile.thigh) localStorage.setItem('styla_twin_thigh', profile.thigh);
+  if (profile.neck) localStorage.setItem('styla_twin_neck', profile.neck);
   if (profile.api_scans) {
       localStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans));
   } else {
@@ -1628,6 +1636,11 @@ btnDecode.addEventListener('click', async () => {
     if (rawScans) api_scans = JSON.parse(rawScans);
   } catch (e) {}
 
+  let shoulder = localStorage.getItem('styla_twin_shoulder');
+  let sleeve = localStorage.getItem('styla_twin_sleeve');
+  let thigh = localStorage.getItem('styla_twin_thigh');
+  let neck = localStorage.getItem('styla_twin_neck');
+
   let measurement_overrides = {};
   try {
     const rawOverrides = localStorage.getItem('styla_twin_measurement_overrides');
@@ -1641,7 +1654,7 @@ btnDecode.addEventListener('click', async () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        chest, waist, belly, hips, height, inseam,
+        chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck,
         api_scans,
         measurement_overrides,
         chartImagesBase64: chartBase64Images,

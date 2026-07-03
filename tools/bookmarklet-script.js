@@ -149,64 +149,7 @@
   };
   window.addEventListener('message', messageListener);
 
-  // Advanced Event Forwarding to bypass host page modal backdrops and overlays
-  const forwardEventToContainer = (e) => {
-    if (container.style.display === 'none') return;
-    const rect = container.getBoundingClientRect();
-    if (
-      e.clientX >= rect.left &&
-      e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom
-    ) {
-      if (!container.contains(e.target)) {
-        e.stopPropagation();
-        e.preventDefault();
 
-        // Temporarily disable pointer events on all blocking overlay elements at this coordinate
-        const originalPointerEvents = [];
-        const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
-        for (let i = 0; i < elementsAtPoint.length; i++) {
-          const el = elementsAtPoint[i];
-          if (el !== container && !container.contains(el)) {
-            originalPointerEvents.push({ el, val: el.style.pointerEvents });
-            el.style.pointerEvents = 'none';
-          }
-        }
-
-        // Re-dispatch event at the same coordinate (which will now hit the container/iframe)
-        const newEvent = new MouseEvent(e.type, {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          screenX: e.screenX,
-          screenY: e.screenY,
-          button: e.button,
-          buttons: e.buttons
-        });
-        
-        const targetEl = document.elementFromPoint(e.clientX, e.clientY);
-        if (targetEl) {
-          targetEl.dispatchEvent(newEvent);
-        }
-
-        // Restore original pointer event styles
-        setTimeout(() => {
-          for (let i = 0; i < originalPointerEvents.length; i++) {
-            const item = originalPointerEvents[i];
-            item.el.style.pointerEvents = item.val;
-          }
-        }, 50);
-      }
-    }
-  };
-
-  // Intercept mousedown, mouseup, and click events in capturing phase
-  window.addEventListener('mousedown', forwardEventToContainer, true);
-  window.addEventListener('mouseup', forwardEventToContainer, true);
-  window.addEventListener('click', forwardEventToContainer, true);
 
   // Append iframe to DOM (Starts iframe loading)
   container.appendChild(iframe);

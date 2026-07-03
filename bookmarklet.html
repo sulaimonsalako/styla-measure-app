@@ -10,13 +10,13 @@
   <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg-color: #07070f;
-      --card-bg: rgba(255, 255, 255, 0.03);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --text-main: #ffffff;
-      --text-muted: #94a3b8;
+      --bg-color: #080811;
+      --card-bg: rgba(255, 255, 255, 0.02);
+      --card-border: rgba(255, 255, 255, 0.05);
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
       --accent-pink: #ff2a75;
-      --accent-light: #ff75a0;
+      --accent-light: #ff6095;
       --font-main: 'Inter', sans-serif;
       --font-head: 'Outfit', sans-serif;
     }
@@ -74,64 +74,53 @@
       margin-bottom: 16px;
     }
 
-    .verdict-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .verdict-size {
-      font-family: var(--font-head);
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--accent-pink);
-      margin-bottom: 12px;
-    }
-
-    /* Score Meter */
-    .score-container {
-      display: none !important;
+    /* Verdict Box */
+    .verdict-box {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
       margin-bottom: 16px;
-    }
-    .score-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-    .score-bar-bg {
-      height: 6px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 3px;
+      position: relative;
       overflow: hidden;
     }
-    .score-bar-fill {
+    .verdict-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 100%;
-      background: linear-gradient(to right, var(--accent-pink), var(--accent-light));
-      width: 0%;
-      transition: width 0.5s ease-out;
+      background: radial-gradient(circle at top right, rgba(255, 42, 117, 0.08), transparent 60%);
+      pointer-events: none;
     }
 
+    /* Breakdown list rows */
     .breakdown-item {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
       display: flex;
-      align-items: start;
-      gap: 8px;
-      font-size: 0.88rem;
-      padding: 4px 0;
-      color: #cbd5e1;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .breakdown-item:hover {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.06);
     }
     .breakdown-label {
-      font-weight: 700;
-      color: #ffffff;
-      margin-right: 4px;
+      font-weight: 600;
+      color: #94a3b8;
     }
     .breakdown-val {
-      color: #cbd5e1;
-      line-height: 1.45;
+      text-align: right;
+      color: #fff;
     }
 
     .explanation {
@@ -261,8 +250,14 @@
       font-size: 0.85rem;
       outline: none;
     }
+    .chat-input {
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 0 0 0 rgba(255, 42, 117, 0);
+    }
     .chat-input:focus {
       border-color: var(--accent-pink);
+      box-shadow: 0 0 8px rgba(255, 42, 117, 0.15);
+      background: rgba(255,255,255,0.08);
     }
     .chat-send-btn {
       background: var(--accent-pink);
@@ -297,18 +292,21 @@
     }
     .form-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--card-border);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 10px 12px;
       color: #fff;
       font-size: 0.9rem;
       outline: none;
       box-sizing: border-box;
-      transition: border-color 0.2s;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 0 0 0 rgba(255, 42, 117, 0);
     }
     .form-input:focus {
       border-color: var(--accent-pink);
+      box-shadow: 0 0 8px rgba(255, 42, 117, 0.15);
+      background: rgba(255,255,255,0.07);
     }
     select.form-input {
       appearance: none;
@@ -678,22 +676,19 @@
     </div>
 
     <div id="result-view" style="display: none;">
-      <div class="card" style="padding: 20px 16px; line-height: 1.6; font-size: 0.9rem;">
-        <div style="font-size: 1.25rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <span id="verdict-icon">👔</span> Recommended Size: <span id="size-verdict" style="color: var(--accent-light);">M</span>
+      <!-- Glowing Verdict Box -->
+      <div class="verdict-box">
+        <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+          Recommended Size
         </div>
-        
-        <div class="score-container" style="display: none !important;">
-          <div class="score-header">
-            <span>Fit Match Score</span>
-            <span id="score-val">98%</span>
-          </div>
-          <div class="score-bar-bg">
-            <div class="score-bar-fill" id="score-bar"></div>
-          </div>
+        <div id="size-verdict" style="font-family: var(--font-head); font-size: 3rem; font-weight: 800; color: var(--accent-pink); line-height: 1; margin: 6px 0;">M</div>
+        <div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span id="verdict-icon">👔</span> Fit Profile: <span id="fit-profile-lbl" style="font-weight: 700; color: #fff;">Perfect Fit</span>
         </div>
+      </div>
 
-        <div id="fit-assessment-header" style="font-size: 0.95rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; margin: 16px 0 6px 0;">
+      <div class="card" style="padding: 16px; font-size: 0.9rem; margin-bottom: 16px;">
+        <div id="fit-assessment-header" style="font-size: 0.95rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 6px; margin: 0 0 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">
           <span>🔍</span> Fit Assessment
         </div>
 
@@ -808,6 +803,10 @@
                 safeStorage.setItem('styla_twin_hips', profile.hips || '');
                 safeStorage.setItem('styla_twin_height', profile.height || '');
                 safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+                safeStorage.setItem('styla_twin_shoulder', profile.shoulder || '');
+                safeStorage.setItem('styla_twin_sleeve', profile.sleeve || '');
+                safeStorage.setItem('styla_twin_thigh', profile.thigh || '');
+                safeStorage.setItem('styla_twin_neck', profile.neck || '');
                 safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
                 safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
                 
@@ -1136,6 +1135,10 @@
             safeStorage.setItem('styla_twin_hips', profile.hips || '');
             safeStorage.setItem('styla_twin_height', profile.height || '');
             safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+            safeStorage.setItem('styla_twin_shoulder', profile.shoulder || '');
+            safeStorage.setItem('styla_twin_sleeve', profile.sleeve || '');
+            safeStorage.setItem('styla_twin_thigh', profile.thigh || '');
+            safeStorage.setItem('styla_twin_neck', profile.neck || '');
             safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
             safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
             safeStorage.setItem('styla_twin_logged_in', 'true');
@@ -1375,7 +1378,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chest, waist, belly, hips, height, inseam,
+            chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck,
             api_scans,
             measurement_overrides,
             pageTitle: activeScrapedContext ? activeScrapedContext.pageTitle : "Uploaded Size Chart",
@@ -1470,13 +1473,16 @@
               }
               
               itemDiv.innerHTML = `
-                <span style="color: var(--text-muted);">•</span>
-                <span class="breakdown-label">${displayLabel}:</span>
-                <span class="breakdown-val">${emoji} <strong>${statusText}</strong> (${desc})</span>
+                <span class="breakdown-label">${displayLabel}</span>
+                <span class="breakdown-val">${emoji} <strong>${statusText}</strong> <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;">${desc}</span></span>
               `;
               breakdownBox.appendChild(itemDiv);
             }
           }
+
+          // Set Fit Profile label
+          const fitLbl = document.getElementById('fit-profile-lbl');
+          if (fitLbl) fitLbl.textContent = (data.fit_spectrum ? data.fit_spectrum.charAt(0).toUpperCase() + data.fit_spectrum.slice(1) : 'Perfect') + " Fit";
 
           // Render formatted stylist tip block
           let rawExplanation = data.explanation || '';
@@ -1613,6 +1619,10 @@
       const hips = safeStorage.getItem('styla_twin_hips');
       const height = safeStorage.getItem('styla_twin_height');
       const inseam = safeStorage.getItem('styla_twin_inseam');
+      const shoulder = safeStorage.getItem('styla_twin_shoulder');
+      const sleeve = safeStorage.getItem('styla_twin_sleeve');
+      const thigh = safeStorage.getItem('styla_twin_thigh');
+      const neck = safeStorage.getItem('styla_twin_neck');
 
       if (!chest || !waist || !hips) {
         showSetup();
@@ -1625,7 +1635,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chest, waist, belly, hips, height, inseam,
+            chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck,
             api_scans,
             measurement_overrides,
             pageTitle: activeScrapedContext ? activeScrapedContext.pageTitle : "Unknown Product",
@@ -1725,13 +1735,16 @@
               }
               
               itemDiv.innerHTML = `
-                <span style="color: var(--text-muted);">•</span>
-                <span class="breakdown-label">${displayLabel}:</span>
-                <span class="breakdown-val">${emoji} <strong>${statusText}</strong> (${desc})</span>
+                <span class="breakdown-label">${displayLabel}</span>
+                <span class="breakdown-val">${emoji} <strong>${statusText}</strong> <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;">${desc}</span></span>
               `;
               breakdownBox.appendChild(itemDiv);
             }
           }
+
+          // Set Fit Profile label
+          const fitLbl = document.getElementById('fit-profile-lbl');
+          if (fitLbl) fitLbl.textContent = (data.fit_spectrum ? data.fit_spectrum.charAt(0).toUpperCase() + data.fit_spectrum.slice(1) : 'Perfect') + " Fit";
 
           // Render formatted stylist tip block
           let rawExplanation = data.explanation || '';
@@ -1855,7 +1868,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            chest, waist, belly, hips, height, inseam,
+            chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck,
             api_scans,
             measurement_overrides,
             recommendedSize,
@@ -2180,6 +2193,10 @@
             safeStorage.setItem('styla_twin_hips', profile.hips || '');
             safeStorage.setItem('styla_twin_height', profile.height || '');
             safeStorage.setItem('styla_twin_inseam', profile.inseam || '');
+            safeStorage.setItem('styla_twin_shoulder', profile.shoulder || '');
+            safeStorage.setItem('styla_twin_sleeve', profile.sleeve || '');
+            safeStorage.setItem('styla_twin_thigh', profile.thigh || '');
+            safeStorage.setItem('styla_twin_neck', profile.neck || '');
             safeStorage.setItem('styla_twin_api_scans', JSON.stringify(profile.api_scans || []));
             safeStorage.setItem('styla_twin_measurement_overrides', JSON.stringify(profile.measurement_overrides || {}));
             safeStorage.setItem('styla_twin_logged_in', 'true');

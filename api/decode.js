@@ -24,6 +24,7 @@ export default async function handler(req, res) {
       shoulder,
       sleeve,
       thigh,
+      neck,
       api_scans, 
       measurement_overrides, 
       chartImagesBase64, 
@@ -255,7 +256,7 @@ The JSON must have this exact structure:
         // Resolve local sizing engine recommendation to ensure 100% stable matching rules
         let finalResult = jsonAnswer;
         if (jsonAnswer.size_chart_detected && jsonAnswer.sizes && jsonAnswer.sizes.length > 0) {
-          const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, api_scans, measurement_overrides };
+          const user = { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides };
           const localResult = runSizingEngine(user, jsonAnswer);
           finalResult = {
             ...jsonAnswer,

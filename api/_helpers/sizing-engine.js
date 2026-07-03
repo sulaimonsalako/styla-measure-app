@@ -37,6 +37,7 @@ export function runSizingEngine(user, chart) {
   let userSleeve = parseFloat(user.sleeve || (user.twin && user.twin.sleeve));
   let userInseam = parseFloat(user.inseam || (user.twin && user.twin.inseam));
   let userThigh = parseFloat(user.thigh || (user.twin && user.twin.thigh));
+  let userNeck = parseFloat(user.neck || (user.twin && user.twin.neck));
 
   if (activeScan) {
     userChest = parseFloat(activeScan.volume_params.chest) || userChest;
@@ -49,6 +50,7 @@ export function runSizingEngine(user, chart) {
                  userSleeve;
     userInseam = parseFloat(activeScan.front_params.inseam_from_crotch_to_floor) || parseFloat(activeScan.front_params.inseam) || userInseam;
     userThigh = parseFloat(activeScan.volume_params.thigh) || userThigh;
+    userNeck = parseFloat(activeScan.volume_params.neck) || userNeck;
   }
 
   if (user.measurement_overrides) {
@@ -60,6 +62,7 @@ export function runSizingEngine(user, chart) {
     if (overrides.sleeve) userSleeve = parseFloat(overrides.sleeve);
     if (overrides.inseam) userInseam = parseFloat(overrides.inseam);
     if (overrides.thigh) userThigh = parseFloat(overrides.thigh);
+    if (overrides.neck) userNeck = parseFloat(overrides.neck);
   }
 
   const candidateScores = [];
@@ -84,6 +87,7 @@ export function runSizingEngine(user, chart) {
     let chartSleeve = getVal('sleeve') || getVal('sleeve_length');
     let chartInseam = getVal('inseam');
     let chartThigh = getVal('thigh');
+    let chartNeck = getVal('neck') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
 
     let score = 100;
     const breakdown = {};
@@ -175,7 +179,7 @@ export function runSizingEngine(user, chart) {
           breakdown[label] = `Too loose (Garment is ${physicalEase.toFixed(1)}" larger than your waist)`;
         }
       } else if (label === 'sleeve') {
-        // Sleeve length
+        // Sleeve length (adjusted for standard bent-elbow / mobility wearing ease of 0.5" to 3.0")
         if (physicalEase < 0) {
           fits = false;
           score -= Math.abs(physicalEase) * 8;
@@ -183,17 +187,29 @@ export function runSizingEngine(user, chart) {
         } else if (physicalEase < 0.5) {
           score -= (0.5 - physicalEase) * 4;
           breakdown[label] = `Sleeves snug (Garment sleeve is ${physicalEase.toFixed(1)}" over arm length)`;
-        } else if (physicalEase <= 2.0) {
+        } else if (physicalEase <= 3.0) { // 0.5" to 3.0" ease is ideal for movement/wearing ease
           localSpectrum = 'ideal';
           breakdown[label] = `Sleeves perfect (${physicalEase.toFixed(1)}" mobility allowance)`;
-        } else if (physicalEase <= 4.0) {
-          score -= (physicalEase - 2.0) * 2;
+        } else if (physicalEase <= 4.5) { // 3.0" to 4.5" is relaxed
+          score -= (physicalEase - 3.0) * 2;
           localSpectrum = 'relaxed';
           breakdown[label] = `Sleeves long (${physicalEase.toFixed(1)}" ease)`;
-        } else {
-          score -= (physicalEase - 4.0) * 5;
+        } else { // 4.5"+ is oversized
+          score -= (physicalEase - 4.5) * 5;
           localSpectrum = 'oversized';
           breakdown[label] = `Sleeves very long (${physicalEase.toFixed(1)}" ease)`;
+        }
+      } else if (label === 'neck') {
+        // Neck/Collar (tightness can be worn open/unbuttoned, so fits remains true)
+        if (physicalEase < 0.2) { // less than 0.2" ease is too tight to button comfortably
+          score -= Math.abs(physicalEase - 0.2) * 5; // modest penalty
+          breakdown[label] = `Tight collar (Garment collar is ${chartVal.toFixed(1)}" on a ${userVal.toFixed(1)}" neck)`;
+        } else if (physicalEase <= 1.0) {
+          localSpectrum = 'ideal';
+          breakdown[label] = `Collar perfect (${physicalEase.toFixed(1)}" ease)`;
+        } else {
+          score -= (physicalEase - 1.0) * 1.5;
+          breakdown[label] = `Collar loose (${physicalEase.toFixed(1)}" ease)`;
         }
       } else if (label === 'inseam') {
         // Inseam length
@@ -240,6 +256,7 @@ export function runSizingEngine(user, chart) {
     if (chartSleeve && userSleeve) scoreDimension(userSleeve, chartSleeve, 'sleeve');
     if (chartInseam && userInseam) scoreDimension(userInseam, chartInseam, 'inseam', category === 'bottoms');
     if (chartThigh && userThigh) scoreDimension(userThigh, chartThigh, 'thigh');
+    if (chartNeck && userNeck) scoreDimension(userNeck, chartNeck, 'neck');
 
     score = Math.max(0, Math.min(100, Math.round(score)));
 
@@ -277,6 +294,33 @@ export function runSizingEngine(user, chart) {
       }
       if (key === 'sleeve' && desc.includes("long")) {
         tailoringTips.push(`**Sleeve Length:** Sleeves run slightly long. Shortening hem is straightforward if you prefer showing more cuff.`);
+      }
+      if (key === 'neck' && desc.includes("Tight collar")) {
+        // Find next larger size with fitting collar (neck ease >= 0.2)
+        const currentSizeIdx = sizes.findIndex(s => s.name === bestOption.name);
+        let sizeUpOption = null;
+        if (currentSizeIdx !== -1) {
+          for (let i = currentSizeIdx + 1; i < sizes.length; i++) {
+            const nextSize = sizes[i];
+            const nextNeckVal = nextSize.neck || nextSize.neck_girth || nextSize.neck_girth_relaxed || nextSize.neck_base_girth;
+            if (nextNeckVal) {
+              const nextNeckInches = Array.isArray(nextNeckVal) 
+                ? (parseFloat(nextNeckVal[0]) + parseFloat(nextNeckVal[1])) / 2 
+                : parseFloat(nextNeckVal);
+              
+              if (nextNeckInches - userNeck >= 0.2) {
+                sizeUpOption = { name: nextSize.name, collar: nextNeckInches };
+                break;
+              }
+            }
+          }
+        }
+        
+        if (sizeUpOption) {
+          tailoringTips.push(`**Collar Fit / Sizing Up Advice:** The collar on Size ${bestOption.name} is too tight for your neck. If you require the collar to fit (e.g. to wear a tie), consider sizing up to Size ${sizeUpOption.name} (collar: ${sizeUpOption.collar.toFixed(1)}"). Note that the body of Size ${sizeUpOption.name} will fit significantly looser and may require professional taking-in. If you plan to wear the collar open/unbuttoned, Size ${bestOption.name} is your best fit.`);
+        } else {
+          tailoringTips.push(`**Collar Fit:** The collar is snug for buttoning. If you wear the shirt open/unbuttoned, it will fit your body perfectly.`);
+        }
       }
       if (key === 'inseam' && desc.includes("Long")) {
         tailoringTips.push(`**Pant Length:** Hemming recommended. Shortening pant legs is simple and highly standard.`);
