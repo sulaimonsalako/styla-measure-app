@@ -1716,7 +1716,7 @@ btnDecode.addEventListener('click', async () => {
             let emoji = '✅';
             const lowerDesc = desc.toLowerCase();
             
-            if (lowerDesc.includes('too tight') || lowerDesc.includes('too narrow') || lowerDesc.includes('too short')) {
+            if (lowerDesc.includes('tight') || lowerDesc.includes('narrow') || lowerDesc.includes('short')) {
               statusText = 'Tight';
               emoji = '⚠️';
             } else if (lowerDesc.includes('slim') || lowerDesc.includes('snug')) {
