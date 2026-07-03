@@ -1653,6 +1653,20 @@ btnDecode.addEventListener('click', async () => {
     stopLoader();
 
     if (res.ok) {
+        if (!data.recommended_size) {
+            const warnMsg = data.warning || "No size chart was detected in the uploaded image.";
+            resultBox.innerHTML = `
+              <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); padding: 1.5rem; border-radius: 12px; font-size: 0.95rem; color: #fca5a5; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 12px;">⚠️</div>
+                <strong style="color: #ffffff;">No Size Chart Detected</strong><br><br>
+                ${warnMsg}
+              </div>
+            `;
+            resultBox.style.display = 'block';
+            saveProfileBox.style.display = 'none';
+            return;
+        }
+
         // Dynamically compute display spectrum
         let fitSpectrumName = data.fit_spectrum ? data.fit_spectrum.charAt(0).toUpperCase() + data.fit_spectrum.slice(1) : 'Comfort';
         if (fitSpectrumName.toLowerCase() === 'ideal') fitSpectrumName = 'Perfect';

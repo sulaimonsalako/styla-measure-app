@@ -1656,8 +1656,9 @@
           
           if (!data.recommended_size) {
             document.getElementById('size-verdict').textContent = "Unknown";
+            const warnMsg = data.warning || "No size chart was detected on this product page.";
             document.getElementById('explanation-text').innerHTML = `
-              <strong>No size chart was detected on this product page.</strong><br><br>
+              <strong style="color: #fca5a5;">${warnMsg}</strong><br><br>
               💡 <em>Try clicking the store's "Size Guide" or "Size Chart" button to open it on your screen, then click the button below to re-scan.</em>
               <button id="btn-rescan-page" style="margin-top: 12px; background: var(--accent-pink); color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 0.85rem; cursor: pointer; width: 100%; transition: all 0.2s; box-shadow: 0 4px 12px rgba(255, 42, 117, 0.2);">🔍 Re-Scan Page</button>
             `;

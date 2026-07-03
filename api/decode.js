@@ -89,7 +89,12 @@ ${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
 ${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
 
 Look at the attached size chart image(s) as your primary sizing data.
-Determine the absolute best size for this user.
+CRITICAL RULE: DO NOT use customer reviews, comments, feedback text, dates, or other user post details to extract sizes or sizing measurements. Sizing charts are tables or lists mapping sizes (e.g. S, M, L) to physical body or garment measurements.
+If you cannot find a real size chart (with dimensions like chest, waist, hip, or sleeve length per size) in the attached size chart image(s):
+- You MUST set "size_chart_detected": false
+- You MUST set "recommended_size": null
+- You MUST set "warning": "No size chart was detected in the uploaded image. Please ensure the image contains a clear brand size chart."
+Determine the absolute best size for this user ONLY if a real size chart is detected.
 
 PROFESSIONAL SIZING & APPAREL MATCHING RULES:
 1. IDENTIFY CHART TYPE (CRITICAL):

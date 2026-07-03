@@ -229,7 +229,12 @@ ${tableHtml || 'None'}
 
 YOUR TARGET:
 Check the HTML sizing tables above and the attached images to locate the size chart.
-Determine the absolute best size for this user.
+CRITICAL RULE: DO NOT use customer reviews, comments, feedback text, dates, or other user post details to extract sizes or sizing measurements. Sizing charts are tables or lists mapping sizes (e.g. S, M, L) to physical body or garment measurements.
+If you cannot find a real size chart (with dimensions like chest, waist, hip, or sleeve length per size) in the HTML sizing tables or images:
+- You MUST set "size_chart_detected": false
+- You MUST set "recommended_size": null
+- You MUST set "warning": "I couldn't locate a size chart on this page. If there is a Size Guide or Size Chart button, please click it to open it, then select 'New Page Scan' so I can analyze it."
+Determine the absolute best size for this user ONLY if a real size chart is detected.
 
 PROFESSIONAL SIZING & APPAREL MATCHING RULES:
 1. IDENTIFY CHART TYPE (CRITICAL):
