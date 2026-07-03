@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
+    const { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart } = req.body;
 
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
@@ -162,6 +162,7 @@ Product Info:
 - Title: "${pageTitle || 'Unknown Product'}"
 - Details: ${pageText || 'No description.'}
 - Size Chart Table: ${tableHtml || 'None'}
+${sizeChart ? `- Structured Size Chart Data: ${JSON.stringify(sizeChart.sizes || sizeChart)}` : ''}
 - Recommended Size by STYLA: "${recommendedSize || 'Unknown'}"
 
 User message: ${msgText}`;

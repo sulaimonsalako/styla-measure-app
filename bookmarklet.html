@@ -1218,6 +1218,7 @@
     }
 
     let activeScrapedContext = null;
+    let activeSizeChart = null;
     let chatHistory = [];
     let guestFrontBase64 = null;
     let guestSideBase64 = null;
@@ -1398,6 +1399,7 @@
         if (textInterval) clearInterval(textInterval);
 
         if (res.ok) {
+          activeSizeChart = data;
           resultView.style.display = 'flex';
           const scoreContainer = resultView.querySelector('.score-container');
           const breakdownBox = document.getElementById('breakdown-box');
@@ -1659,6 +1661,7 @@
         if (textInterval) clearInterval(textInterval);
 
         if (res.ok) {
+          activeSizeChart = data;
           resultView.style.display = 'flex';
           const scoreContainer = resultView.querySelector('.score-container');
           const breakdownBox = document.getElementById('breakdown-box');
@@ -1826,6 +1829,7 @@
         // Reset state so it doesn't auto-decode immediately
         wasAlreadyLoggedInOnLoad = false;
         activeScrapedContext = null;
+        activeSizeChart = null;
         
         // Reset chat history and messages list
         chatHistory = [];
@@ -1892,7 +1896,8 @@
             pageText: activeScrapedContext ? activeScrapedContext.pageText : "",
             tableHtml: activeScrapedContext ? activeScrapedContext.tableHtml : "",
             imagesBase64: [],
-            history: chatHistory
+            history: chatHistory,
+            sizeChart: activeSizeChart
           })
         });
 
