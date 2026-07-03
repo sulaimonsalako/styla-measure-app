@@ -1423,8 +1423,10 @@
 
           if (scoreContainer) scoreContainer.style.display = 'none';
           document.getElementById('size-verdict').textContent = data.recommended_size;
-          document.getElementById('score-val').textContent = `${data.fit_match_score}%`;
-          document.getElementById('score-bar').style.width = `${data.fit_match_score}%`;
+          const scoreValEl = document.getElementById('score-val');
+          if (scoreValEl) scoreValEl.textContent = `${data.fit_match_score}%`;
+          const scoreBarEl = document.getElementById('score-bar');
+          if (scoreBarEl) scoreBarEl.style.width = `${data.fit_match_score}%`;
 
           // Set verdict category icon dynamically
           const categoryIconMap = {
@@ -1687,8 +1689,10 @@
 
           if (scoreContainer) scoreContainer.style.display = 'none';
           document.getElementById('size-verdict').textContent = data.recommended_size;
-          document.getElementById('score-val').textContent = `${data.fit_match_score}%`;
-          document.getElementById('score-bar').style.width = `${data.fit_match_score}%`;
+          const scoreValEl = document.getElementById('score-val');
+          if (scoreValEl) scoreValEl.textContent = `${data.fit_match_score}%`;
+          const scoreBarEl = document.getElementById('score-bar');
+          if (scoreBarEl) scoreBarEl.style.width = `${data.fit_match_score}%`;
 
           // Set verdict category icon dynamically
           const categoryIconMap = {
