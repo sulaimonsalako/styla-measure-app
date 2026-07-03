@@ -2119,6 +2119,35 @@
         });
       }
 
+      // Allow Enter key to trigger form submission
+      const authInputIds = [
+        'login-email',
+        'login-password',
+        'signup-email',
+        'signup-password',
+        'signup-confirm-password'
+      ];
+      authInputIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const loginSection = document.getElementById('auth-login-section');
+              const signupSection = document.getElementById('auth-signup-section');
+              
+              if (loginSection && loginSection.style.display !== 'none') {
+                const btn = document.getElementById('btn-login-submit');
+                if (btn) btn.click();
+              } else if (signupSection && signupSection.style.display !== 'none') {
+                const btn = document.getElementById('btn-signup-submit');
+                if (btn) btn.click();
+              }
+            }
+          });
+        }
+      });
+
       // Login Submit
       const btnLoginSubmit = document.getElementById('btn-login-submit');
       if (btnLoginSubmit) {

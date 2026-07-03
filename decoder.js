@@ -1905,6 +1905,36 @@ const btnResetSubmit = document.getElementById('btn-reset-submit');
 const linkForgotPassword = document.getElementById('link-forgot-password');
 const linkBackLogin = document.getElementById('link-back-login');
 
+// Allow Enter key to trigger form submission in Auth Modal
+const authInputs = [
+  'login-email',
+  'login-password',
+  'login-confirm-password'
+];
+
+authInputs.forEach(id => {
+  const input = document.getElementById(id);
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Find the active submit button that is currently visible
+        const activeSubmitBtn = [
+          'btn-login-submit',
+          'btn-signup-submit',
+          'btn-forgot-submit',
+          'btn-reset-submit'
+        ].map(btnId => document.getElementById(btnId))
+         .find(btn => btn && btn.offsetParent !== null);
+         
+        if (activeSubmitBtn) {
+          activeSubmitBtn.click();
+        }
+      }
+    });
+  }
+});
+
 function switchToLogin() {
     if (authTabsContainer) authTabsContainer.style.display = 'flex';
     if (authModalTitle) authModalTitle.textContent = "Welcome Back";
