@@ -179,6 +179,7 @@ export default async function handler(req, res) {
     let pShoulder = shoulder;
     let pSleeve = sleeve;
     let pThigh = thigh;
+    let pNeck = neck;
 
     if (activeScan) {
       pChest = activeScan.volume_params.chest || pChest;
@@ -191,6 +192,7 @@ export default async function handler(req, res) {
                    pSleeve;
       pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
       pThigh = activeScan.volume_params.thigh || pThigh;
+      pNeck = activeScan.volume_params.neck || pNeck;
     }
 
     if (measurement_overrides) {
@@ -201,6 +203,7 @@ export default async function handler(req, res) {
       if (measurement_overrides.sleeve) pSleeve = measurement_overrides.sleeve;
       if (measurement_overrides.inseam) pInseam = measurement_overrides.inseam;
       if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
+      if (measurement_overrides.neck) pNeck = measurement_overrides.neck;
     }
 
     const prompt = `You are an expert fashion tailor and sizing assistant for STYLA.
@@ -214,6 +217,7 @@ ${pInseam ? `- Inseam: ${pInseam}"` : ''}
 ${pShoulder ? `- Shoulder Width: ${pShoulder}"` : ''}
 ${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
 ${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
+${pNeck ? `- Neck / Collar: ${pNeck}"` : ''}
 
 We are analyzing a product page for a garment:
 Product Title: "${pageTitle || 'Unknown Product'}"

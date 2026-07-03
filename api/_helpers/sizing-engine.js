@@ -87,7 +87,7 @@ export function runSizingEngine(user, chart) {
     let chartSleeve = getVal('sleeve') || getVal('sleeve_length');
     let chartInseam = getVal('inseam');
     let chartThigh = getVal('thigh');
-    let chartNeck = getVal('neck') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
+    let chartNeck = getVal('neck') || getVal('collar') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
 
     let score = 100;
     const breakdown = {};
@@ -302,7 +302,7 @@ export function runSizingEngine(user, chart) {
         if (currentSizeIdx !== -1) {
           for (let i = currentSizeIdx + 1; i < sizes.length; i++) {
             const nextSize = sizes[i];
-            const nextNeckVal = nextSize.neck || nextSize.neck_girth || nextSize.neck_girth_relaxed || nextSize.neck_base_girth;
+            const nextNeckVal = nextSize.neck || nextSize.collar || nextSize.neck_girth || nextSize.neck_girth_relaxed || nextSize.neck_base_girth;
             if (nextNeckVal) {
               const nextNeckInches = Array.isArray(nextNeckVal) 
                 ? (parseFloat(nextNeckVal[0]) + parseFloat(nextNeckVal[1])) / 2 
