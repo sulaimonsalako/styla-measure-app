@@ -23,6 +23,20 @@
     return;
   }
 
+  const cleanTableHtml = (rawHtml) => {
+    if (!rawHtml) return '';
+    return rawHtml
+      .replace(/class="[^"]*"/gi, '')
+      .replace(/style="[^"]*"/gi, '')
+      .replace(/id="[^"]*"/gi, '')
+      .replace(/data-[a-zA-Z0-9-]*="[^"]*"/gi, '')
+      .replace(/aria-[a-zA-Z0-9-]*="[^"]*"/gi, '')
+      .replace(/<svg[^>]*>([\s\S]*?)<\/svg>/gi, '')
+      .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   // 1. Scrape data
   const pageTitle = document.title || document.querySelector('h1')?.innerText || 'Product Page';
   const url = window.location.href;
@@ -31,14 +45,14 @@
   let pageText = '';
   const descEl = document.querySelector('.product-description, #description, [class*="description"], [id*="description"]');
   if (descEl) pageText = descEl.innerText;
-  else pageText = document.body.innerText.substring(0, 3000);
+  else pageText = document.body.innerText.substring(0, 1000);
 
   // Extract tables containing sizing info
   let tableHtml = '';
   const tables = Array.from(document.querySelectorAll('table'));
   const sizeTables = tables.filter(t => /size|chart|measure|guide|fit/i.test(t.innerText));
   if (sizeTables.length > 0) {
-    tableHtml = sizeTables[0].outerHTML;
+    tableHtml = cleanTableHtml(sizeTables[0].outerHTML);
   }
 
   // Create UI overlay container
@@ -107,13 +121,13 @@
         let freshText = '';
         const freshDesc = document.querySelector('.product-description, #description, [class*="description"], [id*="description"]');
         if (freshDesc) freshText = freshDesc.innerText;
-        else freshText = document.body.innerText.substring(0, 3000);
+        else freshText = document.body.innerText.substring(0, 1000);
 
         let freshTableHtml = '';
         const freshTables = Array.from(document.querySelectorAll('table'));
         const freshSizeTables = freshTables.filter(t => /size|chart|measure|guide|fit/i.test(t.innerText));
         if (freshSizeTables.length > 0) {
-          freshTableHtml = freshSizeTables[0].outerHTML;
+          freshTableHtml = cleanTableHtml(freshSizeTables[0].outerHTML);
         }
 
         iframe.contentWindow.postMessage({
