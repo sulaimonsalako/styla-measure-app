@@ -312,7 +312,11 @@ The JSON must have this exact structure:
       "waist": 30.0,
       "hips": 38.0,
       "belly": 32.0, // optional
-      "inseam": 30.0 // optional
+      "inseam": 30.0, // optional
+      "neck": 15.0, // optional (collar/neck girth, extract if present in chart)
+      "shoulder": 17.5, // optional (across back shoulder width, extract if present in chart)
+      "sleeve": 33.0, // optional (sleeve length, extract if present)
+      "thigh": 22.0 // optional (thigh girth, extract if present)
     },
     {
       "name": "M",

@@ -1288,7 +1288,7 @@
     // Notify parent window that widget is ready to receive scraped data
     window.parent.postMessage({ type: 'STYLA_WIDGET_READY' }, '*');
 
-    function compressFileImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+    function compressFileImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -1385,11 +1385,11 @@
             chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck,
             api_scans,
             measurement_overrides,
-            pageTitle: activeScrapedContext ? activeScrapedContext.pageTitle : "Uploaded Size Chart",
-            pageText: activeScrapedContext ? activeScrapedContext.pageText : "",
+            pageTitle: "Uploaded Size Chart",
+            pageText: "",
             tableHtml: "",
             imagesBase64: [base64Image],
-            url: activeScrapedContext ? activeScrapedContext.url : window.location.href
+            url: window.location.href
           })
         });
 
