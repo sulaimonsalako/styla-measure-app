@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
+import { sendScanCompleteEmail } from '../_helpers/email-helper.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -248,9 +249,11 @@ export default async function handler(req, res) {
       // B. Update store_profiles table (queried by e-commerce storefront app.js)
       const { data: existingStoreProf } = await supabase
         .from('store_profiles')
-        .select('api_scans')
+        .select('api_scans, password')
         .eq('username', cleanedUsername)
         .maybeSingle();
+
+      const portalUrl = `https://${req.headers.host || 'styla-measure.vercel.app'}`;
 
       if (existingStoreProf) {
         const existingScans = existingStoreProf.api_scans || [];
@@ -269,6 +272,9 @@ export default async function handler(req, res) {
           console.error("Error updating store_profiles:", storeError);
         } else {
           console.log(`Saved measurements for ${cleanedUsername} in store_profiles table via webhook.`);
+          if (existingStoreProf.password === 'temp_guest_placeholder') {
+            await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
+          }
         }
       } else {
         // Insert guest profile placeholder
@@ -286,6 +292,7 @@ export default async function handler(req, res) {
           console.error("Error inserting guest store_profile:", insertError);
         } else {
           console.log(`Created guest store_profile for ${cleanedUsername} in store_profiles via webhook.`);
+          await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
         }
       }
     } else {
@@ -297,6 +304,7 @@ export default async function handler(req, res) {
         p.username.toLowerCase() === cleanedUsername || 
         (p.email && p.email.toLowerCase() === cleanedUsername)
       );
+      const portalUrl = `https://${req.headers.host || 'styla-measure.vercel.app'}`;
       if (!profile) {
         // Create a guest placeholder profile in profiles.json
         profile = {
@@ -309,6 +317,7 @@ export default async function handler(req, res) {
         };
         profiles.push(profile);
         console.log(`Created guest profile for ${cleanedUsername} in profiles.json via webhook.`);
+        await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
       } else {
         const existingScans = profile.api_scans || [];
         existingScans.forEach(s => s.is_active = false);
@@ -317,6 +326,9 @@ export default async function handler(req, res) {
         profile.twin = legacyTwin;
         profile.api_scans = existingScans;
         console.log(`Saved measurements for ${cleanedUsername} in profiles.json via webhook.`);
+        if (profile.password === 'temp_guest_placeholder') {
+          await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
+        }
       }
 
       fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));

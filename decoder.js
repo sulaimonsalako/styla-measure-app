@@ -2831,6 +2831,19 @@ window.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                     } else {
+                        // Create a guest placeholder record so we can track and follow up if they abandon or complete the scan
+                        supabase.from('store_profiles').upsert({
+                            username: email.toLowerCase(),
+                            password: 'temp_guest_placeholder',
+                            twin: null,
+                            api_scans: [],
+                            manual_measurements: {},
+                            measurement_overrides: {}
+                        }, { onConflict: 'username', ignoreDuplicates: true }).then(({ error: insertError }) => {
+                            if (insertError) console.warn("Failed to insert guest scan placeholder:", insertError);
+                            else console.log("Registered guest scan email placeholder for:", email);
+                        });
+
                         if (scanEmailError) scanEmailError.style.display = 'none';
                         widgetContainer.style.pointerEvents = 'auto';
                         widgetContainer.style.opacity = '1';

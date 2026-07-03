@@ -199,3 +199,163 @@ STYLA Logistics Team`;
     return { success: true, logged: true };
   }
 }
+
+export async function sendScanCompleteEmail(email, twin, portalUrl) {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || user || 'no-reply@styla.ca';
+
+  const subject = `Styla Sizing Scan Complete! 🌟 Complete your registration`;
+  
+  // Format core measurements for the email
+  const chestText = twin.chest ? `${twin.chest}"` : 'N/A';
+  const waistText = twin.waist ? `${twin.waist}"` : 'N/A';
+  const hipsText = twin.hips ? `${twin.hips}"` : 'N/A';
+  const heightText = twin.height ? `${twin.height}"` : 'N/A';
+
+  const textContent = `Hi there,
+
+Your AI sizing scan is complete! 🌟
+
+We've successfully processed your scan and calculated your measurements:
+- Chest: ${chestText}
+- Waist: ${waistText}
+- Hips: ${hipsText}
+- Height: ${heightText}
+
+To access your Styla dashboard, view all 80+ AI measurements, use the sizing widget on any online store, or share your measurements with a tailor, please complete your registration by setting a password:
+
+${portalUrl}/index.html?action=signup&email=${encodeURIComponent(email)}
+
+Best regards,
+The Styla Team`;
+
+  console.log(`[SCAN COMPLETE EMAIL PENDING] Sending confirmation to ${email}...`);
+
+  if (host && user && pass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass }
+      });
+
+      const info = await transporter.sendMail({
+        from,
+        to: email,
+        subject,
+        text: textContent
+      });
+
+      console.log(`[SCAN COMPLETE EMAIL SENT] Success: Message ID ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (err) {
+      console.error("[SCAN COMPLETE EMAIL ERROR] SMTP failed:", err.message);
+    }
+  }
+
+  // Fallback to Ethereal mock
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Styla Sandbox" <${testAccount.user}>`,
+      to: email,
+      subject: `[SANDBOX] ${subject}`,
+      text: textContent
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    console.log(`[SCAN COMPLETE EMAIL MOCK] Ethereal Success! Preview: ${previewUrl}`);
+    return { success: true, previewUrl };
+  } catch (ethErr) {
+    console.error("[SCAN COMPLETE EMAIL MOCK ERROR] Ethereal failed:", ethErr.message);
+    return { success: true, logged: true };
+  }
+}
+
+export async function sendScanAbandonedEmail(email, portalUrl) {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || user || 'no-reply@styla.ca';
+
+  const subject = `Finish your Styla 3D body scan ⚡`;
+  const textContent = `Hi there,
+
+It looks like you started setting up your Styla profile but didn't complete your 3D body scan.
+
+With Styla, you can scan in just 30 seconds using your phone camera to instantly find your size on any online store, export your measurements, or share them with a tailor.
+
+Click here to complete your scan and get your sizing profile:
+${portalUrl}/index.html?email=${encodeURIComponent(email)}
+
+Best regards,
+The Styla Team`;
+
+  console.log(`[SCAN ABANDONED EMAIL PENDING] Sending reminder to ${email}...`);
+
+  if (host && user && pass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass }
+      });
+
+      const info = await transporter.sendMail({
+        from,
+        to: email,
+        subject,
+        text: textContent
+      });
+
+      console.log(`[SCAN ABANDONED EMAIL SENT] Success: Message ID ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (err) {
+      console.error("[SCAN ABANDONED EMAIL ERROR] SMTP failed:", err.message);
+    }
+  }
+
+  // Fallback to Ethereal mock
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass
+      }
+    });
+
+    const info = await transporter.sendMail({
+      from: `"Styla Sandbox" <${testAccount.user}>`,
+      to: email,
+      subject: `[SANDBOX] ${subject}`,
+      text: textContent
+    });
+
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    console.log(`[SCAN ABANDONED EMAIL MOCK] Ethereal Success! Preview: ${previewUrl}`);
+    return { success: true, previewUrl };
+  } catch (ethErr) {
+    console.error("[SCAN ABANDONED EMAIL MOCK ERROR] Ethereal failed:", ethErr.message);
+    return { success: true, logged: true };
+  }
+}
