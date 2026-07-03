@@ -1857,6 +1857,10 @@
       const hips = safeStorage.getItem('styla_twin_hips');
       const height = safeStorage.getItem('styla_twin_height');
       const inseam = safeStorage.getItem('styla_twin_inseam');
+      const shoulder = safeStorage.getItem('styla_twin_shoulder');
+      const sleeve = safeStorage.getItem('styla_twin_sleeve');
+      const thigh = safeStorage.getItem('styla_twin_thigh');
+      const neck = safeStorage.getItem('styla_twin_neck');
 
       chatHistory.push({ role: 'user', text: text });
 
@@ -1903,7 +1907,7 @@
         }
       } catch (err) {
         chatMessages.removeChild(loadingBubble);
-        appendBubble("Network error: Could not reach chat server.", 'assistant');
+        appendBubble("Network error: Could not reach chat server (" + err.message + ").", 'assistant');
         console.error(err);
       }
     }

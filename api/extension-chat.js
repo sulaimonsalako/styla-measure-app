@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
+    const { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history } = req.body;
 
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
@@ -30,9 +30,10 @@ export default async function handler(req, res) {
     let pHips = hips;
     let pHeight = height;
     let pInseam = inseam;
-    let pShoulder = null;
-    let pSleeve = null;
-    let pThigh = null;
+    let pShoulder = shoulder;
+    let pSleeve = sleeve;
+    let pThigh = thigh;
+    let pNeck = neck;
 
     if (activeScan) {
       pChest = activeScan.volume_params.chest || pChest;
@@ -40,9 +41,12 @@ export default async function handler(req, res) {
       pBelly = activeScan.volume_params.abdomen || activeScan.volume_params.waist || pBelly;
       pHips = activeScan.volume_params.low_hips || pHips;
       pShoulder = activeScan.front_params.shoulders || pShoulder;
-      pSleeve = activeScan.front_params.back_neck_point_to_wrist_length || activeScan.front_params.sleeve_length || pSleeve;
+      pSleeve = activeScan.front_params.back_neck_point_to_wrist_length || 
+                   (activeScan.front_params.sleeve_length ? (activeScan.front_params.sleeve_length + (activeScan.front_params.shoulders || 0) / 2) : null) || 
+                   pSleeve;
       pInseam = activeScan.front_params.inseam_from_crotch_to_floor || activeScan.front_params.inseam || pInseam;
       pThigh = activeScan.volume_params.thigh || pThigh;
+      pNeck = activeScan.volume_params.neck || pNeck;
     }
 
     if (measurement_overrides) {
@@ -53,6 +57,7 @@ export default async function handler(req, res) {
       if (measurement_overrides.sleeve) pSleeve = measurement_overrides.sleeve;
       if (measurement_overrides.inseam) pInseam = measurement_overrides.inseam;
       if (measurement_overrides.thigh) pThigh = measurement_overrides.thigh;
+      if (measurement_overrides.neck) pNeck = measurement_overrides.neck;
     }
 
     const systemPrompt = `You are an expert fashion tailor and sizing/styling assistant for STYLA.
@@ -66,6 +71,7 @@ ${pInseam ? `- Inseam: ${pInseam}"` : ''}
 ${pShoulder ? `- Across Back Shoulder Width: ${pShoulder}"` : ''}
 ${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
 ${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
+${pNeck ? `- Neck / Collar: ${pNeck}"` : ''}
 
 We are analyzing a product page for a garment:
 Product Title: "${pageTitle || 'Unknown Product'}"
@@ -147,6 +153,10 @@ CRITICAL RULES:
 - Hips: ${pHips}"
 ${pHeight ? `- Height: ${pHeight}"` : ''}
 ${pInseam ? `- Inseam: ${pInseam}"` : ''}
+${pShoulder ? `- Shoulder Width: ${pShoulder}"` : ''}
+${pSleeve ? `- Sleeve Length: ${pSleeve}"` : ''}
+${pThigh ? `- Thigh Girth: ${pThigh}"` : ''}
+${pNeck ? `- Neck / Collar: ${pNeck}"` : ''}
 
 Product Info:
 - Title: "${pageTitle || 'Unknown Product'}"
