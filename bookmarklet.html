@@ -1360,6 +1360,10 @@
       const hips = safeStorage.getItem('styla_twin_hips');
       const height = safeStorage.getItem('styla_twin_height');
       const inseam = safeStorage.getItem('styla_twin_inseam');
+      const shoulder = safeStorage.getItem('styla_twin_shoulder');
+      const sleeve = safeStorage.getItem('styla_twin_sleeve');
+      const thigh = safeStorage.getItem('styla_twin_thigh');
+      const neck = safeStorage.getItem('styla_twin_neck');
 
       let api_scans = [];
       try {
@@ -1409,7 +1413,9 @@
           
           if (!data.recommended_size) {
             document.getElementById('size-verdict').textContent = "Unknown";
-            document.getElementById('explanation-text').textContent = "No size chart was detected on this uploaded image.";
+            const fitLbl = document.getElementById('fit-profile-lbl');
+            if (fitLbl) fitLbl.textContent = "N/A";
+            document.getElementById('explanation-text').textContent = data.warning || "No size chart was detected on this uploaded image.";
             if (scoreContainer) scoreContainer.style.display = 'none';
             if (breakdownBox) breakdownBox.innerHTML = '';
             return;
@@ -1666,6 +1672,8 @@
           
           if (!data.recommended_size) {
             document.getElementById('size-verdict').textContent = "Unknown";
+            const fitLbl = document.getElementById('fit-profile-lbl');
+            if (fitLbl) fitLbl.textContent = "N/A";
             const warnMsg = data.warning || "No size chart was detected on this product page.";
             document.getElementById('explanation-text').innerHTML = `
               <strong style="color: #fca5a5;">${warnMsg}</strong><br><br>
