@@ -1536,7 +1536,7 @@
       } catch (err) {
         loader.style.display = 'none';
         if (textInterval) clearInterval(textInterval);
-        alert("Network Error: Could not connect to Styla server.");
+        alert("Network Error: Could not connect to Styla server (" + err.message + ").");
         showSetup();
         console.error(err);
       }
@@ -1800,7 +1800,7 @@
       } catch (err) {
         loader.style.display = 'none';
         if (textInterval) clearInterval(textInterval);
-        alert("Network Error: Could not connect to Styla server.");
+        alert("Network Error: Could not connect to Styla server (" + err.message + ").");
         showSetup();
         console.error(err);
       }

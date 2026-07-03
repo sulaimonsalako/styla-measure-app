@@ -1817,7 +1817,7 @@ btnDecode.addEventListener('click', async () => {
 
   } catch (err) {
     stopLoader();
-    alert("Network error occurred.");
+    alert("Network error occurred (" + err.message + ").");
     console.error(err);
   }
 });
