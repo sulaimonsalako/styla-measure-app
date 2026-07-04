@@ -1,3 +1,82 @@
+// Poll database for webhook scan results (with loading text updates)
+function pollForScanResults(email, isGuest, userId) {
+  const statusText = document.getElementById('loader-status');
+  const loaderEl = document.getElementById('loader');
+  
+  if (loaderEl) {
+    loaderEl.style.display = 'flex';
+    if (statusText) {
+      statusText.textContent = "Processing scan... Calculating your 80+ measurements (takes about 15-30s)...";
+    }
+  }
+  
+  const startTime = Date.now();
+  const timeoutMs = 60000; // 60 seconds timeout
+  const intervalMs = 3000;  // Poll every 3 seconds
+  
+  const intervalId = setInterval(async () => {
+    if (Date.now() - startTime > timeoutMs) {
+      clearInterval(intervalId);
+      if (loaderEl) loaderEl.style.display = 'none';
+      alert("Processing is taking longer than expected. Your profile will update automatically in the background shortly.");
+      return;
+    }
+    
+    try {
+      if (!window.supabase) return;
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      if (isGuest) {
+        // Poll store_profiles for guest
+        const { data, error } = await supabase
+          .from('store_profiles')
+          .select('twin, api_scans')
+          .eq('username', email.toLowerCase())
+          .maybeSingle();
+          
+        if (data && data.twin) {
+          clearInterval(intervalId);
+          if (loaderEl) loaderEl.style.display = 'none';
+          
+          // Open signup modal and pre-fill measurements
+          const loginEmailInput = document.getElementById('login-email');
+          if (loginEmailInput) loginEmailInput.value = email;
+          const authEmailInput = document.getElementById('auth-email');
+          if (authEmailInput) authEmailInput.value = email;
+          
+          const loginModal = document.getElementById('login-modal');
+          if (loginModal) {
+            loginModal.style.display = 'flex';
+            if (typeof switchToSignup === 'function') switchToSignup();
+            const modalDesc = document.getElementById('auth-modal-desc');
+            if (modalDesc) {
+              modalDesc.innerHTML = `<span style="color: #34d399; font-weight: 700;">✓ Scan Successful!</span> Set a password below to securely save your measurements to your cloud profile.`;
+            }
+          }
+        }
+      } else {
+        // Poll profiles for logged-in user
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (profile && profile.chest) {
+          clearInterval(intervalId);
+          if (loaderEl) loaderEl.style.display = 'none';
+          
+          // Re-render UI with new measurements
+          onUserLoggedIn({ email, id: userId }, profile);
+          alert("Success! Your 3D scan measurements have been successfully calculated and synced to your profile.");
+        }
+      }
+    } catch (err) {
+      console.warn("Error while polling for scan results:", err);
+    }
+  }, intervalMs);
+}
+
 // Initialize 3DLook Mobile Tailor Widget Options
 function init3DLookWidget(email) {
   const existing = document.getElementById('saia-mtm-integration');
@@ -7,45 +86,29 @@ function init3DLookWidget(email) {
   if (container) container.innerHTML = '';
   
   window.MTM_WIDGET_OPTIONS = {
+    clientId: email.toLowerCase(),
+    externalId: email.toLowerCase(),
+    client_id: email.toLowerCase(),
+    external_id: email.toLowerCase(),
+    userId: email.toLowerCase(),
+    user_id: email.toLowerCase(),
     defaultValues: { email: email.toLowerCase() },
     onMeasurementsReady: (m) => {
-      console.log("Measurements complete:", m);
+      console.log("Measurements complete callback triggered. Starting poll...");
       
-      const scanEmailVal = document.getElementById('scan-email').value;
-      if (scanEmailVal) {
-        const loginEmailInput = document.getElementById('login-email');
-        if (loginEmailInput) loginEmailInput.value = scanEmailVal;
-        const authEmailInput = document.getElementById('auth-email');
-        if (authEmailInput) authEmailInput.value = scanEmailVal;
-      }
-      
-      const loginModal = document.getElementById('login-modal');
-      if (loginModal) {
-        loginModal.style.display = 'flex';
-        if (typeof switchToSignup === 'function') {
-          switchToSignup();
-        }
-        
-        const modalDesc = document.getElementById('auth-modal-desc');
-        if (modalDesc) {
-          modalDesc.innerHTML = `<span style="color: #34d399; font-weight: 700;">✓ Scan Successful!</span> Set a password below to securely save your measurements to your cloud profile.`;
-        }
-      }
-      
-      setTimeout(async () => {
-        if (window.supabase) {
-          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          const { data: { session } } = await supabase.auth.getSession();
+      if (window.supabase) {
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
-            try {
-              const profile = await getOrCreateProfile(supabase, session.user);
-              onUserLoggedIn(session.user, profile);
-            } catch (err) {
-              console.error("Failed to get or create profile on init:", err);
-            }
+            // Logged-in user
+            pollForScanResults(session.user.email, false, session.user.id);
+          } else {
+            // Guest user
+            const scanEmailVal = document.getElementById('scan-email').value || email;
+            pollForScanResults(scanEmailVal, true, null);
           }
-        }
-      }, 3000);
+        });
+      }
     }
   };
 
@@ -55,6 +118,11 @@ function init3DLookWidget(email) {
   script.src = 'https://mtm-widget.3dlook.me/integration.js';
   script.setAttribute('data-public-key', 'MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E');
   script.setAttribute('data-button-title', 'Start AI Sizing Scan');
+  
+  // Set all possible user identifiers on script tag attributes for 3DLook
+  script.setAttribute('data-client-id', email.toLowerCase());
+  script.setAttribute('data-external-id', email.toLowerCase());
+  script.setAttribute('data-user-id', email.toLowerCase());
   
   if (container) {
     container.appendChild(script);
@@ -585,6 +653,10 @@ async function syncStoreScansToPortal(user, profile) {
           profile.inseam = inseam;
           profile.shoulder = shoulder;
           profile.sleeve = sleeve;
+          profile.neck = neck;
+          profile.thigh = thigh;
+          profile.bicep = bicep;
+          profile.wrist = wrist;
           profile.api_scans = mergedScans;
         }
       }
@@ -1459,6 +1531,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (modal) {
           modal.style.display = 'flex';
           switchToSignup();
+          
+          const emailParam = urlParams.get('email');
+          if (emailParam) {
+              const loginEmailInput = document.getElementById('login-email');
+              if (loginEmailInput) loginEmailInput.value = emailParam;
+              const authEmailInput = document.getElementById('auth-email');
+              if (authEmailInput) authEmailInput.value = emailParam;
+          }
       }
   } else if (action === 'reset') {
       const modal = document.getElementById('login-modal');

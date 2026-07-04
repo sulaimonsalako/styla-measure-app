@@ -234,6 +234,12 @@ export default async function handler(req, res) {
             hips: legacyTwin.hips,
             height: legacyTwin.height,
             inseam: legacyTwin.inseam,
+            shoulder: legacyTwin.shoulder,
+            sleeve: legacyTwin.sleeve,
+            neck: legacyTwin.neck,
+            thigh: legacyTwin.thigh,
+            bicep: legacyTwin.bicep,
+            wrist: legacyTwin.wrist,
             api_scans: existingScans,
             updated_at: new Date().toISOString()
           })
