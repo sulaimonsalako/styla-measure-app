@@ -1056,7 +1056,16 @@
           </div>
           <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0; margin-bottom: 2rem;">These measurements are used to recommend your best size on retail stores via the Styla Bookmarklet.</p>
           
-          <div id="db-measurements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <!-- Welcome/Activate Banner for new users -->
+          <div id="new-user-welcome-banner" style="display: none; background: rgba(59, 130, 246, 0.08); border: 1px dashed rgba(59, 130, 246, 0.3); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); margin-bottom: 2rem; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h4 style="margin: 0 0 4px 0; color: #fff; font-size: 1.05rem; font-family: var(--font-outfit);">🚀 Complete Your Fit Profile</h4>
+              <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.45;">Please take your first 3D body scan to automatically calculate your 80+ measurements and unlock personal sizing recommendations.</p>
+            </div>
+            <button id="btn-banner-start-scan" class="btn-run" style="margin: 0; background: var(--success-gradient); padding: 10px 20px; font-size: 0.85rem; font-weight: 700; width: auto; border-radius: 8px;">Start 3D Scan</button>
+          </div>
+
+                    <div id="db-measurements-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
              <!-- Populated dynamically via JS -->
           </div>
           
@@ -1403,7 +1412,7 @@
   </style>
 
   <script src="decoder.js?v=20260621"></script>
-  <script id="saia-mtm-integration" async src="https://mtm-widget.3dlook.me/integration.js" data-public-key="MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E" data-button-title="Start AI Sizing Scan"></script>
+  
   <script>
     // Visual Measure Guide Modal Closer helper
     function closeMeasureModal(e) {

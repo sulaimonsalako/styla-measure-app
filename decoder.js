@@ -1,49 +1,67 @@
 // Initialize 3DLook Mobile Tailor Widget Options
-window.MTM_WIDGET_OPTIONS = {
-  defaultValues: { email: 'guest@styla.ca' },
-  onMeasurementsReady: (m) => {
-    console.log("Measurements complete:", m);
-    
-    // Pre-fill signup email input in login modal
-    const scanEmailVal = document.getElementById('scan-email').value;
-    if (scanEmailVal) {
-      const loginEmailInput = document.getElementById('login-email');
-      if (loginEmailInput) loginEmailInput.value = scanEmailVal;
-      const authEmailInput = document.getElementById('auth-email');
-      if (authEmailInput) authEmailInput.value = scanEmailVal;
-    }
-    
-    // Open signup/auth modal to choose a password
-    const loginModal = document.getElementById('login-modal');
-    if (loginModal) {
-      loginModal.style.display = 'flex';
-      if (typeof switchToSignup === 'function') {
-        switchToSignup();
+function init3DLookWidget(email) {
+  const existing = document.getElementById('saia-mtm-integration');
+  if (existing) existing.remove();
+  
+  const container = document.querySelector('.saia-widget-container');
+  if (container) container.innerHTML = '';
+  
+  window.MTM_WIDGET_OPTIONS = {
+    defaultValues: { email: email.toLowerCase() },
+    onMeasurementsReady: (m) => {
+      console.log("Measurements complete:", m);
+      
+      const scanEmailVal = document.getElementById('scan-email').value;
+      if (scanEmailVal) {
+        const loginEmailInput = document.getElementById('login-email');
+        if (loginEmailInput) loginEmailInput.value = scanEmailVal;
+        const authEmailInput = document.getElementById('auth-email');
+        if (authEmailInput) authEmailInput.value = scanEmailVal;
       }
       
-      const modalDesc = document.getElementById('auth-modal-desc');
-      if (modalDesc) {
-        modalDesc.innerHTML = `<span style="color: #34d399; font-weight: 700;">✓ Scan Successful!</span> Set a password below to securely save your measurements to your cloud profile.`;
-      }
-    }
-    
-    // Refresh profile state after a short delay for webhook execution
-    setTimeout(async () => {
-      if (window.supabase) {
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          try {
-            const profile = await getOrCreateProfile(supabase, session.user);
-            onUserLoggedIn(session.user, profile);
-          } catch (err) {
-            console.error("Failed to get or create profile on init:", err);
-          }
+      const loginModal = document.getElementById('login-modal');
+      if (loginModal) {
+        loginModal.style.display = 'flex';
+        if (typeof switchToSignup === 'function') {
+          switchToSignup();
+        }
+        
+        const modalDesc = document.getElementById('auth-modal-desc');
+        if (modalDesc) {
+          modalDesc.innerHTML = `<span style="color: #34d399; font-weight: 700;">✓ Scan Successful!</span> Set a password below to securely save your measurements to your cloud profile.`;
         }
       }
-    }, 3000);
+      
+      setTimeout(async () => {
+        if (window.supabase) {
+          const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            try {
+              const profile = await getOrCreateProfile(supabase, session.user);
+              onUserLoggedIn(session.user, profile);
+            } catch (err) {
+              console.error("Failed to get or create profile on init:", err);
+            }
+          }
+        }
+      }, 3000);
+    }
+  };
+
+  const script = document.createElement('script');
+  script.id = 'saia-mtm-integration';
+  script.async = true;
+  script.src = 'https://mtm-widget.3dlook.me/integration.js';
+  script.setAttribute('data-public-key', 'MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E');
+  script.setAttribute('data-button-title', 'Start AI Sizing Scan');
+  
+  if (container) {
+    container.appendChild(script);
+  } else {
+    document.body.appendChild(script);
   }
-};
+}
 
 const fileUpload = document.getElementById('file-upload');
 const dropZone = document.getElementById('drop-zone');
@@ -676,6 +694,21 @@ async function onUserLoggedIn(user, profile) {
   // Render Dashboard contents
   renderDashboardTwin(profile);
   renderDashboardScans(profile);
+
+  // Show welcome banner for new users if they have no scans/measurements
+  const welcomeBanner = document.getElementById('new-user-welcome-banner');
+  if (welcomeBanner) {
+    const hasMeasurements = profile.chest || profile.waist || profile.hips;
+    const hasScans = profile.api_scans && profile.api_scans.length > 0;
+    if (!hasMeasurements && !hasScans) {
+      welcomeBanner.style.display = 'flex';
+    } else {
+      welcomeBanner.style.display = 'none';
+    }
+  }
+
+  // Initialize 3DLook body scanner widget with logged-in user email
+  init3DLookWidget(user.email);
 }
 
 function renderScanHistory(profile) {
@@ -984,6 +1017,27 @@ async function deleteScanFromCloud(scanId) {
 
 // Load saved AI Tailor measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
+  // Check if we just came from an email activation redirect
+  if (window.location.hash.includes('type=signup') || window.location.hash.includes('type=invite')) {
+      alert("Success! Your STYLA account activation was successful. Welcome aboard!");
+      // Clean up hash so it doesn't alert again on reload
+      history.replaceState(null, document.title, window.location.pathname + window.location.search);
+  }
+
+  // Bind Welcome Banner Start Scan button
+  const btnBannerStartScan = document.getElementById('btn-banner-start-scan');
+  if (btnBannerStartScan) {
+      btnBannerStartScan.addEventListener('click', () => {
+          const tabScansBtn = document.querySelector('button[data-tab="tab-scans"]');
+          if (tabScansBtn) {
+              tabScansBtn.click();
+          }
+          const startScanBtn = document.getElementById('btn-db-start-scan');
+          if (startScanBtn) {
+              startScanBtn.click();
+          }
+      });
+  }
   // Set bookmarklet dynamically and setup copy button/toggle
   const btnBookmarklet = document.getElementById('btn-bookmarklet');
   const btnCopyBookmarklet = document.getElementById('btn-copy-bookmarklet');
@@ -1207,7 +1261,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const btnDbStartScan = document.getElementById('btn-db-start-scan');
   if (btnDbStartScan) {
     btnDbStartScan.addEventListener('click', () => {
-      const widgetBtn = document.querySelector('#saia-mtm-integration button, .saia-mtm-btn');
+      const widgetBtn = document.querySelector('.saia-widget-container button, .saia-widget-container .saia-widget-button');
       if (widgetBtn) {
         widgetBtn.click();
       } else {
@@ -1351,10 +1405,12 @@ window.addEventListener('DOMContentLoaded', async () => {
               onUserLoggedIn(session.user, profile);
           } else {
               document.body.classList.remove('user-logged-in');
+              init3DLookWidget('guest@styla.ca');
           }
       }
   } catch (err) {
       console.log("Supabase session check skipped or failed.", err);
+      init3DLookWidget('guest@styla.ca');
   }
 
 
@@ -2905,10 +2961,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         widgetContainer.style.pointerEvents = 'auto';
                         widgetContainer.style.opacity = '1';
                         
-                        if (window.MTM_WIDGET_OPTIONS) {
-                            window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
-                            window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
-                        }
+                        init3DLookWidget(email);
                     }
                 });
           }, 300);
