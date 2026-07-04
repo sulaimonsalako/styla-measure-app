@@ -2921,6 +2921,10 @@ window.addEventListener('DOMContentLoaded', () => {
       
       if (emailRegex.test(email)) {
           if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
+          // Disable widget button immediately while we perform database validation checks
+          widgetContainer.style.pointerEvents = 'none';
+          widgetContainer.style.opacity = '0.4';
+          
           emailCheckTimeout = setTimeout(() => {
               if (!window.supabase) return;
               const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
