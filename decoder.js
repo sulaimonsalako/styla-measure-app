@@ -120,7 +120,8 @@ async function getOrCreateProfile(supabase, user) {
     finalProfile = newProfile;
   }
   
-  // Auto-populate Savvy Davis measurements for suloasis@gmail.com
+  // Auto-populate Savvy Davis measurements for suloasis@gmail.com (DISABLED FOR TESTING SIGNUP FLOWS)
+  /*
   if (user && user.email === 'suloasis@gmail.com' && !finalProfile.chest && !finalProfile.waist && !finalProfile.hips) {
     console.log("Auto-populating Savvy Davis measurements for suloasis@gmail.com...");
     const updates = {
@@ -169,6 +170,7 @@ async function getOrCreateProfile(supabase, user) {
       console.log("Successfully auto-populated measurements!");
     }
   }
+  */
   
   return finalProfile;
 }
