@@ -2929,11 +2929,11 @@ window.addEventListener('DOMContentLoaded', () => {
               if (!window.supabase) return;
               const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
               supabase.from('store_profiles')
-                .select('username')
+                .select('username, password')
                 .eq('username', email.toLowerCase())
                 .maybeSingle()
                 .then(({ data, error }) => {
-                    if (data) {
+                    if (data && data.password !== 'temp_guest_placeholder') {
                         widgetContainer.style.pointerEvents = 'none';
                         widgetContainer.style.opacity = '0.4';
                         if (scanEmailError) {
