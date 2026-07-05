@@ -243,26 +243,29 @@ The Styla Team`;
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f0c1b;
-      color: #e2e8f0;
+      background-color: #f8fafc;
+      color: #334155;
       margin: 0;
       padding: 0;
+      -webkit-font-smoothing: antialiased;
     }
     .container {
       max-width: 600px;
       margin: 20px auto;
-      background-color: #16122c;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background-color: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
     .header {
-      background: linear-gradient(135deg, #ff2a75 0%, #e11d48 100%);
-      padding: 30px 20px;
+      background: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
+      padding: 35px 20px;
       text-align: center;
     }
     .header h1 {
@@ -271,26 +274,26 @@ The Styla Team`;
       font-size: 26px;
       font-weight: 800;
       letter-spacing: 0.5px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .content {
       padding: 35px 25px;
     }
     .greeting {
       font-size: 20px;
-      color: #ffffff;
+      color: #0f172a;
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .lead {
-      font-size: 16px;
+      font-size: 15.5px;
       line-height: 1.6;
-      color: #cbd5e1;
-      margin-bottom: 30px;
+      color: #475569;
+      margin-bottom: 25px;
     }
     .measurements-card {
-      background-color: rgba(225, 29, 72, 0.04);
-      border: 1px solid rgba(225, 29, 72, 0.15);
+      background-color: rgba(225, 29, 72, 0.03);
+      border: 1px solid rgba(225, 29, 72, 0.12);
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 30px;
@@ -299,7 +302,7 @@ The Styla Team`;
       color: #ff2a75;
       margin-top: 0;
       margin-bottom: 15px;
-      font-size: 14px;
+      font-size: 13.5px;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: 700;
@@ -308,10 +311,10 @@ The Styla Team`;
       margin-bottom: 35px;
     }
     .steps-section h3 {
-      color: #ffffff;
-      font-size: 17px;
+      color: #0f172a;
+      font-size: 16.5px;
       margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       padding-bottom: 8px;
       font-weight: 700;
     }
@@ -321,7 +324,7 @@ The Styla Team`;
       align-items: flex-start;
     }
     .step-number {
-      background: linear-gradient(135deg, #ff2a75 0%, #e11d48 100%);
+      background: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
       color: #ffffff;
       font-weight: 700;
       font-size: 12px;
@@ -336,12 +339,12 @@ The Styla Team`;
       margin-top: 2px;
     }
     .step-text {
-      color: #cbd5e1;
+      color: #475569;
       font-size: 14.5px;
       line-height: 1.5;
     }
     .step-text strong {
-      color: #ffffff;
+      color: #0f172a;
       font-weight: 600;
     }
     .cta-container {
@@ -349,7 +352,7 @@ The Styla Team`;
       margin: 35px 0 15px;
     }
     .btn {
-      background: linear-gradient(135deg, #ff2a75 0%, #e11d48 100%);
+      background: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
       color: #ffffff !important;
       text-decoration: none;
       padding: 14px 35px;
@@ -357,16 +360,16 @@ The Styla Team`;
       font-weight: 700;
       font-size: 16px;
       display: inline-block;
-      box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+      box-shadow: 0 4px 15px rgba(225, 29, 72, 0.25);
     }
     .footer {
-      background-color: #0c0919;
+      background-color: #f1f5f9;
       padding: 20px;
       text-align: center;
-      border-top: 1px solid #1e193b;
+      border-top: 1px solid rgba(0, 0, 0, 0.04);
     }
     .footer p {
-      color: #64748b;
+      color: #94a3b8;
       font-size: 12px;
       margin: 0;
     }
@@ -385,20 +388,20 @@ The Styla Team`;
         <h3>Core Measurements</h3>
         <table style="width:100%; border-collapse:collapse;">
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Chest / Bust</td>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${chestText}</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#64748b; font-size:14.5px;">Chest / Bust</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#0f172a; font-weight:700; text-align:right; font-size:16px;">${chestText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Waist</td>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${waistText}</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#64748b; font-size:14.5px;">Waist</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#0f172a; font-weight:700; text-align:right; font-size:16px;">${waistText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Hips</td>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${hipsText}</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#64748b; font-size:14.5px;">Hips</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(0,0,0,0.04); color:#0f172a; font-weight:700; text-align:right; font-size:16px;">${hipsText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; color:#cbd5e1; font-size:14.5px;">Total Height</td>
-            <td style="padding:10px 0; color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${heightText}</td>
+            <td style="padding:10px 0; color:#64748b; font-size:14.5px;">Total Height</td>
+            <td style="padding:10px 0; color:#0f172a; font-weight:700; text-align:right; font-size:16px;">${heightText}</td>
           </tr>
         </table>
       </div>
