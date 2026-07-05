@@ -2892,12 +2892,28 @@ window.addEventListener('DOMContentLoaded', () => {
               const { data: { session } } = await supabase.auth.getSession();
               
               if (session) {
-                  const { error: dbError } = await supabase
-                    .from('profiles')
-                    .delete()
-                    .eq('id', session.user.id);
-                    
-                  if (dbError) throw dbError;
+                  const userEmail = session.user.email;
+                  
+                  // 1. Delete from store_profiles (guest scans/twin)
+                  if (userEmail) {
+                      await supabase
+                        .from('store_profiles')
+                        .delete()
+                        .eq('username', userEmail.toLowerCase());
+                  }
+
+                  // 2. Call delete_user_account RPC to securely delete auth.users record
+                  const { error: rpcError } = await supabase.rpc('delete_user_account');
+                  
+                  if (rpcError) {
+                      console.warn("delete_user_account RPC not found, falling back to profiles table delete:", rpcError);
+                      const { error: dbError } = await supabase
+                        .from('profiles')
+                        .delete()
+                        .eq('id', session.user.id);
+                      if (dbError) throw dbError;
+                  }
+                  
                   await supabase.auth.signOut();
               }
               
