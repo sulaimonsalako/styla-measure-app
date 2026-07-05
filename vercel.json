@@ -3,39 +3,39 @@
   "rewrites": [
     {
       "source": "/api/store-auth",
-      "destination": "/api/store-api"
+      "destination": "/api/store-api?route=store-auth"
     },
     {
       "source": "/api/store-cart",
-      "destination": "/api/store-api"
+      "destination": "/api/store-api?route=store-cart"
     },
     {
       "source": "/api/store-categories",
-      "destination": "/api/store-api"
+      "destination": "/api/store-api?route=store-categories"
     },
     {
       "source": "/api/store-payment",
-      "destination": "/api/store-api"
+      "destination": "/api/store-api?route=store-payment"
     },
     {
       "source": "/api/store-products",
-      "destination": "/api/store-api"
+      "destination": "/api/store-api?route=store-products"
     },
     {
       "source": "/api/3dlook/init-session",
-      "destination": "/api/3dlook-api"
+      "destination": "/api/3dlook-api?route=init-session"
     },
     {
       "source": "/api/3dlook/check-status",
-      "destination": "/api/3dlook-api"
+      "destination": "/api/3dlook-api?route=check-status"
     },
     {
       "source": "/api/3dlook/save-measurements",
-      "destination": "/api/3dlook-api"
+      "destination": "/api/3dlook-api?route=save-measurements"
     },
     {
       "source": "/api/3dlook/webhook",
-      "destination": "/api/3dlook-api"
+      "destination": "/api/3dlook-api?route=webhook"
     }
   ]
 }

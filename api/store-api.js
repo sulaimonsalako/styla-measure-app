@@ -30,9 +30,10 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
+  const route = url.searchParams.get('route');
 
   // Read body if it's not store-payment (which handles raw stream itself)
-  const isPayment = pathname.includes('/store-payment');
+  const isPayment = route === 'store-payment' || pathname.includes('/store-payment');
   if (!isPayment && req.method === 'POST') {
     try {
       const rawBody = await getRawBody(req);
@@ -48,17 +49,17 @@ export default async function handler(req, res) {
     }
   }
 
-  if (pathname.includes('/store-auth')) {
+  if (route === 'store-auth' || pathname.includes('/store-auth')) {
     return authHandler(req, res);
-  } else if (pathname.includes('/store-cart')) {
+  } else if (route === 'store-cart' || pathname.includes('/store-cart')) {
     return cartHandler(req, res);
-  } else if (pathname.includes('/store-categories')) {
+  } else if (route === 'store-categories' || pathname.includes('/store-categories')) {
     return categoriesHandler(req, res);
-  } else if (pathname.includes('/store-payment')) {
+  } else if (route === 'store-payment' || pathname.includes('/store-payment')) {
     return paymentHandler(req, res);
-  } else if (pathname.includes('/store-products')) {
+  } else if (route === 'store-products' || pathname.includes('/store-products')) {
     return productsHandler(req, res);
   } else {
-    return res.status(404).json({ error: `Store API endpoint not found: ${pathname}` });
+    return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }
 }

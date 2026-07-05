@@ -15,16 +15,17 @@ export default async function handler(req, res) {
 
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
+  const route = url.searchParams.get('route');
 
-  if (pathname.includes('/init-session')) {
+  if (route === 'init-session' || pathname.includes('/init-session')) {
     return initSessionHandler(req, res);
-  } else if (pathname.includes('/check-status')) {
+  } else if (route === 'check-status' || pathname.includes('/check-status')) {
     return checkStatusHandler(req, res);
-  } else if (pathname.includes('/save-measurements')) {
+  } else if (route === 'save-measurements' || pathname.includes('/save-measurements')) {
     return saveMeasurementsHandler(req, res);
-  } else if (pathname.includes('/webhook')) {
+  } else if (route === 'webhook' || pathname.includes('/webhook')) {
     return webhookHandler(req, res);
   } else {
-    return res.status(404).json({ error: `3DLook API endpoint not found: ${pathname}` });
+    return res.status(404).json({ error: `3DLook API endpoint not found: ${pathname} (route parameter: ${route})` });
   }
 }
