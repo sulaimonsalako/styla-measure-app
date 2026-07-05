@@ -273,7 +273,16 @@ export default async function handler(req, res) {
         } else {
           console.log(`Saved measurements for ${cleanedUsername} in store_profiles table via webhook.`);
           if (existingStoreProf.password === 'temp_guest_placeholder') {
-            await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
+            let firstName = req.body.first_name || '';
+            if (!firstName && req.body.person) {
+              if (typeof req.body.person === 'object') {
+                firstName = req.body.person.first_name || req.body.person.name || '';
+              }
+            }
+            if (firstName && firstName.includes(' ')) {
+              firstName = firstName.split(' ')[0];
+            }
+            await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl, firstName);
           }
         }
       } else {
@@ -292,7 +301,16 @@ export default async function handler(req, res) {
           console.error("Error inserting guest store_profile:", insertError);
         } else {
           console.log(`Created guest store_profile for ${cleanedUsername} in store_profiles via webhook.`);
-          await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl);
+          let firstName = req.body.first_name || '';
+          if (!firstName && req.body.person) {
+            if (typeof req.body.person === 'object') {
+              firstName = req.body.person.first_name || req.body.person.name || '';
+            }
+          }
+          if (firstName && firstName.includes(' ')) {
+            firstName = firstName.split(' ')[0];
+          }
+          await sendScanCompleteEmail(cleanedUsername, legacyTwin, portalUrl, firstName);
         }
       }
     } else {

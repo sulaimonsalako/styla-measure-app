@@ -200,7 +200,7 @@ STYLA Logistics Team`;
   }
 }
 
-export async function sendScanCompleteEmail(email, twin, portalUrl) {
+export async function sendScanCompleteEmail(email, twin, portalUrl, firstName = '') {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
@@ -213,9 +213,17 @@ export async function sendScanCompleteEmail(email, twin, portalUrl) {
   const chestText = twin.chest ? `${twin.chest}"` : 'N/A';
   const waistText = twin.waist ? `${twin.waist}"` : 'N/A';
   const hipsText = twin.hips ? `${twin.hips}"` : 'N/A';
-  const heightText = twin.height ? `${twin.height}"` : 'N/A';
+  
+  // Format height nicely
+  let heightText = 'N/A';
+  if (twin.height) {
+    const totalInches = Math.round(parseFloat(twin.height));
+    const ft = Math.floor(totalInches / 12);
+    const inch = totalInches % 12;
+    heightText = `${ft}ft ${inch}in`;
+  }
 
-  const textContent = `Hi there,
+  const textContent = `Hi ${firstName || 'there'},
 
 Your AI sizing scan is complete! 🌟
 
@@ -225,12 +233,218 @@ We've successfully processed your scan and calculated your measurements:
 - Hips: ${hipsText}
 - Height: ${heightText}
 
-To access your Styla dashboard, view all 80+ AI measurements, use the sizing widget on any online store, or share your measurements with a tailor, please complete your registration by setting a password:
+To access your Styla dashboard, view all 80+ AI measurements, use the sizing widget on online stores, or share your measurements with a tailor, please complete your registration by setting a password:
 
 ${portalUrl}/index.html?action=signup&email=${encodeURIComponent(email)}
 
 Best regards,
 The Styla Team`;
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f0c1b;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #16122c;
+      border: 1px solid #2e245a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .header {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: #ffffff;
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .content {
+      padding: 35px 25px;
+    }
+    .greeting {
+      font-size: 20px;
+      color: #ffffff;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .lead {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 30px;
+    }
+    .measurements-card {
+      background-color: #1e193b;
+      border: 1px solid #3b3275;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .measurements-card h3 {
+      color: #ec4899;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .steps-section {
+      margin-bottom: 35px;
+    }
+    .steps-section h3 {
+      color: #ffffff;
+      font-size: 17px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #2e245a;
+      padding-bottom: 8px;
+      font-weight: 700;
+    }
+    .step-item {
+      display: flex;
+      margin-bottom: 18px;
+      align-items: flex-start;
+    }
+    .step-number {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-text {
+      color: #cbd5e1;
+      font-size: 14.5px;
+      line-height: 1.5;
+    }
+    .step-text strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .cta-container {
+      text-align: center;
+      margin: 35px 0 15px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 35px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+    }
+    .footer {
+      background-color: #0c0919;
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid #1e193b;
+    }
+    .footer p {
+      color: #64748b;
+      font-size: 12px;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Styla Measure</h1>
+    </div>
+    <div class="content">
+      <div class="greeting">Hi ${firstName || 'there'},</div>
+      <div class="lead">Your AI sizing scan is complete! 🌟 We've successfully calculated your tailor-grade measurements.</div>
+      
+      <div class="measurements-card">
+        <h3>Core Measurements</h3>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Chest / Bust</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${chestText}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Waist</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${waistText}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Hips</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${hipsText}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; color:#94a3b8; font-size:14.5px;">Total Height</td>
+            <td style="padding:10px 0; color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${heightText}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="steps-section">
+        <h3>Your Next Steps</h3>
+        
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-text">
+            <strong>Log in to your profile:</strong> Click the button below to set your account password. This gives you instant access to your Styla dashboard to view all 80+ calculated measurements.
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-text">
+            <strong>Add the Styla Bookmarklet:</strong> Install the Sizing Bookmarklet on your Chrome, Edge, or Brave desktop browser to find your perfect size automatically on any retail clothing website.
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-text">
+            <strong>Safari Extension:</strong> We are actively building our Safari mobile & desktop extension, which will be released very soon!
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-text">
+            <strong>Email or Export to Tailor:</strong> Download a clean PDF export of your measurements or email them directly to your custom tailor or designer.
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-container">
+        <a href="${portalUrl}/index.html?action=signup&email=${encodeURIComponent(email)}" class="btn">Activate Your Account</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; ${new Date().getFullYear()} Styla. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`;
 
   console.log(`[SCAN COMPLETE EMAIL PENDING] Sending confirmation to ${email}...`);
 
@@ -244,10 +458,11 @@ The Styla Team`;
       });
 
       const info = await transporter.sendMail({
-        from,
+        from: `"Styla Measure" <${from}>`,
         to: email,
         subject,
-        text: textContent
+        text: textContent,
+        html: htmlContent
       });
 
       console.log(`[SCAN COMPLETE EMAIL SENT] Success: Message ID ${info.messageId}`);
@@ -271,10 +486,11 @@ The Styla Team`;
     });
 
     const info = await transporter.sendMail({
-      from: `"Styla Sandbox" <${testAccount.user}>`,
+      from: `"Styla Measure" <${testAccount.user}>`,
       to: email,
       subject: `[SANDBOX] ${subject}`,
-      text: textContent
+      text: textContent,
+      html: htmlContent
     });
 
     const previewUrl = nodemailer.getTestMessageUrl(info);
