@@ -255,13 +255,13 @@ The Styla Team`;
       max-width: 600px;
       margin: 20px auto;
       background-color: #16122c;
-      border: 1px solid #2e245a;
+      border: 1px solid #3c1e3b;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
     .header {
-      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      background: linear-gradient(135deg, #f43f5e 0%, #db2777 100%);
       padding: 30px 20px;
       text-align: center;
     }
@@ -289,14 +289,14 @@ The Styla Team`;
       margin-bottom: 30px;
     }
     .measurements-card {
-      background-color: #1e193b;
-      border: 1px solid #3b3275;
+      background-color: #241628;
+      border: 1px solid #4a1d48;
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 30px;
     }
     .measurements-card h3 {
-      color: #ec4899;
+      color: #f43f5e;
       margin-top: 0;
       margin-bottom: 15px;
       font-size: 14px;
@@ -311,7 +311,7 @@ The Styla Team`;
       color: #ffffff;
       font-size: 17px;
       margin-bottom: 20px;
-      border-bottom: 1px solid #2e245a;
+      border-bottom: 1px solid #3c1e3b;
       padding-bottom: 8px;
       font-weight: 700;
     }
@@ -321,7 +321,7 @@ The Styla Team`;
       align-items: flex-start;
     }
     .step-number {
-      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      background: linear-gradient(135deg, #f43f5e 0%, #db2777 100%);
       color: #ffffff;
       font-weight: 700;
       font-size: 12px;
@@ -349,7 +349,7 @@ The Styla Team`;
       margin: 35px 0 15px;
     }
     .btn {
-      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      background: linear-gradient(135deg, #f43f5e 0%, #db2777 100%);
       color: #ffffff !important;
       text-decoration: none;
       padding: 14px 35px;
@@ -357,7 +357,7 @@ The Styla Team`;
       font-weight: 700;
       font-size: 16px;
       display: inline-block;
-      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
     }
     .footer {
       background-color: #0c0919;
@@ -385,19 +385,19 @@ The Styla Team`;
         <h3>Core Measurements</h3>
         <table style="width:100%; border-collapse:collapse;">
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Chest / Bust</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Chest / Bust</td>
             <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${chestText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Waist</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Waist</td>
             <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${waistText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#94a3b8; font-size:14.5px;">Hips</td>
+            <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#cbd5e1; font-size:14.5px;">Hips</td>
             <td style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${hipsText}</td>
           </tr>
           <tr>
-            <td style="padding:10px 0; color:#94a3b8; font-size:14.5px;">Total Height</td>
+            <td style="padding:10px 0; color:#cbd5e1; font-size:14.5px;">Total Height</td>
             <td style="padding:10px 0; color:#ffffff; font-weight:700; text-align:right; font-size:16px;">${heightText}</td>
           </tr>
         </table>
@@ -409,7 +409,7 @@ The Styla Team`;
         <div class="step-item">
           <div class="step-number">1</div>
           <div class="step-text">
-            <strong>Log in to your profile:</strong> Click the button below to set your account password. This gives you instant access to your Styla dashboard to view all 80+ calculated measurements.
+            <strong>Complete your sign up:</strong> Click the button below to set your account password. This gives you instant access to your Styla dashboard to view all 80+ calculated measurements.
           </div>
         </div>
 
@@ -436,7 +436,7 @@ The Styla Team`;
       </div>
 
       <div class="cta-container">
-        <a href="${portalUrl}/index.html?action=signup&email=${encodeURIComponent(email)}" class="btn">Activate Your Account</a>
+        <a href="${portalUrl}/index.html?action=signup&email=${encodeURIComponent(email)}" class="btn">Complete Sign Up</a>
       </div>
     </div>
     <div class="footer">
