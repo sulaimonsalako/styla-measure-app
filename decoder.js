@@ -160,6 +160,27 @@ let chatHistory = [];
 const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
 
+// Helper to populate extended fields dynamically from active scan data
+function populateProfileExtendedFields(profile) {
+  if (!profile) return profile;
+  const activeScan = profile.api_scans && Array.isArray(profile.api_scans)
+    ? profile.api_scans.find(s => s.is_active)
+    : null;
+    
+  if (activeScan) {
+    const vp = activeScan.volume_params || {};
+    const fp = activeScan.front_params || {};
+    
+    profile.shoulder = fp.shoulders || null;
+    profile.sleeve = fp.back_neck_point_to_wrist_length || fp.back_neck_point_to_wrist_length_1_5_inch || null;
+    profile.neck = vp.neck || null;
+    profile.thigh = vp.thigh || null;
+    profile.bicep = vp.bicep || null;
+    profile.wrist = vp.wrist || null;
+  }
+  return profile;
+}
+
 // Helper to get or create user profile in a self-healing way
 async function getOrCreateProfile(supabase, user) {
   const { data: profile, error } = await supabase
@@ -240,7 +261,7 @@ async function getOrCreateProfile(supabase, user) {
   }
   */
   
-  return finalProfile;
+  return populateProfileExtendedFields(finalProfile);
 }
 
 
@@ -605,12 +626,6 @@ async function syncStoreScansToPortal(user, profile) {
             hips: hips ? parseFloat(hips) : null,
             height: height ? parseFloat(height) : null,
             inseam: inseam ? parseFloat(inseam) : null,
-            shoulder: shoulder ? parseFloat(shoulder) : null,
-            sleeve: sleeve ? parseFloat(sleeve) : null,
-            neck: neck ? parseFloat(neck) : null,
-            thigh: thigh ? parseFloat(thigh) : null,
-            bicep: bicep ? parseFloat(bicep) : null,
-            wrist: wrist ? parseFloat(wrist) : null,
             api_scans: mergedScans,
             updated_at: new Date().toISOString()
           })
@@ -664,7 +679,7 @@ async function syncStoreScansToPortal(user, profile) {
   } catch (syncErr) {
     console.error("Failed to sync store scans to portal:", syncErr);
   }
-  return profile;
+  return populateProfileExtendedFields(profile);
 }
 
 async function onUserLoggedIn(user, profile) {
