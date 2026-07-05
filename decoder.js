@@ -2945,7 +2945,13 @@ window.addEventListener('DOMContentLoaded', () => {
               const manageBox = document.getElementById('manage-profile-box');
               if (manageBox) manageBox.style.display = 'none';
               
+              // Clear all localStorage data
+              localStorage.clear();
+              
               alert("Your profile and account have been deleted.");
+              
+              // Redirect back to landing page
+              window.location.href = '/';
               
           } catch (err) {
               console.error("Failed to delete profile:", err);
