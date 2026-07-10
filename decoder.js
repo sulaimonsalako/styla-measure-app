@@ -272,6 +272,254 @@ async function getOrCreateProfile(supabase, user) {
 let isEditingTwin = false;
 let currentProfileObj = null;
 
+function getCompleteMeasurementList(scan) {
+  const vp = scan.volume_params || {};
+  const fp = scan.front_params || {};
+  const sp = scan.side_params || {};
+
+  const cleanVal = (val) => {
+    if (val === undefined || val === null || val === '') return 'N/A';
+    return typeof val === 'number' ? val.toFixed(1) + '"' : val + '"';
+  };
+
+  return [
+    // Circumferences
+    { cat: 'Circumference (Girth)', name: 'Chest / Bust', val: cleanVal(vp.chest), desc: 'Fullest part of the chest/bust' },
+    { cat: 'Circumference (Girth)', name: 'Under Bust', val: cleanVal(vp.under_bust_girth), desc: 'Directly under the bust' },
+    { cat: 'Circumference (Girth)', name: 'Upper Chest', val: cleanVal(vp.upper_chest_girth), desc: 'Above the bust, across chest' },
+    { cat: 'Circumference (Girth)', name: 'Overarm Girth', val: cleanVal(vp.overarm_girth), desc: 'Around arms and chest' },
+    { cat: 'Circumference (Girth)', name: 'Waist', val: cleanVal(vp.waist), desc: 'Natural waistline (narrowest part)' },
+    { cat: 'Circumference (Girth)', name: 'Waist (Gray)', val: cleanVal(vp.waist_gray), desc: 'Alternative waist definition' },
+    { cat: 'Circumference (Girth)', name: 'Pant Waist', val: cleanVal(vp.pant_waist), desc: 'Where pants typically sit' },
+    { cat: 'Circumference (Girth)', name: 'Low Hips', val: cleanVal(vp.low_hips), desc: 'Widest part of hips/seat' },
+    { cat: 'Circumference (Girth)', name: 'High Hips', val: cleanVal(vp.high_hips), desc: 'Upper hip bone level' },
+    { cat: 'Circumference (Girth)', name: 'Abdomen / Belly', val: cleanVal(vp.abdomen), desc: 'Fullest part of the stomach' },
+    { cat: 'Circumference (Girth)', name: 'Neck', val: cleanVal(vp.neck || vp.neck_girth), desc: 'Base of the neck' },
+    { cat: 'Circumference (Girth)', name: 'Neck (Relaxed)', val: cleanVal(vp.neck_girth_relaxed), desc: 'Comfortable collar width' },
+    { cat: 'Circumference (Girth)', name: 'Bicep', val: cleanVal(vp.bicep), desc: 'Fullest part of the upper arm' },
+    { cat: 'Circumference (Girth)', name: 'Upper Bicep', val: cleanVal(vp.upper_bicep_girth), desc: 'High upper arm girth' },
+    { cat: 'Circumference (Girth)', name: 'Forearm', val: cleanVal(vp.forearm), desc: 'Fullest part of the lower arm' },
+    { cat: 'Circumference (Girth)', name: 'Wrist', val: cleanVal(vp.wrist), desc: 'Over the wrist bone' },
+    { cat: 'Circumference (Girth)', name: 'Thigh', val: cleanVal(vp.thigh), desc: 'Fullest part of the upper thigh' },
+    { cat: 'Circumference (Girth)', name: 'Thigh (1" below crotch)', val: cleanVal(vp.thigh_1_inch_below_crotch), desc: 'Upper thigh clearance' },
+    { cat: 'Circumference (Girth)', name: 'Mid Thigh', val: cleanVal(vp.mid_thigh_girth), desc: 'Middle of the thigh' },
+    { cat: 'Circumference (Girth)', name: 'Knee', val: cleanVal(vp.knee), desc: 'Around the knee cap' },
+    { cat: 'Circumference (Girth)', name: 'Calf', val: cleanVal(vp.calf), desc: 'Fullest part of the calf muscle' },
+    { cat: 'Circumference (Girth)', name: 'Ankle', val: cleanVal(vp.ankle), desc: 'Above the ankle bone' },
+    { cat: 'Circumference (Girth)', name: 'Armscye Girth', val: cleanVal(vp.armscye_girth), desc: 'Armhole opening circumference' },
+    { cat: 'Circumference (Girth)', name: 'Elbow Girth', val: cleanVal(vp.elbow_girth), desc: 'Around the elbow point' },
+
+    // Lengths
+    { cat: 'Length & Height', name: 'Total Height', val: cleanVal(fp.body_height), desc: 'Total height (floor to head top)' },
+    { cat: 'Length & Height', name: 'Outseam', val: cleanVal(fp.outseam), desc: 'Waist to floor along outside of leg' },
+    { cat: 'Length & Height', name: 'Outseam (Upper Hip)', val: cleanVal(fp.outseam_from_upper_hip_level), desc: 'Upper hip to floor' },
+    { cat: 'Length & Height', name: 'Inseam', val: cleanVal(fp.inseam), desc: 'Crotch to floor along inside of leg' },
+    { cat: 'Length & Height', name: 'Inseam (To Ankle)', val: cleanVal(fp.inseam_from_crotch_to_ankle), desc: 'Crotch to ankle joint' },
+    { cat: 'Length & Height', name: 'Inseam (1" Above Floor)', val: cleanVal(fp.inside_leg_length_to_the_1_inch_above_the_floor), desc: 'Inseam with floor clearance' },
+    { cat: 'Length & Height', name: 'Crotch Length', val: cleanVal(fp.crotch_length), desc: 'Total crotch curve' },
+    { cat: 'Length & Height', name: 'Total Crotch Length', val: cleanVal(fp.total_crotch_length), desc: 'Full front-to-back crotch curve' },
+    { cat: 'Length & Height', name: 'Front Crotch Length', val: cleanVal(fp.front_crotch_length), desc: 'Waist to crotch intersection (front)' },
+    { cat: 'Length & Height', name: 'Back Crotch Length', val: cleanVal(fp.back_crotch_length), desc: 'Waist to crotch intersection (back)' },
+    { cat: 'Length & Height', name: 'Rise', val: cleanVal(fp.rise), desc: 'Waist to crotch height (sitting depth)' },
+    { cat: 'Length & Height', name: 'Sleeve Length', val: cleanVal(fp.sleeve_length), desc: 'Shoulder joint to wrist crease' },
+    { cat: 'Length & Height', name: 'Underarm Length', val: cleanVal(fp.underarm_length), desc: 'Armpit to wrist crease' },
+    { cat: 'Length & Height', name: 'Sleeve (Back Neck to Wrist)', val: cleanVal(fp.back_neck_point_to_wrist_length || fp.back_neck_point_to_wrist_length_1_5_inch), desc: 'Center back neck to wrist crease' },
+    { cat: 'Length & Height', name: 'Shoulders (Biacromial)', val: cleanVal(fp.shoulders), desc: 'Shoulder tip to shoulder tip' },
+    { cat: 'Length & Height', name: 'Across Back Shoulder Width', val: cleanVal(fp.across_back_shoulder_width), desc: 'Shoulder width across upper back' },
+    { cat: 'Length & Height', name: 'Across Back Width', val: cleanVal(fp.across_back_width), desc: 'Width of back between armpits' },
+    { cat: 'Length & Height', name: 'Shoulder Length', val: cleanVal(fp.shoulder_length), desc: 'Base of neck to shoulder tip' },
+    { cat: 'Length & Height', name: 'Jacket Length', val: cleanVal(fp.new_jacket_length), desc: 'Standard tailored jacket length' },
+    { cat: 'Length & Height', name: 'Waist to Low Hips', val: cleanVal(fp.waist_to_low_hips), desc: 'Vertical distance waist to hip level' },
+    { cat: 'Length & Height', name: 'Waist to Knees', val: cleanVal(fp.waist_to_knees), desc: 'Vertical distance waist to knee level' },
+    { cat: 'Length & Height', name: 'Abdomen to Upper Knee', val: cleanVal(fp.abdomen_to_upper_knee_length), desc: 'Belly to knee distance' },
+    { cat: 'Length & Height', name: 'Upper Knee to Ankle', val: cleanVal(fp.upper_knee_to_ankle), desc: 'Knee to ankle distance' },
+    { cat: 'Length & Height', name: 'Nape to Waist (Back)', val: cleanVal(fp.nape_to_waist_centre_back), desc: 'Back neck point to center waist' },
+    { cat: 'Length & Height', name: 'Shoulder to Waist', val: cleanVal(fp.shoulder_to_waist), desc: 'Shoulder line to waist line' },
+    { cat: 'Length & Height', name: 'Side Neck to Armpit', val: cleanVal(fp.side_neck_point_to_armpit), desc: 'Base of neck to armpit level' },
+    { cat: 'Length & Height', name: 'Back Neck Height', val: cleanVal(fp.back_neck_height), desc: 'Back neck point from floor' },
+    { cat: 'Length & Height', name: 'Bust Height', val: cleanVal(fp.offset_bust_height || fp.bust_height), desc: 'Bust point from floor' },
+    { cat: 'Length & Height', name: 'Hip Height', val: cleanVal(fp.hip_height), desc: 'Hip level from floor' },
+    { cat: 'Length & Height', name: 'Upper Hip Height', val: cleanVal(fp.upper_hip_height), desc: 'Upper hip level from floor' },
+    { cat: 'Length & Height', name: 'Knee Height', val: cleanVal(fp.knee_height), desc: 'Knee level from floor' },
+    { cat: 'Length & Height', name: 'Ankle Height', val: cleanVal(fp.outer_ankle_height), desc: 'Ankle level from floor' },
+    { cat: 'Length & Height', name: 'Waist Height', val: cleanVal(fp.waist_height), desc: 'Waist level from floor' },
+    { cat: 'Length & Height', name: 'Leg Height', val: cleanVal(fp.leg_height), desc: 'Crotch level from floor' },
+    { cat: 'Length & Height', name: 'Torso Height', val: cleanVal(fp.torso_height), desc: 'Crotch to neck height' },
+    { cat: 'Length & Height', name: 'Side Neck to Thigh', val: cleanVal(fp.side_neck_point_to_thigh), desc: 'Neck side point to thigh level' },
+    { cat: 'Length & Height', name: 'Upper Arm Length', val: cleanVal(fp.upper_arm_length), desc: 'Shoulder tip to elbow point' },
+    { cat: 'Length & Height', name: 'Lower Arm Length', val: cleanVal(fp.lower_arm_length), desc: 'Elbow point to wrist bone' },
+
+    // Depths
+    { cat: 'Side & Depth', name: 'Waist Depth', val: cleanVal(sp.waist_depth), desc: 'Side-to-side waist thickness' },
+    { cat: 'Side & Depth', name: 'Side Upper Hip to Knee', val: cleanVal(sp.side_upper_hip_level_to_knee), desc: 'Side length upper hip to knee' },
+    { cat: 'Side & Depth', name: 'Side Neck to Upper Hip', val: cleanVal(sp.side_neck_point_to_upper_hip), desc: 'Side neck to hip line' },
+    { cat: 'Side & Depth', name: 'Neck to Chest Depth', val: cleanVal(sp.neck_to_chest), desc: 'Neck to chest thickness' },
+    { cat: 'Side & Depth', name: 'Chest to Waist Depth', val: cleanVal(sp.chest_to_waist), desc: 'Chest to waist vertical thickness' },
+    { cat: 'Side & Depth', name: 'Waist to Ankle Depth', val: cleanVal(sp.waist_to_ankle), desc: 'Waist to ankle side length' },
+    { cat: 'Side & Depth', name: 'Shoulders to Knees', val: cleanVal(sp.shoulders_to_knees), desc: 'Total shoulder to knee height' },
+    { cat: 'Side & Depth', name: 'Armpit to Waist Side', val: cleanVal(sp.axilla_to_waist_side_length), desc: 'Armpit to natural waist side' },
+  ].filter(x => x.val !== 'N/A"');
+}
+
+async function generateTailorPDF(profile) {
+  const activeScan = profile.api_scans && Array.isArray(profile.api_scans)
+    ? profile.api_scans.find(s => s.is_active)
+    : null;
+    
+  if (!activeScan) {
+    alert("No active 3D body scan found to generate PDF report.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const primaryColor = [225, 29, 72]; 
+  const secondaryColor = [30, 41, 59]; 
+  const textColor = [51, 65, 85]; 
+
+  // Draw Header Banner
+  doc.setFillColor(...primaryColor);
+  doc.rect(0, 0, 210, 40, 'F');
+
+  // Title
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.text('S T Y L A   M E A S U R E', 15, 18);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('AI-POWERED TAILOR-GRADE BODY MEASUREMENT REPORT', 15, 25);
+  doc.text(`Generated: ${new Date().toLocaleDateString()}`, 15, 32);
+
+  // Client Details Block
+  doc.setFillColor(248, 250, 252); 
+  doc.rect(15, 48, 180, 28, 'F');
+  
+  doc.setFontSize(10);
+  doc.setTextColor(...secondaryColor);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CLIENT DETAILS', 20, 54);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...textColor);
+  doc.text(`Email: ${profile.email}`, 20, 60);
+  
+  const heightStr = profile.height ? `${Math.floor(profile.height / 12)}' ${Math.round(profile.height % 12)}"` : 'N/A';
+  doc.text(`Height: ${heightStr} (${profile.height || 'N/A'} in)`, 20, 66);
+  doc.text(`Inseam: ${profile.inseam ? profile.inseam + '"' : 'N/A'}`, 20, 71);
+
+  // Scan Details Block
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...secondaryColor);
+  doc.text('SCAN DETAILS', 110, 54);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...textColor);
+  doc.text(`Scan ID: ${activeScan.scan_id || 'N/A'}`, 110, 60);
+  doc.text(`Captured: ${new Date(activeScan.timestamp).toLocaleDateString()}`, 110, 66);
+  doc.text(`Unit: Inches`, 110, 71);
+
+  // Table Generation
+  const measurements = getCompleteMeasurementList(activeScan);
+  const tableRows = measurements.map(m => [m.cat, m.name, m.val, m.desc]);
+  
+  doc.autoTable({
+    startY: 84,
+    head: [['Category', 'Measurement Point', 'Value', 'Tailor Intent / Description']],
+    body: tableRows,
+    theme: 'grid',
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 10
+    },
+    bodyStyles: {
+      fontSize: 9,
+      textColor: textColor
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 45 },
+      1: { fontStyle: 'bold', cellWidth: 45 },
+      2: { fontStyle: 'bold', textColor: primaryColor, cellWidth: 20 },
+      3: { cellWidth: 70 }
+    },
+    margin: { left: 15, right: 15 },
+    didDrawPage: function(data) {
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`, 15, doc.internal.pageSize.height - 10);
+      doc.text('CONFIDENTIAL - FOR PERSONAL TAILORING USE ONLY', 120, doc.internal.pageSize.height - 10);
+    }
+  });
+
+  doc.save(`styla-tailor-report-${profile.email}.pdf`);
+}
+
+async function handleUnlockTailorReport(profile) {
+  if (!window.supabase) {
+    alert("Database connection is not initialized.");
+    return;
+  }
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    alert("Please log in to unlock this report.");
+    return;
+  }
+
+  const btn = document.getElementById('btn-unlock-export');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Redirecting to Stripe...";
+  }
+
+  try {
+    const res = await fetch('/api/export-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create-checkout-session',
+        userId: session.user.id,
+        email: session.user.email
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to create secure checkout session.");
+    }
+
+    const data = await res.json();
+    
+    if (!window.Stripe) {
+      throw new Error("Stripe.js library failed to load. Please check your internet connection.");
+    }
+    
+    const stripePublicKey = data.publishableKey || 'pk_test_51TiFOjRraLJVWQoHxQ6Q5PyjmJAWJ56yxAbUriGiXrW3wqsbh1F94YoAFTNy0wSvKbWU4OWytkgItc6AUovV75bp00FdoUbqoE';
+    const stripe = window.Stripe(stripePublicKey);
+    
+    const result = await stripe.redirectToCheckout({
+      sessionId: data.id
+    });
+    
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+  } catch (err) {
+    alert("Checkout error: " + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Unlock Now for $7.49 CAD";
+    }
+  }
+}
+
 function renderExtendedMeasurements(profile) {
   const section = document.getElementById('db-extended-section');
   const grid = document.getElementById('db-extended-grid');
@@ -314,18 +562,71 @@ function renderExtendedMeasurements(profile) {
   }
   
   section.style.display = 'block';
-  if (badge) badge.textContent = `${items.length} details`;
   
-  let html = '';
-  items.forEach(item => {
-    html += `
-      <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">${item.label}</span>
-        <span style="font-size: 0.95rem; color: #fff; font-weight: 700; font-family: var(--font-mono);">${item.val}"</span>
+  // Clear any existing custom unlock container or download header before redrawing
+  const existingContainer = document.getElementById('extended-premium-container');
+  if (existingContainer) existingContainer.remove();
+  
+  if (profile.has_paid_export) {
+    if (badge) badge.textContent = `${items.length} details (Unlocked)`;
+    
+    const headerHtml = `
+      <div id="extended-premium-container" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; width: 100%; box-sizing: border-box;">
+        <div>
+          <h5 style="margin: 0; color: #34d399; font-size: 1rem; font-weight: 700; font-family: var(--font-outfit);">Premium Tailor Report Unlocked</h5>
+          <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.82rem;">You have lifetime access to export all 80+ measurements in PDF format.</p>
+        </div>
+        <button id="btn-download-pdf" style="background: var(--success-gradient); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 10px rgba(16,185,129,0.25); display: flex; align-items: center; gap: 8px;">
+          <span>Download PDF Report</span>
+        </button>
       </div>
     `;
-  });
-  grid.innerHTML = html;
+    grid.insertAdjacentHTML('beforebegin', headerHtml);
+    
+    document.getElementById('btn-download-pdf').addEventListener('click', () => generateTailorPDF(profile));
+    
+    let html = '';
+    items.forEach(item => {
+      html += `
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">${item.label}</span>
+          <span style="font-size: 0.95rem; color: #fff; font-weight: 700; font-family: var(--font-mono);">${item.val}"</span>
+        </div>
+      `;
+    });
+    grid.innerHTML = html;
+    
+  } else {
+    if (badge) badge.textContent = `${items.length} details (Locked)`;
+    
+    let html = '';
+    items.forEach(item => {
+      html += `
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; filter: opacity(0.55);">
+          <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">${item.label}</span>
+          <span style="font-size: 0.95rem; color: #fff; font-weight: 700; font-family: var(--font-mono); filter: blur(4px); user-select: none; pointer-events: none;">99.9"</span>
+        </div>
+      `;
+    });
+    grid.innerHTML = html;
+    
+    const unlockHtml = `
+      <div id="extended-premium-container" style="background: linear-gradient(135deg, rgba(225, 29, 72, 0.06) 0%, rgba(139, 92, 246, 0.04) 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2.25rem 1.5rem; text-align: center; margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); width: 100%; box-sizing: border-box;">
+        <div style="font-size: 2.25rem; margin-bottom: 0.25rem; color: #ff2a75; filter: drop-shadow(0 0 8px rgba(255, 42, 117, 0.35));">🔒</div>
+        <h5 style="margin: 0; color: #fff; font-size: 1.2rem; font-family: var(--font-outfit); font-weight: 700;">Export Custom Tailoring Report</h5>
+        <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 480px; margin: 4px 0 1rem 0; line-height: 1.5;">
+          Unlock your complete <b>80+ physical body measurements</b> in a professional A4 PDF format. Instantly ready to email or print for your personal tailor, bespoke suit/dress designer, or custom fittings.
+        </p>
+        <button id="btn-unlock-export" style="background: var(--primary-gradient); border: none; color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(225,29,72,0.3); display: flex; align-items: center; gap: 8px;">
+          <span>Unlock Now for $7.49 CAD</span>
+        </button>
+        <span style="font-size: 0.72rem; color: var(--text-muted);">One-time payment for lifetime access. Secured via Stripe.</span>
+      </div>
+    `;
+    grid.insertAdjacentHTML('afterend', unlockHtml);
+    
+    document.getElementById('btn-unlock-export').addEventListener('click', () => handleUnlockTailorReport(profile));
+  }
 }
 
 function renderDashboardTwin(profile) {
@@ -1561,6 +1862,23 @@ window.addEventListener('DOMContentLoaded', async () => {
           modal.style.display = 'flex';
           switchToReset();
       }
+  }
+
+  // Handle Stripe Payment Callback for Premium PDF Export
+  const paymentStatus = urlParams.get('payment');
+  const paymentType = urlParams.get('type');
+  if (paymentStatus === 'success' && paymentType === 'export') {
+      alert("Payment successful! Your Premium Custom Tailor Report is now unlocked. You can now download the PDF below.");
+      
+      // Update local cache if logged in
+      if (currentProfileObj) {
+          currentProfileObj.has_paid_export = true;
+          renderExtendedMeasurements(currentProfileObj);
+      }
+      
+      // Clean up URL query parameters
+      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+      window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
   }
 });
 

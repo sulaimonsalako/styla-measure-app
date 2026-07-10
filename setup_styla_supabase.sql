@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     inseam NUMERIC,
     api_scans JSONB DEFAULT '[]'::jsonb,
     measurement_overrides JSONB DEFAULT '{}'::jsonb,
+    has_paid_export BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
