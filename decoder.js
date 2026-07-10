@@ -567,7 +567,8 @@ function renderExtendedMeasurements(profile) {
   const existingContainer = document.getElementById('extended-premium-container');
   if (existingContainer) existingContainer.remove();
   
-  if (profile.has_paid_export) {
+  const isUnlocked = profile.has_paid_export || localStorage.getItem('styla_export_unlocked') === 'true';
+  if (isUnlocked) {
     if (badge) badge.textContent = `${items.length} details (Unlocked)`;
     
     const headerHtml = `
@@ -1870,7 +1871,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (paymentStatus === 'success' && paymentType === 'export') {
       alert("Payment successful! Your Premium Custom Tailor Report is now unlocked. You can now download the PDF below.");
       
-      // Update local cache if logged in
+      // Save in localStorage as a backup/instant unlock
+      localStorage.setItem('styla_export_unlocked', 'true');
+      
       if (currentProfileObj) {
           currentProfileObj.has_paid_export = true;
           renderExtendedMeasurements(currentProfileObj);
