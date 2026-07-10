@@ -101,6 +101,31 @@ export default async function handler(req, res) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const metadata = session.metadata || {};
+
+      // Handle PDF export payment webhook (if Stripe is configured with this webhook URL globally)
+      if (metadata.type === 'export_payment') {
+        const userId = metadata.userId;
+        if (!userId) {
+          console.error("Stripe webhook session completed for export_payment but userId is missing:", metadata);
+          return res.status(400).json({ error: 'Missing userId' });
+        }
+        try {
+          console.log(`Setting has_paid_export = true for user ${userId} inside store-payment webhook...`);
+          const { data, error } = await supabase
+            .from('profiles')
+            .update({ has_paid_export: true, updated_at: new Date().toISOString() })
+            .eq('id', userId)
+            .select();
+
+          if (error) throw error;
+          console.log(`Successfully updated profile payment state for user ${userId}.`);
+          return res.status(200).json({ received: true });
+        } catch (e) {
+          console.error(`Error handling database write inside store-payment webhook for export:`, e);
+          return res.status(500).json({ error: 'Database update failed' });
+        }
+      }
+
       const { cartId, role, amount } = metadata;
 
       if (!cartId || !role || !amount) {

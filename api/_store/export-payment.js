@@ -62,6 +62,12 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const metadata = session.metadata || {};
 
+      // If it is a storefront group cart checkout session, ignore gracefully in export handler
+      if (metadata.cartId) {
+        console.log("Export payment webhook received a storefront cart payment event. Ignoring gracefully.");
+        return res.status(200).json({ received: true });
+      }
+
       if (metadata.type === 'export_payment') {
         const userId = metadata.userId;
         if (!userId) {
