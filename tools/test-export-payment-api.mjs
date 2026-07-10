@@ -17,7 +17,7 @@ for (const line of envLines) {
 }
 
 // Now dynamically import the payment handler
-const { default: handler } = await import('../api/export-payment.js');
+const { default: handler } = await import('../api/_store/export-payment.js');
 
 function mockReqRes(body, query = {}) {
   const req = {
