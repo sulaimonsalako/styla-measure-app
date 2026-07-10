@@ -2,10 +2,6 @@
   "name": "styla-measure",
   "rewrites": [
     {
-      "source": "/api/export-payment",
-      "destination": "/api/export-payment"
-    },
-    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },
