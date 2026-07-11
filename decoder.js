@@ -501,7 +501,7 @@ async function handleUnlockTailorReport(profile) {
       throw new Error("Stripe.js library failed to load. Please check your internet connection.");
     }
     
-    const stripePublicKey = data.publishableKey || 'pk_test_51TiFOjRraLJVWQoHxQ6Q5PyjmJAWJ56yxAbUriGiXrW3wqsbh1F94YoAFTNy0wSvKbWU4OWytkgItc6AUovV75bp00FdoUbqoE';
+    const stripePublicKey = data.publishableKey || 'pk_live_51TiFOU2KQ3LS8UujB9QaSTFoAPeCOYRXExRhEubyGcOpycEDSOmE9KW1AVNOA19fab3xIuhDqeoDcX6smDbOKLbj007kAiKikJ';
     const stripe = window.Stripe(stripePublicKey);
     
     const result = await stripe.redirectToCheckout({

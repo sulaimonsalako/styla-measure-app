@@ -2315,7 +2315,7 @@ async function processPayment(roleToPay, amountToPay) {
     }
     
     // Use the backend publishable key or fallback to a standard publishable key if not configured
-    const stripePublicKey = data.publishableKey || 'pk_test_51PMTqyKDt9XgBvV60v1HqMv6v4XgBvV60v1HqMv6v4';
+    const stripePublicKey = data.publishableKey || 'pk_live_51TiFOU2KQ3LS8UujB9QaSTFoAPeCOYRXExRhEubyGcOpycEDSOmE9KW1AVNOA19fab3xIuhDqeoDcX6smDbOKLbj007kAiKikJ';
     const stripe = window.Stripe(stripePublicKey);
     
     const result = await stripe.redirectToCheckout({
