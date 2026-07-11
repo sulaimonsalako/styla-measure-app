@@ -1,0 +1,237 @@
+{% comment %}
+  STYLA Fit Advisor storefront widget block.
+{% endcomment %}
+
+<!-- Supabase Client Load -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<div class="styla-widget-container" 
+     id="styla-widget-{{ block.id }}" 
+     data-product-id="{{ product.id }}"
+     data-product-title="{{ product.title | escape }}"
+     data-product-handle="{{ product.handle }}"
+     data-customer-id="{{ customer.id }}"
+     {{ block.shopify_attributes }}>
+     
+  <!-- PDP Button -->
+  <button type="button" class="styla-fit-btn" id="styla-trigger-btn-{{ block.id }}" style="
+    --btn-bg: {{ block.settings.btn_bg }};
+    --btn-color: {{ block.settings.btn_color }};
+  ">
+    <svg class="styla-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+    <span class="styla-btn-text">{{ block.settings.btn_label }}</span>
+  </button>
+</div>
+
+<!-- Modal Structure -->
+<div class="styla-modal-overlay styla-hidden" id="styla-modal-{{ block.id }}">
+  <div class="styla-modal-container">
+    <!-- Close Button -->
+    <button class="styla-modal-close" id="styla-close-{{ block.id }}">&times;</button>
+    
+    <div class="styla-modal-body">
+      <!-- 1. Left Column: Product Featured Image -->
+      <div class="styla-modal-left" style="background-image: url('{{ product.featured_image | image_url: width: 600 }}');">
+        <div class="styla-product-overlay">
+          <span class="styla-product-badge">GARMENT PREVIEW</span>
+        </div>
+      </div>
+      
+      <!-- 2. Right Column: Sizing & Chat Panel -->
+      <div class="styla-modal-right">
+      
+        <!-- Loading State Panel -->
+        <div class="styla-panel-content styla-hidden" id="styla-panel-loading-{{ block.id }}">
+          <div class="styla-status-container">
+            <div class="styla-spinner"></div>
+            <p id="styla-loading-msg-{{ block.id }}">Processing your fit recommendation...</p>
+          </div>
+        </div>
+
+        <!-- Auth Panel (Shown if no measurements found) -->
+        <div class="styla-panel-content" id="styla-panel-auth-{{ block.id }}">
+          <div class="styla-auth-container">
+            <!-- Logo Header -->
+            <div class="styla-auth-header">
+              <span class="styla-brand-title">STYLA Fit Advisor</span>
+              <p>Find your perfect size instantly using our AI-powered 3D Sizing Technology.</p>
+            </div>
+            
+            <!-- Auth Main View -->
+            <div class="styla-auth-view active" id="styla-auth-view-main-{{ block.id }}">
+              <div class="styla-btn-stack">
+                <button type="button" class="styla-primary-btn" id="btn-auth-start-scan-{{ block.id }}">
+                  Start AI Sizing Scan (15s)
+                </button>
+                <button type="button" class="styla-secondary-btn" id="btn-auth-goto-retrieve-{{ block.id }}">
+                  Already scanned? Enter email
+                </button>
+                <button type="button" class="styla-text-btn" id="btn-auth-goto-login-{{ block.id }}">
+                  Sign in to STYLA account
+                </button>
+              </div>
+            </div>
+
+            <!-- Email for Scan View -->
+            <div class="styla-auth-view styla-hidden" id="styla-auth-view-scan-email-{{ block.id }}">
+              <p class="styla-form-help">Enter your email address to register your AI body measurements secure scan profile.</p>
+              <div class="styla-form-group">
+                <input type="email" class="styla-input" id="input-scan-email-{{ block.id }}" placeholder="your-email@example.com" required>
+                <button type="button" class="styla-primary-btn" id="btn-auth-launch-scanner-{{ block.id }}">
+                  Continue to 3D Scan
+                </button>
+                <button type="button" class="styla-text-btn btn-auth-back-{{ block.id }}">Back</button>
+              </div>
+            </div>
+
+            <!-- Email Retrieval View -->
+            <div class="styla-auth-view styla-hidden" id="styla-auth-view-retrieve-{{ block.id }}">
+              <p class="styla-form-help">Enter the email you used for your previous STYLA scan to fetch your digital twin measurements.</p>
+              <div class="styla-form-group">
+                <input type="email" class="styla-input" id="input-retrieve-email-{{ block.id }}" placeholder="your-email@example.com" required>
+                <button type="button" class="styla-primary-btn" id="btn-auth-run-retrieve-{{ block.id }}">
+                  Retrieve Measurements
+                </button>
+                <button type="button" class="styla-text-btn btn-auth-back-{{ block.id }}">Back</button>
+              </div>
+            </div>
+
+            <!-- Member Login View -->
+            <div class="styla-auth-view styla-hidden" id="styla-auth-view-login-{{ block.id }}">
+              <p class="styla-form-help">Sign in using your permanent STYLA account credentials.</p>
+              <div class="styla-form-group">
+                <input type="email" class="styla-input" id="input-login-email-{{ block.id }}" placeholder="Email Address">
+                <input type="password" class="styla-input" id="input-login-pass-{{ block.id }}" placeholder="Password">
+                <button type="button" class="styla-primary-btn" id="btn-auth-run-login-{{ block.id }}">
+                  Sign In
+                </button>
+                <button type="button" class="styla-text-btn btn-auth-back-{{ block.id }}">Back</button>
+              </div>
+            </div>
+            
+            <!-- 3DLook Scanning Embed Target -->
+            <div class="styla-auth-view styla-hidden" id="styla-auth-view-3dlook-{{ block.id }}">
+              <div class="saia-widget-container" id="saia-widget-container-{{ block.id }}" style="min-height: 250px;">
+                <!-- 3DLook widget script will render here -->
+              </div>
+              <button type="button" class="styla-text-btn btn-auth-cancel-scan-{{ block.id }}" style="margin-top: 15px;">Cancel</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Results Panel (Shown once measurements are active) -->
+        <div class="styla-panel-content styla-hidden" id="styla-panel-results-{{ block.id }}">
+          <!-- Tab Bar -->
+          <div class="styla-tabs-bar">
+            <div class="styla-tabs">
+              <button class="styla-tab-btn active" data-tab="styla-tab-fit-{{ block.id }}">Fit Advisor</button>
+              <button class="styla-tab-btn" data-tab="styla-tab-chat-{{ block.id }}">Ask AI Tailor</button>
+            </div>
+          </div>
+          
+          <!-- Tab Panel 1: Sizing Details -->
+          <div class="styla-tab-content active" id="styla-tab-fit-{{ block.id }}">
+            <div class="styla-text-rec-container">
+              <!-- Top Section: Best Option Info -->
+              <div class="styla-best-option-row">
+                <div class="styla-best-option-box">
+                  <span class="styla-option-label">BEST OPTION</span>
+                  <div class="styla-option-val">
+                    <span id="styla-best-size-val-{{ block.id }}">-</span>
+                    <svg class="styla-check-icon" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Middle Section: Sizing Details List -->
+              <div class="styla-fit-analysis-panel">
+                <span class="styla-panel-title">Fit details relative to your body:</span>
+                <ul class="styla-text-analysis-list" id="styla-text-list-{{ block.id }}">
+                  <!-- Dynamic specifications will load here -->
+                </ul>
+              </div>
+              
+              <!-- Designer Intent Card -->
+              <div class="styla-intent-card">
+                <p id="styla-intent-text-{{ block.id }}">Evaluating your profile measurements against our designer specifications...</p>
+              </div>
+              
+              <!-- Bottom Section: Also Try Sizes slider -->
+              <div class="styla-size-picker-section">
+                <span class="styla-picker-title">Also try the sizes:</span>
+                <div class="styla-size-slider-row">
+                  <button type="button" class="styla-arrow-btn prev" id="styla-prev-size-{{ block.id }}">&lt;</button>
+                  <div class="styla-size-options-list" id="styla-size-options-list-{{ block.id }}">
+                    <!-- Dynamic size selector buttons will render here -->
+                  </div>
+                  <button type="button" class="styla-arrow-btn next" id="styla-next-size-{{ block.id }}">&gt;</button>
+                </div>
+              </div>
+              
+              <!-- Log Out / Reset Link -->
+              <div style="text-align: center; margin-top: 10px;">
+                <a href="#" id="styla-profile-reset-{{ block.id }}" style="font-size: 11px; color: #94a3b8; text-decoration: none;">Use different profile / Sign out</a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tab Panel 2: AI Tailor Chat -->
+          <div class="styla-tab-content" id="styla-tab-chat-{{ block.id }}">
+            <div class="styla-chat-container">
+              <div class="styla-chat-history" id="styla-chat-history-{{ block.id }}">
+                <div class="chat-msg system">
+                  <p>Hello! I am your STYLA AI Tailor. Ask me anything about how this item fits your body, its fabric composition, or styling suggestions.</p>
+                </div>
+              </div>
+              <div class="styla-chat-input-bar">
+                <input type="text" class="styla-chat-input" id="styla-chat-input-{{ block.id }}" placeholder="Ask about sizing, fabric, or fit...">
+                <button type="button" class="styla-chat-send" id="styla-chat-send-{{ block.id }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ 'styla-widget.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'styla-widget.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Styla Fit Advisor",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "Button Label",
+      "default": "Auto-Size with STYLA"
+    },
+    {
+      "type": "color",
+      "id": "btn_bg",
+      "label": "Button Background Color",
+      "default": "#ff2a75"
+    },
+    {
+      "type": "color",
+      "id": "btn_color",
+      "label": "Button Text Color",
+      "default": "#ffffff"
+    }
+  ]
+}
+{% endschema %}

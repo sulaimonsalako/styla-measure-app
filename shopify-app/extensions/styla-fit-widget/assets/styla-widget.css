@@ -1,0 +1,655 @@
+/* STYLA Storefront Widget Stylesheet */
+
+.styla-widget-container {
+  margin: 15px 0;
+  display: block;
+}
+
+.styla-fit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--btn-bg, #ff2a75);
+  color: var(--btn-color, #ffffff);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 42, 117, 0.25);
+}
+
+.styla-fit-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 42, 117, 0.35);
+}
+
+/* Modal Overlay */
+.styla-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.styla-hidden {
+  display: none !important;
+}
+
+/* Modal Container (Fixed Dimensions) */
+.styla-modal-container {
+  width: 820px;
+  height: 500px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  color: #1e293b;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.styla-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  z-index: 99;
+}
+
+.styla-modal-close:hover {
+  color: #0f172a;
+}
+
+/* Modal Split Layout */
+.styla-modal-body {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Left Cover Image Column */
+.styla-modal-left {
+  width: 40%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  position: relative;
+}
+
+.styla-product-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.styla-product-badge {
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+}
+
+/* Right Content Column */
+.styla-modal-right {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+/* Tab Bar */
+.styla-tabs-bar {
+  border-bottom: 1px solid #e2e8f0;
+  padding-right: 48px; /* Avoid close button overlap */
+  background: #f8fafc;
+}
+
+.styla-tabs {
+  display: flex;
+}
+
+.styla-tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  padding: 18px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  text-align: center;
+}
+
+.styla-tab-btn.active {
+  color: #ff2a75;
+  border-bottom-color: #ff2a75;
+  background: #ffffff;
+}
+
+.styla-tab-content {
+  display: none;
+  height: calc(100% - 55px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.styla-tab-content.active {
+  display: block;
+}
+
+/* Text Sizing Layout */
+.styla-text-rec-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 22px 26px;
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+/* Best Option Info Row */
+.styla-best-option-row {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.styla-best-option-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 24px;
+  text-align: center;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.styla-option-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.styla-option-val {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.styla-check-icon {
+  width: 18px;
+  height: 18px;
+  color: #10b981;
+}
+
+/* Sizing Specification List */
+.styla-fit-analysis-panel {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.styla-panel-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.styla-text-analysis-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.styla-text-fit-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.styla-text-fit-item:last-child {
+  border-bottom: none;
+}
+
+.styla-item-label {
+  font-weight: 600;
+  color: #0f172a;
+  width: 30%;
+}
+
+.styla-item-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 80px;
+}
+
+.styla-item-badge.ok {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.styla-item-badge.warn {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.styla-item-badge.err {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.styla-item-ease {
+  color: #64748b;
+  font-weight: 500;
+  text-align: right;
+  width: 30%;
+}
+
+/* Designer Intent Card */
+.styla-intent-card {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+}
+
+.styla-intent-card p {
+  margin: 0;
+}
+
+/* Slider Size Picker */
+.styla-size-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.styla-picker-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.styla-size-slider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.styla-arrow-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.styla-arrow-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.styla-size-options-list {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.styla-size-opt-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.styla-size-opt-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Chat container sized exactly the same */
+.styla-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.styla-chat-history {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 330px; /* Constrains chat height */
+  box-sizing: border-box;
+}
+
+.chat-msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chat-msg.system {
+  background: #f1f5f9;
+  color: #1e293b;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+}
+
+.chat-msg.user {
+  background: #ff2a75;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+
+.styla-chat-input-bar {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  flex-shrink: 0;
+}
+
+.styla-chat-input {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #0f172a;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.styla-chat-input:focus {
+  border-color: #ff2a75;
+}
+
+.styla-chat-send {
+  background: #ff2a75;
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.styla-chat-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+.styla-chat-send:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+}
+
+/* Auth Container styling */
+.styla-auth-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 30px 40px;
+  box-sizing: border-box;
+  justify-content: center;
+}
+
+.styla-auth-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.styla-brand-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ff2a75;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.styla-auth-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Button stack & forms */
+.styla-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.styla-primary-btn {
+  background: linear-gradient(135deg, #ff2a75 0%, #ff5252 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.styla-primary-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.styla-secondary-btn {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.styla-secondary-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.styla-text-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s ease;
+  text-align: center;
+}
+
+.styla-text-btn:hover {
+  color: #0f172a;
+}
+
+/* Inputs & Form Group */
+.styla-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.styla-input {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.styla-input:focus {
+  border-color: #ff2a75;
+  box-shadow: 0 0 0 3px rgba(255, 42, 117, 0.15);
+}
+
+.styla-form-help {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Loading & Spinners */
+.styla-panel-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.styla-status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  gap: 18px;
+  text-align: center;
+}
+
+.styla-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f1f5f9;
+  border-top-color: #ff2a75;
+  border-radius: 50%;
+  animation: styla-spin 0.8s linear infinite;
+}
+
+@keyframes styla-spin {
+  to { transform: rotate(360deg); }
+}
+
+.styla-status-container p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .styla-modal-container {
+    width: 95%;
+    height: auto;
+    max-height: 95vh;
+  }
+
+  .styla-modal-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .styla-modal-left {
+    display: none;
+  }
+
+  .styla-modal-right {
+    width: 100%;
+    height: auto;
+  }
+
+  .styla-tab-content {
+    height: auto;
+  }
+
+  .styla-chat-history {
+    height: 220px;
+  }
+}

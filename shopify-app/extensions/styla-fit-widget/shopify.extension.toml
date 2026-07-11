@@ -1,0 +1,13 @@
+api_version = "2024-04"
+
+[[extensions]]
+name = "Styla Fit Advisor"
+handle = "styla-fit-widget"
+uid = "9dcbe9cb-a729-eebb-effb-85d9a0df6fbf28c38689"
+type = "theme"
+
+[[extensions.blocks]]
+name = "Styla Fit Advisor"
+templates = ["product"]
+target = "section"
+type = "styla-widget"
