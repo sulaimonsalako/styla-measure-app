@@ -713,6 +713,109 @@
         margin: auto !important;
       }
     }
+  
+    /* Premium Input and Button Overrides */
+    .styled-input, .input-group input {
+      background: rgba(255, 255, 255, 0.02) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 12px !important;
+      padding: 14px 16px !important;
+      color: #fff !important;
+      font-size: 0.95rem !important;
+      font-family: var(--font-head) !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .styled-input:hover, .input-group input:hover {
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+    .styled-input:focus, .input-group input:focus {
+      outline: none !important;
+      border-color: #ff2a75 !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      box-shadow: 0 0 12px rgba(255, 42, 117, 0.2) !important;
+    }
+    
+    .styled-select {
+      background: rgba(255, 255, 255, 0.02) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 12px !important;
+      color: #fff !important;
+      padding: 12px 14px !important;
+      font-size: 0.95rem !important;
+      font-family: var(--font-head) !important;
+      transition: all 0.25s ease !important;
+    }
+    .styled-select:focus {
+      outline: none !important;
+      border-color: #ff2a75 !important;
+      box-shadow: 0 0 10px rgba(255, 42, 117, 0.15) !important;
+    }
+
+    .tab-container {
+      background: rgba(255, 255, 255, 0.015) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      border-radius: 100px !important;
+      padding: 4px !important;
+    }
+    .tab-btn {
+      color: var(--text-secondary) !important;
+      font-weight: 700 !important;
+      border-radius: 100px !important;
+      transition: all 0.2s ease !important;
+    }
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #fff !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    }
+
+    .step-num {
+      background: rgba(255, 42, 117, 0.1) !important;
+      border: 1px solid rgba(255, 42, 117, 0.25) !important;
+      color: #ff2a75 !important;
+      font-weight: 800 !important;
+      font-size: 1rem !important;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* Checklist overrides */
+    .premium-checklist {
+      list-style-type: none !important;
+      padding-left: 0 !important;
+      margin: 0 !important;
+    }
+    .premium-checklist li {
+      position: relative !important;
+      padding-left: 24px !important;
+      margin-bottom: 10px !important;
+      font-size: 0.85rem !important;
+      color: var(--text-secondary) !important;
+      line-height: 1.45 !important;
+    }
+    .premium-checklist li::before {
+      content: "✓" !important;
+      position: absolute !important;
+      left: 0 !important;
+      color: #10b981 !important;
+      font-weight: 900 !important;
+    }
+
+    @media (max-width: 480px) {
+      #onboarding-modal > div {
+        padding: 1.5rem !important;
+        width: 92% !important;
+        margin: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -841,30 +944,30 @@
 
       <!-- TAB CONTENT: MANUAL PANEL WORKSPACE -->
       <div id="manual-panel-workspace" style="display: block;">
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.2rem 0;">Enter your dimensions manually if you already know them.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 1.5rem 0; text-align: center;">Enter your dimensions manually if you already know them.</p>
         
         <div class="input-row">
           <div class="input-group">
-            <label>Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Chest (inches) <span class="info-icon" onclick="showMeasureModal('chest')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <input type="number" id="val-chest" placeholder="e.g. 38" autocomplete="off" />
           </div>
           <div class="input-group">
-            <label>Waist (inches) <span class="info-icon" onclick="showMeasureModal('waist')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Waist (inches) <span class="info-icon" onclick="showMeasureModal('waist')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <input type="number" id="val-waist" placeholder="e.g. 32" autocomplete="off" />
           </div>
           <div class="input-group">
-            <label>Belly (inches) <span class="info-icon" onclick="showMeasureModal('belly')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Belly (inches) <span class="info-icon" onclick="showMeasureModal('belly')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <input type="number" id="val-belly" placeholder="e.g. 36" autocomplete="off" />
           </div>
         </div>
         
         <div class="input-row" style="margin-top: 1rem; margin-bottom: 0;">
           <div class="input-group">
-            <label>Hips (inches) <span class="info-icon" onclick="showMeasureModal('hips')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Hips (inches) <span class="info-icon" onclick="showMeasureModal('hips')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <input type="number" id="val-hips" placeholder="e.g. 40" autocomplete="off" />
           </div>
           <div class="input-group">
-            <label>Height <span class="info-icon" onclick="showMeasureModal('height')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Height <span class="info-icon" onclick="showMeasureModal('height')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <div style="display: flex; gap: 0.5rem;">
               <select id="val-height-ft" class="styled-select" style="flex: 1;">
                 <option value="">ft</option>
@@ -891,9 +994,16 @@
             </div>
           </div>
           <div class="input-group">
-            <label>Inseam (inches) <span class="info-icon" onclick="showMeasureModal('inseam')">?</span></label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Inseam (inches) <span class="info-icon" onclick="showMeasureModal('inseam')" style="color: #ff2a75; cursor: pointer; font-weight: 700; margin-left: 4px;">?</span></label>
             <input type="number" id="val-inseam" placeholder="e.g. 30" autocomplete="off" />
           </div>
+        </div>
+
+        <!-- B2C Action Button -->
+        <div style="margin-top: 2rem; text-align: center;">
+          <button type="button" id="btn-manual-save-gate" class="btn-run" style="background: var(--primary-gradient); width: 100%; max-width: 320px; font-weight: 700; padding: 12px 24px; font-size: 1rem; border-radius: 100px; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 0;">
+            Create Account & Save Profile
+          </button>
         </div>
       </div>
 
@@ -905,57 +1015,60 @@
         <div class="step-num">2</div>
         <h3 class="step-title">Get Shopping Extension & Bookmarklet</h3>
       </div>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0 0 1.5rem 0; line-height: 1.5;">
-        Now that you have your body measurements saved, you can use them to find your fit automatically on any online store. Choose your preferred tool below:
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0 0 2rem 0; line-height: 1.5; max-width: 600px;">
+        Once your measurements are saved, you can use them to find your perfect fit automatically on any online store. Choose your platform below:
       </p>
 
       <div class="tools-container" style="display: flex; flex-direction: row; gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
         <!-- Apple Devices Card -->
-        <div class="card" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="tools-card" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.8rem; border-radius: 16px; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05);">
           <div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 1.25rem;">🍎</span>
-              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">iPad & Apple Devices</h4>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff;">
+                <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,22C14.32,22.05 13.89,21.24 12.37,21.24C10.84,21.24 10.37,21.97 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z"/></svg>
+              </div>
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700;">iPad & Apple Devices</h4>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
-              Choose the easiest setup for your iPad or iPhone. No complicated configuration required!
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 1.25rem;">
+              Sleek integration designed specifically for iOS. Choose the easiest option for your device:
             </p>
-            <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5; list-style: none;">
-              <li style="margin-bottom: 6px;">💡 <b>iPad Safari Bookmark:</b> Save a quick bookmark in Safari. Simple and 100% app-free.</li>
-              <li>⚡ <b>Apple Share Shortcut:</b> Launch directly from your Safari Share menu.</li>
+            <ul class="premium-checklist">
+              <li><b>iPad Safari Bookmark:</b> Save a quick, 100% app-free utility in Safari bookmarks.</li>
+              <li><b>Apple Share Shortcut:</b> Launch the sizing tool directly from Safari's native Share Sheet.</li>
             </ul>
           </div>
-          <button class="btn-run btn-apple-shortcut-action" style="margin-top: 1rem; text-align: center; width: 100%; padding: 10px; font-size: 0.85rem; background: var(--primary-gradient); border: none; border-radius: 8px; cursor: pointer; color: #fff; font-weight: 700;">Open iPad & Apple Setup Guide</button>
+          <button class="btn-run btn-apple-shortcut-action" style="margin-top: 1rem; width: 100%; padding: 12px; font-size: 0.9rem; background: var(--primary-gradient); border: none; border-radius: 8px; cursor: pointer; color: #fff; font-weight: 700; transition: transform 0.2s;">Open iPad & Apple Setup Guide</button>
         </div>
 
         <!-- Windows & Android Card -->
-        <div class="card" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+        <div class="tools-card" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.8rem; border-radius: 16px; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05);">
           <div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <span style="font-size: 1.25rem;">💻</span>
-              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">Windows & Android</h4>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff;">
+                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700;">Windows & Android</h4>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 1rem;">
-              Use our smart browser bookmarklet on Chrome, Edge, or Firefox. No installation required.
+            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 1.25rem;">
+              Smart browser bookmarklet for Chrome, Edge, and Firefox. No installations required:
             </p>
-            <ol style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.1rem; margin-bottom: 0; line-height: 1.5;">
-              <li><b>Desktop:</b> Drag the <b>⚡ STYLA Stylist</b> button below to your Bookmarks bar.</li>
-              <li><b>Mobile:</b> Tap <b>Copy Code</b>, bookmark this page, edit the bookmark's URL, and paste the code.</li>
-              <li>Go to any clothing product page and tap the bookmark to open the fitting room!</li>
-            </ol>
+            <ul class="premium-checklist">
+              <li><b>Desktop Chrome/Edge:</b> Simply drag the <b>⚡ STYLA Stylist</b> pill below directly to your Bookmarks bar.</li>
+              <li><b>Mobile Chrome:</b> Copy the code block below, bookmark this page, edit the URL, and paste the code.</li>
+            </ul>
           </div>
-          <div style="text-align: center; margin-top: auto; padding-top: 0.5rem;">
-            <a id="btn-bookmarklet" href="#" style="display: inline-block; background: var(--success-gradient); color: var(--text-primary); font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 100px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.2);">⚡ STYLA Stylist</a>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag me to your Bookmarks bar!</p>
+          <div style="text-align: center; margin-top: 1rem; width: 100%;">
+            <a id="btn-bookmarklet" href="#" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 100px; font-size: 0.9rem; border: none; cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.25); width: 100%; box-sizing: border-box;">
+              <span>⚡ STYLA Stylist</span>
+            </a>
+            <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag this pill directly to your Bookmarks bar!</p>
             
-            <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--success-gradient); margin-top: 0; border-radius: 8px;">Copy Code (For Mobile Chrome)</button>
-            <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
+            <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); margin-top: 0; border-radius: 8px; font-weight: 600; color: var(--text-secondary);">Copy Mobile Chrome Code</button>
+            <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">✓ Code copied to clipboard!</div>
           </div>
         </div>
       </div>
     </div>
-
-    </main>
   </div>
 
   <!-- PREMIUM AI TAILOR DASHBOARD VIEW -->
@@ -1471,6 +1584,49 @@ s0.parentNode.insertBefore(s1,s0);
       if (btnTabManual) btnTabManual.click();
     }
   </script>
+
+
+    // Bind B2C Manual Save Gate button to open signup modal
+    document.addEventListener('DOMContentLoaded', () => {
+      const manualSaveGateBtn = document.getElementById('btn-manual-save-gate');
+      if (manualSaveGateBtn) {
+        manualSaveGateBtn.addEventListener('click', () => {
+          const chest = document.getElementById('val-chest').value;
+          const waist = document.getElementById('val-waist').value;
+          const hips = document.getElementById('val-hips').value;
+          if (!chest || !waist || !hips) {
+            alert("Please fill in your Chest, Waist, and Hips before saving.");
+            return;
+          }
+
+          // Save manual measurements to localStorage so signup parses them immediately
+          localStorage.setItem('styla_twin_chest', chest);
+          localStorage.setItem('styla_twin_waist', waist);
+          const belly = document.getElementById('val-belly').value;
+          if (belly) localStorage.setItem('styla_twin_belly', belly);
+          localStorage.setItem('styla_twin_hips', hips);
+          const inseam = document.getElementById('val-inseam').value;
+          if (inseam) localStorage.setItem('styla_twin_inseam', inseam);
+
+          const heightFt = document.getElementById('val-height-ft').value;
+          const heightIn = document.getElementById('val-height-in').value;
+          if (heightFt !== "" && heightIn !== "") {
+            const totalHeight = (parseInt(heightFt, 10) * 12) + parseInt(heightIn, 10);
+            localStorage.setItem('styla_twin_height', totalHeight.toString());
+          }
+
+          // Open login modal and focus on signup tab
+          const loginModal = document.getElementById('login-modal');
+          if (loginModal) {
+            loginModal.style.display = 'flex';
+            const signupTabBtn = document.getElementById('tab-auth-signup');
+            if (signupTabBtn) {
+              signupTabBtn.click();
+            }
+          }
+        });
+      }
+    });
 
 </body>
 </html>
