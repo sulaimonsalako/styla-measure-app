@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STYLA Admin - Upload Size Chart & Garment</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER NAV -->
+  <nav class="navbar" style="border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+      <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 800; font-family: var(--font-outfit); font-size: 1.3rem; text-decoration: none; color: #fff;">
+        <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA <span class="logo-accent">Measure</span>
+      </a>
+      <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+        <a href="index.html" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">Shopper Home</a>
+        <a href="brands.html" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">For Brands</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width: 800px; margin: 3rem auto; padding: 0 1.5rem; box-sizing: border-box;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ffffff 40%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Merchant Admin Tools</h2>
+      <p style="margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-secondary);">Legacy Size Chart & Sizing Analysis Uploader</p>
+    </div>
+
+    <!-- STEP 3: UPLOAD BRAND SIZE CHART & GARMENT -->
+    <div class="step-card" id="step-3-container" style="border: 1px solid var(--border); background: var(--bg-surface); border-radius: 20px; padding: 2rem;">
+      <div class="step-header" style="margin-bottom: 1.5rem;">
+        <h3 class="step-title" style="color: #fff; margin: 0; font-size: 1.4rem;">Upload Size Chart & Garment Specs</h3>
+      </div>
+
+      <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 12px; padding: 1.2rem; margin-bottom: 2rem;">
+        <p style="font-size: 0.85rem; color: var(--accent-light); margin: 0; line-height: 1.5;">
+          This manual uploader allows merchants to upload flat finished size specs to test size recommendation logic.
+        </p>
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+        <div class="input-group" style="flex: 1; min-width: 250px;">
+          <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 8px;">1. Size Chart Image (Required)</label>
+          <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
+            <span id="drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop size chart</span>
+          </div>
+          <input type="file" id="file-upload" accept="image/*" style="display: none;" />
+          <div id="chart-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+        </div>
+
+        <div class="input-group" style="flex: 1; min-width: 250px;">
+          <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 8px;">2. Garment Photos (Required)</label>
+          <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
+            <span id="style-drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop garment photos</span>
+          </div>
+          <input type="file" id="style-file-upload" accept="image/*" multiple style="display: none;" />
+          <div id="style-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
+        </div>
+      </div>
+
+      <!-- User Reference Specs (used for testing sizing) -->
+      <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem;">
+        <h4 style="margin: 0 0 1rem 0; color: #fff; font-size: 1.05rem;">User reference dimensions for sizing estimation:</h4>
+        <div class="input-row" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div class="input-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.8rem;">Chest (inches)</label>
+            <input type="number" id="val-chest" class="styled-input" placeholder="e.g. 38" />
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.8rem;">Waist (inches)</label>
+            <input type="number" id="val-waist" class="styled-input" placeholder="e.g. 32" />
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.8rem;">Belly (inches)</label>
+            <input type="number" id="val-belly" class="styled-input" placeholder="e.g. 36" />
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.8rem;">Hips (inches)</label>
+            <input type="number" id="val-hips" class="styled-input" placeholder="e.g. 40" />
+          </div>
+          <div class="input-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 0.8rem;">Inseam (inches)</label>
+            <input type="number" id="val-inseam" class="styled-input" placeholder="e.g. 30" />
+          </div>
+        </div>
+        
+        <div class="input-row" style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div class="input-group" style="flex: 1; min-width: 180px;">
+            <label style="font-size: 0.8rem;">Height</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="val-height-ft" class="styled-select" style="flex: 1;">
+                <option value="4">4 ft</option>
+                <option value="5" selected>5 ft</option>
+                <option value="6">6 ft</option>
+                <option value="7">7 ft</option>
+              </select>
+              <select id="val-height-in" class="styled-select" style="flex: 1;">
+                <option value="0">0 in</option><option value="1">1 in</option><option value="2">2 in</option>
+                <option value="3">3 in</option><option value="4">4 in</option><option value="5">5 in</option>
+                <option value="6">6 in</option><option value="7">7 in</option><option value="8" selected>8 in</option>
+                <option value="9">9 in</option><option value="10">10 in</option><option value="11">11 in</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-decode" class="btn-run" style="margin-top: 2rem; width: 100%; padding: 12px; background: var(--primary-gradient); border: none; font-size: 1rem; font-weight: 700; color: #fff; cursor: pointer; border-radius: 8px;">Check Sizing Recommendation</button>
+
+      <!-- Sizing Loader -->
+      <div id="loader" class="loader-container" style="display: none; text-align: center; margin-top: 1.5rem;">
+        <div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-top-color: #ff2a75; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        <div id="loader-status" class="loader-text" style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">Reading size chart...</div>
+      </div>
+
+      <!-- Sizing Output -->
+      <div id="result-box" style="margin-top: 2rem;"></div>
+
+      <!-- AI Chat Widget -->
+      <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 1.5rem;">
+        <div id="chat-messages" class="chat-messages-container" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 10px;">
+          <div class="chat-bubble bot">Ask Tailor AI any follow-up questions about the fit.</div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <input type="text" id="chat-input" class="styled-input" placeholder="Ask Tailor AI..." autocomplete="off" style="flex: 1;" />
+          <button id="chat-send-btn" class="btn-run" style="width: auto; padding: 10px 20px; font-size: 0.9rem;">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script tags -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <script src="decoder.js?v=20260621"></script>
+</body>
+</html>

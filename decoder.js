@@ -1923,8 +1923,8 @@ let chartBase64Images = [];
 let styleBase64Images = [];
 
 // Handle Chart File Selection
-fileUpload.addEventListener('change', (e) => handleChartFiles(e.target.files));
-styleFileUpload.addEventListener('change', (e) => handleStyleFiles(e.target.files));
+if (fileUpload) fileUpload.addEventListener('change', (e) => handleChartFiles(e.target.files));
+if (styleFileUpload) styleFileUpload.addEventListener('change', (e) => handleStyleFiles(e.target.files));
 
 function compressImage(file, maxDimension = 1024, quality = 0.7) {
   return new Promise((resolve) => {
@@ -2018,28 +2018,32 @@ async function handleStyleFiles(files) {
     }
 }
 // Handle Drag & Drop for Chart
-dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#8b5cf6'; });
-dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)'; });
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    fileUpload.files = e.dataTransfer.files;
-    handleChartFiles(e.dataTransfer.files);
-  }
-});
+if (dropZone) {
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#8b5cf6'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)'; });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (fileUpload) fileUpload.files = e.dataTransfer.files;
+      handleChartFiles(e.dataTransfer.files);
+    }
+  });
+}
 
 // Handle Drag & Drop for Style Image
-styleDropZone.addEventListener('dragover', (e) => { e.preventDefault(); styleDropZone.style.borderColor = '#8b5cf6'; });
-styleDropZone.addEventListener('dragleave', () => { styleDropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)'; });
-styleDropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  styleDropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    styleFileUpload.files = e.dataTransfer.files;
-    handleStyleFiles(e.dataTransfer.files);
-  }
-});
+if (styleDropZone) {
+  styleDropZone.addEventListener('dragover', (e) => { e.preventDefault(); styleDropZone.style.borderColor = '#8b5cf6'; });
+  styleDropZone.addEventListener('dragleave', () => { styleDropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)'; });
+  styleDropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    styleDropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (styleFileUpload) styleFileUpload.files = e.dataTransfer.files;
+      handleStyleFiles(e.dataTransfer.files);
+    }
+  });
+}
 
 // Dynamic Loader Animation
 function startLoader() {
@@ -2067,6 +2071,7 @@ function stopLoader() {
 }
 
 // Submit for AI Decoding
+if (btnDecode) {
 btnDecode.addEventListener('click', async () => {
   const chest = document.getElementById('val-chest').value;
   const waist = document.getElementById('val-waist').value;
@@ -2297,6 +2302,10 @@ btnDecode.addEventListener('click', async () => {
 });
 
 // Save Profile to Supabase Cloud
+});
+}
+
+if (btnSaveProfile) {
 btnSaveProfile.addEventListener('click', async () => {
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-password').value;

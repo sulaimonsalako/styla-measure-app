@@ -1,4 +1,4 @@
-/* STYLA Storefront Widget Stylesheet */
+/* STYLA Storefront Widget Stylesheet - Sizebay Text-based Theme */
 
 .styla-widget-container {
   margin: 15px 0;
@@ -175,15 +175,17 @@
 /* Best Option Info Row */
 .styla-best-option-row {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   flex-shrink: 0;
+  margin-bottom: 10px;
 }
 
 .styla-best-option-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 10px 24px;
+  padding: 8px 20px;
   text-align: center;
   display: inline-flex;
   flex-direction: column;
@@ -191,7 +193,7 @@
 }
 
 .styla-option-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   color: #64748b;
   letter-spacing: 0.05em;
@@ -199,7 +201,7 @@
 }
 
 .styla-option-val {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
   color: #0f172a;
   line-height: 1;
@@ -209,9 +211,43 @@
 }
 
 .styla-check-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #10b981;
+}
+
+/* Edit Specs Button */
+.styla-edit-specs-btn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.styla-edit-specs-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.styla-edit-specs-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.styla-fit-details-body {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 60px);
+  justify-content: space-between;
 }
 
 /* Sizing Specification List */
@@ -241,7 +277,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
 }
@@ -257,13 +293,13 @@
 }
 
 .styla-item-badge {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 9999px;
   white-space: nowrap;
   text-align: center;
-  min-width: 80px;
+  min-width: 70px;
 }
 
 .styla-item-badge.ok {
@@ -272,8 +308,8 @@
 }
 
 .styla-item-badge.warn {
-  background: #ffe4e6;
-  color: #be123c;
+  background: #fff3c4;
+  color: #854d0e;
 }
 
 .styla-item-badge.err {
@@ -372,6 +408,94 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
+/* Manual Specs Form styling */
+.styla-specs-form {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 60px);
+  justify-content: space-between;
+}
+
+.styla-form-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.styla-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.styla-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.styla-form-group label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.styla-form-group input {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.styla-form-group input:focus {
+  border-color: #ff2a75;
+}
+
+.styla-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: auto;
+}
+
+.styla-form-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.styla-form-btn.cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.styla-form-btn.cancel:hover {
+  background: #e2e8f0;
+}
+
+.styla-form-btn.save {
+  background: #ff2a75;
+  color: white;
+}
+
+.styla-form-btn.save:hover {
+  opacity: 0.9;
+}
+
 /* Chat container sized exactly the same */
 .styla-chat-container {
   display: flex;
@@ -462,167 +586,6 @@
   transform: scale(1.03);
 }
 
-/* Auth Container styling */
-.styla-auth-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 30px 40px;
-  box-sizing: border-box;
-  justify-content: center;
-}
-
-.styla-auth-header {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.styla-brand-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #ff2a75;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.styla-auth-header p {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Button stack & forms */
-.styla-btn-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.styla-primary-btn {
-  background: linear-gradient(135deg, #ff2a75 0%, #ff5252 100%);
-  color: #ffffff;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-  width: 100%;
-  text-align: center;
-}
-
-.styla-primary-btn:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-}
-
-.styla-secondary-btn {
-  background: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
-  width: 100%;
-  text-align: center;
-}
-
-.styla-secondary-btn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-}
-
-.styla-text-btn {
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 8px;
-  transition: color 0.2s ease;
-  text-align: center;
-}
-
-.styla-text-btn:hover {
-  color: #0f172a;
-}
-
-/* Inputs & Form Group */
-.styla-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.styla-input {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #0f172a;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.styla-input:focus {
-  border-color: #ff2a75;
-  box-shadow: 0 0 0 3px rgba(255, 42, 117, 0.15);
-}
-
-.styla-form-help {
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.5;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-/* Loading & Spinners */
-.styla-panel-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.styla-status-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 40px;
-  gap: 18px;
-  text-align: center;
-}
-
-.styla-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f1f5f9;
-  border-top-color: #ff2a75;
-  border-radius: 50%;
-  animation: styla-spin 0.8s linear infinite;
-}
-
-@keyframes styla-spin {
-  to { transform: rotate(360deg); }
-}
-
-.styla-status-container p {
-  font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-  margin: 0;
-}
-
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .styla-modal-container {
@@ -637,7 +600,7 @@
   }
   
   .styla-modal-left {
-    display: none;
+    display: none; /* Hide product image on small mobile screen to optimize space */
   }
 
   .styla-modal-right {

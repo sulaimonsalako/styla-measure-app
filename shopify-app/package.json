@@ -1,0 +1,18 @@
+{
+  "name": "styla-shopify-app",
+  "version": "1.0.0",
+  "description": "Shopify integration app for STYLA Fit Engine",
+  "main": "web/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node web/index.js",
+    "dev": "node web/index.js"
+  },
+  "dependencies": {
+    "@shopify/shopify-api": "^9.0.2",
+    "@supabase/supabase-js": "^2.108.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  }
+}

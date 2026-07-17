@@ -731,23 +731,55 @@
 
   <div id="landing-view" style="margin-top: 72px;">
   <!-- Hero Intro -->
-    <section class="hero-container">
+    <section class="hero-container" style="align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #ffffff 30%, #ff75a0 70%, #e11d48 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Know Your Size.<br><em>Everywhere.</em></h1>
-      <p style="font-size: 1.1rem; color: var(--text-secondary); line-height: 1.6; margin: 0 0 0.5rem 0; max-width: 520px;">
-        Every clothing brand uses a different size chart. STYLA matches your 3D body measurements to size charts in real-time, helping you buy the perfect fit with confidence.
+      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; background: linear-gradient(135deg, #ffffff 30%, #ff75a0 70%, #ff2a75 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Your Personal Tailor at Home.<br><em>Perfect Fit across Every Brand.</em></h1>
+      <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; margin: 0; max-width: 540px;">
+        Scan your body in 30 seconds with your mobile phone camera—no tape measures or physical tailor visits. Instantly discover your perfect size at any online store, or export your 80+ tailor-grade measurements to send straight to your designer for custom wedding suits, dresses, and special events.
       </p>
-      <div style="display: flex; gap: 16px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); flex-wrap: wrap;">
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> No return shipping fees</span>
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Scan in 30 seconds</span>
-        <span style="display: flex; align-items: center; gap: 6px;"><span style="color: #e11d48;">✔</span> Universal size profile</span>
+      <div style="margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn-run" id="btn-hero-measure" style="background: var(--primary-gradient); font-size: 1.05rem; padding: 12px 32px; width: auto; margin-top: 0;">Measure Me Now</button>
+        <span style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+          <svg style="width: 16px; height: 16px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          No Photos Stored / 100% Automated AI
+        </span>
       </div>
-      </div>
+    </div>
 
     <!-- Right Column: 3D Body Scan Visual Mockup (Truetoform Style) -->
     <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
       <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(225, 29, 72, 0.08) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
       <img src="images/styla_3d_scan_hero_dark.png" alt="STYLA 3D Scan Avatar" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(15, 23, 42, 0.06); box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04); position: relative; z-index: 1;" />
+    </div>
+  </section>
+  <!-- How it Works 4-Column Explainer -->
+  <section class="explainer-section" style="max-width: 1200px; margin: 4rem auto; padding: 0 1.5rem; text-align: center; box-sizing: border-box;">
+    <h2 style="font-family: var(--font-outfit); font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 2.5rem; letter-spacing: -0.02em;">How STYLA Works</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+      <!-- Column 1 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">1</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">3D Mobile Scan</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Take two quick photos from home using your phone camera. No manual tape measures or physical tailors required.</p>
+      </div>
+      <!-- Column 2 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">2</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Calculated Precision</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Our AI instantly extracts 80+ distinct physical measurements with professional, tailor-grade accuracy.</p>
+      </div>
+      <!-- Column 3 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">3</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Cross-Brand Shop</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Shop Nike, Levi's, Zara, and more. STYLA matches your metrics to brand size charts to recommend your perfect fit.</p>
+      </div>
+      <!-- Column 4 -->
+      <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">4</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Bespoke PDF Export</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Export your sizing profile to a clean PDF sheet and send it directly to your tailor for weddings or custom outfits.</p>
+      </div>
     </div>
   </section>
 
@@ -945,93 +977,7 @@
       </div>
     </div>
 
-    <!-- STEP 3: UPLOAD BRAND SIZE CHART & GARMENT -->
-    <div class="step-card" id="step-3-container" style="border-style: dashed; opacity: 0.8; transition: all 0.3s ease;">
-      <!-- Toggle Header -->
-      <div id="step-3-toggle-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-        <div class="step-header" style="margin-bottom: 0;">
-          <div class="step-num" style="background: rgba(255,255,255,0.1); color: var(--text-muted);">3</div>
-          <h3 class="step-title" style="color: var(--text-muted);">Upload Size Chart & Garment (Legacy Alternative)</h3>
-        </div>
-        <span id="step-3-toggle-arrow" style="font-size: 1.25rem; color: var(--text-muted); transition: transform 0.3s;">▼</span>
-      </div>
-
-      <!-- Expandable Body (Hidden by default) -->
-      <div id="step-3-expandable-body" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.5rem;">
-        <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 16px; padding: 1.2rem; margin-bottom: 2rem;">
-          <p style="font-size: 0.85rem; color: var(--accent-light); margin: 0; line-height: 1.5;">
-            ⚠️ <b>Legacy Flow:</b> This manual upload option is redundant and will be deprecated. For the best experience, use the <b>AI Body Scan (Step 1)</b> and shop directly on retail websites using the <b>Extension / Bookmarklet (Step 2)</b>.
-          </p>
-        </div>
-
-        <div class="input-row" style="gap: 1.5rem; margin-bottom: 0;">
-          <div class="input-group">
-            <label style="font-size: 0.9rem;">1. Size Chart Image (Required)</label>
-            <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-upload').click()">
-              <span id="drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop size chart</span>
-            </div>
-            <input type="file" id="file-upload" accept="image/*" style="display: none;" />
-            <div id="chart-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
-          </div>
-
-          <div class="input-group">
-            <label style="font-size: 0.9rem;">2. Garment Photos (Required)</label>
-            <div class="file-drop" id="style-drop-zone" onclick="document.getElementById('style-file-upload').click()">
-              <span id="style-drop-text" style="color: var(--text-muted); font-size: 0.85rem;">Click or drag & drop garment photos</span>
-            </div>
-            <input type="file" id="style-file-upload" accept="image/*" multiple style="display: none;" />
-            <div id="style-preview-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;"></div>
-          </div>
-        </div>
-
-        <button id="btn-decode" class="btn-run" style="margin-top: 2rem;">⚡ Check My Sizing Recommendation</button>
-
-        <!-- Sizing Loader -->
-        <div id="loader" class="loader-container">
-          <div class="spinner"></div>
-          <div id="loader-status" class="loader-text">Reading size chart...</div>
-        </div>
-
-        <!-- Sizing Output -->
-        <div id="result-box"></div>
-
-        <!-- AI Chat Widget -->
-        <div id="chat-section" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(15, 23, 42, 0.08); padding-top: 1.5rem;">
-          <div id="chat-messages" class="chat-messages-container" style="max-height: 250px;">
-            <div class="chat-bubble bot">Ask Tailor AI any follow-up questions about the fit.</div>
-          </div>
-          <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <input type="text" id="chat-input" class="styled-input" placeholder="Ask Tailor AI (e.g., 'Will the chest be too tight?')..." autocomplete="off" />
-            <button id="chat-send-btn" class="btn-run" style="width: auto; margin-top: 0; padding: 10px 20px; font-size: 0.9rem; border-radius: 120px;">Send</button>
-          </div>
-        </div>
-
-        <!-- Convert Guest to Cloud Profile Box -->
-        <div id="save-profile-box" class="card" style="margin-top: 2rem; background: rgba(225, 29, 72, 0.02); border-color: rgba(225, 29, 72, 0.08); display: none;">
-          <h4 style="margin: 0 0 4px 0; color: var(--text-primary); font-size: 1.05rem; font-family: var(--font-head); font-weight: 700;">💾 Save Your Fit Profile</h4>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.2rem;">Create a free account to securely sync your 80+ measurements and AI Stylist recommendations across devices.</p>            <div class="input-row" style="margin-bottom: 1rem;">
-              <input type="email" id="auth-email" class="styled-input" placeholder="Email Address"  />
-              <div style="position: relative; width: 100%;">
-                <input type="password" id="auth-password" class="styled-input" placeholder="Password (min 6 chars)" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
-                <button type="button" onclick="togglePasswordVisibility('auth-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          <button id="btn-save-profile" class="btn-run" style="margin-top: 0.5rem; background: var(--success-gradient);">Create Account & Save Profile</button>
-        </div>
-      </div>
-    </div>
-
-    
-
-  </main>
-  </div>
-
-  <!-- PREMIUM AI TAILOR DASHBOARD VIEW -->
+    <!-- PREMIUM AI TAILOR DASHBOARD VIEW -->
   <div id="dashboard-view" style="display: none; width: 100%; max-width: 1200px; margin: 72px auto 0; padding: 2rem 1.5rem; box-sizing: border-box;">
     
     <!-- Dashboard Header -->
@@ -1455,5 +1401,110 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 <!--End of Tawk.to Script-->
+
+  <!-- ONBOARDING LAUNCH MODAL -->
+  <div id="onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 99999;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 2.2rem; width: 100%; max-width: 440px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4); position: relative; box-sizing: border-box;">
+      <button onclick="document.getElementById('onboarding-modal').style.display='none'" style="position: absolute; top: 16px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+      
+      <!-- Step 1 Form View -->
+      <div id="onboard-form-step">
+        <div style="text-align: center; margin-bottom: 1.8rem;">
+          <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">Start Your AI Sizing Scan</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">Provide your email address to register your body measurements securely.</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div style="text-align: left;">
+            <label for="onboard-email" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Email Address</label>
+            <input class="styled-input" type="email" id="onboard-email" placeholder="your-email@example.com" style="width: 100%; box-sizing: border-box; padding: 12px 16px;" required />
+            <p id="onboard-email-error" style="color: #fca5a5; font-size: 0.75rem; margin-top: 6px; display: none; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 6px; border-radius: 6px;"></p>
+          </div>
+
+          <!-- Privacy Block -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; box-sizing: border-box;">
+            <svg style="width: 18px; height: 18px; color: #ff2a75; flex-shrink: 0; margin-top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+              <strong>No-Photo Privacy Guarantee:</strong> We never save your photos or videos. Your scan contours are converted instantly into encrypted, private numbers.
+            </span>
+          </div>
+
+          <button id="btn-onboard-scan" class="btn-run" style="background: var(--primary-gradient); width: 100%; margin-top: 0.5rem; font-weight: 700; padding: 12px;">Launch AI Scanner</button>
+        </div>
+      </div>
+
+      <!-- Step 2 Scanner Target View -->
+      <div id="onboard-scan-step" style="display: none;">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <h3 style="font-family: var(--font-outfit); font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0 0 4px 0;">3D Body Scanner</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Position your camera to complete the scan.</p>
+        </div>
+        <!-- Target saia container relocated inside popup modal -->
+        <div class="saia-widget-container" style="min-height: 250px;"></div>
+        <button type="button" class="btn-run" onclick="cancelOnboardingScan()" style="background: none; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 15px; padding: 10px;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Bind Hero Measure button
+    document.addEventListener('DOMContentLoaded', () => {
+      const heroBtn = document.getElementById('btn-hero-measure');
+      if (heroBtn) {
+        heroBtn.addEventListener('click', () => {
+          // Open onboarding popup modal
+          document.getElementById('onboard-form-step').style.display = 'block';
+          document.getElementById('onboard-scan-step').style.display = 'none';
+          document.getElementById('onboarding-modal').style.display = 'flex';
+        });
+      }
+
+      // Bind onboarding submit button
+      const onboardEmailInput = document.getElementById('onboard-email');
+      const onboardBtn = document.getElementById('btn-onboard-scan');
+      const onboardError = document.getElementById('onboard-email-error');
+      
+      if (onboardBtn && onboardEmailInput) {
+        onboardBtn.addEventListener('click', () => {
+          const email = onboardEmailInput.value.trim();
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            if (onboardError) {
+              onboardError.textContent = "Please enter a valid email address.";
+              onboardError.style.display = 'block';
+            }
+            return;
+          }
+          
+          if (onboardError) onboardError.style.display = 'none';
+          
+          // Pre-fill the hidden/background scanner input so validateScanEmail/3DLook hooks run seamlessly
+          const bgScanEmail = document.getElementById('scan-email');
+          if (bgScanEmail) {
+            bgScanEmail.value = email;
+            // Trigger input event to run decoder.js validation and init3DLookWidget
+            bgScanEmail.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          
+          // Transition modal view to show the scanner container
+          document.getElementById('onboard-form-step').style.display = 'none';
+          document.getElementById('onboard-scan-step').style.display = 'block';
+        });
+      }
+    });
+
+    function cancelOnboardingScan() {
+      // Clear widget integration
+      const existing = document.getElementById('saia-mtm-integration');
+      if (existing) existing.remove();
+      const popupWidget = document.querySelector('#onboard-scan-step .saia-widget-container');
+      if (popupWidget) popupWidget.innerHTML = '';
+      
+      document.getElementById('onboarding-modal').style.display = 'none';
+    }
+  </script>
+
 </body>
 </html>
