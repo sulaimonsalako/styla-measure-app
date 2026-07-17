@@ -2247,10 +2247,9 @@ btnDecode.addEventListener('click', async () => {
     console.error(err);
   }
 });
+}
 
 // Save Profile to Supabase Cloud
-});
-}
 
 if (btnSaveProfile) {
 btnSaveProfile.addEventListener('click', async () => {
@@ -2321,6 +2320,7 @@ btnSaveProfile.addEventListener('click', async () => {
       btnSaveProfile.disabled = false;
   }
 });
+}
 
 // -----------------------------------------
 // Login & Logout Handlers
@@ -3361,4 +3361,3 @@ window.addEventListener('DOMContentLoaded', () => {
       // Run once on load
       validateScanEmail();
   }
-
