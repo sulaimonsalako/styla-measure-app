@@ -3416,6 +3416,13 @@ window.addEventListener('DOMContentLoaded', () => {
                         
                         init3DLookWidget(email);
                     }
+                })
+                .catch(err => {
+                    console.warn("Supabase check failed, proceeding with fallback widget load:", err);
+                    if (scanEmailError) scanEmailError.style.display = 'none';
+                    widgetContainer.style.pointerEvents = 'auto';
+                    widgetContainer.style.opacity = '1';
+                    init3DLookWidget(email);
                 });
           }, 300);
       } else {

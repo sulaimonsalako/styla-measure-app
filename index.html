@@ -1425,6 +1425,10 @@ s0.parentNode.insertBefore(s1,s0);
       if (heroBtn) {
         heroBtn.addEventListener('click', () => {
           document.getElementById('onboarding-modal').style.display = 'flex';
+          const scanEmail = document.getElementById('scan-email');
+          if (scanEmail) {
+            scanEmail.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         });
       }
 
@@ -1434,6 +1438,10 @@ s0.parentNode.insertBefore(s1,s0);
           // Open onboarding popup modal
           e.preventDefault();
           document.getElementById('onboarding-modal').style.display = 'flex';
+          const scanEmail = document.getElementById('scan-email');
+          if (scanEmail) {
+            scanEmail.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         });
       }
     });
