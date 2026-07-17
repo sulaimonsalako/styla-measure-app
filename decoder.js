@@ -1743,12 +1743,10 @@ window.addEventListener('DOMContentLoaded', async () => {
               onUserLoggedIn(session.user, profile);
           } else {
               document.body.classList.remove('user-logged-in');
-              init3DLookWidget('guest@styla.ca');
           }
       }
   } catch (err) {
       console.log("Supabase session check skipped or failed.", err);
-      init3DLookWidget('guest@styla.ca');
   }
 
 
@@ -3287,6 +3285,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
   // Handle scan email input validation
+  window.addEventListener('DOMContentLoaded', () => {
   const scanEmailInput = document.getElementById('scan-email');
   const widgetContainer = document.querySelector('.saia-widget-container');
   const scanEmailError = document.getElementById('scan-email-error');
@@ -3361,3 +3360,4 @@ window.addEventListener('DOMContentLoaded', () => {
       // Run once on load
       validateScanEmail();
   }
+});
