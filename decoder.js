@@ -3321,6 +3321,14 @@ window.addEventListener('DOMContentLoaded', () => {
               window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
           }
 
+          // Update the script tag attributes so 3DLook has the user identifiers!
+          const script = document.getElementById('saia-mtm-integration');
+          if (script) {
+              script.setAttribute('data-client-id', email.toLowerCase());
+              script.setAttribute('data-external-id', email.toLowerCase());
+              script.setAttribute('data-user-id', email.toLowerCase());
+          }
+
           // Silently store the email in Supabase for lead recovery (non-blocking)
           if (window.supabase) {
               const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
