@@ -78,59 +78,6 @@ function pollForScanResults(email, isGuest, userId) {
 }
 
 // Initialize 3DLook Mobile Tailor Widget Options
-function init3DLookWidget(email) {
-  const existing = document.getElementById('saia-mtm-integration');
-  if (existing) existing.remove();
-  
-  const container = document.querySelector('.saia-widget-container');
-  if (container) container.innerHTML = '';
-  
-  window.MTM_WIDGET_OPTIONS = {
-    clientId: email.toLowerCase(),
-    externalId: email.toLowerCase(),
-    client_id: email.toLowerCase(),
-    external_id: email.toLowerCase(),
-    userId: email.toLowerCase(),
-    user_id: email.toLowerCase(),
-    defaultValues: { email: email.toLowerCase() },
-    onMeasurementsReady: (m) => {
-      console.log("Measurements complete callback triggered. Starting poll...");
-      
-      if (window.supabase) {
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            // Logged-in user
-            pollForScanResults(session.user.email, false, session.user.id);
-          } else {
-            // Guest user
-            const scanEmailVal = document.getElementById('scan-email').value || email;
-            pollForScanResults(scanEmailVal, true, null);
-          }
-        });
-      }
-    }
-  };
-
-  const script = document.createElement('script');
-  script.id = 'saia-mtm-integration';
-  script.async = true;
-  script.src = 'https://mtm-widget.3dlook.me/integration.js';
-  script.setAttribute('data-public-key', 'MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E');
-  script.setAttribute('data-button-title', 'Start AI Sizing Scan');
-  
-  // Set all possible user identifiers on script tag attributes for 3DLook
-  script.setAttribute('data-client-id', email.toLowerCase());
-  script.setAttribute('data-external-id', email.toLowerCase());
-  script.setAttribute('data-user-id', email.toLowerCase());
-  
-  if (container) {
-    container.appendChild(script);
-  } else {
-    document.body.appendChild(script);
-  }
-}
-
 const fileUpload = document.getElementById('file-upload');
 const dropZone = document.getElementById('drop-zone');
 const dropText = document.getElementById('drop-text');
@@ -3344,8 +3291,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const widgetContainer = document.querySelector('.saia-widget-container');
   const scanEmailError = document.getElementById('scan-email-error');
 
-  let emailCheckTimeout = null;
-
   function validateScanEmail() {
       if (!scanEmailInput || !widgetContainer) return;
       
@@ -3367,64 +3312,29 @@ window.addEventListener('DOMContentLoaded', () => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       
       if (emailRegex.test(email)) {
-          if (emailCheckTimeout) clearTimeout(emailCheckTimeout);
-          // Disable widget button immediately while we perform database validation checks
-          widgetContainer.style.pointerEvents = 'none';
-          widgetContainer.style.opacity = '0.4';
+          if (scanEmailError) scanEmailError.style.display = 'none';
+          widgetContainer.style.pointerEvents = 'auto';
+          widgetContainer.style.opacity = '1';
           
-          emailCheckTimeout = setTimeout(() => {
-              if (!window.supabase) return;
-              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-              supabase.from('store_profiles')
-                .select('username, password')
-                .eq('username', email.toLowerCase())
-                .maybeSingle()
-                .then(({ data, error }) => {
-                    if (data && data.password !== 'temp_guest_placeholder') {
-                        widgetContainer.style.pointerEvents = 'none';
-                        widgetContainer.style.opacity = '0.4';
-                        if (scanEmailError) {
-                            scanEmailError.innerHTML = `This email is already registered. Please <a href="#" id="error-login-link" style="color: #ff2a75; font-weight: 700; text-decoration: underline;">log in</a> first to take a new scan.`;
-                            scanEmailError.style.display = 'block';
-                            
-                            const link = document.getElementById('error-login-link');
-                            if (link) {
-                                link.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    const loginModal = document.getElementById('login-modal');
-                                    if (loginModal) loginModal.style.display = 'flex';
-                                });
-                            }
-                        }
-                    } else {
-                        // Create a guest placeholder record so we can track and follow up if they abandon or complete the scan
-                        supabase.from('store_profiles').upsert({
-                            username: email.toLowerCase(),
-                            password: 'temp_guest_placeholder',
-                            twin: null,
-                            api_scans: [],
-                            manual_measurements: {},
-                            measurement_overrides: {}
-                        }, { onConflict: 'username', ignoreDuplicates: true }).then(({ error: insertError }) => {
-                            if (insertError) console.warn("Failed to insert guest scan placeholder:", insertError);
-                            else console.log("Registered guest scan email placeholder for:", email);
-                        });
+          if (window.MTM_WIDGET_OPTIONS) {
+              window.MTM_WIDGET_OPTIONS.defaultValues = window.MTM_WIDGET_OPTIONS.defaultValues || {};
+              window.MTM_WIDGET_OPTIONS.defaultValues.email = email;
+          }
 
-                        if (scanEmailError) scanEmailError.style.display = 'none';
-                        widgetContainer.style.pointerEvents = 'auto';
-                        widgetContainer.style.opacity = '1';
-                        
-                        init3DLookWidget(email);
-                    }
-                })
-                .catch(err => {
-                    console.warn("Supabase check failed, proceeding with fallback widget load:", err);
-                    if (scanEmailError) scanEmailError.style.display = 'none';
-                    widgetContainer.style.pointerEvents = 'auto';
-                    widgetContainer.style.opacity = '1';
-                    init3DLookWidget(email);
-                });
-          }, 300);
+          // Silently store the email in Supabase for lead recovery (non-blocking)
+          if (window.supabase) {
+              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+              supabase.from('store_profiles').upsert({
+                  username: email.toLowerCase(),
+                  password: 'temp_guest_placeholder',
+                  twin: null,
+                  api_scans: [],
+                  manual_measurements: {},
+                  measurement_overrides: {}
+              }, { onConflict: 'username', ignoreDuplicates: true })
+              .then(() => console.log("Registered guest scan email:", email))
+              .catch(err => console.warn("Failed to log guest scan email:", err));
+          }
       } else {
           widgetContainer.style.pointerEvents = 'none';
           widgetContainer.style.opacity = '0.4';
