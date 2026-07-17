@@ -637,66 +637,16 @@
   </section>
 
   <!-- WAITLIST FORM -->
-  <section class="brand-waitlist-section" id="lead-form">
-    <div class="hero-glow hero-glow--center" style="background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%); bottom: 0;"></div>
-    <div class="container">
-      <div class="waitlist-card">
-        <div style="text-align: center; margin-bottom: 28px;">
-          <h2 style="font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: #ffffff; margin-bottom: 12px;">Partner with STYLA</h2>
-          <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex; font-size: 0.9rem; padding: 0.6rem 1.4rem; background: var(--primary-gradient); border: none; margin-bottom: 16px;">
-            Book a Live Demo on Calendly
-          </a>
-          <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto;">— OR REGISTER FOR PILOT ACCESS BELOW —</p>
-        </div>
-
-        <form id="brand-form" onsubmit="handleBrandSubmit(event)">
-          <div class="form-group-grid">
-            <div class="form-group">
-              <label for="brand-name">Brand / Company Name</label>
-              <input type="text" id="brand-name" class="styled-input" placeholder="e.g. Acme Clothing" required />
-            </div>
-            <div class="form-group">
-              <label for="brand-email">Business Email</label>
-              <input type="email" id="brand-email" class="styled-input" placeholder="e.g. partner@acme.com" required />
-            </div>
-          </div>
-
-          <div class="form-group-grid">
-            <div class="form-group">
-              <label for="brand-volume">Monthly Order Volume</label>
-              <select id="brand-volume" class="styled-select" required>
-                <option value="" disabled selected>Select order volume</option>
-                <option value="Under 1,000">Under 1,000 orders/mo</option>
-                <option value="1,000 - 5,000">1,000 - 5,000 orders/mo</option>
-                <option value="5,000 - 20,000">5,000 - 20,000 orders/mo</option>
-                <option value="20,000+">20,000+ orders/mo</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="brand-returns">Estimated Sizing Return Rate</label>
-              <select id="brand-returns" class="styled-select" required>
-                <option value="" disabled selected>Select return rate</option>
-                <option value="Under 10%">Under 10% returns</option>
-                <option value="10% - 25%">10% - 25% returns</option>
-                <option value="25% - 40%">25% - 40% returns</option>
-                <option value="40%+">40%+ returns</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="brand-painpoints">What are your primary sizing or return challenges?</label>
-            <textarea id="brand-painpoints" class="styled-textarea" placeholder="e.g. Sizing inconsistency across manufacturers, high return rates on denim..."></textarea>
-          </div>
-
-          <div style="margin-top: 10px;">
-            <button type="submit" class="btn-primary" id="btn-submit" style="width: 100%; justify-content: center; background: var(--primary-gradient); border: none; padding: 12px; font-size: 1rem;">
-              <span id="btn-text">Apply for Pilot Access</span>
-              <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
-            </button>
-          </div>
-        </form>
-      </div>
+  <section class="brand-waitlist-section" id="lead-form" style="max-width: 800px; margin: 4rem auto; padding: 0 1.5rem; text-align: center; box-sizing: border-box;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 3.5rem 2rem; text-align: center;">
+      <h2 style="font-family: var(--font-head); font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em;">Ready to Optimize Your Store?</h2>
+      <p style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 2.2rem; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+        Schedule a brief 15-minute product tour. See how STYLA integrates with your Shopify theme and calculates real-time sizing ease.
+      </p>
+      <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 14px 36px; background: var(--primary-gradient); text-decoration: none; border-radius: 8px; color: #fff; font-weight: 700; font-family: var(--font-head); font-size: 1.05rem; border: none; box-shadow: 0 4px 15px rgba(255,42,117,0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <span>Book a Demo</span>
+        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </a>
     </div>
   </section>
 
