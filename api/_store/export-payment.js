@@ -64,6 +64,8 @@ export default async function handler(req, res) {
           updatePayload.has_paid_bridesmaid_scan = true;
         } else if (paymentType === 'bridesmaid_report_payment') {
           updatePayload.has_paid_bridesmaid_report = true;
+        } else if (paymentType === 'match_unlock_payment') {
+          updatePayload.has_paid_matches = true;
         } else {
           updatePayload.has_paid_export = true;
         }

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Your Fit Dashboard | Styla</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root{--bg:#0b0b14;--panel:#16162a;--panel2:#121222;--border:rgba(255,255,255,.08);--text:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--pink2:#ff5c96;--pinkdim:rgba(255,42,117,.12);--serif:'EB Garamond',serif;--sans:'Inter',sans-serif;--green:#34d399}
@@ -165,7 +166,8 @@
     // TASK 16: no fit profile yet -> send them to build one.
     if(!m.chest && !m.waist && !m.hips){ window.location.href = '/start.html'; return; }
 
-    paid = !!profile.has_paid_matches;
+    var _pay = new URLSearchParams(window.location.search).get('payment');
+    paid = !!profile.has_paid_matches || _pay === 'success';
     window._m = m;
     document.getElementById('bootLoader').style.display = 'none';
     document.getElementById('dashLayout').style.display = 'grid';
@@ -247,10 +249,28 @@
     }
   }
 
-  function startUnlock(){
-    // TASK 13: real Stripe $9.99 checkout -> webhook sets has_paid_matches. Placeholder reveal for now.
-    alert('Stripe $9.99 checkout goes here (task 13). Previewing the unlocked view for now.');
-    paid = true; renderMatches();
+  async function startUnlock(){
+    try {
+      var origin = window.location.origin;
+      var resp = await fetch('/api/export-payment', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action:'create-checkout-session',
+          userId: user.id, email: user.email,
+          amount: 999,
+          productName: 'Styla — Your full brand matches',
+          productDescription: 'Unlock every brand ranked by fit, with your size in each.',
+          paymentType: 'match_unlock_payment',
+          successUrl: origin + '/dashboard.html?payment=success',
+          cancelUrl: origin + '/dashboard.html?payment=cancel'
+        })
+      });
+      var data = await resp.json();
+      if(!resp.ok || !data.id) throw new Error(data.error || 'Could not start checkout');
+      var stripe = Stripe(data.publishableKey);
+      var r = await stripe.redirectToCheckout({ sessionId: data.id });
+      if(r && r.error) throw r.error;
+    } catch(e){ alert('Checkout error: ' + (e.message || e)); }
   }
 
   async function logout(){ try { await sb.auth.signOut(); } catch(e){} window.location.href = '/index.html'; }
