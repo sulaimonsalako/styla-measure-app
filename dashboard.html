@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Fit Dashboard | Styla</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0b0b14;--panel:#16162a;--panel2:#121222;--border:rgba(255,255,255,.08);--text:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--pink2:#ff5c96;--pinkdim:rgba(255,42,117,.12);--serif:'EB Garamond',serif;--sans:'Inter',sans-serif;--green:#34d399}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;background-image:radial-gradient(circle at 90% 3%,rgba(255,42,117,.06),transparent 38%);min-height:100vh}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:rgba(11,11,20,.8);backdrop-filter:blur(12px)}
+  .logo{font-family:var(--serif);font-weight:700;font-size:1.3rem;display:flex;align-items:center;gap:8px}
+  .navr{display:flex;align-items:center;gap:18px;font-size:.85rem;color:var(--muted)}
+  .navr a{color:var(--muted);text-decoration:none}
+  .navr .sync{color:var(--green);font-weight:600}
+  .navr .out{background:var(--pink);color:#fff;border:none;border-radius:100px;padding:8px 18px;font-weight:600;font-size:.82rem;cursor:pointer;font-family:var(--sans)}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 24px}
+  h1.dh{font-family:var(--serif);font-size:2rem;font-weight:700}
+  .welcome{color:var(--muted);font-size:.95rem;margin-bottom:24px}
+  .welcome b{color:var(--green)}
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:22px}
+  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  .side{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px;height:fit-content}
+  .navitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:3px;border:1px solid transparent}
+  .navitem:hover{color:var(--text)}
+  .navitem.on{background:var(--pinkdim);color:var(--text);border-color:rgba(255,42,117,.3)}
+  .navitem .ic{width:20px;text-align:center}
+  .navitem small{display:block;font-weight:400;font-size:.68rem;color:var(--dim)}
+  .retired{font-size:.68rem;color:#5a5f70;padding:10px 14px;border-top:1px solid var(--border);margin-top:6px}
+  .retired s{color:#4a4f60}
+  .content{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px;min-height:360px}
+  .panel{display:none}.panel.on{display:block}
+  h2.ct{font-family:var(--serif);font-size:1.5rem;font-weight:700}
+  p.cs{font-size:.86rem;color:var(--dim);margin-bottom:18px}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:14px 6px;border-bottom:1px solid var(--border);font-size:.95rem;font-weight:600}
+  .row .r{display:flex;align-items:center;gap:12px}
+  .row .pct{color:var(--pink2);font-weight:700}
+  .row .size{font-size:.78rem;color:var(--muted);font-weight:500}
+  .row.lock{color:#6b7080;font-weight:500}
+  .unlock{margin-top:18px;background:var(--pinkdim);border:1px solid rgba(255,42,117,.28);border-radius:16px;padding:22px;text-align:center}
+  .unlock h3{font-family:var(--serif);font-size:1.3rem;margin-bottom:5px}
+  .unlock p{font-size:.85rem;color:var(--muted);margin-bottom:14px}
+  .btn-primary{background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:11px;padding:13px 26px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--sans)}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 18px;font-weight:600;font-size:.85rem;cursor:pointer;font-family:var(--sans)}
+  .fine{font-size:.72rem;color:var(--dim);margin-top:10px}
+  .ok-banner{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:14px;font-size:.85rem;margin-top:16px}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .mcard{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .mcard.miss{border-style:dashed}
+  .mcard .lab{font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .mcard input{width:100%;background:transparent;border:none;color:#fff;font-size:1.4rem;font-weight:700;font-family:var(--sans);outline:none}
+  .tag{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:100px}
+  .tag.conf{background:rgba(52,211,153,.12);color:var(--green)}
+  .tag.miss{background:var(--pinkdim);color:var(--pink2)}
+  .member{display:flex;align-items:center;justify-content:space-between;padding:12px 6px;border-bottom:1px solid var(--border);font-size:.9rem}
+  .lockbox{background:var(--panel2);border:1px dashed var(--border);border-radius:14px;padding:26px;text-align:center;color:var(--dim);font-size:.9rem}
+  .loader{text-align:center;color:var(--dim);padding:60px 0}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="logo"><img src="logo.png" alt="Styla" style="height:28px;width:auto;border-radius:50%"/>STYLA</div>
+  <div class="navr"><span class="sync">✓ Synced</span><a href="/bridesmaid.html">Bridesmaid</a><a href="/blogs">Blogs</a><button class="out" onclick="logout()">Log out</button></div>
+</div>
+<div class="wrap">
+  <h1 class="dh">Your Fit Dashboard</h1>
+  <div class="welcome">Welcome back, <b id="welcomeEmail">…</b></div>
+  <div id="bootLoader" class="loader">Loading your profile…</div>
+  <div class="layout" id="dashLayout" style="display:none">
+    <div class="side">
+      <div class="navitem on" onclick="tab('matches',this)"><span class="ic">✨</span>My Matches<small>brands that fit you</small></div>
+      <div class="navitem" onclick="tab('profile',this)"><span class="ic">📐</span>My Fit Profile<small>measurements</small></div>
+      <div class="navitem" onclick="tab('book',this)"><span class="ic">⚡</span>Bookmarklet<small>free — add to your browser</small></div>
+      <div class="navitem" onclick="tab('party',this)"><span class="ic">💍</span>My Wedding Party</div>
+      <div class="navitem" onclick="tab('account',this)"><span class="ic">⚙️</span>Account</div>
+      <div class="retired"><s>3D Body Scans</s> — retired (no scanning)</div>
+    </div>
+    <div class="content">
+
+      <!-- MATCHES -->
+      <div class="panel on" id="p-matches">
+        <h2 class="ct">Brands that fit your proportions</h2>
+        <p class="cs">Ranked by how well each brand's cut matches your body.</p>
+        <div id="matchLocked"><div class="loader">Matching…</div></div>
+        <div id="matchUnlocked" style="display:none"></div>
+      </div>
+
+      <!-- PROFILE (editable — task 15) -->
+      <div class="panel" id="p-profile">
+        <h2 class="ct">My fit profile</h2>
+        <p class="cs">These power your matches. Edit any value and save — your matches refresh.</p>
+        <div class="mgrid" id="profileGrid"></div>
+        <div style="margin-top:18px;display:flex;align-items:center;gap:14px">
+          <button class="btn-primary" onclick="saveProfile()">Save changes</button>
+          <span id="saveMsg" style="display:none;color:var(--green);font-size:.85rem"></span>
+        </div>
+      </div>
+
+      <!-- BOOKMARKLET (free) -->
+      <div class="panel" id="p-book">
+        <h2 class="ct">The Styla bookmarklet</h2>
+        <p class="cs">Free with your account. Check your size on any store's website while you shop.</p>
+        <div class="ok-banner" style="margin-top:0">Drag the button below to your bookmarks bar, then click it on any product page to see your size.</div>
+        <div style="text-align:center;margin-top:18px"><span class="btn-primary" style="display:inline-block;cursor:grab">⚡ Styla Stylist</span></div>
+      </div>
+
+      <!-- PARTY (placeholder — task 17) -->
+      <div class="panel" id="p-party">
+        <h2 class="ct">My wedding party</h2>
+        <p class="cs">Add everyone, let them do their 2-minute fit, and find the one dress that fits you all.</p>
+        <div class="lockbox">💍 <b style="color:var(--text)">Coming soon</b><br/><br/>Invite your party, everyone builds their fit profile, and the admin unlocks the group match report ($29.99) — the styles with a size that fits every member.</div>
+      </div>
+
+      <!-- ACCOUNT -->
+      <div class="panel" id="p-account">
+        <h2 class="ct">Account</h2>
+        <p class="cs">Manage your login and data.</p>
+        <div class="mcard" style="max-width:420px"><div class="lab">Email</div><div style="font-size:1rem;font-weight:700" id="accountEmail">…</div></div>
+        <div style="margin-top:14px;display:flex;gap:10px"><button class="btn-ghost" onclick="logout()">Log out</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+  var SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+  var sb, user, profile = {}, paid = false, curMatches = [];
+  var FIELDS = [['chest','Chest / Bust'],['waist','Waist'],['hips','Hips'],['height','Height'],['inseam','Inseam'],['neck','Neck']];
+
+  function tab(name, el){
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+    document.getElementById('p-'+name).classList.add('on');
+    document.querySelectorAll('.navitem').forEach(function(n){ n.classList.remove('on'); });
+    if(el) el.classList.add('on');
+  }
+
+  async function init(){
+    if(!window.supabase){ return; }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    var sess = (await sb.auth.getSession()).data.session;
+    if(!sess){ window.location.href = '/index.html?login=true'; return; }
+    user = sess.user;
+    document.getElementById('welcomeEmail').textContent = user.email;
+    document.getElementById('accountEmail').textContent = user.email;
+
+    try {
+      var q = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      profile = q.data || {};
+    } catch(e){ profile = {}; }
+    var ov = profile.measurement_overrides || {};
+    var ls = function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } };
+    var m = {
+      chest: profile.chest || ls('styla_twin_chest'),
+      waist: profile.waist || ls('styla_twin_waist'),
+      hips: profile.hips || ls('styla_twin_hips'),
+      height: profile.height || ls('styla_twin_height'),
+      inseam: profile.inseam || ls('styla_twin_inseam'),
+      neck: ov.neck || null,
+    };
+    Object.keys(m).forEach(function(k){ if(m[k]!=null && m[k]!=='') m[k] = parseFloat(m[k]); });
+
+    // TASK 16: no fit profile yet -> send them to build one.
+    if(!m.chest && !m.waist && !m.hips){ window.location.href = '/start.html'; return; }
+
+    paid = !!profile.has_paid_matches;
+    window._m = m;
+    document.getElementById('bootLoader').style.display = 'none';
+    document.getElementById('dashLayout').style.display = 'grid';
+    renderProfile(m);
+    await loadMatches(m);
+  }
+
+  function renderProfile(m){
+    var html = '';
+    FIELDS.forEach(function(f){
+      var k = f[0], label = f[1];
+      var v = (m[k]!=null && m[k]!=='') ? m[k] : '';
+      var missing = v === '';
+      html += '<div class="mcard'+(missing?' miss':'')+'"><div class="lab">'+label+' '+
+        (missing?'<span class="tag miss">Missing</span>':'<span class="tag conf">Set</span>')+
+        '</div><input type="number" step="0.1" id="m-'+k+'" value="'+v+'" placeholder="—" /></div>';
+    });
+    document.getElementById('profileGrid').innerHTML = html;
+  }
+
+  async function saveProfile(){
+    var m = {};
+    ['chest','waist','hips','height','inseam','neck'].forEach(function(k){
+      var el = document.getElementById('m-'+k);
+      if(el && el.value !== '') m[k] = parseFloat(el.value);
+    });
+    var ov = Object.assign({}, profile.measurement_overrides || {});
+    if(m.neck != null) ov.neck = m.neck;
+    var upd = { chest:m.chest, waist:m.waist, hips:m.hips, height:m.height, inseam:m.inseam,
+                measurement_overrides:ov, updated_at:new Date().toISOString() };
+    var msg = document.getElementById('saveMsg');
+    try {
+      var r = await sb.from('profiles').update(upd).eq('id', user.id);
+      if(r.error) throw r.error;
+    } catch(e){ msg.style.display='block'; msg.style.color='var(--pink2)'; msg.textContent = 'Save failed: '+(e.message||e); return; }
+    profile = Object.assign(profile, upd);
+    window._m = m;
+    msg.style.display='block'; msg.style.color='var(--green)'; msg.textContent = '✓ Saved — refreshing your matches…';
+    renderProfile(m);
+    await loadMatches(m);
+    setTimeout(function(){ msg.style.display='none'; }, 2500);
+  }
+
+  async function loadMatches(m){
+    var matches = [];
+    try {
+      var resp = await fetch('/api/rank-brands', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ profile:m, limit:20 }) });
+      if(resp.ok){ var d = await resp.json(); matches = d.matches || []; }
+    } catch(e){}
+    curMatches = matches;
+    renderMatches();
+  }
+
+  function renderMatches(){
+    var locked = document.getElementById('matchLocked');
+    var unlocked = document.getElementById('matchUnlocked');
+    if(!curMatches.length){
+      locked.innerHTML = '<div class="row lock"><div class="r">No matches yet — check your profile is complete.</div></div>';
+      locked.style.display='block'; unlocked.style.display='none'; return;
+    }
+    if(paid){
+      var h = '';
+      curMatches.forEach(function(mm,i){
+        h += '<div class="row"'+(i===curMatches.length-1?' style="border-bottom:none"':'')+'><div class="r">'+mm.brand+
+             '</div><div class="r"><span class="size">Your size: '+mm.recommended_size+'</span><span class="pct">'+mm.score+'%</span></div></div>';
+      });
+      h += '<div class="ok-banner">✓ Unlocked — every brand that fits you, with your size in each.</div>';
+      unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
+    } else {
+      var top = curMatches[0], rest = curMatches.length - 1;
+      var h = '<div class="row"><div class="r">'+top.brand+'</div><div class="r"><span class="size">Size '+top.recommended_size+'</span><span class="pct">'+top.score+'%</span></div></div>';
+      for(var i=0;i<Math.min(3,rest);i++) h += '<div class="row lock"><div class="r">••••••••••</div><span>🔒</span></div>';
+      if(rest>0) h += '<div class="row lock" style="border-bottom:none"><div class="r">+ '+rest+' more matches</div><span>🔒</span></div>';
+      h += '<div class="unlock"><h3>Unlock all your matches</h3><p>Every brand ranked by fit, plus your exact size in each.</p>'+
+           '<button class="btn-primary" onclick="startUnlock()">Unlock everything — $9.99</button>'+
+           '<div class="fine">🔒 One-time payment via Stripe · no subscription</div></div>';
+      locked.innerHTML = h; locked.style.display='block'; unlocked.style.display='none';
+    }
+  }
+
+  function startUnlock(){
+    // TASK 13: real Stripe $9.99 checkout -> webhook sets has_paid_matches. Placeholder reveal for now.
+    alert('Stripe $9.99 checkout goes here (task 13). Previewing the unlocked view for now.');
+    paid = true; renderMatches();
+  }
+
+  async function logout(){ try { await sb.auth.signOut(); } catch(e){} window.location.href = '/index.html'; }
+
+  window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
