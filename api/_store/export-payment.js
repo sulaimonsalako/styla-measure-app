@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import getRawBody from 'raw-body';
 import { supabaseAdmin as supabase } from '../_helpers/supabase-admin.js';
+import { sendMatchUnlockEmail, sendWeddingReportEmail } from '../_helpers/email-helper.js';
 
 export const config = {
   api: {
@@ -105,6 +106,29 @@ export default async function handler(req, res) {
         }
 
         console.log(`Successfully completed payment registration in DB for user ${userId}.`);
+
+        // Fire the customer receipt email (best-effort; never blocks the webhook).
+        try {
+          const recipientEmail = (metadata.email || '').trim();
+          if (recipientEmail) {
+            let firstName = '';
+            if (isUuid) {
+              const { data: p } = await supabase
+                .from('profiles').select('first_name').eq('id', userId).maybeSingle();
+              firstName = (p && p.first_name) || '';
+            }
+            const amountStr = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : undefined;
+            const purchaseDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+            if (paymentType === 'match_unlock_payment') {
+              await sendMatchUnlockEmail(recipientEmail, firstName, { amount: amountStr, orderId: session.id, purchaseDate });
+            } else if (paymentType === 'bridesmaid_report_payment') {
+              await sendWeddingReportEmail(recipientEmail, firstName, { amount: amountStr, orderId: session.id, purchaseDate });
+            }
+          }
+        } catch (mailErr) {
+          console.error('[WEBHOOK EMAIL] Receipt send failed (non-fatal):', mailErr.message);
+        }
       } catch (e) {
         console.error(`Error handling database write inside Stripe webhook:`, e);
         return res.status(500).json({ error: 'Database update failed' });

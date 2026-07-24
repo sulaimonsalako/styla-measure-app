@@ -505,6 +505,171 @@ The Styla Team`;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Styla product emails (new questionnaire / brand-match model)
+// Shared dark-theme builder + a single transport, so every product email is
+// consistent and we don't repeat the HTML. Sends via SendGrid SMTP when the
+// SMTP_* env vars are set; falls back to an Ethereal preview in dev.
+// ---------------------------------------------------------------------------
+
+const STYLA_SITE = process.env.SITE_URL || 'https://www.styla.ca';
+const STYLA_LOGO = `${STYLA_SITE}/logo.png`;
+
+function buildStylaEmail({ heading, bodyHtml, ctaText, ctaUrl, receiptHtml = '', footerNote = '' }) {
+  const cta = ctaText && ctaUrl
+    ? `<a href="${ctaUrl}" style="display:inline-block; background:linear-gradient(135deg,#e11d48,#ff2a75); color:#ffffff; text-decoration:none; font-weight:700; font-size:16px; padding:14px 36px; border-radius:100px;">${ctaText}</a>`
+    : '';
+  const receipt = receiptHtml
+    ? `<div style="margin-top:32px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08); text-align:left; font-size:13px; color:#8b90a0;">${receiptHtml}</div>`
+    : '';
+  const footer = footerNote
+    ? `<p style="text-align:center; font-size:12px; color:#5a5f70; margin-top:24px;">${footerNote}</p>`
+    : '';
+  return `<div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; background-color:#0b0b14; color:#ffffff; padding:40px 20px; max-width:600px; margin:0 auto; border-radius:8px;">
+  <div style="text-align:center; margin-bottom:30px;">
+    <img src="${STYLA_LOGO}" alt="Styla" width="40" height="40" style="border-radius:50%; vertical-align:middle; margin-right:10px;" />
+    <span style="color:#ffffff; font-size:30px; letter-spacing:3px; font-weight:bold; font-family:Georgia,'Times New Roman',serif; vertical-align:middle;">STYLA</span>
+  </div>
+  <div style="background-color:#16162a; padding:40px; border-radius:12px; text-align:center; border:1px solid rgba(255,255,255,0.06);">
+    <h2 style="font-size:22px; margin-top:0; margin-bottom:15px; color:#ffffff; font-family:Georgia,'Times New Roman',serif;">${heading}</h2>
+    <div style="font-size:16px; line-height:1.6; color:#cbd5e1; margin-bottom:28px;">${bodyHtml}</div>
+    ${cta}
+    ${receipt}
+  </div>
+  ${footer}
+  <p style="text-align:center; font-size:12px; color:#5a5f70; margin-top:6px;">&copy; Styla &middot; Your body. Your size. Everywhere.</p>
+</div>`;
+}
+
+async function sendStylaMail(to, subject, html, text) {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || user || 'contact@styla.ca';
+
+  if (!to) {
+    console.log('[STYLA EMAIL] No recipient — skipping.');
+    return { skipped: true };
+  }
+
+  console.log(`[STYLA EMAIL PENDING] "${subject}" -> ${to}`);
+
+  if (host && user && pass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host, port, secure: port === 465, auth: { user, pass }
+      });
+      const info = await transporter.sendMail({
+        from: `"Styla" <${from}>`, to, subject, text, html
+      });
+      console.log(`[STYLA EMAIL SENT] ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (err) {
+      console.error('[STYLA EMAIL ERROR] SMTP failed:', err.message);
+    }
+  }
+
+  // Dev fallback: Ethereal preview
+  try {
+    const testAccount = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email', port: 587, secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass }
+    });
+    const info = await transporter.sendMail({
+      from: `"Styla Sandbox" <${testAccount.user}>`, to, subject: `[SANDBOX] ${subject}`, text, html
+    });
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    console.log(`[STYLA EMAIL MOCK] Preview: ${previewUrl}`);
+    return { success: true, previewUrl };
+  } catch (ethErr) {
+    console.error('[STYLA EMAIL MOCK ERROR]', ethErr.message);
+    return { success: true, logged: true };
+  }
+}
+
+// #7 — Match unlock receipt ($9.99)
+export async function sendMatchUnlockEmail(email, firstName, { amount = '$9.99', orderId = '', purchaseDate = '', dashboardUrl } = {}) {
+  const url = dashboardUrl || `${STYLA_SITE}/dashboard.html`;
+  const name = firstName || 'there';
+  const html = buildStylaEmail({
+    heading: "You're all unlocked 🎉",
+    bodyHtml: `Thanks, ${name}. Your full list of matching brands &mdash; with your size in each &mdash; is now open on your dashboard.`,
+    ctaText: 'See all my matches',
+    ctaUrl: url,
+    receiptHtml: `<strong style="color:#cbd5e1;">Receipt</strong><br/>Full brand-match unlock &mdash; ${amount}<br/>${[purchaseDate, orderId && `Order ${orderId}`].filter(Boolean).join(' &middot; ')}`,
+    footerNote: "Need help? Reply to this email and we'll sort it out."
+  });
+  const text = `Thanks, ${name}. Your full list of matching brands is unlocked: ${url}\n\nReceipt: Full brand-match unlock — ${amount} ${orderId ? `(Order ${orderId})` : ''}`;
+  return sendStylaMail(email, 'Your full brand-match list is unlocked', html, text);
+}
+
+// #10 — Wedding party report ready ($29.99)
+export async function sendWeddingReportEmail(email, firstName, { amount = '$29.99', orderId = '', purchaseDate = '', partyName = 'your party', reportUrl } = {}) {
+  const url = reportUrl || `${STYLA_SITE}/dashboard.html`;
+  const name = firstName || 'there';
+  const html = buildStylaEmail({
+    heading: "The whole party's matches are unlocked 🎉",
+    bodyHtml: `Thanks, ${name}. Your Brand Fit Match Report for <strong style="color:#ffffff;">${partyName}</strong> is ready &mdash; the styles that fit everyone, with each person's size listed.`,
+    ctaText: 'Open the report',
+    ctaUrl: url,
+    receiptHtml: `<strong style="color:#cbd5e1;">Receipt</strong><br/>Wedding-party fit report &mdash; ${amount}<br/>${[purchaseDate, orderId && `Order ${orderId}`].filter(Boolean).join(' &middot; ')}`,
+    footerNote: 'Need a hand? Reply to this email.'
+  });
+  const text = `Thanks, ${name}. Your wedding-party fit report for ${partyName} is ready: ${url}\n\nReceipt: Wedding-party fit report — ${amount} ${orderId ? `(Order ${orderId})` : ''}`;
+  return sendStylaMail(email, 'Your wedding-party fit report is ready', html, text);
+}
+
+// #6 — Welcome (call after signup/confirmation when you have a trigger)
+export async function sendStylaWelcomeEmail(email, firstName, { dashboardUrl } = {}) {
+  const url = dashboardUrl || `${STYLA_SITE}/dashboard.html`;
+  const name = firstName || 'there';
+  const html = buildStylaEmail({
+    heading: `Welcome to Styla, ${name}`,
+    bodyHtml: `Your fit profile is saved. Here's what you can do now:<br/><br/>
+      <span style="display:inline-block; text-align:left; max-width:420px;">
+      &#10003;&nbsp; See the brands cut for your body, ranked by fit<br/>
+      &#10003;&nbsp; Get your recommended size in each one<br/>
+      &#10003;&nbsp; Add the free bookmarklet to check your size on any site<br/>
+      &#10003;&nbsp; Edit your profile any time &mdash; matches update instantly
+      </span>`,
+    ctaText: 'Open my dashboard',
+    ctaUrl: url,
+    footerNote: 'Questions? Just reply to this email.'
+  });
+  const text = `Welcome to Styla, ${name}. Your fit profile is saved — open your dashboard: ${url}`;
+  return sendStylaMail(email, `You're in, ${name} — here are your brand matches`, html, text);
+}
+
+// #8 — Wedding party invite (call when a coordinator invites a member)
+export async function sendWeddingInviteEmail(email, { coordinatorName = 'A friend', partyName = 'their wedding party', inviteUrl } = {}) {
+  const html = buildStylaEmail({
+    heading: `You're invited to "${partyName}"`,
+    bodyHtml: `${coordinatorName} is using Styla to find one style that fits everyone in the party &mdash; with each person in their own correct size. Answer a few quick questions to add your fit. No measuring, no photos, and it's private to the group.`,
+    ctaText: 'Add my fit',
+    ctaUrl: inviteUrl || STYLA_SITE,
+    footerNote: "Not expecting this? You can ignore it — nothing was shared about you."
+  });
+  const text = `${coordinatorName} invited you to "${partyName}" on Styla. Add your fit: ${inviteUrl || STYLA_SITE}`;
+  return sendStylaMail(email, `${coordinatorName} invited you to their wedding party on Styla`, html, text);
+}
+
+// #9 — Party member joined (notify the coordinator)
+export async function sendPartyMemberJoinedEmail(email, { memberName = 'Someone', partyName = 'your party', filledCount, totalCount, partyUrl } = {}) {
+  const progress = (filledCount != null && totalCount != null)
+    ? `${filledCount} of ${totalCount} people in <strong style="color:#ffffff;">${partyName}</strong> have added their fit. Once everyone's in, you can unlock the styles that fit the whole party.`
+    : `${memberName} added their fit to <strong style="color:#ffffff;">${partyName}</strong>.`;
+  const html = buildStylaEmail({
+    heading: `${memberName} is in ✅`,
+    bodyHtml: progress,
+    ctaText: 'View the party',
+    ctaUrl: partyUrl || `${STYLA_SITE}/dashboard.html`
+  });
+  const text = `${memberName} added their fit to ${partyName}. View the party: ${partyUrl || `${STYLA_SITE}/dashboard.html`}`;
+  return sendStylaMail(email, `${memberName} just added their fit to ${partyName}`, html, text);
+}
+
 export async function sendScanAbandonedEmail(email, portalUrl) {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
