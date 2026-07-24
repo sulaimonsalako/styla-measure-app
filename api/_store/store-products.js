@@ -1,8 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabaseAdmin as supabase } from '../_helpers/supabase-admin.js';
 
 const mapProductFromDB = (p) => ({
   id: p.id,

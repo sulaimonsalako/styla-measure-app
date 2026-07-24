@@ -1,12 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '../_helpers/supabase-admin.js';
 import { sendEmailNotification, sendBatchFullyPaidEmail } from '../_helpers/email-helper.js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const mapCartFromDB = (c) => {
   if (!c) return null;

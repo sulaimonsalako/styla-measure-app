@@ -61,7 +61,54 @@ TDLOOK_API_KEY.
 - Function-count consolidation pattern is deliberate — don't split routes back out.
 - Live Stripe keys are in use.
 
+## Connected systems (Cowork)
+
+- **Git:** local commits work via bash. Delete perms enabled for the folder (the mount
+  blocks `rm` by default — if a `.git/*.lock` reappears and blocks git, remove it; perms
+  now allow it). No GitHub push credential in sandbox — Claude commits locally, user pushes.
+- **Supabase (MCP):** project `tneflxtpmzodauygtslk` (Styla-measurement-Project, us-east-1).
+  Can run SQL, list tables, apply migrations.
+- **Vercel (MCP):** read/manage (projects, deployments, build logs). Does not deploy —
+  deploys happen on git push. Project `prj_JlKXXBAWSG3MVTdVaLmZ6Ft6GvFL` / team `team_FVOcE...`.
+
+## VERIFIED against live DB (2026-07-23)
+
+- **Bridesmaid migration is NOT run.** `public.profiles` has NO `has_paid_bridesmaid_scan`,
+  `has_paid_bridesmaid_report`, or `shoulder` columns; `store_profiles` lacks the paid flags.
+  `update_bridesmaid_schema.sql` is still pending — the bridesmaid feature will break against
+  prod until it's applied. (Apply via Supabase MCP when user approves.)
+- **SECURITY: RLS disabled on 4 tables** — `store_products`, `store_categories`,
+  `store_profiles`, `store_carts`. Anyone with the (client-side) anon key can read/write every
+  row. `store_profiles` also stores `password` as plaintext. Remediation SQL exists but must
+  NOT be auto-applied (enabling RLS w/o policies blocks all access). Needs policies designed.
+
+## RLS remediation (in progress, 2026-07-23)
+
+Full secure fix chosen. Code + SQL written; NOT yet applied to prod.
+
+- **New:** `api/_helpers/supabase-admin.js` — central service-role client (bypasses RLS).
+  All `api/_store/*` files now import it instead of building an anon-key client.
+  Fixed a latent crash in `export-payment.js` (was importing `@supabase/supabase-client`).
+- **`store-auth.js`:** bcrypt password hashing (`bcryptjs`), lazy migration (legacy
+  plaintext rehashed on next successful login), + new actions `get-profile`, `guest-init`,
+  `delete-profile`. Added `bcryptjs` + `raw-body` to `api/package.json`.
+- **Frontend:** all 8 direct `store_profiles` calls in `index.html`, `bridesmaid.html`,
+  `decoder.js` rerouted through `/api/store-auth`. No frontend file touches `store_*` now.
+- **`update_rls_policies.sql`:** enables RLS on all 4 tables; public-read policy on
+  `store_products`/`store_categories`; `store_profiles`/`store_carts` locked to service-role.
+
+### PREREQUISITE before applying SQL / deploying
+User must add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** env AND local `.env`. Without it,
+backend falls back to anon key and all store writes break once RLS is on. `supabase-admin.js`
+logs a warning when the key is missing.
+
+### Remaining steps
+1. User adds service-role key (Vercel + .env).
+2. Branch-test `update_rls_policies.sql` on a Supabase branch (~$0.013/hr, delete after).
+3. Apply SQL to prod, user redeploys (git push), verify store/login/cart/scan flows.
+
 ## Current State — UPDATE THIS EACH SESSION
 
-- 2026-07-23: Claude took over from Antigravity. Read repo, wrote this doc. No code changed
-  yet. Next step pending user direction (likely: finish/commit bridesmaid group-order feature).
+- 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
+  safety commit `8eaf1e9`. Built full RLS remediation (code + SQL, see above) — NOT applied
+  to prod yet; waiting on user's service-role key. Syntax-checked all changed files.

@@ -1,11 +1,6 @@
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-client';
 import getRawBody from 'raw-body';
-
-// Use Service Role Key to bypass RLS in Stripe webhook updates. Fallback to Anon Key if not configured.
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabaseAdmin as supabase } from '../_helpers/supabase-admin.js';
 
 export const config = {
   api: {

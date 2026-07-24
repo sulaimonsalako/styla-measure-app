@@ -2,7 +2,9 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "bcryptjs": "^2.4.3",
     "nodemailer": "^9.0.0",
+    "raw-body": "^3.0.0",
     "stripe": "^22.2.1"
   }
 }

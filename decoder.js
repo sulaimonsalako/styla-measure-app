@@ -28,12 +28,17 @@ function pollForScanResults(email, isGuest, userId) {
       
       if (isGuest) {
         // Poll store_profiles for guest
-        const { data, error } = await supabase
-          .from('store_profiles')
-          .select('twin, api_scans')
-          .eq('username', email.toLowerCase())
-          .maybeSingle();
-          
+        let data = null;
+        try {
+          const resp = await fetch('/api/store-auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get-profile', username: email.toLowerCase() })
+          });
+          const json = await resp.json();
+          if (json && json.exists) data = json;
+        } catch (e) { console.warn('Guest profile poll failed:', e); }
+
         if (data && data.twin) {
           clearInterval(intervalId);
           if (loaderEl) loaderEl.style.display = 'none';
@@ -774,13 +779,16 @@ async function syncStoreScansToPortal(user, profile) {
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     const email = user.email.toLowerCase();
-    const { data: storeProfile, error: fetchError } = await supabase
-      .from('store_profiles')
-      .select('api_scans, twin')
-      .eq('username', email)
-      .maybeSingle();
-      
-    if (fetchError) {
+    let storeProfile = null;
+    try {
+      const resp = await fetch('/api/store-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get-profile', username: email })
+      });
+      const json = await resp.json();
+      if (json && json.exists) storeProfile = json;
+    } catch (fetchError) {
       console.warn("Error fetching store profile for sync:", fetchError);
       return profile;
     }
@@ -3179,10 +3187,13 @@ window.addEventListener('DOMContentLoaded', () => {
                   
                   // 1. Delete from store_profiles (guest scans/twin)
                   if (userEmail) {
-                      await supabase
-                        .from('store_profiles')
-                        .delete()
-                        .eq('username', userEmail.toLowerCase());
+                      try {
+                          await fetch('/api/store-auth', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'delete-profile', username: userEmail.toLowerCase() })
+                          });
+                      } catch (e) { console.warn('Guest profile delete failed:', e); }
                   }
 
                   // 2. Call delete_user_account RPC to securely delete auth.users record
@@ -3337,19 +3348,13 @@ window.addEventListener('DOMContentLoaded', () => {
           }
 
           // Silently store the email in Supabase for lead recovery (non-blocking)
-          if (window.supabase) {
-              const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-              supabase.from('store_profiles').upsert({
-                  username: email.toLowerCase(),
-                  password: 'temp_guest_placeholder',
-                  twin: null,
-                  api_scans: [],
-                  manual_measurements: {},
-                  measurement_overrides: {}
-              }, { onConflict: 'username', ignoreDuplicates: true })
-              .then(() => console.log("Registered guest scan email:", email))
-              .catch(err => console.warn("Failed to log guest scan email:", err));
-          }
+          fetch('/api/store-auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'guest-init', username: email.toLowerCase() })
+          })
+          .then(() => console.log("Registered guest scan email:", email))
+          .catch(err => console.warn("Failed to log guest scan email:", err));
       } else {
           widgetContainer.style.pointerEvents = 'none';
           widgetContainer.style.opacity = '0.4';

@@ -1357,19 +1357,16 @@
       const manualData = calculateDigitalTwinValues();
       
       try {
-        const supabase = getSupabase();
-        const { data, error } = await supabase
-          .from('store_profiles')
-          .update({
-            manual_measurements: manualData
-          })
-          .eq('username', currentEmail.toLowerCase())
-          .select();
+        const resp = await fetch('/api/store-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'guest-init', username: currentEmail.toLowerCase(), manual_measurements: manualData })
+        });
+        const result = await resp.json();
+        if (!resp.ok || !result.success) throw new Error(result.error || 'Sync failed');
 
-        if (error) throw error;
-        
         closeOnboardingWizard();
-        showMatchingReport(data[0]);
+        showMatchingReport(result.profile);
       } catch (err) {
         alert("Failed to sync measurements: " + err.message);
       }
@@ -1400,18 +1397,14 @@
 
         if (signUpError) throw signUpError;
 
-        // 2. Upsert guest profile in store_profiles cache
-        const { data: profileData, error: profileError } = await supabase
-          .from('store_profiles')
-          .upsert({
-            username: currentEmail.toLowerCase(),
-            password: 'temp_guest_placeholder',
-            manual_measurements: manualData,
-            api_scans: []
-          }, { onConflict: 'username' })
-          .select();
-
-        if (profileError) throw profileError;
+        // 2. Cache guest profile in store_profiles (via backend, service-role)
+        const profResp = await fetch('/api/store-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'guest-init', username: currentEmail.toLowerCase(), manual_measurements: manualData, api_scans: [] })
+        });
+        const profileData = await profResp.json();
+        if (!profResp.ok || !profileData.success) throw new Error(profileData.error || 'Profile cache failed');
 
         // Show verification modal inside the popup card
         document.getElementById('wizard-grid-layout').style.display = 'none';
