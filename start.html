@@ -258,7 +258,10 @@
           <p>Create your free account to save your fit profile — then unlock your full brand matches, your size in each, and the bookmarklet from your dashboard.</p>
           <div class="oauth">
             <input type="email" id="su-email" placeholder="Email address" />
-            <input type="password" id="su-pass" placeholder="Create a password (6+ characters)" />
+            <div style="position:relative">
+              <input type="password" id="su-pass" placeholder="Create a password (6+ characters)" style="padding-right:52px" />
+              <button type="button" onclick="togglePw(this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:.78rem;font-family:var(--sans)">Show</button>
+            </div>
             <button id="su-btn" onclick="doSignup()">Create account &amp; go to my dashboard</button>
           </div>
           <div id="su-msg" style="margin-top:10px;font-size:.82rem;color:var(--pink2);display:none"></div>
@@ -511,6 +514,12 @@
     document.getElementById('dashUnlocked').classList.remove('hidden');
   }
 
+  function togglePw(btn){
+    var i = document.getElementById('su-pass');
+    if(i.type === 'password'){ i.type = 'text'; btn.textContent = 'Hide'; }
+    else { i.type = 'password'; btn.textContent = 'Show'; }
+  }
+
   // Stage 2: real signup + profile save handoff.
   async function doSignup(){
     var email = (document.getElementById('su-email').value || '').trim().toLowerCase();
@@ -542,7 +551,7 @@
     // Real account.
     try {
       var sb = getSupabase();
-      var out = await sb.auth.signUp({ email: email, password: pass });
+      var out = await sb.auth.signUp({ email: email, password: pass, options: { emailRedirectTo: window.location.origin + '/dashboard.html' } });
       if(out.error) throw out.error;
       var box = document.querySelector('.save-box');
       if(box) box.innerHTML = '<h3>Check your email</h3><p style="font-size:.85rem;color:var(--muted);margin-top:6px">We sent a confirmation link to <b style="color:var(--text)">'+email+'</b>. Click it to activate your account, then log in to see all your matches and the bookmarklet.</p>';

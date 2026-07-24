@@ -279,6 +279,13 @@ export function runSizingEngine(user, chart) {
 
   const bestOption = candidateScores[0];
 
+  // Coverage weighting: a "match" on a single dimension is not a real 100%.
+  // Dampen confidence by how many body dimensions we could actually compare, so a
+  // thin chest-only chart can't score 100% and brands we can fully assess rank higher.
+  const comparedDims = bestOption.breakdown ? Object.keys(bestOption.breakdown).length : 0;
+  const coverageFactor = Math.min(1, 0.55 + 0.15 * comparedDims); // 1 dim→0.70, 2→0.85, 3+→1.0
+  const displayScore = Math.round(bestOption.score * coverageFactor);
+
   // Generate dynamic, reassuring styling explanations and alterations advice
   let explanation = `Size ${bestOption.name} is recommended as your best starting fit (${bestOption.spectrum}).`;
   let tailoringTips = [];
@@ -338,7 +345,8 @@ export function runSizingEngine(user, chart) {
 
   return {
     recommended_size: bestOption.name,
-    fit_match_score: bestOption.score,
+    fit_match_score: displayScore,
+    dimensions_compared: comparedDims,
     fit_spectrum: bestOption.spectrum,
     fit_breakdown: bestOption.breakdown,
     explanation: explanation,
