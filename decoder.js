@@ -1027,7 +1027,12 @@ async function onUserLoggedIn(user, profile) {
   
   renderScanHistory(profile);
 
-  // Toggle from Landing page to Dashboard page
+  // Route authenticated users to the new standalone dashboard (dashboard.html).
+  if (!window.location.pathname.includes('dashboard.html')) {
+    window.location.href = '/dashboard.html';
+    return;
+  }
+  // Legacy in-page dashboard (retained but bypassed by the redirect above).
   const landingView = document.getElementById('landing-view');
   const dashboardView = document.getElementById('dashboard-view');
   if (landingView) landingView.style.display = 'none';
