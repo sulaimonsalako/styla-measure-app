@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Styla — Onboarding Preview</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root{
@@ -257,10 +258,11 @@
           <h3>Save your profile</h3>
           <p>Create your free account to save your fit profile — then unlock your full brand matches, your size in each, and the bookmarklet from your dashboard.</p>
           <div class="oauth">
-            <input type="email" placeholder="Email address" />
-            <input type="password" placeholder="Create a password" />
-            <button onclick="goDashboard()">Create account &amp; go to my dashboard</button>
+            <input type="email" id="su-email" placeholder="Email address" />
+            <input type="password" id="su-pass" placeholder="Create a password (6+ characters)" />
+            <button id="su-btn" onclick="doSignup()">Create account &amp; go to my dashboard</button>
           </div>
+          <div id="su-msg" style="margin-top:10px;font-size:.82rem;color:var(--pink2);display:none"></div>
           <p style="margin-top:12px;font-size:.8rem;color:var(--dim)">Already have an account? <a style="color:var(--pink2);cursor:pointer">Log in</a></p>
         </div>
         <div class="badgeline">🔒 No tape measure · no photos · free</div>
@@ -313,6 +315,10 @@
 </div>
 
 <script>
+  var SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+  function getSupabase(){ return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+
   var state = { audience:null, gender:null, age:null, hips:null, chest:null };
   var flow = ['who','fit']; // extended once gender chosen
   var baseAfterFit = ['height','weight','age'];
@@ -504,6 +510,46 @@
     document.getElementById('dashFullList').innerHTML = html;
     document.getElementById('dashLocked').classList.add('hidden');
     document.getElementById('dashUnlocked').classList.remove('hidden');
+  }
+
+  // Stage 2: real signup + profile save handoff.
+  async function doSignup(){
+    var email = (document.getElementById('su-email').value || '').trim().toLowerCase();
+    var pass = document.getElementById('su-pass').value || '';
+    var msg = document.getElementById('su-msg');
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!re.test(email)){ msg.style.display='block'; msg.textContent='Please enter a valid email address.'; return; }
+    if(pass.length < 6){ msg.style.display='block'; msg.textContent='Password must be at least 6 characters.'; return; }
+    msg.style.display='none';
+    var btn = document.getElementById('su-btn'); btn.disabled = true; btn.textContent = 'Creating your account…';
+
+    var profile = computeProfile();
+    // Hand the computed profile to the app via the same localStorage keys the
+    // authenticated dashboard already reads, so it saves on first load.
+    try {
+      localStorage.setItem('styla_twin_chest', profile.chest);
+      localStorage.setItem('styla_twin_waist', profile.waist);
+      localStorage.setItem('styla_twin_hips', profile.hips);
+      localStorage.setItem('styla_twin_height', profile.height);
+      if(profile.inseam) localStorage.setItem('styla_twin_inseam', profile.inseam);
+    } catch(e){}
+
+    // Lead capture (best effort — works once deployed).
+    try {
+      await fetch('/api/store-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'guest-init', username:email, manual_measurements:profile }) });
+    } catch(e){}
+
+    // Real account.
+    try {
+      var sb = getSupabase();
+      var out = await sb.auth.signUp({ email: email, password: pass });
+      if(out.error) throw out.error;
+      goDashboard();
+    } catch(e){
+      btn.disabled = false; btn.textContent = 'Create account & go to my dashboard';
+      msg.style.display='block'; msg.textContent = 'Sign-up: ' + (e.message || e);
+    }
   }
 
   // init
