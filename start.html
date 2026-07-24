@@ -80,7 +80,6 @@
 </head>
 <body>
 <div class="frame">
-  <div class="note-banner">PROTOTYPE — clickable preview of the reworked onboarding. No data is saved.</div>
   <div class="bar-top">
     <span class="step-txt" id="stepTxt">Getting started</span>
     <span class="time-txt" id="timeTxt">~2 min</span>
@@ -545,7 +544,8 @@
       var sb = getSupabase();
       var out = await sb.auth.signUp({ email: email, password: pass });
       if(out.error) throw out.error;
-      goDashboard();
+      var box = document.querySelector('.save-box');
+      if(box) box.innerHTML = '<h3>Check your email</h3><p style="font-size:.85rem;color:var(--muted);margin-top:6px">We sent a confirmation link to <b style="color:var(--text)">'+email+'</b>. Click it to activate your account, then log in to see all your matches and the bookmarklet.</p>';
     } catch(e){
       btn.disabled = false; btn.textContent = 'Create account & go to my dashboard';
       msg.style.display='block'; msg.textContent = 'Sign-up: ' + (e.message || e);
