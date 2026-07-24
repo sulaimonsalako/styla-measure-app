@@ -4,6 +4,7 @@ import categoriesHandler from './_store/store-categories.js';
 import paymentHandler from './_store/store-payment.js';
 import productsHandler from './_store/store-products.js';
 import exportPaymentHandler from './_store/export-payment.js';
+import rankBrandsHandler from './_match/rank-brands.js';
 
 export const config = {
   api: {
@@ -62,6 +63,8 @@ export default async function handler(req, res) {
     return productsHandler(req, res);
   } else if (route === 'export-payment' || pathname.includes('/export-payment')) {
     return exportPaymentHandler(req, res);
+  } else if (route === 'rank-brands' || pathname.includes('/rank-brands')) {
+    return rankBrandsHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

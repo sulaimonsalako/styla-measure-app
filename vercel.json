@@ -6,6 +6,10 @@
       "destination": "/api/store-api?route=export-payment"
     },
     {
+      "source": "/api/rank-brands",
+      "destination": "/api/store-api?route=rank-brands"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },
