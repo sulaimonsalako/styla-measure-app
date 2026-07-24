@@ -3,6 +3,8 @@ export function runSizingEngine(user, chart) {
   const category = chart.garment_category || 'tops';
   const fabric = chart.fabric_type || 'woven';
   const sizes = chart.sizes || [];
+  const subclass = chart.garment_subclass || '';
+  const structured = category === 'outerwear' || /suit|blazer|jacket|tailored/i.test(subclass + ' ' + category);
 
   if (sizes.length === 0) {
     return {
@@ -131,30 +133,30 @@ export function runSizingEngine(user, chart) {
 
       // Evaluate fit based on label and physicalEase
       if (label === 'chest' || label === 'hips' || label === 'belly' || (label === 'waist' && category !== 'bottoms')) {
-        // General circumferences (Chest, Bust, Belly, Hips, Waist on tops)
+        // General circumferences (Chest, Bust, Belly, Hips, Waist on tops).
+        // Ideal ease is CATEGORY-AWARE: structured garments (suits/jackets/outerwear)
+        // need real drape ease; soft knit tops need very little. Score smoothly by how
+        // far the ease is from that ideal, so sizes are genuinely discriminated and a
+        // too-tight size is penalized instead of flattered as "slim fit".
+        let ideal = 3.0;
+        if (label === 'chest') ideal = structured ? 4.5 : (fabric === 'woven' ? 3.0 : 2.5);
+        else if (label === 'hips') ideal = 3.5;
+        else if (label === 'belly') ideal = structured ? 4.0 : 3.5;
+        else if (label === 'waist') ideal = structured ? 3.5 : 3.0;
+
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 10;
-          breakdown[label] = `Too tight (Garment is ${Math.abs(physicalEase).toFixed(1)}" smaller than your body)`;
-        } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 5;
+          score -= Math.abs(physicalEase + stretchAllowance) * 12;
           localSpectrum = 'slim';
-          breakdown[label] = `Slim fit (Tightness: ${Math.abs(physicalEase).toFixed(1)}" under target)`;
-        } else if (physicalEase <= 3.5) { // e.g. 0" to 3.5" ease
-          if (fabric === 'woven') score -= (3.5 - physicalEase) * 1.5;
-          localSpectrum = 'slim';
-          breakdown[label] = `Fitted / Slim fit (${physicalEase.toFixed(1)}" ease)`;
-        } else if (physicalEase <= 6.5) { // e.g. 3.5" to 6.5" ease (normal fit)
-          localSpectrum = 'ideal';
-          breakdown[label] = `Regular fit (${physicalEase.toFixed(1)}" ease)`;
-        } else if (physicalEase <= 10.0) { // e.g. 6.5" to 10" ease
-          score -= (physicalEase - 6.5) * 2;
-          localSpectrum = 'relaxed';
-          breakdown[label] = `Relaxed fit (${physicalEase.toFixed(1)}" ease)`;
-        } else { // e.g. 10"+ ease
-          score -= (physicalEase - 10.0) * 4;
-          localSpectrum = 'oversized';
-          breakdown[label] = `Oversized (${physicalEase.toFixed(1)}" ease)`;
+          breakdown[label] = `Too tight (${Math.abs(physicalEase).toFixed(1)}" tighter than you need here)`;
+        } else {
+          const dev = physicalEase - ideal;
+          score -= Math.abs(dev) * (dev < 0 ? 5 : 2); // tighter-than-ideal penalized harder than looser
+          if (dev < -1.0) localSpectrum = 'slim';
+          else if (dev <= 1.5) localSpectrum = 'ideal';
+          else if (dev <= 4.0) localSpectrum = 'relaxed';
+          else localSpectrum = 'oversized';
+          breakdown[label] = `${localSpectrum.charAt(0).toUpperCase() + localSpectrum.slice(1)} fit (${physicalEase.toFixed(1)}" ease · ideal ~${ideal}")`;
         }
       } else if (label === 'waist' && category === 'bottoms') {
         // Waist on bottoms (pants)
