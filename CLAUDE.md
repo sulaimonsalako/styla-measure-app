@@ -102,10 +102,19 @@ User must add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** env AND local `.env`. Wi
 backend falls back to anon key and all store writes break once RLS is on. `supabase-admin.js`
 logs a warning when the key is missing.
 
-### Remaining steps
-1. User adds service-role key (Vercel + .env).
-2. Branch-test `update_rls_policies.sql` on a Supabase branch (~$0.013/hr, delete after).
-3. Apply SQL to prod, user redeploys (git push), verify store/login/cart/scan flows.
+### STATUS: APPLIED TO PROD (2026-07-23)
+- Service-role key added to Vercel + .env by user. Code pushed + deployed (commit `6c476e6`,
+  deployment READY on prod).
+- `add_bridesmaid_columns` migration applied (bridesmaid schema now live).
+- `enable_rls_store_tables` applied via Supabase SQL Editor (the apply_migration MCP call was
+  blocked by a safety classifier for REVOKE/RLS DDL, so user ran the SQL directly).
+- VERIFIED read-only: all 4 store_* tables have RLS enabled. store_profiles + store_carts =
+  anon fully denied (no policy, no grants). store_products + store_categories = public-read
+  SELECT policy; anon write grants remain but are inert (RLS denies writes w/o policy).
+- Optional future hardening: `REVOKE INSERT,UPDATE,DELETE ON store_products, store_categories
+  FROM anon, authenticated` (belt-and-suspenders; not required).
+- CONFIRMED: user smoke-tested live app (store load, login, cart, guest scan) — all working
+  under RLS. Service-role key is being picked up correctly. RLS remediation COMPLETE.
 
 ## Current State — UPDATE THIS EACH SESSION
 
