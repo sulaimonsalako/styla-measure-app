@@ -911,25 +911,25 @@ input[type="number"]:focus {
 
 /* Unified Editorial Footer */
 .footer, footer {
-  background: #F0EADE !important;
-  border-top: 1px solid var(--border) !important;
+  background: #16130F !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
   padding: 4rem 0 !important;
   width: 100% !important;
   margin-top: 6rem !important;
-  color: var(--text-secondary) !important;
+  color: #C9C0B0 !important;
 }
 
 .footer a, footer a {
-  color: var(--text-secondary) !important;
+  color: #E8E1D4 !important;
   transition: color 0.2s ease !important;
 }
 
 .footer a:hover, footer a:hover {
-  color: var(--accent-light) !important;
+  color: #D4B483 !important;
 }
 
 .footer p, footer p {
-  color: var(--text-muted) !important;
+  color: #A79E8C !important;
 }
 
 /* Buttons Systems */
