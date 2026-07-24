@@ -36,8 +36,17 @@ below is just a different way of calling it. **The data model is the moat; featu
 
 ## Monetization
 - One-time **$9.99** unlock for the full brand-match list + size per brand (NOW).
+- **Wedding party $29.99** group unlock — the party ADMIN pays once to reveal the brand
+  matches for EVERY member (not each member paying). This is the bridal product's paywall.
 - The **bookmarklet is FREE** with a free account — it drives adoption and body-data. Paid is
   the curated match list, not the tool.
+
+## Accounts & identity
+- Collect a **first name** at signup (to address users in emails, connection requests, and the
+  wedding-party roster). Email stays the unique identifier; no separate username needed.
+- **Direct signups** (via the nav login/signup, not the questionnaire) have NO fit profile —
+  route them into `/start.html` to build one before showing matches.
+- The **fit profile is editable** from the dashboard; edits re-run the match ranking.
 - **Affiliate** on item fit search (FUTURE).
 - **Premium subscription** for 3D scan accuracy (FUTURE).
 - **B2B** analytics + widget subscriptions.
