@@ -33,8 +33,15 @@ export default async function rankBrands(req, res) {
 
     const { data: charts, error } = await supabaseAdmin
       .from('size_charts')
-      .select('id, category, gender, chart_data, brands(name)');
+      .select('id, brand_id, category, gender, chart_data');
     if (error) throw error;
+
+    const { data: brandRows, error: bErr } = await supabaseAdmin
+      .from('brands')
+      .select('id, name');
+    if (bErr) throw bErr;
+    const brandMap = {};
+    (brandRows || []).forEach(function(b){ brandMap[b.id] = b.name; });
 
     const matches = [];
     for (const c of (charts || [])) {
@@ -50,7 +57,7 @@ export default async function rankBrands(req, res) {
 
       const r = runSizingEngine(user, norm);
       matches.push({
-        brand: (c.brands && c.brands.name) || 'Unknown',
+        brand: brandMap[c.brand_id] || 'Unknown',
         category: norm.garment_category,
         recommended_size: r.recommended_size,
         score: r.fit_match_score,
@@ -63,6 +70,6 @@ export default async function rankBrands(req, res) {
     return res.status(200).json({ matches: limit ? matches.slice(0, Number(limit)) : matches });
   } catch (e) {
     console.error('rank-brands error:', e);
-    return res.status(500).json({ error: 'Failed to rank brands' });
+    return res.status(500).json({ error: 'Failed to rank brands', detail: String((e && e.message) || e) });
   }
 }
