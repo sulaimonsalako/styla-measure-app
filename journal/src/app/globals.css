@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --bg-dark: #0b0b14;
+  --card-bg: #121222;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --text-white: #ffffff;
+  --text-muted: #cbd5e1;
+  --text-secondary: #e2e8f0;
+  --accent-pink: #ff2a75;
+  --accent-light: #ff75a0;
+  --pink-glow: rgba(255, 42, 117, 0.06);
+}
+
+@theme {
+  --color-bg-dark: var(--bg-dark);
+  --color-card-bg: var(--card-bg);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-light: var(--accent-light);
+  --color-text-white: var(--text-white);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border-card: var(--card-border);
+  
+  --font-serif: var(--font-eb-garamond), serif;
+  --font-sans: var(--font-inter), sans-serif;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 10% 20%, var(--pink-glow) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.04) 0%, transparent 45%);
+  color: var(--text-white);
+  font-family: var(--font-inter), sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Custom transitions and glow effects */
+.btn-pink-glow {
+  box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-pink-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 42, 117, 0.4);
+}
+
+.card-luxury {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.3s, box-shadow 0.3s;
+}
+.card-luxury:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 42, 117, 0.25);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 42, 117, 0.05);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .7; transform: scale(1.05); }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom Hide Scrollbar for Horizontal Netflix Lists */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

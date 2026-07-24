@@ -564,3 +564,32 @@ These should almost never be shorter than the body. Long is always preferable be
 These numbers should be treated as industry defaults. Every brand should have its own "ease profile" layered on top of these defaults. 
 
 If the system learns that Brand A consistently cuts T-shirts with +5" chest ease while Brand B cuts them with +2.5" chest ease, those brand-specific values override the generic defaults. Over time, recommendations become tailored to each brand while still using these rules as a reliable baseline.
+
+
+---
+
+# Styla UI Design & Responsive Auth Architecture Rules v1.0
+
+## 1. Unified Navigation Header Invariants
+All static HTML pages and Next.js `journal` sub-app routes must render the identical navigation header containing:
+- Logo link pointing to `/index.html` (resolves to `/` or the home dashboard).
+- "Bridesmaid" link pointing to `/bridesmaid.html` (with active highlighting support).
+- "For Fashion Brands" link pointing to `/brands.html` (with class `nav-link-brands`).
+- "Blogs" link pointing to `/blogs`.
+- "Log In" / "Sync Status" buttons.
+
+## 2. Global Authentication State Synchronization
+- **Dynamic Hiding**: When a user logs in, the "For Fashion Brands" tab must be hidden. This is done globally via a CSS rule:
+  ```css
+  body.user-logged-in .nav-link-brands {
+    display: none !important;
+  }
+  ```
+- **Lightweight Observer**: Sub-pages and tools pages that do not load `decoder.js` must implement a lightweight self-executing local storage observer checking `sb-tneflxtpmzodauygtslk-auth-token` to add the `user-logged-in` body class, toggle synced/logout actions, and redirect "Log In" clicks to `/index.html?login=true`.
+- **Decoder Auto-Trigger**: `decoder.js` must listen on page load for `?login=true` or `#login` in URL parameters, immediately expanding the auth modal overlay upon redirection.
+
+## 3. Mobile Viewport Responsive Constraints
+- **Header Link Hiding**: Under `600px` viewports, headers must hide secondary navigation links (e.g. `For Fashion Brands`, `Blogs`) to prevent layout wrapping or item squishing. They are accessible in the footer.
+- **Header Dimensions**: Mobile navigation bar heights must remain at `56px` with compact padding (`0 12px`).
+- **Typography Scaling**: Large hero headers (`3.2rem`) must scale down to `2.0rem` or below under `600px` to prevent viewport overflow on standard smartphones.
+- **Interactive Choice Cards**: Sizing selection cards (Tape Measure vs. 3D Scan) must stack vertically in a single column (`1fr`) on viewports under `500px` to preserve tap usability.

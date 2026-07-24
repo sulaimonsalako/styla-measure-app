@@ -11,21 +11,21 @@
   --bg-surface: #121222;
   --bg-raised: #16162a;
   --border: rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(225, 29, 72, 0.15);
+  --border-accent: rgba(37, 99, 235, 0.15);
 
   --text-primary: #ffffff;
   --text-secondary: #e2e8f0;
   --text-muted: #cbd5e1;
 
-  --accent: #ff2a75;
-  --accent-light: #e11d48;
-  --accent-dim: rgba(225, 29, 72, 0.08);
-  --accent-glow: rgba(225, 29, 72, 0.15);
+  --accent: #3b82f6;
+  --accent-light: #2563eb;
+  --accent-dim: rgba(37, 99, 235, 0.08);
+  --accent-glow: rgba(37, 99, 235, 0.15);
   
   --purple-glow: rgba(139, 92, 246, 0.06);
-  --rose-glow: rgba(225, 29, 72, 0.04);
+  --rose-glow: rgba(37, 99, 235, 0.04);
 
-  --pink: #e11d48;
+  --pink: #2563eb;
   --amber: #d97706;
 
   --radius-sm: 8px;
@@ -37,7 +37,7 @@
   --font-body: 'Inter', sans-serif;
 
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 40px rgba(225, 29, 72, 0.08);
+  --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.08);
   
   --primary-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
 }
@@ -95,7 +95,7 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
 }
 .logo-accent { 
-  color: var(--accent-light); 
+  color: #ff2a75 !important; 
   font-style: italic;
   font-weight: 400;
 }
@@ -186,7 +186,7 @@ a { text-decoration: none; color: inherit; }
 .btn-primary:hover {
   background: var(--accent-light);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.15);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
 }
 .btn-primary svg.btn-arrow {
   width: 18px;
@@ -311,7 +311,7 @@ a { text-decoration: none; color: inherit; }
 .step-card:hover, .who-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px rgba(0,0,0,0.04) !important;
-  border-color: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(37, 99, 235, 0.15) !important;
 }
 .step-num {
   font-family: var(--font-head);
@@ -371,7 +371,7 @@ a { text-decoration: none; color: inherit; }
   padding: 120px 0;
   text-align: center;
   background-image: 
-    radial-gradient(circle at 50% 50%, rgba(225, 29, 72, 0.03) 0%, transparent 60%);
+    radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.03) 0%, transparent 60%);
 }
 .final-title {
   font-family: var(--font-head);
@@ -476,7 +476,7 @@ a { text-decoration: none; color: inherit; }
   transition: all 0.3s ease;
 }
 .dashboard-mock:hover {
-  border-color: rgba(225, 29, 72, 0.15);
+  border-color: rgba(37, 99, 235, 0.15);
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.06);
 }
 .dashboard-header {
@@ -543,7 +543,7 @@ a { text-decoration: none; color: inherit; }
 .chart-bar {
   width: 100%;
   border-radius: 4px 4px 0 0;
-  background: linear-gradient(180deg, var(--accent-light) 0%, rgba(225, 29, 72, 0.2) 100%);
+  background: linear-gradient(180deg, var(--accent-light) 0%, rgba(37, 99, 235, 0.2) 100%);
   position: relative;
   transition: all 0.6s ease;
   min-height: 8px;
@@ -738,7 +738,7 @@ input[type="email"]:focus,
 input[type="password"]:focus,
 input[type="number"]:focus {
   border-color: var(--accent-light) !important;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 .styled-input::placeholder {
@@ -767,7 +767,7 @@ input[type="number"]:focus {
 
 .styled-select:focus {
   border-color: var(--accent-light) !important;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 .styled-select option {
@@ -793,7 +793,7 @@ input[type="number"]:focus {
 
 .styled-textarea:focus {
   border-color: var(--accent-light) !important;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 /* Unified Cards System */
@@ -902,8 +902,8 @@ input[type="number"]:focus {
 }
 
 .chat-bubble.bot {
-  background: rgba(225, 29, 72, 0.04) !important;
-  border: 1px solid rgba(225, 29, 72, 0.1) !important;
+  background: rgba(37, 99, 235, 0.04) !important;
+  border: 1px solid rgba(37, 99, 235, 0.1) !important;
   color: var(--text-primary) !important;
   align-self: flex-start !important;
   border-bottom-left-radius: 2px !important;
@@ -944,7 +944,7 @@ input[type="number"]:focus {
 
 .btn-run:hover, .btn-primary:hover, button[type="submit"]:hover {
   background: var(--accent-light) !important;
-  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.15) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15) !important;
 }
 
 /* Custom Scrollbars */
@@ -1024,4 +1024,79 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* Accessibility & Contrast Enhancements */
 input::placeholder, select::placeholder, textarea::placeholder {
   color: rgba(255, 255, 255, 0.5) !important;
+}
+
+
+/* Hide 'For Fashion Brands' link when user is logged in */
+body.user-logged-in .nav-link-brands {
+  display: none !important;
+}
+
+
+/* ============================================
+   GLOBAL MOBILE RESPONSIVENESS OVERRIDES
+   ============================================ */
+
+/* Navbar responsiveness */
+@media (max-width: 600px) {
+  .nav {
+    padding: 0 12px !important;
+  }
+  .nav-inner {
+    height: 56px !important;
+  }
+  .logo {
+    font-size: 1.1rem !important;
+    gap: 6px !important;
+  }
+  .logo img {
+    height: 24px !important;
+  }
+  .nav-actions {
+    gap: 0.6rem !important;
+  }
+  /* Hide secondary nav links on mobile to prevent squishing */
+  .nav-actions a:not(#nav-link-bridesmaid) {
+    display: none !important;
+  }
+  .nav-cta {
+    padding: 6px 14px !important;
+    font-size: 0.75rem !important;
+  }
+  .logged-in-email {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Landing & Page elements responsiveness */
+@media (max-width: 600px) {
+  .landing-hero {
+    margin-top: 80px !important;
+    padding: 0 1rem !important;
+    gap: 2rem !important;
+  }
+  .hero-title {
+    font-size: 2.0rem !important;
+  }
+  .hero-desc {
+    font-size: 0.95rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .section-title {
+    font-size: 1.8rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .glass-card {
+    padding: 1.5rem !important;
+  }
+  .choice-card {
+    padding: 1.2rem !important;
+  }
+  #choice-container {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .benefits-grid {
+    gap: 1.2rem !important;
+  }
 }

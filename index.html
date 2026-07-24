@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Meet Your AI Stylist | STYLA Measure</title>
+  <title>Discover Brands for Your Body Proportions | STYLA Measure</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -154,9 +154,7 @@
       font-weight: 900;
       margin: 0 0 1.2rem 0;
       line-height: 1.1;
-      background: linear-gradient(135deg, #ffffff 40%, #ff75a0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #ffffff;
     }
 
     .hero-container p {
@@ -816,19 +814,98 @@
         margin: auto !important;
       }
     }
-  </style>
+  
+    /* Wizard Modal styles */
+    .wizard-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 11, 20, 0.7);
+      backdrop-filter: blur(16px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .wizard-modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .wizard-modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+      position: relative;
+      transform: translateY(30px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 2.5rem;
+      box-sizing: border-box;
+      text-align: left;
+    }
+    .wizard-modal-overlay.active .wizard-modal-content {
+      transform: translateY(0);
+    }
+    
+    /* Slide transitions */
+    .wizard-slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .wizard-slide.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .choice-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 1.8rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+    .choice-card:hover {
+      transform: translateY(-4px);
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.03);
+      box-shadow: 0 8px 30px rgba(255, 42, 117, 0.1);
+    }
+    .choice-card.active {
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.05);
+      box-shadow: 0 8px 30px rgba(255, 42, 117, 0.15);
+    }
+    </style>
 </head>
 <body>
+  
+
 
   <!-- Header -->
-  <nav class="nav">
+    <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-        <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+      <a href="/index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
         STYLA <span class="logo-accent">Measure</span>
       </a>
       <div id="auth-status-container" class="nav-actions" style="display: flex; align-items: center; gap: 1.5rem;">
-        <a href="brands.html" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
+        <a href="/bridesmaid.html" class="nav-link" id="nav-link-bridesmaid" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Bridesmaid</a>
+        <a href="/brands.html" class="nav-link nav-link-brands" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
+        <a href="/blogs" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Blogs</a>
         <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log In</button>
         <div id="logged-in-status" style="display: none; align-items: center; gap: 16px;">
           <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
@@ -842,15 +919,15 @@
   <!-- Hero Intro -->
     <section class="hero-container" style="align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; color: #ffffff;">Your Personal Tailor at Home.<br><em>Perfect Fit across Every Brand.</em></h1>
+      <h1 style="font-family: var(--font-outfit); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; margin: 0; color: #ffffff;">Find Brands Designed for Your Proportions.<br><em>Save on Alterations & Returns.</em></h1>
       <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.6; margin: 0; max-width: 520px;">
-        Scan your body in 30 seconds with your phone. Instantly discover your perfect size at any online store, or export measurements to send straight to your tailor.
+        Generate your digital twin in 30 seconds. STYLA matches your physical coordinates against designer charts to recommend the perfect fit, help you discover new brands, and save money in alteration fees.
       </p>
       <div style="margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <button type="button" class="btn-run" id="btn-hero-measure" style="background: var(--primary-gradient); font-size: 1.05rem; padding: 12px 32px; width: auto; margin-top: 0;">Measure Me Now</button>
+        <button type="button" class="btn-run" id="btn-hero-measure" style="background: var(--primary-gradient); font-size: 1.05rem; padding: 12px 32px; width: auto; margin-top: 0;">Create Your Digital Twin</button>
         <span style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
           <svg style="width: 16px; height: 16px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          No Photos Stored / 100% Automated AI
+          No Tape Measure Needed / Shop Smarter
         </span>
       </div>
     </div>
@@ -858,7 +935,7 @@
     <!-- Right Column: Woman with Phone and Mug Lifestyle Image -->
     <div style="position: relative; width: 100%; max-width: 440px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
       <div style="position: absolute; width: 100%; height: 100%; background: radial-gradient(circle, rgba(225, 29, 72, 0.08) 0%, transparent 70%); filter: blur(30px); pointer-events: none; z-index: 0;"></div>
-      <img src="images/woman_phone_mug.png" alt="STYLA Mobile Scan" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); position: relative; z-index: 1;" />
+      <img src="images/woman_phone_mug.png" alt="STYLA Digital Twin Stylist" style="width: 100%; height: auto; border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); position: relative; z-index: 1;" />
     </div>
   </section>
   <!-- How it Works 4-Column Explainer -->
@@ -868,27 +945,43 @@
       <!-- Column 1 -->
       <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
         <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">1</div>
-        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">3D Mobile Scan</h3>
-        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Take two quick photos from home using your phone camera. No manual tape measures or physical tailors required.</p>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Digital Twin Profile</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Enter a few basic parameters to instantly calculate complete physical contours (Waist, Chest, Hip, Inseam) using proportional anthropometric models.</p>
       </div>
       <!-- Column 2 -->
       <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
         <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">2</div>
-        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Calculated Precision</h3>
-        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Our AI instantly extracts 80+ distinct physical measurements with professional, tailor-grade accuracy.</p>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Save on Alterations</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Understand if a garment will fit out of the box or where standard tailoring is needed. Never order clothing that is too tight in critical areas.</p>
       </div>
       <!-- Column 3 -->
       <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
         <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">3</div>
-        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Cross-Brand Shop</h3>
-        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Shop Nike, Levi's, Zara, and more. STYLA matches your metrics to brand size charts to recommend your perfect fit.</p>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Discover New Brands</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Uncover designers that structure clothing tailored specifically to your unique body frame, letting you discover new brands and shop with confidence.</p>
       </div>
       <!-- Column 4 -->
       <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: left; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
         <div style="background: rgba(255, 42, 117, 0.1); color: #ff2a75; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 800; margin-bottom: 1.25rem;">4</div>
-        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Bespoke PDF Export</h3>
-        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Export your sizing profile to a clean PDF sheet and send it directly to your tailor for weddings or custom outfits.</p>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0 0 10px 0;">Eliminate Returns</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Shop smarter with your saved digital coordinates. Check sizes automatically across hundreds of online stores using our stylist tools.</p>
       </div>
+    </div>
+  </section>
+
+  <!-- Bridesmaid Use Case Callout -->
+  <section style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 2.5rem; max-width: 1200px; margin: 4rem auto; display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: center; box-sizing: border-box; text-align: left;">
+    <div>
+      <div class="hero-badge" style="background: rgba(255, 42, 117, 0.08); color: #ff2a75; font-size: 0.75rem; margin-bottom: 0.5rem;">SPECIALIZED SERVICE</div>
+      <h2 style="font-family: var(--font-outfit); font-size: 2rem; font-weight: 800; color: #fff; margin: 0.5rem 0 1rem 0;">Bridal Party Sizing Matchmaker</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+        Planning a wedding? Sizing consistency across bridesmaid dresses (like Azazie, Jenny Yoo, Birdy Grey) and groomsmen suits (like The Black Tux, Indochino) is a major pain point. 
+        Get guaranteed fits, compare 21 bridal designers by match percentage, and eliminate expensive pre-wedding tailoring surprises.
+      </p>
+      <a href="/bridesmaid.html" class="btn-pink" style="display: inline-block; text-decoration: none; padding: 12px 28px;">Go to Bridesmaid Matching Portal &rarr;</a>
+    </div>
+    <div style="display: flex; justify-content: center;">
+      <img src="happy_bridesmaid.png" alt="Happy Bridesmaids Sizing" style="width: 100%; max-width: 320px; height: auto; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 15px 30px rgba(0,0,0,0.4);" />
     </div>
   </section>
 
@@ -919,16 +1012,16 @@
     <div class="step-card">
       <div class="step-header">
         <div class="step-num">1</div>
-        <h3 class="step-title">Create Your AI Tailor Profile</h3>
+        <h3 class="step-title">Create Your Digital Twin</h3>
       </div>
 
       <!-- 3D Scan Active Badge -->
-      <div id="active-scan-badge" style="display: none;">
+      <div id="active-scan-badge" style="display: none !important;">
         <span>✅ <strong>3D Body Scan Active:</strong> Using 80+ measurements from AI Sizing Scan.</span>
       </div>
 
       <!-- Tab Toggle (Scan vs Manual) -->
-      <div class="tab-container">
+      <div class="tab-container" style="display: none !important;">
         <button type="button" id="btn-tab-scan" class="tab-btn">
           📷 3D Body Scan <span class="badge">Recommended</span>
         </button>
@@ -1017,54 +1110,35 @@
         Once your measurements are saved, you can use them to find your perfect fit automatically on any online store. Choose your platform below:
       </p>
 
-      <div class="tools-container" style="display: flex; flex-direction: row; gap: 1.5rem; margin-bottom: 0; align-items: stretch; flex-wrap: wrap;">
-        <!-- Apple Devices Card -->
-        <div class="tools-card" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.8rem; border-radius: 16px; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05);">
-          <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-              <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff;">
-                <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,22C14.32,22.05 13.89,21.24 12.37,21.24C10.84,21.24 10.37,21.97 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.1,16.67C20.08,16.74 19.67,18.11 18.71,19.5M15.97,4.17C16.63,3.37 17.07,2.28 16.95,1C16,1.04 14.9,1.6 14.24,2.38C13.68,3.04 13.19,4.14 13.34,5.39C14.39,5.47 15.4,4.88 15.97,4.17Z"/></svg>
-              </div>
-              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700;">iPad & Apple Devices</h4>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 1.25rem;">
-              Sleek integration designed specifically for iOS. Choose the easiest option for your device:
-            </p>
-            <ul class="premium-checklist">
-              <li><b>iPad Safari Bookmark:</b> Save a quick, 100% app-free utility in Safari bookmarks.</li>
-              <li><b>Apple Share Shortcut:</b> Launch the sizing tool directly from Safari's native Share Sheet.</li>
-            </ul>
-          </div>
-          <button class="btn-run btn-apple-shortcut-action" style="margin-top: 1rem; width: 100%; padding: 12px; font-size: 0.9rem; background: var(--primary-gradient); border: none; border-radius: 8px; cursor: pointer; color: #fff; font-weight: 700; transition: transform 0.2s;">Open iPad & Apple Setup Guide</button>
-        </div>
-
-        <!-- Windows & Android Card -->
-        <div class="tools-card" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.8rem; border-radius: 16px; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05);">
+            <div class="tools-container" style="display: flex; justify-content: center; margin-bottom: 0;">
+        <!-- Desktop & Mobile Bookmarklet Card -->
+        <div class="tools-card" style="max-width: 500px; width: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.8rem; border-radius: 16px; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.05);">
           <div>
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
               <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #fff;">
                 <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               </div>
-              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700;">Windows & Android</h4>
+              <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); font-weight: 700;">Desktop & Mobile Bookmarklet</h4>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 1.25rem;">
-              Smart browser bookmarklet for Chrome, Edge, and Firefox. No installations required:
+              Smart browser bookmarklet for Chrome, Safari, Edge, and Firefox. No installations required:
             </p>
             <ul class="premium-checklist">
-              <li><b>Desktop Chrome/Edge:</b> Simply drag the <b>⚡ STYLA Stylist</b> pill below directly to your Bookmarks bar.</li>
-              <li><b>Mobile Chrome:</b> Copy the code block below, bookmark this page, edit the URL, and paste the code.</li>
+              <li><b>Desktop Browser:</b> Simply drag the <b>⚡ STYLA Stylist</b> pill below directly to your Bookmarks bar.</li>
+              <li><b>Mobile Safari/Chrome:</b> Copy the code block below, bookmark this page, edit the URL, and paste the code.</li>
             </ul>
           </div>
           <div style="text-align: center; margin-top: 1rem; width: 100%;">
             <a id="btn-bookmarklet" href="#" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--success-gradient); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 100px; font-size: 0.9rem; border: none; cursor: grab; box-shadow: 0 4px 15px rgba(16,185,129,0.25); width: 100%; box-sizing: border-box;">
               <span>⚡ STYLA Stylist</span>
             </a>
-            <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">← Drag this pill directly to your Bookmarks bar!</p>
+            <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; margin-bottom: 12px;">👆 Drag this pill directly to your Bookmarks bar!</p>
             
-            <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); margin-top: 0; border-radius: 8px; font-weight: 600; color: var(--text-secondary);">Copy Mobile Chrome Code</button>
+            <button id="btn-copy-bookmarklet" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); margin-top: 0; border-radius: 8px; font-weight: 600; color: var(--text-secondary);">Copy Mobile Sizing Code</button>
             <div id="copy-success-msg" style="display: none; font-size: 0.75rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">✓ Code copied to clipboard!</div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -1075,7 +1149,7 @@
     <!-- Dashboard Header -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; flex-wrap: wrap; gap: 1.5rem;">
       <div>
-        <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ffffff 40%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Tailor Dashboard</h2>
+        <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; color: #ffffff;">AI Tailor Dashboard</h2>
         <p style="margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-secondary);">Welcome back, <span id="db-user-email" style="color: #10b981; font-weight: 600;"></span></p>
       </div>
     </div>
@@ -1149,7 +1223,7 @@
               <h3 style="font-family: var(--font-outfit); color: var(--text-primary); margin: 0; font-size: 1.5rem;">3D Body Scans History</h3>
               <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 4px 0 0 0;">Manage your scans imported from Twilio / 3DLook.</p>
             </div>
-            <button id="btn-db-start-scan" class="btn-run" style="margin: 0; padding: 10px 20px; font-size: 0.85rem; font-weight: 700; background: var(--success-gradient); border-radius: 10px;">Start New 3D Scan</button>
+            <button id="btn-db-start-scan" class="btn-run" style="display: none !important; margin: 0; padding: 10px 20px; font-size: 0.85rem; font-weight: 700; background: var(--success-gradient); border-radius: 10px;">Start New 3D Scan</button>
           </div>
           
           <div id="db-scans-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -1180,18 +1254,8 @@
             <!-- Mobile Guide -->
             <div class="card" style="padding: 1.5rem;">
               <h4 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.15rem; font-family: var(--font-outfit); display: flex; align-items: center; gap: 8px;">📱 Mobile Installation</h4>
-              
-              <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.08);">
-                <h5 style="margin: 0 0 0.6rem 0; color: var(--text-primary); font-size: 1rem; font-family: var(--font-outfit);">🍎 Apple Devices (iOS & Mac)</h5>
-                <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px;">
-                  <li>Tap the button below to install the STYLA Apple Shortcut.</li>
-                  <li>To use: Browse any store in Safari, tap the <b>Share</b> icon, and select <b>⚡ STYLA Stylist</b>.</li>
-                </ol>
-                <a href="javascript:void(0)" class="btn-run btn-apple-shortcut-action" style="display: block; text-align: center; text-decoration: none; width: 100%; padding: 12px; font-size: 0.9rem; font-weight: 700; background: var(--primary-gradient); border-radius: 10px;">Install Apple Shortcut</a>
-              </div>
-
               <div>
-                <h5 style="margin: 0 0 0.6rem 0; color: var(--text-primary); font-size: 1rem; font-family: var(--font-outfit);">🤖 Android (Chrome)</h5>
+                <h5 style="margin: 0 0 0.6rem 0; color: var(--text-primary); font-size: 1rem; font-family: var(--font-outfit);">🤖 Mobile Browser (Chrome/Safari)</h5>
                 <ol style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.2rem; line-height: 1.6; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
                   <li>Tap <b>Copy Code</b> below.</li>
                   <li>Bookmark this page.</li>
@@ -1247,82 +1311,37 @@
 
 
   <!-- FOOTER -->
-  <footer class="footer">
+    <footer class="footer">
     <div class="container">
       <div class="footer-inner" style="flex-direction: column; gap: 20px;">
         <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
           <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
           STYLA <span class="logo-accent">Measure</span>
         </div>
-        
-        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center;">
-          <a href="https://instagram.com/stylaca" target="_blank"  >Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank"  >TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank"  >X (Twitter)</a>
+
+        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
         </div>
 
         <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
+          <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Home</a>
+          <a href="bridesmaid.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Bridesmaid</a>
           <a href="brands.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">For Fashion Brands</a>
           <a href="https://calendly.com/contact-styla/30min" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Book a Demo</a>
-          <a href="store/index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Styla Shop</a>
           <a href="tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
           <a href="tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
-          <a href="seo/guides.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Sizing & Sourcing Hub</a>
+          <a href="/blogs" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Blogs</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a>
         </div>
 
-        <p class="footer-copy">&copy; 2026 STYLA Measure. All rights reserved.</p>
-        <p class="footer-tagline">Your body. Your size. Everywhere.</p>
+        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">&copy; 2026 STYLA Measure. All rights reserved.</p>
+        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
       </div>
     </div>
   </footer>
-
-  <!-- APPLE & IPAD SETUP MODAL -->
-  <div class="modal-overlay" id="apple-shortcut-modal" onclick="if (event.target === this) this.style.display='none'" style="display: none; align-items: center; justify-content: center; z-index: 9999;">
-    <div class="modal-content" style="position: relative; max-width: 520px; width: 92%; padding: 2rem; background: #121222; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
-      <button class="modal-close-btn" onclick="document.getElementById('apple-shortcut-modal').style.display='none'" aria-label="Close modal">&times;</button>
-      
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
-        <span style="font-size: 1.6rem;">📱</span>
-        <h3 style="margin: 0; color: var(--text-primary); font-family: var(--font-outfit); font-size: 1.35rem; font-weight: 700;">iPad & Apple Setup Guide</h3>
-      </div>
-      <p style="color: var(--text-muted); line-height: 1.5; margin-top: 0; margin-bottom: 1.25rem; font-size: 0.88rem;">
-        Choose the method below that is easiest for you. No technical experience required!
-      </p>
-
-      <!-- METHOD 1: iPad Safari Bookmark (Easiest / App-Free) -->
-      <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <h4 style="margin: 0; color: #10b981; font-size: 1rem; font-family: var(--font-outfit); font-weight: 700;">💡 Method 1: Safari Bookmark (Easiest for iPad)</h4>
-          <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 2px 8px; border-radius: 10px; font-weight: 600;">No App Needed</span>
-        </div>
-        <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0 0 0.75rem 0; line-height: 1.4;">
-          You don't need to touch the Shortcuts app at all! Just save STYLA as a Safari bookmark on your iPad:
-        </p>
-        <ol style="font-size: 0.83rem; color: var(--text-secondary); padding-left: 1.1rem; margin: 0 0 1rem 0; line-height: 1.5; display: flex; flex-direction: column; gap: 6px;">
-          <li>Tap <b>Copy Bookmark Code</b> below.</li>
-          <li>In Safari on your iPad, tap <b>Share ↗️</b> &rarr; <b>Add Bookmark</b>.</li>
-          <li>Edit the bookmark, rename it <b>⚡ STYLA Stylist</b>, and paste the code into the Address field.</li>
-          <li>When shopping on any site (RW&CO, Zara, etc.), just tap your Bookmarks menu and tap STYLA!</li>
-        </ol>
-
-        <button id="btn-copy-ipad-bookmarklet" class="btn-run" style="width: 100%; padding: 11px; font-size: 0.88rem; font-weight: 700; background: var(--success-gradient); margin-top: 0; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);">📋 Copy iPad Bookmark Code</button>
-        <div id="copy-ipad-bookmarklet-msg" style="display: none; font-size: 0.82rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
-      </div>
-
-      <!-- METHOD 2: Apple Shortcuts App -->
-      <div style="background: rgba(255, 42, 117, 0.05); border: 1px solid rgba(255, 42, 117, 0.2); border-radius: 12px; padding: 1.25rem;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #ff4081; font-size: 0.98rem; font-family: var(--font-outfit); font-weight: 700;">⚡ Method 2: Apple Shortcuts App (Share Menu)</h4>
-        <ol style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 1.1rem; margin: 0 0 1rem 0; line-height: 1.5; display: flex; flex-direction: column; gap: 6px;">
-          <li>Open <b>Shortcuts app</b> on iPad &rarr; Tap <b>+</b>.</li>
-          <li>Tap details (ℹ️) &rarr; Enable <b>Show in Share Sheet</b> (Safari Web Pages).</li>
-          <li>Add action <b>Run JavaScript on Web Page</b> and paste the code below.</li>
-        </ol>
-
-        <button id="btn-copy-shortcut-js" class="btn-run" style="width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 700; background: var(--primary-gradient); margin-top: 0; border-radius: 8px; cursor: pointer;">📋 Copy JavaScript Runner Code</button>
-        <div id="copy-shortcut-js-msg" style="display: none; font-size: 0.82rem; color: #10b981; margin-top: 8px; text-align: center; font-weight: 600;">Code copied to clipboard!</div>
-      </div>
-    </div>
-  </div>
 
   <!-- Visual Measurement Guide Modal -->
   <div class="modal-overlay" id="measure-modal" onclick="closeMeasureModal(event)" style="display: none;">
@@ -1503,83 +1522,566 @@ s0.parentNode.insertBefore(s1,s0);
 
 
   <!-- ONBOARDING LAUNCH MODAL -->
-  <div id="onboarding-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 99999;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 2.2rem; width: 100%; max-width: 440px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4); position: relative; box-sizing: border-box; text-align: center;">
-      <button onclick="cancelOnboardingScan()" style="position: absolute; top: 16px; right: 18px; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+  <!-- MODAL ONBOARDING WIZARD OVERLAY -->
+  <div id="onboarding-wizard-modal" class="wizard-modal-overlay" onclick="if(event.target === this) closeOnboardingWizard()">
+    <div class="wizard-modal-content">
+      <button class="modal-close-btn" onclick="closeOnboardingWizard()" aria-label="Close modal">&times;</button>
       
-      <div style="margin-bottom: 1.8rem;">
-        <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0 0 8px 0;">3D Body Scanner</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.4;">Enter your email to secure your measurements and unlock the camera.</p>
+      <!-- Slide Progress Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #ff2a75; font-weight: 700;" id="wizard-progress-text">Step 1 of 5</div>
+        <div style="width: 120px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+          <div id="wizard-progress-bar" style="width: 20%; height: 100%; background: var(--primary-gradient); transition: width 0.3s ease;"></div>
+        </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 1.2rem; text-align: left;">
-        <div id="scan-email-container">
-          <label for="scan-email" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 6px;">Email Address</label>
-          <input class="styled-input" type="email" id="scan-email" placeholder="your-email@example.com" style="width: 100%; box-sizing: border-box; padding: 12px 16px;" required />
-          <p id="scan-email-error" style="color: #fca5a5; font-size: 0.75rem; margin-top: 6px; display: none; text-align: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); padding: 6px; border-radius: 6px;"></p>
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem;" id="wizard-grid-layout">
+        <!-- Active Wizard Slide -->
+        <div id="wizard-slides-container">
+          
+          <!-- Slide 1: Email Address -->
+          <div class="wizard-slide" id="slide-email">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">1. Enter Email Address</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Recover your active profiles and backup matches from the cloud.</p>
+            <div style="margin-bottom: 1.5rem;">
+              <input type="email" id="wizard-email" class="input-field" placeholder="email@example.com" />
+              <div id="wizard-email-error" style="color: #ff2a75; font-size: 0.8rem; margin-top: 6px; display: none;">Please enter a valid email address.</div>
+            </div>
+            <button onclick="wizardNext(1)" class="btn-pink" style="width: 100%;">Continue</button>
+          </div>
+
+          <!-- Slide 2: Gender/Fit Profile -->
+          <div class="wizard-slide" id="slide-gender">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">2. Select Fit Preference</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Select standard cut modeling patterns.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="choice-card" id="gender-women" onclick="selectGender('women')" style="padding: 1.2rem;">
+                <div style="font-size: 1.8rem;">👗</div>
+                <h4 style="margin: 4px 0 0 0; font-size: 0.95rem;">Women's Fit</h4>
+              </div>
+              <div class="choice-card" id="gender-men" onclick="selectGender('men')" style="padding: 1.2rem;">
+                <div style="font-size: 1.8rem;">👔</div>
+                <h4 style="margin: 4px 0 0 0; font-size: 0.95rem;">Men's Fit</h4>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(2)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(2)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 3: Stature Calibration (Height & Weight) -->
+          <div class="wizard-slide" id="slide-stature">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">3. Calibrate Stature</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Adjust height and weight boundaries to scale mass volume.</p>
+            
+            <div style="margin-bottom: 1.2rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Height:</span> <span id="label-height" style="color: var(--accent-light); font-weight: 700;">64 in (5'4")</span>
+              </div>
+              <input type="range" min="50" max="84" value="64" id="range-height" class="styled-range" oninput="updateStatureLabels()" style="width: 100%; accent-color: #ff2a75;" />
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Weight:</span> <span id="label-weight" style="color: var(--accent-light); font-weight: 700;">130 lbs</span>
+              </div>
+              <input type="range" min="80" max="300" value="130" id="range-weight" class="styled-range" oninput="updateStatureLabels()" style="width: 100%; accent-color: #ff2a75;" />
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(3)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(3)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 4: Proportional Contours -->
+          <div class="wizard-slide" id="slide-contour">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">4. Frame Contours</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Enter exact waist and bodice constraints.</p>
+
+            <!-- Dynamic inputs for Women -->
+            <div id="contour-women-inputs" style="display: none;">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Waist Size:</span> <span id="label-waist-women" style="color: var(--accent-light); font-weight: 700;">28 in</span>
+                </div>
+                <input type="range" min="20" max="50" value="28" id="range-waist-women" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Bra Band Size</label>
+                  <select id="select-band" class="input-field" style="padding: 10px 14px;" onchange="updateCalibrationPanel()">
+                    <option value="30">30</option>
+                    <option value="32">32</option>
+                    <option value="34" selected>34</option>
+                    <option value="36">36</option>
+                    <option value="38">38</option>
+                    <option value="40">40</option>
+                    <option value="42">42</option>
+                    <option value="44">44</option>
+                    <option value="46">46</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Cup Size</label>
+                  <select id="select-cup" class="input-field" style="padding: 10px 14px;" onchange="updateCalibrationPanel()">
+                    <option value="AA">AA</option>
+                    <option value="A">A</option>
+                    <option value="B" selected>B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="DD">DD</option>
+                    <option value="DDD">DDD / E</option>
+                    <option value="G">G</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Inseam (inches, optional)</label>
+                <input type="number" id="in-inseam-women" class="input-field" style="padding: 10px 14px;" placeholder="e.g., 29" />
+              </div>
+            </div>
+
+            <!-- Dynamic inputs for Men -->
+            <div id="contour-men-inputs" style="display: none;">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Waist Size:</span> <span id="label-waist-men" style="color: var(--accent-light); font-weight: 700;">32 in</span>
+                </div>
+                <input type="range" min="24" max="54" value="32" id="range-waist-men" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Chest Size:</span> <span id="label-chest-men" style="color: var(--accent-light); font-weight: 700;">40 in</span>
+                </div>
+                <input type="range" min="30" max="60" value="40" id="range-chest-men" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Inseam (inches, optional)</label>
+                <input type="number" id="in-inseam-men" class="input-field" style="padding: 10px 14px;" placeholder="e.g., 30" />
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(4)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(4)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 5: Create Account / Secure Profile -->
+          <div class="wizard-slide" id="slide-account">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">5. Secure Twin Profile</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Set a password to save your digital twin and access sizing matches.</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <input type="password" id="wizard-password" class="input-field" placeholder="Enter a secure password" required />
+              <div id="wizard-password-error" style="color: #ff2a75; font-size: 0.8rem; margin-top: 6px; display: none;">Password must be at least 6 characters.</div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(5)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button id="btn-wizard-submit" onclick="submitWizard()" class="btn-pink" style="flex: 1.5;">Save Profile & Match</button>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Privacy Block -->
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; box-sizing: border-box;">
-          <svg style="width: 18px; height: 18px; color: #ff2a75; flex-shrink: 0; margin-top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
-            <strong>No-Photo Privacy Guarantee:</strong> We never save your photos or videos. Your scan contours are converted instantly into encrypted sizing values.
-          </span>
-        </div>
+        <!-- Right Side: Digital Twin Diagnostic Panel -->
+        <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid rgba(255,255,255,0.08);">
+          <div>
+            <div style="font-family: monospace; font-size: 0.75rem; color: #10b981; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite;"></span>
+              DIAGNOSTIC LOG
+            </div>
+            <div id="diagnostic-lines" style="font-family: monospace; font-size: 0.7rem; color: #94a3b8; line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
+              <div>&gt; System initialized.</div>
+              <div>&gt; Waiting for email...</div>
+            </div>
+          </div>
 
-        <!-- 3DLook Widget Container -->
-        <div class="saia-widget-container" style="margin-top: 0.5rem; pointer-events: none; opacity: 0.4; transition: opacity 0.3s, pointer-events 0.3s; min-height: 150px; display: flex; align-items: center; justify-content: center;">
-          <script id="saia-mtm-integration" async src="https://mtm-widget.3dlook.me/integration.js" data-public-key="MTI1OTk:1wbJPG:eHI6-GfRcZPOyHYqxaZ4IUew8jVHXUVPa-W4Ufshk3E" data-button-title="Start AI Sizing Scan"></script>
+          <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">Calibration Envelope</div>
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4px; font-size: 0.75rem; color: #fff;">
+              <div>Stature Frame:</div>
+              <div id="panel-stature" style="color: #64748b; font-weight: 700;">WAITING</div>
+              
+              <div>Torso Contour:</div>
+              <div id="panel-contour" style="color: #64748b; font-weight: 700;">WAITING</div>
+              
+              <div>Digital Twin:</div>
+              <div id="panel-twin" style="color: #64748b; font-weight: 700;">PENDING</div>
+            </div>
+          </div>
         </div>
-        
-        <button type="button" class="btn-run" onclick="cancelOnboardingScan()" style="background: none; border: 1px solid var(--border); color: var(--text-secondary); width: 100%; margin-top: 10px; padding: 10px;">Cancel</button>
       </div>
+      
+      <!-- Verification Screen State -->
+      <div id="wizard-verification-state" style="display: none; text-align: center; padding: 2rem 0;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">✉️</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.8rem; margin-top: 0; margin-bottom: 8px;">Confirm Your Email</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 1.8rem; line-height: 1.5;">
+          We have sent an activation link to <strong id="verification-email-label" style="color: #fff;"></strong>. Click the link inside the email to complete verification and view your Sizing Match Report.
+        </p>
+        <button onclick="closeOnboardingWizard()" class="btn-pink">Done</button>
+      </div>
+
     </div>
   </div>
 
   <script>
-    // Bind Hero Measure button and Nav scan button to open onboarding modal
+    // Bind Hero Measure button to open onboarding modal wizard
     document.addEventListener('DOMContentLoaded', () => {
       const heroBtn = document.getElementById('btn-hero-measure');
       if (heroBtn) {
-        heroBtn.addEventListener('click', () => {
-          document.getElementById('onboarding-modal').style.display = 'flex';
-          const scanEmail = document.getElementById('scan-email');
-          if (scanEmail) {
-            scanEmail.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        });
-      }
-
-      const tabScanBtn = document.getElementById('btn-tab-scan');
-      if (tabScanBtn) {
-        tabScanBtn.addEventListener('click', (e) => {
-          // Open onboarding popup modal
+        heroBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          document.getElementById('onboarding-modal').style.display = 'flex';
-          const scanEmail = document.getElementById('scan-email');
-          if (scanEmail) {
-            scanEmail.dispatchEvent(new Event('input', { bubbles: true }));
-          }
+          openOnboardingWizard();
         });
       }
     });
 
-    function cancelOnboardingScan() {
-      // Clear 3DLook integration DOM
-      const existing = document.getElementById('saia-mtm-integration');
-      if (existing) existing.remove();
-      const popupWidget = document.querySelector('#onboarding-modal .saia-widget-container');
-      if (popupWidget) popupWidget.innerHTML = '';
+    let currentEmail = "";
+    let currentUserId = "";
+    let selectedGender = "women";
+
+    function getSupabase() {
+      if (!window.supabase) throw new Error("Supabase SDK not loaded");
+      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // Modal Onboarding control functions
+    function openOnboardingWizard() {
+      const modal = document.getElementById('onboarding-wizard-modal');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
       
-      // Hide modal
-      document.getElementById('onboarding-modal').style.display = 'none';
+      // Reset wizard flow to step 1
+      document.getElementById('wizard-grid-layout').style.display = 'grid';
+      document.getElementById('wizard-verification-state').style.display = 'none';
       
-      // Auto-toggle back to manual tab on the page
-      const btnTabManual = document.getElementById('btn-tab-manual');
-      if (btnTabManual) btnTabManual.click();
+      showSlide(1);
+    }
+
+    function closeOnboardingWizard() {
+      const modal = document.getElementById('onboarding-wizard-modal');
+      modal.classList.remove('active');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    function showSlide(step) {
+      const slides = document.querySelectorAll('.wizard-slide');
+      slides.forEach(slide => {
+        slide.classList.remove('active');
+        slide.style.display = 'none';
+      });
+
+      const activeSlide = document.getElementById(getSlideId(step));
+      if (activeSlide) {
+        activeSlide.style.display = 'block';
+        setTimeout(() => {
+          activeSlide.classList.add('active');
+        }, 50);
+      }
+      updateProgress(step);
+    }
+
+    function getSlideId(step) {
+      const ids = {
+        1: 'slide-email',
+        2: 'slide-gender',
+        3: 'slide-stature',
+        4: 'slide-contour',
+        5: 'slide-account'
+      };
+      return ids[step];
+    }
+
+    // Wizard Navigation Functions
+    function selectGender(gender) {
+      selectedGender = gender;
+      document.getElementById('gender-women').classList.remove('active');
+      document.getElementById('gender-men').classList.remove('active');
+      if (gender === 'women') {
+        document.getElementById('gender-women').classList.add('active');
+        document.getElementById('contour-women-inputs').style.display = 'block';
+        document.getElementById('contour-men-inputs').style.display = 'none';
+      } else {
+        document.getElementById('gender-men').classList.add('active');
+        document.getElementById('contour-women-inputs').style.display = 'none';
+        document.getElementById('contour-men-inputs').style.display = 'block';
+      }
+      updateCalibrationPanel();
+    }
+
+    function updateStatureLabels() {
+      const height = parseInt(document.getElementById('range-height').value);
+      const weight = parseInt(document.getElementById('range-weight').value);
+      
+      const feet = Math.floor(height / 12);
+      const inches = height % 12;
+      document.getElementById('label-height').textContent = `${height} in (${feet}'${inches}")`;
+      document.getElementById('label-weight').textContent = `${weight} lbs`;
+
+      // Log to diagnostic lines
+      const bmi = ((weight * 703) / (height * height)).toFixed(1);
+      logDiagnostic(`> Calibrating stature: height=${height}in, weight=${weight}lbs (BMI: ${bmi})`);
+      document.getElementById('panel-stature').textContent = "CALIBRATED";
+      document.getElementById('panel-stature').style.color = "#10b981";
+      updateCalibrationPanel();
+    }
+
+    function updateContourLabels() {
+      const gender = selectedGender;
+      if (gender === 'women') {
+        const waist = document.getElementById('range-waist-women').value;
+        document.getElementById('label-waist-women').textContent = `${waist} in`;
+        logDiagnostic(`> Calibrating bodice limits: waist=${waist}in`);
+      } else {
+        const waist = document.getElementById('range-waist-men').value;
+        const chest = document.getElementById('range-chest-men').value;
+        document.getElementById('label-waist-men').textContent = `${waist} in`;
+        document.getElementById('label-chest-men').textContent = `${chest} in`;
+        logDiagnostic(`> Calibrating suit bounds: chest=${chest}in, waist=${waist}in`);
+      }
+      document.getElementById('panel-contour').textContent = "CALIBRATED";
+      document.getElementById('panel-contour').style.color = "#10b981";
+      updateCalibrationPanel();
+    }
+
+    function logDiagnostic(line) {
+      const container = document.getElementById('diagnostic-lines');
+      if (!container) return;
+      const row = document.createElement('div');
+      row.textContent = line;
+      container.appendChild(row);
+      if (container.children.length > 8) {
+        container.removeChild(container.firstChild);
+      }
+    }
+
+    function updateCalibrationPanel() {
+      const height = parseFloat(document.getElementById('range-height').value);
+      const weight = parseFloat(document.getElementById('range-weight').value);
+      
+      let bust = 0;
+      let hips = 0;
+
+      if (selectedGender === 'women') {
+        const waist = parseFloat(document.getElementById('range-waist-women').value);
+        const band = parseFloat(document.getElementById('select-band').value);
+        const cup = document.getElementById('select-cup').value;
+        
+        const modifiers = { 'AA': 0.5, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'DD': 5, 'DDD': 6, 'G': 7 };
+        const cupMod = modifiers[cup] || 2.0;
+        
+        bust = band + cupMod;
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 4 + (bmi * 0.3);
+      } else {
+        const waist = parseFloat(document.getElementById('range-waist-men').value);
+        const chest = parseFloat(document.getElementById('range-chest-men').value);
+        
+        bust = chest;
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 2 + (bmi * 0.15);
+      }
+
+      document.getElementById('panel-twin').textContent = "READY";
+      document.getElementById('panel-twin').style.color = "#10b981";
+    }
+
+    // Step routing
+    function wizardNext(step) {
+      if (step === 1) {
+        const email = document.getElementById('wizard-email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          document.getElementById('wizard-email-error').style.display = 'block';
+          return;
+        }
+        document.getElementById('wizard-email-error').style.display = 'none';
+        currentEmail = email;
+        logDiagnostic(`> Email verified: ${email}`);
+        
+        showSlide(2);
+        selectGender('women');
+      } 
+      else if (step === 2) {
+        logDiagnostic(`> Silhouette pattern selected: ${selectedGender}`);
+        showSlide(3);
+        updateStatureLabels();
+      }
+      else if (step === 3) {
+        logDiagnostic(`> Stature frame saved.`);
+        showSlide(4);
+        updateContourLabels();
+      }
+      else if (step === 4) {
+        logDiagnostic(`> Contours saved. Resolving account state...`);
+        const savedUserId = localStorage.getItem('styla_user_id');
+        if (savedUserId && savedUserId.includes('@')) {
+          submitWizardDirectNoPass();
+          return;
+        }
+        
+        showSlide(5);
+      }
+    }
+
+    function wizardBack(step) {
+      if (step === 2) {
+        showSlide(1);
+      }
+      else if (step === 3) {
+        showSlide(2);
+      }
+      else if (step === 4) {
+        showSlide(3);
+      }
+      else if (step === 5) {
+        showSlide(4);
+      }
+    }
+
+    function updateProgress(step) {
+      const text = document.getElementById('wizard-progress-text');
+      const bar = document.getElementById('wizard-progress-bar');
+      text.textContent = `Step ${step} of 5`;
+      bar.style.width = `${step * 20}%`;
+    }
+
+    async function submitWizardDirectNoPass() {
+      logDiagnostic(`> Syncing digital twin measurements...`);
+      const manualData = calculateDigitalTwinValues();
+      
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('store_profiles')
+          .update({
+            manual_measurements: manualData
+          })
+          .eq('username', currentEmail.toLowerCase())
+          .select();
+
+        if (error) throw error;
+        
+        closeOnboardingWizard();
+        location.reload(); // Refresh the page to reload dashboard state!
+      } catch (err) {
+        alert("Failed to sync measurements: " + err.message);
+      }
+    }
+
+    async function submitWizard() {
+      const pass = document.getElementById('wizard-password').value;
+      if (!pass || pass.length < 6) {
+        document.getElementById('wizard-password-error').style.display = 'block';
+        return;
+      }
+      document.getElementById('wizard-password-error').style.display = 'none';
+
+      const btn = document.getElementById('btn-wizard-submit');
+      btn.disabled = true;
+      btn.textContent = "Creating Account...";
+
+      const manualData = calculateDigitalTwinValues();
+
+      try {
+        const supabase = getSupabase();
+        
+        // 1. Sign up Supabase user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: currentEmail.toLowerCase(),
+          password: pass
+        });
+
+        if (signUpError) throw signUpError;
+
+        // 2. Upsert guest profile in store_profiles cache
+        const { data: profileData, error: profileError } = await supabase
+          .from('store_profiles')
+          .upsert({
+            username: currentEmail.toLowerCase(),
+            password: 'temp_guest_placeholder',
+            manual_measurements: manualData,
+            api_scans: []
+          }, { onConflict: 'username' })
+          .select();
+
+        if (profileError) throw profileError;
+
+        // Show verification modal inside the popup card
+        document.getElementById('wizard-grid-layout').style.display = 'none';
+        document.getElementById('wizard-verification-state').style.display = 'block';
+        document.getElementById('verification-email-label').textContent = currentEmail;
+      } catch (err) {
+        console.error("Failed to create profile:", err.message);
+        alert("Failed to create profile: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Profile & Match";
+      }
+    }
+
+    function calculateDigitalTwinValues() {
+      const height = parseFloat(document.getElementById('range-height').value);
+      const weight = parseFloat(document.getElementById('range-weight').value);
+      
+      let waist = 0;
+      let chest = 0;
+      let hips = 0;
+      let shoulder = 0;
+      let inseam = 0;
+
+      if (selectedGender === 'women') {
+        waist = parseFloat(document.getElementById('range-waist-women').value);
+        const band = parseFloat(document.getElementById('select-band').value);
+        const cup = document.getElementById('select-cup').value;
+        
+        const modifiers = { 'AA': 0.5, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'DD': 5, 'DDD': 6, 'G': 7 };
+        const cupMod = modifiers[cup] || 2.0;
+        chest = band + cupMod;
+        
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 4 + (bmi * 0.3);
+        shoulder = 10 + (height * 0.085);
+        
+        const customInseam = document.getElementById('in-inseam-women').value;
+        inseam = customInseam ? parseFloat(customInseam) : (height * 0.45);
+      } else {
+        waist = parseFloat(document.getElementById('range-waist-men').value);
+        chest = parseFloat(document.getElementById('range-chest-men').value);
+        
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 2 + (bmi * 0.15);
+        shoulder = 12 + (height * 0.08) + (chest - 38) * 0.1;
+        
+        const customInseam = document.getElementById('in-inseam-men').value;
+        inseam = customInseam ? parseFloat(customInseam) : (height * 0.44);
+      }
+
+      return {
+        height,
+        weight,
+        gender: selectedGender,
+        chest: Math.round(chest * 10) / 10,
+        waist: Math.round(waist * 10) / 10,
+        hips: Math.round(hips * 10) / 10,
+        shoulder: Math.round(shoulder * 10) / 10,
+        inseam: Math.round(inseam * 10) / 10
+      };
     }
   </script>
 
@@ -1626,7 +2128,43 @@ s0.parentNode.insertBefore(s1,s0);
         });
       }
     });
+
+    // 16-Hour Coordinated Universal Countdown Timer
+    function startSixteenHourTimer() {
+        const CYCLE_MS = 16 * 60 * 60 * 1000; // 16 Hours in ms
+        setInterval(function() {
+            let now = new Date().getTime();
+            let elapsed = now % CYCLE_MS;
+            let distance = CYCLE_MS - elapsed;
+            
+            let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            let displayTarget = document.getElementById("styla-urgency-clock");
+            if(displayTarget) {
+                displayTarget.innerHTML = "[ " + (hours < 10 ? "0" : "") + hours + ":" + 
+                                          (minutes < 10 ? "0" : "") + minutes + ":" + 
+                                          (seconds < 10 ? "0" : "") + seconds + " ]";
+            }
+        }, 1000);
+    }
+    startSixteenHourTimer();
   </script>
 
+<script>
+  (function() {
+    try {
+      const path = window.location.pathname;
+      if (path.includes('bridesmaid.html')) {
+        const link = document.getElementById('nav-link-bridesmaid');
+        if (link) {
+          link.classList.add('active');
+          link.style.color = 'var(--accent-light)';
+        }
+      }
+    } catch(e) {}
+  })();
+</script>
 </body>
 </html>

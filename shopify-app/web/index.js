@@ -1,3 +1,4 @@
+require('@shopify/shopify-api/adapters/node');
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');

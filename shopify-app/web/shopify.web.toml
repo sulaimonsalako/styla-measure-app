@@ -1,0 +1,9 @@
+# Learn more about configuring your web block at https://shopify.dev/docs/apps/tools/cli/configuration
+
+type = "backend"
+name = "styla-fit-backend"
+roles = ["backend"]
+
+[commands]
+dev = "node index.js"
+start = "node index.js"

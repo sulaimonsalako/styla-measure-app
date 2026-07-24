@@ -1046,7 +1046,7 @@ async function onUserLoggedIn(user, profile) {
   }
 
   // Initialize 3DLook body scanner widget with logged-in user email
-  init3DLookWidget(user.email);
+  // init3DLookWidget(user.email);
 }
 
 function renderScanHistory(profile) {
@@ -1356,6 +1356,14 @@ async function deleteScanFromCloud(scanId) {
 // Load saved AI Tailor measurements on page load
 window.addEventListener('DOMContentLoaded', async () => {
   // Check if we just came from an email activation redirect
+  if (window.location.search.includes('login=true') || window.location.hash.includes('login')) {
+      const loginModal = document.getElementById('login-modal');
+      if (loginModal) {
+          loginModal.style.display = 'flex';
+          history.replaceState(null, document.title, window.location.pathname + window.location.search.replace(/[?&]login=true/, ''));
+      }
+  }
+
   if (window.location.hash.includes('type=signup') || window.location.hash.includes('type=invite')) {
       alert("Success! Your STYLA account activation was successful. Welcome aboard!");
       // Clean up hash so it doesn't alert again on reload
@@ -3361,3 +3369,50 @@ window.addEventListener('DOMContentLoaded', () => {
       validateScanEmail();
   }
 });
+
+async function initiateBridesmaidCheckout(paymentType, amount, productName, productDescription) {
+  let userId = localStorage.getItem('styla_user_id');
+  let email = localStorage.getItem('styla_user_email');
+  
+  if (!userId || !email) {
+    alert("Please enter your email to get started first!");
+    return;
+  }
+  
+  try {
+    const origin = window.location.origin;
+    const res = await fetch('/api/export-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create-checkout-session',
+        userId: userId,
+        email: email,
+        amount: amount,
+        productName: productName,
+        productDescription: productDescription,
+        paymentType: paymentType,
+        successUrl: `${origin}/bridesmaid.html?payment=success&type=${paymentType}`,
+        cancelUrl: `${origin}/bridesmaid.html?payment=cancel`
+      })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to create secure checkout session.");
+    }
+    
+    const data = await res.json();
+    if (!window.Stripe) {
+      throw new Error("Stripe.js library failed to load.");
+    }
+    
+    const stripePublicKey = data.publishableKey || 'pk_live_51TiFOU2KQ3LS8UujB9QaSTFoAPeCOYRXExRhEubyGcOpycEDSOmE9KW1AVNOA19fab3xIuhDqeoDcX6smDbOKLbj007kAiKikJ';
+    const stripe = window.Stripe(stripePublicKey);
+    await stripe.redirectToCheckout({
+      sessionId: data.id
+    });
+  } catch (err) {
+    alert("Checkout error: " + err.message);
+  }
+}

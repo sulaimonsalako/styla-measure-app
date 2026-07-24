@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfect Bridesmaid & Suit Sizing Matching - STYLA</title>
+  <meta name="description" content="Guaranteed size matching for Azazie, Birdy Grey, Jenny Yoo, David's Bridal, The Black Tux, Indochino, Zara and more.">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    :root {
+      --bg-dark: #0b0b14;
+      --card-bg: #121222;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-white: #ffffff;
+      --text-muted: #cbd5e1;
+      --primary-gradient: linear-gradient(135deg, #e11d48 0%, #ff2a75 100%);
+      --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --purple-glow: rgba(139, 92, 246, 0.06);
+      --rose-glow: rgba(225, 29, 72, 0.04);
+      --font-outfit: 'EB Garamond', serif;
+      --font-inter: 'Inter', sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, var(--purple-glow) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, var(--rose-glow) 0%, transparent 45%);
+      color: var(--text-white);
+      font-family: var(--font-inter);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .choice-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 1.8rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+    
+    .choice-card:hover {
+      transform: translateY(-4px);
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.03);
+      box-shadow: 0 8px 30px rgba(255, 42, 117, 0.1);
+    }
+
+    .choice-card.active {
+      border-color: #ff2a75;
+      background: rgba(255, 42, 117, 0.05);
+      box-shadow: 0 8px 30px rgba(255, 42, 117, 0.15);
+    }
+    
+    .btn-pink {
+      background: var(--primary-gradient);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 100px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255, 42, 117, 0.35);
+      transition: all 0.2s;
+      text-align: center;
+    }
+    
+    .btn-pink:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 42, 117, 0.5);
+    }
+
+    .btn-pink:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .input-field:focus {
+      border-color: #ff2a75;
+    }
+    
+    .match-row {
+      display: grid;
+      grid-template-columns: 150px 140px 100px 1fr;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      box-sizing: border-box;
+    }
+    
+    @media (max-width: 768px) {
+      .match-row {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 8px;
+        padding: 1.5rem;
+      }
+    }
+
+    /* Landing Page Structural styling */
+    .landing-hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      max-width: 1100px;
+      margin: 120px auto 60px;
+      padding: 0 2rem;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 820px) {
+      .landing-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        margin-top: 100px;
+      }
+    }
+
+    .hero-title {
+      font-family: var(--font-outfit);
+      font-size: 3.2rem;
+      font-weight: 900;
+      margin: 0 0 1.2rem 0;
+      line-height: 1.1;
+      color: #ffffff;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0 0 2rem 0;
+    }
+
+    /* Benefits Section */
+    .landing-section {
+      max-width: 1100px;
+      margin: 80px auto;
+      padding: 0 2rem;
+      box-sizing: border-box;
+    }
+
+    .section-title {
+      font-family: var(--font-outfit);
+      font-size: 2.2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .benefits-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .benefit-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .benefit-icon {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .benefit-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .benefit-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Modal styles from index.html */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 2.2rem;
+      border-radius: 20px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.8rem;
+      font-weight: 300;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.2s ease;
+      padding: 4px 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-close-btn:hover {
+      color: #ff75a0;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-bottom: 2px solid transparent;
+    }
+
+    .auth-tab-btn.active {
+      color: #fff;
+      border-bottom-color: #ff2a75;
+    }
+
+    .btn-run {
+      width: 100%;
+      background: var(--primary-gradient);
+      color: #fff;
+      border: none;
+      padding: 1rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-run:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.4);
+    }
+
+    .btn-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .styled-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .styled-input:focus {
+      border-color: #ff75a0;
+      box-shadow: 0 0 0 2px rgba(255, 117, 160, 0.15);
+    }
+
+    /* Slider input styling */
+    .styled-range {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    /* Keyframes for pulse */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* Wizard Modal styles */
+    .wizard-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 11, 20, 0.7);
+      backdrop-filter: blur(16px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .wizard-modal-overlay.active {
+      opacity: 1;
+    }
+    .wizard-modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+      position: relative;
+      transform: translateY(30px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 2.5rem;
+      box-sizing: border-box;
+    }
+    .wizard-modal-overlay.active .wizard-modal-content {
+      transform: translateY(0);
+    }
+    
+    /* Slide transitions */
+    .wizard-slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .wizard-slide.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+        STYLA <span class="logo-accent">Measure</span>
+      </a>
+      <div id="auth-status-container" class="nav-actions" style="display: flex; align-items: center; gap: 1.5rem;">
+        <a href="/bridesmaid.html" class="nav-link active" id="nav-link-bridesmaid" style="color: var(--accent-light); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;">Bridesmaid</a>
+        <a href="/brands.html" class="nav-link nav-link-brands" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
+        <a href="/blogs" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Blogs</a>
+        <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log In</button>
+        <div id="logged-in-status" style="display: none; align-items: center; gap: 16px;">
+          <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
+          <button id="btn-logout" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION (ABOVE THE FOLD) -->
+  <section class="landing-hero">
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+      <h1 class="hero-title">Get the Perfect Bridesmaid & Tuxedo Fits. Guaranteed.</h1>
+      <p class="hero-desc">
+        Bridal and suit sizing charts are notoriously inconsistent. STYLA's advanced AI engine simulates how garments fit your physical proportions, matching you to the exact size from 21 top designers in 30 seconds.
+      </p>
+      
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button id="btn-hero-start-matching" onclick="openOnboardingWizard()" class="btn-pink" style="border: none; cursor: pointer; font-size: 0.95rem; font-weight: 700; padding: 14px 32px; border-radius: 100px;">Start Size Matching</button>
+        <a href="#how-it-works" style="display: inline-block; text-decoration: none; padding: 14px 32px; border: 1px solid rgba(255,255,255,0.15); border-radius: 100px; color: #fff; font-weight: 600; font-size: 0.95rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">How it Works</a>
+      </div>
+      
+      <div style="display: flex; gap: 2rem; margin-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem;">
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75;">$150+</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Alterations Saved</div>
+        </div>
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75;">21</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Designers Covered</div>
+        </div>
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75;">98%</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Fit Accuracy</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right side happy bridesmaid image -->
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <div class="glass-card" style="padding: 10px; border-radius: 28px; width: 100%; max-width: 380px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        <img src="happy_bridesmaid.png" alt="Happy Bridesmaids" style="width: 100%; height: auto; border-radius: 20px; display: block;" />
+      </div>
+    </div>
+  </section>
+
+  <!-- THE CRISIS (WHY WE DO IT) -->
+  <section class="landing-section" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 60px;">
+    <h2 class="section-title">The Bridal Sizing Nightmare</h2>
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">📐</div>
+        <div class="benefit-title">Proportional Fit Rules</div>
+        <div class="benefit-desc">
+          Bust and hip bounds are hard limits. If a dress is 1 inch too small at the hips, you cannot sit. STYLA prioritizes these core dimensions so you never order a dress that is physically too tight.
+        </div>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">✂️</div>
+        <div class="benefit-title">Minimize Alteration Costs</div>
+        <div class="benefit-desc">
+          Taking in a waist is simple; letting out chest/shoulders is impossible. We simulate dressing your exact proportions to recommend sizes requiring the least expensive tailoring adjustments.
+        </div>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">🛡️</div>
+        <div class="benefit-title">Fit Guarantee</div>
+        <div class="benefit-desc">
+          Order our recommended size. If it does not comfortably fit your core proportions, we will fully refund your Sizing Match Report. Your wedding-day fit is 100% covered.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works" class="landing-section" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 60px; scroll-margin-top: 100px;">
+    <h2 class="section-title">How It Works</h2>
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75; margin-bottom: 8px;">01</div>
+        <div class="benefit-title">Enter Email</div>
+        <div class="benefit-desc">Capture your sizing session immediately to avoid abandoned cart and back up your measurements.</div>
+      </div>
+      <div class="benefit-card">
+        <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75; margin-bottom: 8px;">02</div>
+        <div class="benefit-title">Calibrate Twin Profile</div>
+        <div class="benefit-desc">Drag sliders to calibrate height, weight, waist and chest parameters. Zero tape measure required.</div>
+      </div>
+      <div class="benefit-card">
+        <div style="font-size: 1.5rem; font-weight: 800; color: #ff2a75; margin-bottom: 8px;">03</div>
+        <div class="benefit-title">Get Size Report ($9.99)</div>
+        <div class="benefit-desc">Unlock exact sizing matches and tailoring alterability feedback across 21 top bridesmaid and suit brands.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL ONBOARDING WIZARD OVERLAY -->
+  <div id="onboarding-wizard-modal" class="wizard-modal-overlay" onclick="if(event.target === this) closeOnboardingWizard()">
+    <div class="wizard-modal-content">
+      <button class="modal-close-btn" onclick="closeOnboardingWizard()" aria-label="Close modal">&times;</button>
+      
+      <!-- Slide Progress Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 12px;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #ff2a75; font-weight: 700;" id="wizard-progress-text">Step 1 of 5</div>
+        <div style="width: 120px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden;">
+          <div id="wizard-progress-bar" style="width: 20%; height: 100%; background: var(--primary-gradient); transition: width 0.3s ease;"></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem;" id="wizard-grid-layout">
+        <!-- Active Wizard Slide -->
+        <div id="wizard-slides-container">
+          
+          <!-- Slide 1: Email Address -->
+          <div class="wizard-slide" id="slide-email">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">1. Enter Email Address</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Recover your active profiles and backup matches from the cloud.</p>
+            <div style="margin-bottom: 1.5rem;">
+              <input type="email" id="wizard-email" class="input-field" placeholder="email@example.com" />
+              <div id="wizard-email-error" style="color: #ff2a75; font-size: 0.8rem; margin-top: 6px; display: none;">Please enter a valid email address.</div>
+            </div>
+            <button onclick="wizardNext(1)" class="btn-pink" style="width: 100%;">Continue</button>
+          </div>
+
+          <!-- Slide 2: Gender/Fit Profile -->
+          <div class="wizard-slide" id="slide-gender">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">2. Select Fit Preference</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Select standard cut modeling patterns.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="choice-card" id="gender-women" onclick="selectGender('women')" style="padding: 1.2rem;">
+                <div style="font-size: 1.8rem;">👗</div>
+                <h4 style="margin: 4px 0 0 0; font-size: 0.95rem;">Women's Fit</h4>
+              </div>
+              <div class="choice-card" id="gender-men" onclick="selectGender('men')" style="padding: 1.2rem;">
+                <div style="font-size: 1.8rem;">👔</div>
+                <h4 style="margin: 4px 0 0 0; font-size: 0.95rem;">Men's Fit</h4>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(2)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(2)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 3: Stature Calibration (Height & Weight) -->
+          <div class="wizard-slide" id="slide-stature">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">3. Calibrate Stature</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Adjust height and weight boundaries to scale mass volume.</p>
+            
+            <div style="margin-bottom: 1.2rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Height:</span> <span id="label-height" style="color: var(--accent-light); font-weight: 700;">64 in (5'4")</span>
+              </div>
+              <input type="range" min="50" max="84" value="64" id="range-height" class="styled-range" oninput="updateStatureLabels()" style="width: 100%; accent-color: #ff2a75;" />
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Weight:</span> <span id="label-weight" style="color: var(--accent-light); font-weight: 700;">130 lbs</span>
+              </div>
+              <input type="range" min="80" max="300" value="130" id="range-weight" class="styled-range" oninput="updateStatureLabels()" style="width: 100%; accent-color: #ff2a75;" />
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(3)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(3)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 4: Proportional Contours -->
+          <div class="wizard-slide" id="slide-contour">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">4. Frame Contours</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Enter exact waist and bodice constraints.</p>
+
+            <!-- Dynamic inputs for Women -->
+            <div id="contour-women-inputs" style="display: none;">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Waist Size:</span> <span id="label-waist-women" style="color: var(--accent-light); font-weight: 700;">28 in</span>
+                </div>
+                <input type="range" min="20" max="50" value="28" id="range-waist-women" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Bra Band Size</label>
+                  <select id="select-band" class="input-field" style="padding: 10px 14px;" onchange="updateCalibrationPanel()">
+                    <option value="30">30</option>
+                    <option value="32">32</option>
+                    <option value="34" selected>34</option>
+                    <option value="36">36</option>
+                    <option value="38">38</option>
+                    <option value="40">40</option>
+                    <option value="42">42</option>
+                    <option value="44">44</option>
+                    <option value="46">46</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Cup Size</label>
+                  <select id="select-cup" class="input-field" style="padding: 10px 14px;" onchange="updateCalibrationPanel()">
+                    <option value="AA">AA</option>
+                    <option value="A">A</option>
+                    <option value="B" selected>B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="DD">DD</option>
+                    <option value="DDD">DDD / E</option>
+                    <option value="G">G</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Inseam (inches, optional)</label>
+                <input type="number" id="in-inseam-women" class="input-field" style="padding: 10px 14px;" placeholder="e.g., 29" />
+              </div>
+            </div>
+
+            <!-- Dynamic inputs for Men -->
+            <div id="contour-men-inputs" style="display: none;">
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Waist Size:</span> <span id="label-waist-men" style="color: var(--accent-light); font-weight: 700;">32 in</span>
+                </div>
+                <input type="range" min="24" max="54" value="32" id="range-waist-men" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                  <span>Chest Size:</span> <span id="label-chest-men" style="color: var(--accent-light); font-weight: 700;">40 in</span>
+                </div>
+                <input type="range" min="30" max="60" value="40" id="range-chest-men" oninput="updateContourLabels()" style="width: 100%; accent-color: #ff2a75;" />
+              </div>
+
+              <div style="margin-bottom: 1.2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Inseam (inches, optional)</label>
+                <input type="number" id="in-inseam-men" class="input-field" style="padding: 10px 14px;" placeholder="e.g., 30" />
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(4)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button onclick="wizardNext(4)" class="btn-pink" style="flex: 1.5;">Continue</button>
+            </div>
+          </div>
+
+          <!-- Slide 5: Create Account / Secure Profile -->
+          <div class="wizard-slide" id="slide-account">
+            <h3 style="font-family: var(--font-outfit); font-size: 1.6rem; margin-top: 0; margin-bottom: 8px;">5. Secure Twin Profile</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">Set a password to save your digital twin and access sizing matches.</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <input type="password" id="wizard-password" class="input-field" placeholder="Enter a secure password" required />
+              <div id="wizard-password-error" style="color: #ff2a75; font-size: 0.8rem; margin-top: 6px; display: none;">Password must be at least 6 characters.</div>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+              <button onclick="wizardBack(5)" class="btn-pink" style="background: none; border: 1px solid var(--card-border); color: #fff; flex: 1; box-shadow: none;">Back</button>
+              <button id="btn-wizard-submit" onclick="submitWizard()" class="btn-pink" style="flex: 1.5;">Save Profile & Match</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Side: Digital Twin Diagnostic Panel -->
+        <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid rgba(255,255,255,0.08);">
+          <div>
+            <div style="font-family: monospace; font-size: 0.75rem; color: #10b981; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <span style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite;"></span>
+              DIAGNOSTIC LOG
+            </div>
+            <div id="diagnostic-lines" style="font-family: monospace; font-size: 0.7rem; color: #94a3b8; line-height: 1.6; display: flex; flex-direction: column; gap: 4px;">
+              <div>&gt; System initialized.</div>
+              <div>&gt; Waiting for email...</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">Calibration Envelope</div>
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4px; font-size: 0.75rem; color: #fff;">
+              <div>Stature Frame:</div>
+              <div id="panel-stature" style="color: #64748b; font-weight: 700;">WAITING</div>
+              
+              <div>Torso Contour:</div>
+              <div id="panel-contour" style="color: #64748b; font-weight: 700;">WAITING</div>
+              
+              <div>Digital Twin:</div>
+              <div id="panel-twin" style="color: #64748b; font-weight: 700;">PENDING</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Verification Screen State -->
+      <div id="wizard-verification-state" style="display: none; text-align: center; padding: 2rem 0;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">✉️</div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.8rem; margin-top: 0; margin-bottom: 8px;">Confirm Your Email</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 1.8rem; line-height: 1.5;">
+          We have sent an activation link to <strong id="verification-email-label" style="color: #fff;"></strong>. Click the link inside the email to complete verification and view your Sizing Match Report.
+        </p>
+        <button onclick="closeOnboardingWizard()" class="btn-pink">Done</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BRAND RESULTS SECTION (REVEALED ON LOAD OR WIZARD COMPLETION) -->
+  <section id="sizing-app" class="landing-section" style="scroll-margin-top: 100px;">
+    <!-- STEP 3: PAYWALL & REPORT VIEW -->
+    <div id="step-report-view" class="glass-card" style="display: none; padding: 2rem; margin-top: 2rem;">
+      <h2 style="font-family: var(--font-outfit); font-size: 1.8rem; margin-top: 0; text-align: center; margin-bottom: 2rem;">Brand Fit Match Report</h2>
+
+      <!-- Report Paywall Overlay -->
+      <div id="report-paywall" style="display: block; text-align: center; max-width: 500px; margin: 3rem auto; padding: 2.5rem; background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+        <h3 style="margin-top: 0; font-size: 1.35rem; margin-bottom: 8px;">Unlock Your Proportional Size Recommendations</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; margin-bottom: 2rem;">
+          Cross-references your physical metrics with standardized designer charts. Recommends your exact size and warns you of any alteration requirements for 21 top brands.
+        </p>
+        <button onclick="buyMatchReport()" class="btn-pink" style="width: 100%;">Pay $9.99 to Unlock Report</button>
+      </div>
+
+      <!-- Unlocked Match Report View -->
+      <div id="report-unlocked" style="display: none;">
+        <div style="background: rgba(255,255,255,0.02); padding: 1.2rem 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 2rem; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 1rem; font-size: 0.9rem;">
+          <div><b>Bust/Chest:</b> <span id="val-bust">-</span>"</div>
+          <div><b>Waist:</b> <span id="val-waist">-</span>"</div>
+          <div><b>Hips:</b> <span id="val-hips">-</span>"</div>
+          <div><b>Shoulder:</b> <span id="val-shoulder">-</span>"</div>
+          <div><b>Inseam:</b> <span id="val-inseam">-</span>"</div>
+          <div><b>Height:</b> <span id="val-height">-</span>"</div>
+        </div>
+
+        <h3 style="font-family: var(--font-outfit); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">👗 Bridesmaid Gowns Sizing Matches</h3>
+        <div id="bridesmaid-results-grid" style="background: rgba(18, 18, 30, 0.4); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 2.5rem; overflow: hidden;">
+          <!-- Rows will be injected here -->
+        </div>
+
+        <h3 style="font-family: var(--font-outfit); margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">👔 Groomsmen Suits & Tuxedos</h3>
+        <div id="suits-results-grid" style="background: rgba(18, 18, 30, 0.4); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden;">
+          <!-- Rows will be injected here -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div class="modal-overlay" id="login-modal" onclick="if (event.target === this) this.style.display='none'">
+    <div class="modal-content" style="position: relative;">
+      <button class="modal-close-btn" onclick="document.getElementById('login-modal').style.display='none'" aria-label="Close modal">&times;</button>
+      <div id="auth-tabs-container" class="auth-tabs">
+        <button id="tab-auth-login" class="auth-tab-btn active">Log In</button>
+        <button id="tab-auth-signup" class="auth-tab-btn">Sign Up</button>
+      </div>
+      <h3 id="auth-modal-title" style="margin-bottom: 0.4rem; color: var(--text-primary); font-family: var(--font-outfit); font-size: 1.3rem;">Welcome Back</h3>
+      <p id="auth-modal-desc" style="color: var(--text-muted); line-height: 1.4; margin-bottom: 1.5rem; font-size: 0.85rem;">Log in to sync your AI Tailor measurements from the cloud.</p>
+      
+      <div id="auth-email-container" class="input-wrapper" style="width: 100%; margin-bottom: 1rem;">
+        <input type="email" id="login-email" class="styled-input" placeholder="Email Address" style="width: 100%;" />
+      </div>
+      <div id="auth-password-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem;">
+        <input type="password" id="login-password" class="styled-input" placeholder="Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+        <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+      <div id="auth-confirm-container" class="input-wrapper" style="position: relative; width: 100%; margin-bottom: 1rem; display: none;">
+        <input type="password" id="login-confirm-password" class="styled-input" placeholder="Confirm Password" style="width: 100%; padding-right: 2.5rem; box-sizing: border-box;" />
+        <button type="button" onclick="togglePasswordVisibility('login-confirm-password', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.5; z-index: 10;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+      
+      <button id="btn-login-submit" class="btn-run" style="margin-top: 0.5rem; width: 100%;">Log In & Sync</button>
+      <button id="btn-signup-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: var(--primary-gradient); width: 100%;">Create Account & Sync</button>
+      <button id="btn-forgot-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); width: 100%;">Send Reset Link</button>
+      <button id="btn-reset-submit" class="btn-run" style="margin-top: 0.5rem; display: none; background: var(--success-gradient); width: 100%;">Update Password</button>
+      
+      <a id="link-forgot-password" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.8rem; margin-top: 1rem; display: block; text-align: center;">Forgot password?</a>
+      <a id="link-back-login" href="#" style="color: #c084fc; text-decoration: underline; font-size: 0.8rem; margin-top: 1rem; display: none; text-align: center;">Back to Log In</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner" style="flex-direction: column; gap: 20px;">
+        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+          <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+          STYLA <span class="logo-accent">Measure</span>
+        </div>
+
+        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
+        </div>
+
+        <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
+          <a href="/index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Home</a>
+          <a href="/bridesmaid.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Bridesmaid</a>
+          <a href="/brands.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">For Fashion Brands</a>
+          <a href="https://calendly.com/contact-styla/30min" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Book a Demo</a>
+          <a href="/tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
+          <a href="/tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
+          <a href="/blogs" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Blogs</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a>
+        </div>
+
+        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">&copy; 2026 STYLA Measure. All rights reserved.</p>
+        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT DEFINITIONS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="decoder.js"></script>
+  
+  <script>
+    // 21 Standardized Designer Size Charts
+    const BRIDESMAID_BRANDS = [
+      {
+        name: "Azazie",
+        logo: "https://www.azazie.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25.5, hip: 35.5 },
+          { size: "2", bust: 33, waist: 26.5, hip: 36.5 },
+          { size: "4", bust: 34, waist: 27.5, hip: 37.5 },
+          { size: "6", bust: 35, waist: 28.5, hip: 38.5 },
+          { size: "8", bust: 36, waist: 29.5, hip: 39.5 },
+          { size: "10", bust: 37.5, waist: 31, hip: 41 },
+          { size: "12", bust: 39, waist: 32.5, hip: 42.5 },
+          { size: "14", bust: 41, waist: 34.75, hip: 44.5 },
+          { size: "16", bust: 43.25, waist: 37.25, hip: 46.75 }
+        ]
+      },
+      {
+        name: "Birdy Grey",
+        logo: "https://www.birdygrey.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "XS (0-2)", bust: 32.5, waist: 25.5, hip: 35.5 },
+          { size: "S (4-6)", bust: 34.5, waist: 27.5, hip: 37.5 },
+          { size: "M (8-10)", bust: 36.5, waist: 29.5, hip: 39.5 },
+          { size: "L (12-14)", bust: 39.25, waist: 32.25, hip: 42.25 },
+          { size: "XL (16-18)", bust: 42.25, waist: 35.25, hip: 45.25 }
+        ]
+      },
+      {
+        name: "Jenny Yoo",
+        logo: "https://www.jennyyoo.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25, hip: 35 },
+          { size: "2", bust: 33, waist: 26, hip: 36 },
+          { size: "4", bust: 34, waist: 27, hip: 37 },
+          { size: "6", bust: 35, waist: 28, hip: 38 },
+          { size: "8", bust: 36, waist: 29, hip: 39 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 40.5 },
+          { size: "12", bust: 39, waist: 32, hip: 42 },
+          { size: "14", bust: 40.5, waist: 33.5, hip: 43.5 }
+        ]
+      },
+      {
+        name: "David's Bridal",
+        logo: "https://www.davidsbridal.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25.5, hip: 35.5 },
+          { size: "2", bust: 33, waist: 26.5, hip: 36.5 },
+          { size: "4", bust: 34, waist: 27.5, hip: 37.5 },
+          { size: "6", bust: 35, waist: 28.5, hip: 38.5 },
+          { size: "8", bust: 36.5, waist: 30, hip: 40 },
+          { size: "10", bust: 38, waist: 31.5, hip: 41.5 },
+          { size: "12", bust: 39.5, waist: 33, hip: 43 },
+          { size: "14", bust: 41.5, waist: 35, hip: 45 }
+        ]
+      },
+      {
+        name: "Dessy",
+        logo: "https://dessy.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25, hip: 35 },
+          { size: "2", bust: 33, waist: 26, hip: 36 },
+          { size: "4", bust: 34, waist: 27, hip: 37 },
+          { size: "6", bust: 35, waist: 28, hip: 38 },
+          { size: "8", bust: 36, waist: 29, hip: 39 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 40.5 },
+          { size: "12", bust: 39, waist: 32, hip: 42 }
+        ]
+      },
+      {
+        name: "Show Me Your Mumu",
+        logo: "https://showmeyourmumu.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "XXS (00)", bust: 30.5, waist: 23.5, hip: 33.5 },
+          { size: "XS (0-2)", bust: 32, waist: 25, hip: 35 },
+          { size: "S (4-6)", bust: 34, waist: 27, hip: 37 },
+          { size: "M (8-10)", bust: 36, waist: 29, hip: 39 },
+          { size: "L (12-14)", bust: 38.75, waist: 31.75, hip: 41.75 },
+          { size: "XL (16)", bust: 41, waist: 34, hip: 44 }
+        ]
+      },
+      {
+        name: "BHLDN (Anthropologie)",
+        logo: "https://www.anthropologie.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25, hip: 35.25 },
+          { size: "2", bust: 33, waist: 26, hip: 36.25 },
+          { size: "4", bust: 34, waist: 27, hip: 37.25 },
+          { size: "6", bust: 35, waist: 28, hip: 38.25 },
+          { size: "8", bust: 36, waist: 29, hip: 39.25 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 40.75 },
+          { size: "12", bust: 39, waist: 32, hip: 42.25 },
+          { size: "14", bust: 40.5, waist: 33.5, hip: 43.75 },
+          { size: "16", bust: 42.5, waist: 35.5, hip: 45.75 }
+        ]
+      },
+      {
+        name: "Lulus",
+        logo: "https://www.lulus.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "XS (2)", bust: 32.5, waist: 24.5, hip: 35.5 },
+          { size: "S (4)", bust: 34.5, waist: 26.5, hip: 37.5 },
+          { size: "M (6-8)", bust: 36.5, waist: 28.5, hip: 39.5 },
+          { size: "L (10-12)", bust: 39.25, waist: 31.25, hip: 42.25 },
+          { size: "XL (14)", bust: 42.25, waist: 34.25, hip: 45.25 }
+        ]
+      },
+      {
+        name: "Reformation",
+        logo: "https://www.thereformation.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25, hip: 37 },
+          { size: "2", bust: 33, waist: 26, hip: 38 },
+          { size: "4", bust: 34, waist: 27, hip: 39 },
+          { size: "6", bust: 35, waist: 28, hip: 40 },
+          { size: "8", bust: 36, waist: 29, hip: 41 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 42.5 },
+          { size: "12", bust: 39, waist: 32, hip: 44 }
+        ]
+      },
+      {
+        name: "Revelry",
+        logo: "https://shoprevelry.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 32, waist: 25, hip: 35 },
+          { size: "2", bust: 33, waist: 26, hip: 36 },
+          { size: "4", bust: 34, waist: 27, hip: 37 },
+          { size: "6", bust: 35, waist: 28, hip: 38 },
+          { size: "8", bust: 36, waist: 29, hip: 39 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 40.5 },
+          { size: "12", bust: 39, waist: 32, hip: 42 },
+          { size: "14", bust: 41, waist: 34, hip: 44 },
+          { size: "16", bust: 43, waist: 36, hip: 46 }
+        ]
+      },
+      {
+        name: "Fame and Partners",
+        logo: "https://www.fameandpartners.com/favicon.ico",
+        type: "dress",
+        chart: [
+          { size: "0", bust: 31.5, waist: 24.5, hip: 34.5 },
+          { size: "2", bust: 32.5, waist: 25.5, hip: 35.5 },
+          { size: "4", bust: 33.5, waist: 26.5, hip: 36.5 },
+          { size: "6", bust: 34.5, waist: 27.5, hip: 37.5 },
+          { size: "8", bust: 35.5, waist: 28.5, hip: 38.5 },
+          { size: "10", bust: 37.5, waist: 30.5, hip: 40.5 },
+          { size: "12", bust: 39.5, waist: 32.5, hip: 42.5 },
+          { size: "14", bust: 41.5, waist: 34.5, hip: 44.5 }
+        ]
+      }
+    ];
+
+    const SUIT_BRANDS = [
+      {
+        name: "The Black Tux",
+        logo: "https://theblacktux.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36, waist: 30, hip: 36, shoulder: 17, inseam: 30 },
+          { size: "38R", chest: 38, waist: 32, hip: 38, shoulder: 17.5, inseam: 31 },
+          { size: "40R", chest: 40, waist: 34, hip: 40, shoulder: 18, inseam: 31 },
+          { size: "42R", chest: 42, waist: 36, hip: 42, shoulder: 18.5, inseam: 32 },
+          { size: "44R", chest: 44, waist: 38, hip: 44, shoulder: 19, inseam: 32 }
+        ]
+      },
+      {
+        name: "Zara (Suits)",
+        logo: "https://www.zara.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "EU 46 / US 36", chest: 36, waist: 30, hip: 36, shoulder: 17 },
+          { size: "EU 48 / US 38", chest: 38, waist: 32, hip: 38, shoulder: 17.5 },
+          { size: "EU 50 / US 40", chest: 40, waist: 34, hip: 40, shoulder: 18 },
+          { size: "EU 52 / US 42", chest: 42, waist: 36, hip: 42, shoulder: 18.5 },
+          { size: "EU 54 / US 44", chest: 44, waist: 38, hip: 44, shoulder: 19 }
+        ]
+      },
+      {
+        name: "SuitSupply",
+        logo: "https://suitsupply.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36.2, waist: 30.7, hip: 36.2, shoulder: 17.3 },
+          { size: "38R", chest: 37.8, waist: 32.3, hip: 37.8, shoulder: 17.7 },
+          { size: "40R", chest: 39.4, waist: 33.9, hip: 39.4, shoulder: 18.1 },
+          { size: "42R", chest: 40.9, waist: 35.4, hip: 40.9, shoulder: 18.5 },
+          { size: "44R", chest: 42.5, waist: 37.0, hip: 42.5, shoulder: 18.9 }
+        ]
+      },
+      {
+        name: "Moores",
+        logo: "https://www.mooresclothing.ca/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36, waist: 30, hip: 36, shoulder: 17 },
+          { size: "38R", chest: 38, waist: 32, hip: 38, shoulder: 17.5 },
+          { size: "40R", chest: 40, waist: 34, hip: 40, shoulder: 18 },
+          { size: "42R", chest: 42, waist: 36, hip: 42, shoulder: 18.5 },
+          { size: "44R", chest: 44, waist: 38, hip: 44, shoulder: 19 }
+        ]
+      },
+      {
+        name: "Indochino",
+        logo: "https://www.indochino.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36, waist: 30, hip: 36, shoulder: 17, inseam: 30 },
+          { size: "38R", chest: 38, waist: 32, hip: 38, shoulder: 17.5, inseam: 31 },
+          { size: "40R", chest: 40, waist: 34, hip: 40, shoulder: 18, inseam: 31 },
+          { size: "42R", chest: 42, waist: 36, hip: 42, shoulder: 18.5, inseam: 32 },
+          { size: "44R", chest: 44, waist: 38, hip: 44, shoulder: 19, inseam: 32 }
+        ]
+      },
+      {
+        name: "Bonobos",
+        logo: "https://bonobos.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36, waist: 30, hip: 36.5, shoulder: 17.25 },
+          { size: "38R", chest: 38, waist: 32, hip: 38.5, shoulder: 17.75 },
+          { size: "40R", chest: 40, waist: 34, hip: 40.5, shoulder: 18.25 },
+          { size: "42R", chest: 42, waist: 36, hip: 42.5, shoulder: 18.75 },
+          { size: "44R", chest: 44, waist: 38, hip: 44.5, shoulder: 19.25 }
+        ]
+      },
+      {
+        name: "Calvin Klein (Suits)",
+        logo: "https://www.calvinklein.us/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36.5, waist: 30, hip: 36, shoulder: 17 },
+          { size: "38R", chest: 38.5, waist: 32, hip: 38, shoulder: 17.5 },
+          { size: "40R", chest: 40.5, waist: 34, hip: 40, shoulder: 18 },
+          { size: "42R", chest: 42.5, waist: 36, hip: 42, shoulder: 18.5 },
+          { size: "44R", chest: 44.5, waist: 38, hip: 44, shoulder: 19 }
+        ]
+      },
+      {
+        name: "Hugo Boss",
+        logo: "https://www.hugoboss.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36.2, waist: 30.7, hip: 36.2, shoulder: 17.3 },
+          { size: "38R", chest: 37.8, waist: 32.3, hip: 37.8, shoulder: 17.7 },
+          { size: "40R", chest: 39.4, waist: 33.9, hip: 39.4, shoulder: 18.1 },
+          { size: "42R", chest: 40.9, waist: 35.4, hip: 40.9, shoulder: 18.5 },
+          { size: "44R", chest: 42.5, waist: 37.0, hip: 42.5, shoulder: 18.9 }
+        ]
+      },
+      {
+        name: "Ted Baker",
+        logo: "https://www.tedbaker.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "1 (36R)", chest: 36, waist: 30, hip: 36, shoulder: 17 },
+          { size: "2 (38R)", chest: 38, waist: 32, hip: 38, shoulder: 17.5 },
+          { size: "3 (40R)", chest: 40, waist: 34, hip: 40, shoulder: 18 },
+          { size: "4 (42R)", chest: 42, waist: 36, hip: 42, shoulder: 18.5 },
+          { size: "5 (44R)", chest: 44, waist: 38, hip: 44, shoulder: 19 }
+        ]
+      },
+      {
+        name: "ASOS Design (Suits)",
+        logo: "https://www.asos.com/favicon.ico",
+        type: "suit",
+        chart: [
+          { size: "36R", chest: 36, waist: 30, hip: 36.5, shoulder: 17.1 },
+          { size: "38R", chest: 38, waist: 32, hip: 38.5, shoulder: 17.5 },
+          { size: "40R", chest: 40, waist: 34, hip: 40.5, shoulder: 17.9 },
+          { size: "42R", chest: 42, waist: 36, hip: 42.5, shoulder: 18.3 },
+          { size: "44R", chest: 44, waist: 38, hip: 44.5, shoulder: 18.7 }
+        ]
+      }
+    ];
+
+    let currentEmail = "";
+    let currentUserId = "";
+    let selectedGender = "women";
+
+    function getSupabase() {
+      if (!window.supabase) throw new Error("Supabase SDK not loaded");
+      return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // Modal Onboarding control functions
+    function openOnboardingWizard() {
+      const modal = document.getElementById('onboarding-wizard-modal');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
+      
+      // Reset wizard flow to step 1
+      document.getElementById('wizard-grid-layout').style.display = 'grid';
+      document.getElementById('wizard-verification-state').style.display = 'none';
+      
+      showSlide(1);
+    }
+
+    function closeOnboardingWizard() {
+      const modal = document.getElementById('onboarding-wizard-modal');
+      modal.classList.remove('active');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    function showSlide(step) {
+      const slides = document.querySelectorAll('.wizard-slide');
+      slides.forEach(slide => {
+        slide.classList.remove('active');
+        slide.style.display = 'none';
+      });
+
+      const activeSlide = document.getElementById(getSlideId(step));
+      if (activeSlide) {
+        activeSlide.style.display = 'block';
+        setTimeout(() => {
+          activeSlide.classList.add('active');
+        }, 50);
+      }
+      updateProgress(step);
+    }
+
+    function getSlideId(step) {
+      const ids = {
+        1: 'slide-email',
+        2: 'slide-gender',
+        3: 'slide-stature',
+        4: 'slide-contour',
+        5: 'slide-account'
+      };
+      return ids[step];
+    }
+
+    // Wizard Navigation Functions
+    function selectGender(gender) {
+      selectedGender = gender;
+      document.getElementById('gender-women').classList.remove('active');
+      document.getElementById('gender-men').classList.remove('active');
+      if (gender === 'women') {
+        document.getElementById('gender-women').classList.add('active');
+        document.getElementById('contour-women-inputs').style.display = 'block';
+        document.getElementById('contour-men-inputs').style.display = 'none';
+      } else {
+        document.getElementById('gender-men').classList.add('active');
+        document.getElementById('contour-women-inputs').style.display = 'none';
+        document.getElementById('contour-men-inputs').style.display = 'block';
+      }
+      updateCalibrationPanel();
+    }
+
+    function updateStatureLabels() {
+      const height = parseInt(document.getElementById('range-height').value);
+      const weight = parseInt(document.getElementById('range-weight').value);
+      
+      const feet = Math.floor(height / 12);
+      const inches = height % 12;
+      document.getElementById('label-height').textContent = `${height} in (${feet}'${inches}")`;
+      document.getElementById('label-weight').textContent = `${weight} lbs`;
+
+      // Log to diagnostic lines
+      const bmi = ((weight * 703) / (height * height)).toFixed(1);
+      logDiagnostic(`> Calibrating stature: height=${height}in, weight=${weight}lbs (BMI: ${bmi})`);
+      document.getElementById('panel-stature').textContent = "CALIBRATED";
+      document.getElementById('panel-stature').style.color = "#10b981";
+      updateCalibrationPanel();
+    }
+
+    function updateContourLabels() {
+      const gender = selectedGender;
+      if (gender === 'women') {
+        const waist = document.getElementById('range-waist-women').value;
+        document.getElementById('label-waist-women').textContent = `${waist} in`;
+        logDiagnostic(`> Calibrating bodice limits: waist=${waist}in`);
+      } else {
+        const waist = document.getElementById('range-waist-men').value;
+        const chest = document.getElementById('range-chest-men').value;
+        document.getElementById('label-waist-men').textContent = `${waist} in`;
+        document.getElementById('label-chest-men').textContent = `${chest} in`;
+        logDiagnostic(`> Calibrating suit bounds: chest=${chest}in, waist=${waist}in`);
+      }
+      document.getElementById('panel-contour').textContent = "CALIBRATED";
+      document.getElementById('panel-contour').style.color = "#10b981";
+      updateCalibrationPanel();
+    }
+
+    function logDiagnostic(line) {
+      const container = document.getElementById('diagnostic-lines');
+      if (!container) return;
+      const row = document.createElement('div');
+      row.textContent = line;
+      container.appendChild(row);
+      if (container.children.length > 8) {
+        container.removeChild(container.firstChild);
+      }
+    }
+
+    function updateCalibrationPanel() {
+      const height = parseFloat(document.getElementById('range-height').value);
+      const weight = parseFloat(document.getElementById('range-weight').value);
+      
+      let bust = 0;
+      let hips = 0;
+
+      if (selectedGender === 'women') {
+        const waist = parseFloat(document.getElementById('range-waist-women').value);
+        const band = parseFloat(document.getElementById('select-band').value);
+        const cup = document.getElementById('select-cup').value;
+        
+        const modifiers = { 'AA': 0.5, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'DD': 5, 'DDD': 6, 'G': 7 };
+        const cupMod = modifiers[cup] || 2.0;
+        
+        bust = band + cupMod;
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 4 + (bmi * 0.3);
+      } else {
+        const waist = parseFloat(document.getElementById('range-waist-men').value);
+        const chest = parseFloat(document.getElementById('range-chest-men').value);
+        
+        bust = chest;
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 2 + (bmi * 0.15);
+      }
+
+      document.getElementById('panel-twin').textContent = "READY";
+      document.getElementById('panel-twin').style.color = "#10b981";
+    }
+
+    // Step routing
+    function wizardNext(step) {
+      if (step === 1) {
+        const email = document.getElementById('wizard-email').value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          document.getElementById('wizard-email-error').style.display = 'block';
+          return;
+        }
+        document.getElementById('wizard-email-error').style.display = 'none';
+        currentEmail = email;
+        logDiagnostic(`> Email verified: ${email}`);
+        
+        showSlide(2);
+        selectGender('women');
+      } 
+      else if (step === 2) {
+        logDiagnostic(`> Silhouette pattern selected: ${selectedGender}`);
+        showSlide(3);
+        updateStatureLabels();
+      }
+      else if (step === 3) {
+        logDiagnostic(`> Stature frame saved.`);
+        showSlide(4);
+        updateContourLabels();
+      }
+      else if (step === 4) {
+        logDiagnostic(`> Contours saved. Resolving account state...`);
+        const savedUserId = localStorage.getItem('styla_user_id');
+        if (savedUserId && savedUserId.includes('@')) {
+          submitWizardDirectNoPass();
+          return;
+        }
+        
+        showSlide(5);
+      }
+    }
+
+    function wizardBack(step) {
+      if (step === 2) {
+        showSlide(1);
+      }
+      else if (step === 3) {
+        showSlide(2);
+      }
+      else if (step === 4) {
+        showSlide(3);
+      }
+      else if (step === 5) {
+        showSlide(4);
+      }
+    }
+
+    function updateProgress(step) {
+      const text = document.getElementById('wizard-progress-text');
+      const bar = document.getElementById('wizard-progress-bar');
+      text.textContent = `Step ${step} of 5`;
+      bar.style.width = `${step * 20}%`;
+    }
+
+    async function submitWizardDirectNoPass() {
+      logDiagnostic(`> Syncing digital twin measurements...`);
+      const manualData = calculateDigitalTwinValues();
+      
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('store_profiles')
+          .update({
+            manual_measurements: manualData
+          })
+          .eq('username', currentEmail.toLowerCase())
+          .select();
+
+        if (error) throw error;
+        
+        closeOnboardingWizard();
+        showMatchingReport(data[0]);
+      } catch (err) {
+        alert("Failed to sync measurements: " + err.message);
+      }
+    }
+
+    async function submitWizard() {
+      const pass = document.getElementById('wizard-password').value;
+      if (!pass || pass.length < 6) {
+        document.getElementById('wizard-password-error').style.display = 'block';
+        return;
+      }
+      document.getElementById('wizard-password-error').style.display = 'none';
+
+      const btn = document.getElementById('btn-wizard-submit');
+      btn.disabled = true;
+      btn.textContent = "Creating Account...";
+
+      const manualData = calculateDigitalTwinValues();
+
+      try {
+        const supabase = getSupabase();
+        
+        // 1. Sign up Supabase user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: currentEmail.toLowerCase(),
+          password: pass
+        });
+
+        if (signUpError) throw signUpError;
+
+        // 2. Upsert guest profile in store_profiles cache
+        const { data: profileData, error: profileError } = await supabase
+          .from('store_profiles')
+          .upsert({
+            username: currentEmail.toLowerCase(),
+            password: 'temp_guest_placeholder',
+            manual_measurements: manualData,
+            api_scans: []
+          }, { onConflict: 'username' })
+          .select();
+
+        if (profileError) throw profileError;
+
+        // Show verification modal inside the popup card
+        document.getElementById('wizard-grid-layout').style.display = 'none';
+        document.getElementById('wizard-verification-state').style.display = 'block';
+        document.getElementById('verification-email-label').textContent = currentEmail;
+      } catch (err) {
+        console.error("Failed to create profile:", err.message);
+        alert("Failed to create profile: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Save Profile & Match";
+      }
+    }
+
+    function calculateDigitalTwinValues() {
+      const height = parseFloat(document.getElementById('range-height').value);
+      const weight = parseFloat(document.getElementById('range-weight').value);
+      
+      let waist = 0;
+      let chest = 0;
+      let hips = 0;
+      let shoulder = 0;
+      let inseam = 0;
+
+      if (selectedGender === 'women') {
+        waist = parseFloat(document.getElementById('range-waist-women').value);
+        const band = parseFloat(document.getElementById('select-band').value);
+        const cup = document.getElementById('select-cup').value;
+        
+        const modifiers = { 'AA': 0.5, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'DD': 5, 'DDD': 6, 'G': 7 };
+        const cupMod = modifiers[cup] || 2.0;
+        chest = band + cupMod;
+        
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 4 + (bmi * 0.3);
+        shoulder = 10 + (height * 0.085);
+        
+        const customInseam = document.getElementById('in-inseam-women').value;
+        inseam = customInseam ? parseFloat(customInseam) : (height * 0.45);
+      } else {
+        waist = parseFloat(document.getElementById('range-waist-men').value);
+        chest = parseFloat(document.getElementById('range-chest-men').value);
+        
+        const bmi = (weight * 703) / (height * height);
+        hips = waist + 2 + (bmi * 0.15);
+        shoulder = 12 + (height * 0.08) + (chest - 38) * 0.1;
+        
+        const customInseam = document.getElementById('in-inseam-men').value;
+        inseam = customInseam ? parseFloat(customInseam) : (height * 0.44);
+      }
+
+      return {
+        height,
+        weight,
+        gender: selectedGender,
+        chest: Math.round(chest * 10) / 10,
+        waist: Math.round(waist * 10) / 10,
+        hips: Math.round(hips * 10) / 10,
+        shoulder: Math.round(shoulder * 10) / 10,
+        inseam: Math.round(inseam * 10) / 10
+      };
+    }
+
+    function showMatchingReport(profile) {
+      document.getElementById('step-report-view').style.display = 'block';
+      document.getElementById('step-report-view').scrollIntoView({ behavior: 'smooth' });
+
+      if (profile.has_paid_bridesmaid_report) {
+        document.getElementById('report-paywall').style.display = 'none';
+        document.getElementById('report-unlocked').style.display = 'block';
+        renderBrandMatches(profile);
+      }
+    }
+
+    async function buyMatchReport() {
+      await initiateBridesmaidCheckout(
+        'bridesmaid_report_payment',
+        999,
+        'STYLA Bridesmaid & Suit Sizing Match Report',
+        'Unlocks full size matching recommendations and percentage matches across 21 top designers.'
+      );
+    }
+
+    function calculateFitScore(brand, body) {
+      let bestSize = null;
+      let bestPercentage = 0;
+      let comments = "";
+      
+      let bust = body.chest || body.bust;
+      let waist = body.waist;
+      let hip = body.hips || body.hip;
+      let shoulder = body.shoulder || 15.0;
+
+      if (body.manual_measurements) {
+        const mm = body.manual_measurements;
+        if (mm.chest) bust = mm.chest;
+        if (mm.waist) waist = mm.waist;
+        if (mm.hips) hip = mm.hips;
+        if (mm.shoulder) shoulder = mm.shoulder;
+      }
+      
+      if (!bust || !waist || !hip) return null;
+      
+      for (const option of brand.chart) {
+        let penalty = 0;
+        if (brand.type === "dress") {
+          const bustDiff = option.bust - bust;
+          const hipDiff = option.hip - hip;
+          const waistDiff = option.waist - waist;
+          
+          // Body charts rule: User body cannot exceed the brand's body dimensions by more than 0.5 inches
+          if (bustDiff < -0.5 || hipDiff < -0.5 || waistDiff < -0.5) {
+            continue;
+          }
+          
+          const bustPenalty = bustDiff < 0 ? Math.abs(bustDiff) * 3 : bustDiff;
+          const hipPenalty = hipDiff < 0 ? Math.abs(hipDiff) * 3 : hipDiff * 0.5; // Hips can be looser in flared gowns
+          const waistPenalty = waistDiff < 0 ? Math.abs(waistDiff) * 4 : waistDiff;
+          
+          penalty = bustPenalty + hipPenalty + waistPenalty;
+        } else if (brand.type === "suit") {
+          const chestDiff = option.chest - bust;
+          const shoulderDiff = option.shoulder - shoulder;
+          const waistDiff = option.waist - waist;
+          
+          if (chestDiff < -0.5 || shoulderDiff < -0.5 || waistDiff < -0.5) {
+            continue;
+          }
+          
+          const chestPenalty = chestDiff < 0 ? Math.abs(chestDiff) * 4 : chestDiff;
+          const shoulderPenalty = shoulderDiff < 0 ? Math.abs(shoulderDiff) * 8 : shoulderDiff * 2; // Shoulder matches are critical
+          const waistPenalty = waistDiff < 0 ? Math.abs(waistDiff) * 4 : waistDiff;
+          
+          penalty = chestPenalty + shoulderPenalty + waistPenalty;
+        }
+
+        // Clamp percentage score between 50% and 99%
+        const pct = Math.max(50, Math.min(99, Math.round(100 - (penalty * 3.5))));
+        if (pct > bestPercentage) {
+          bestPercentage = pct;
+          bestSize = option.size;
+          
+          let commentParts = [];
+          if (brand.type === "dress") {
+            const bustDiff = option.bust - bust;
+            const waistDiff = option.waist - waist;
+            const hipDiff = option.hip - hip;
+            
+            if (Math.abs(bustDiff) <= 0.5) commentParts.push("Perfect bust match.");
+            else if (bustDiff > 2) commentParts.push("Bust fits loose.");
+            
+            if (Math.abs(waistDiff) <= 0.5) commentParts.push("Perfect waist match.");
+            else if (waistDiff > 2) commentParts.push("Waist runs loose. Minor tailoring suggested to take in waist.");
+            
+            if (hipDiff < 0) commentParts.push("Snug hips fit.");
+          } else {
+            const chestDiff = option.chest - bust;
+            const shoulderDiff = option.shoulder - shoulder;
+            const waistDiff = option.waist - waist;
+            
+            if (Math.abs(shoulderDiff) <= 0.25) commentParts.push("Excellent shoulder frame match.");
+            else if (shoulderDiff > 1) commentParts.push("Shoulders fit broad.");
+            
+            if (waistDiff > 2.5) commentParts.push("Waist suppression can be taken in by a tailor.");
+          }
+          comments = commentParts.join(" ") || "Excellent proportional match.";
+        }
+      }
+      
+      if (!bestSize) {
+        const largest = brand.chart[brand.chart.length - 1];
+        bestSize = largest.size;
+        bestPercentage = 60;
+        comments = "Exceeds standard sizing limits. Bespoke customization required.";
+      }
+      
+      return { size: bestSize, percentage: bestPercentage, comments: comments };
+    }
+
+    function renderBrandMatches(profile) {
+      let bust = profile.chest;
+      let waist = profile.waist;
+      let hips = profile.hips;
+      let shoulder = profile.shoulder;
+      let inseam = profile.inseam;
+      let height = profile.height;
+
+      if (profile.manual_measurements) {
+        const mm = profile.manual_measurements;
+        if (mm.chest) bust = mm.chest;
+        if (mm.waist) waist = mm.waist;
+        if (mm.hips) hips = mm.hips;
+        if (mm.shoulder) shoulder = mm.shoulder;
+        if (mm.inseam) inseam = mm.inseam;
+        if (mm.height) height = mm.height;
+      }
+
+      document.getElementById('val-bust').textContent = bust || "-";
+      document.getElementById('val-waist').textContent = waist || "-";
+      document.getElementById('val-hips').textContent = hips || "-";
+      document.getElementById('val-shoulder').textContent = shoulder || "-";
+      document.getElementById('val-inseam').textContent = inseam || "-";
+      document.getElementById('val-height').textContent = height || "-";
+
+      const dressGrid = document.getElementById('bridesmaid-results-grid');
+      const suitGrid = document.getElementById('suits-results-grid');
+      
+      dressGrid.innerHTML = "";
+      suitGrid.innerHTML = "";
+
+      // Calculate matches for all dress brands
+      let dressMatches = [];
+      BRIDESMAID_BRANDS.forEach(brand => {
+        const fit = calculateFitScore(brand, profile);
+        if (fit) {
+          dressMatches.push({ brand, fit });
+        }
+      });
+
+      // Sort dress brands by Match Percentage DESC
+      dressMatches.sort((a, b) => b.fit.percentage - a.fit.percentage);
+
+      // Render dress matches
+      dressMatches.forEach(item => {
+        const brand = item.brand;
+        const fit = item.fit;
+        const color = fit.percentage >= 90 ? '#10b981' : (fit.percentage >= 80 ? '#f59e0b' : '#ef4444');
+        
+        const row = document.createElement('div');
+        row.className = "match-row";
+        row.innerHTML = `
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <img src="${brand.logo}" style="width: 18px; height: 18px; border-radius: 4px;" onError="this.style.display='none'" />
+            ${brand.name}
+          </div>
+          <div>
+            <div style="font-weight: 800; color: #ff2a75; font-size: 1.1rem;">Size ${fit.size}</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+              <div style="width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden;">
+                <div style="width: ${fit.percentage}%; height: 100%; background: ${color};"></div>
+              </div>
+              <span style="font-size: 0.72rem; font-weight: 700; color: ${color};">${fit.percentage}% Match</span>
+            </div>
+          </div>
+          <div style="color: #94a3b8; font-size: 0.85rem;">Standard Gown</div>
+          <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">${fit.comments}</div>
+        `;
+        dressGrid.appendChild(row);
+      });
+
+      // Calculate matches for suit brands
+      let suitMatches = [];
+      SUIT_BRANDS.forEach(brand => {
+        const fit = calculateFitScore(brand, profile);
+        if (fit) {
+          suitMatches.push({ brand, fit });
+        }
+      });
+
+      // Sort suit brands by Match Percentage DESC
+      suitMatches.sort((a, b) => b.fit.percentage - a.fit.percentage);
+
+      // Render suit matches
+      suitMatches.forEach(item => {
+        const brand = item.brand;
+        const fit = item.fit;
+        const color = fit.percentage >= 90 ? '#10b981' : (fit.percentage >= 80 ? '#f59e0b' : '#ef4444');
+
+        const row = document.createElement('div');
+        row.className = "match-row";
+        row.innerHTML = `
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <img src="${brand.logo}" style="width: 18px; height: 18px; border-radius: 4px;" onError="this.style.display='none'" />
+            ${brand.name}
+          </div>
+          <div>
+            <div style="font-weight: 800; color: #ff2a75; font-size: 1.1rem;">Size ${fit.size}</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+              <div style="width: 80px; height: 5px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden;">
+                <div style="width: ${fit.percentage}%; height: 100%; background: ${color};"></div>
+              </div>
+              <span style="font-size: 0.72rem; font-weight: 700; color: ${color};">${fit.percentage}% Match</span>
+            </div>
+          </div>
+          <div style="color: #94a3b8; font-size: 0.85rem;">Jacket & Trousers</div>
+          <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">${fit.comments}</div>
+        `;
+        suitGrid.appendChild(row);
+      });
+    }
+
+    // Auto load session if exists
+    window.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isPaymentSuccess = urlParams.get('payment') === 'success';
+      
+      const savedEmail = localStorage.getItem('styla_user_email');
+      const savedUserId = localStorage.getItem('styla_user_id');
+
+      if (savedEmail) {
+        document.getElementById('wizard-email').value = savedEmail;
+        
+        try {
+          const profile = await getOrCreateGuestProfile(savedEmail);
+          if (profile) {
+            currentEmail = savedEmail;
+            currentUserId = savedEmail;
+            
+            if (isPaymentSuccess) {
+              alert("Payment successful! Your unlocked products are loading...");
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // Pre-fill sliders
+            const mm = profile.manual_measurements || {};
+            if (mm.height) {
+              document.getElementById('range-height').value = mm.height;
+              document.getElementById('range-weight').value = mm.weight || 130;
+              
+              if (mm.gender) {
+                selectedGender = mm.gender;
+                selectGender(selectedGender);
+              }
+              
+              if (mm.gender === 'women') {
+                document.getElementById('range-waist-women').value = mm.waist;
+              } else {
+                document.getElementById('range-waist-men').value = mm.waist;
+                document.getElementById('range-chest-men').value = mm.chest;
+              }
+            }
+
+            // Check report payment state
+            if (profile.has_paid_bridesmaid_report) {
+              showMatchingReport(profile);
+            } else if (mm.height) {
+              // Sizing data exists but unpaid
+              showMatchingReport(profile);
+            }
+          }
+        } catch (e) {
+          console.warn("Auto load profile failed:", e);
+        }
+      }
+    });
+  </script>
+  <script>
+    (function() {
+      try {
+        const path = window.location.pathname;
+        if (path.includes('bridesmaid.html')) {
+          const link = document.getElementById('nav-link-bridesmaid');
+          if (link) {
+            link.classList.add('active');
+            link.style.color = 'var(--accent-light)';
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

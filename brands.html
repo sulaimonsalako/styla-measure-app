@@ -13,7 +13,7 @@
   <style>
     :root {
       --purple-glow: rgba(139, 92, 246, 0.04);
-      --pink-glow: rgba(255, 42, 117, 0.03);
+      --pink-glow: rgba(59, 130, 246, 0.03);
     }
 
     body {
@@ -42,7 +42,7 @@
     }
 
     .brand-hero-title em {
-      color: #ff2a75;
+      color: #3b82f6;
       font-style: italic;
     }
 
@@ -67,7 +67,7 @@
     .section-badge {
       display: inline-block;
       padding: 6px 14px;
-      background: rgba(225, 29, 72, 0.04);
+      background: rgba(37, 99, 235, 0.04);
       border: 1px solid var(--border-accent);
       border-radius: 100px;
       font-size: 0.72rem;
@@ -121,13 +121,13 @@
     .pillar-icon {
       font-size: 1.8rem;
       margin-bottom: 20px;
-      background: rgba(225, 29, 72, 0.02);
+      background: rgba(37, 99, 235, 0.02);
       width: 50px; height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(225, 29, 72, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.1);
       color: var(--accent-light);
     }
 
@@ -281,7 +281,7 @@
     }
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(255, 42, 117, 0.15);
-      border-color: #ff75a0;
+      border-color: #60a5fa;
     }
 
     .pillar-card {
@@ -302,8 +302,8 @@
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
     .styled-input:focus, .styled-select:focus, .styled-textarea:focus {
-      border-color: #ff75a0 !important;
-      box-shadow: 0 0 0 3px rgba(255, 117, 160, 0.15) !important;
+      border-color: #60a5fa !important;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
       background: rgba(255, 255, 255, 0.05) !important;
     }
     
@@ -421,8 +421,8 @@
       box-sizing: border-box;
     }
     .styled-input:focus, .styled-select:focus, .styled-textarea:focus {
-      border-color: #ff75a0 !important;
-      box-shadow: 0 0 0 3px rgba(255, 117, 160, 0.15) !important;
+      border-color: #60a5fa !important;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
       background: rgba(255, 255, 255, 0.05) !important;
     }
     
@@ -438,20 +438,28 @@
       overflow-x: hidden !important;
       max-width: 100% !important;
     }
+  
+    .logo-accent { color: #ff2a75 !important; }
   </style>
 </head>
 <body>
 
   <!-- NAV -->
-  <nav class="nav">
+    <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-        <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+      <a href="/index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
         STYLA <span class="logo-accent">Measure</span>
       </a>
-      <div class="nav-actions" style="display: flex; gap: 1.2rem; align-items: center;">
-        <a href="index.html" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Home</a>
-        <a href="https://calendly.com/contact-styla/30min" target="_blank" class="nav-cta" style="background: var(--primary-gradient); border: none; color: #fff; text-decoration: none;">Book a Demo</a>
+      <div id="auth-status-container" class="nav-actions" style="display: flex; align-items: center; gap: 1.5rem;">
+        <a href="/bridesmaid.html" class="nav-link" id="nav-link-bridesmaid" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Bridesmaid</a>
+        <a href="/brands.html" class="nav-link nav-link-brands" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
+        <a href="/blogs" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Blogs</a>
+        <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log In</button>
+        <div id="logged-in-status" style="display: none; align-items: center; gap: 16px;">
+          <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
+          <button id="btn-logout" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log out</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -497,7 +505,7 @@
             <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Give hesitant buyers immediate size recommendations and checkout confidence.</p>
           </div>
           <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center;">
-            <div style="font-size: 2.8rem; font-weight: 900; color: #ff2a75; margin-bottom: 8px;">2-Min</div>
+            <div style="font-size: 2.8rem; font-weight: 900; color: #3b82f6; margin-bottom: 8px;">2-Min</div>
             <h4 style="margin: 0 0 6px 0; color: #fff; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">No-Code Integration</h4>
             <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Install as a native Shopify Theme App Extension with zero coding.</p>
           </div>
@@ -573,7 +581,7 @@
             <div style="font-size: 0.75rem; color: var(--text-secondary);">Conversion Rate Lift</div>
           </div>
           <div style="border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: #ff75a0;">-40%</div>
+            <div style="font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: #60a5fa;">-40%</div>
             <div style="font-size: 0.75rem; color: var(--text-secondary);">Sizing Returns Reduced</div>
           </div>
           <div>
@@ -646,7 +654,7 @@
       <p style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 2.2rem; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5;">
         Schedule a brief 15-minute product tour. See how STYLA integrates with your Shopify theme and calculates real-time sizing ease.
       </p>
-      <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 14px 36px; background: var(--primary-gradient); text-decoration: none; border-radius: 8px; color: #fff; font-weight: 700; font-family: var(--font-head); font-size: 1.05rem; border: none; box-shadow: 0 4px 15px rgba(255,42,117,0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+      <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 14px 36px; background: var(--primary-gradient); text-decoration: none; border-radius: 8px; color: #fff; font-weight: 700; font-family: var(--font-head); font-size: 1.05rem; border: none; box-shadow: 0 4px 15px rgba(59,130,246,0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
         <span>Book a Demo</span>
         <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
       </a>
@@ -654,27 +662,34 @@
   </section>
 
   <!-- FOOTER -->
-  <footer class="footer">
+      <footer class="footer">
     <div class="container">
       <div class="footer-inner" style="flex-direction: column; gap: 20px;">
-        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;"><img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />STYLA <span class="logo-accent">Measure</span></div>
-        
-        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center;">
-          <a href="https://instagram.com/stylaca" target="_blank"  >Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank"  >TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank"  >X (Twitter)</a>
+        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+          <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+          STYLA <span class="logo-accent">Measure</span>
+        </div>
+
+        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
+          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
         </div>
 
         <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
-          <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Shopper Home</a>
-          <a href="https://calendly.com/contact-styla/30min" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Book a Demo</a>
-          <a href="tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
-          <a href="tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
-          <a href="seo/guides.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#ff2a75'" onmouseout="this.style.color='#94a3b8'">Sizing & Sourcing Hub</a>
+          <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Home</a>
+          <a href="bridesmaid.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Bridesmaid</a>
+          <a href="brands.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">For Fashion Brands</a>
+          <a href="https://calendly.com/contact-styla/30min" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Book a Demo</a>
+          <a href="tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
+          <a href="tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
+          <a href="/blogs" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Blogs</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
+          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a>
         </div>
 
-        <p class="footer-copy">&copy; 2026 STYLA Measure. All rights reserved.</p>
-        <p class="footer-tagline">Your body. Your size. Everywhere.</p>
+        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">&copy; 2026 STYLA Measure. All rights reserved.</p>
+        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
       </div>
     </div>
   </footer>
@@ -757,7 +772,7 @@
         bottom: 28px;
         left: 50%;
         transform: translateX(-50%) translateY(20px);
-        background: ${type === 'error' ? '#ef4444' : '#ff2a75'};
+        background: ${type === 'error' ? '#ef4444' : '#3b82f6'};
         color: #fff;
         padding: 14px 24px;
         border-radius: 100px;
@@ -797,5 +812,50 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 <!--End of Tawk.to Script-->
+<script>
+  (function() {
+    try {
+      const path = window.location.pathname;
+      if (path.includes('bridesmaid.html')) {
+        const link = document.getElementById('nav-link-bridesmaid');
+        if (link) {
+          link.classList.add('active');
+          link.style.color = 'var(--accent-light)';
+        }
+      }
+    } catch(e) {}
+  })();
+</script>
+<script>
+  (function() {
+    try {
+      const token = localStorage.getItem('sb-tneflxtpmzodauygtslk-auth-token');
+      if (token) {
+        document.body.classList.add('user-logged-in');
+        const showLoginBtn = document.getElementById('btn-show-login');
+        const loggedInStatus = document.getElementById('logged-in-status');
+        if (showLoginBtn) showLoginBtn.style.display = 'none';
+        if (loggedInStatus) loggedInStatus.style.display = 'flex';
+      }
+      
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', function() {
+          localStorage.clear();
+          window.location.href = '/index.html';
+        });
+      }
+      
+      const btnLogin = document.getElementById('btn-show-login');
+      if (btnLogin) {
+        btnLogin.addEventListener('click', function() {
+          window.location.href = '/index.html?login=true';
+        });
+      }
+    } catch(e) {
+      console.warn("Auth sync failed", e);
+    }
+  })();
+</script>
 </body>
 </html>

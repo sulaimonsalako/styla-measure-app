@@ -2,7 +2,7 @@
 
 name = "Styla Fit Engine"
 client_id = "ae97233671ed9354af95498cd5c7fc62"
-application_url = "http://localhost:8080"
+application_url = "https://real-candles-visit.loca.lt"
 embedded = true
 
 [webhooks]
@@ -16,5 +16,8 @@ scopes = "write_products,read_products,read_customers"
 
 [auth]
 redirect_urls = [
-  "http://localhost:8080/api/auth/callback"
+  "https://real-candles-visit.loca.lt/api/auth/callback"
 ]
+
+[build]
+automatically_update_urls_on_dev = true

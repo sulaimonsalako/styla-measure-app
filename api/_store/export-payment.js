@@ -1,36 +1,20 @@
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-client';
+import getRawBody from 'raw-body';
 
-const supabaseUrl = process.env.SUPABASE_URL;
 // Use Service Role Key to bypass RLS in Stripe webhook updates. Fallback to Anon Key if not configured.
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function getRawBody(readable) {
-  const chunks = [];
-  for await (const chunk of readable) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-  }
-  return Buffer.concat(chunks);
-}
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export const config = {
   api: {
-    bodyParser: false, // Disables Vercel's automatic body parser to handle raw stream for webhooks
+    bodyParser: false, // Disabling bodyParser is necessary for raw Stripe webhook verification
   },
 };
 
 export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const actionQuery = req.query?.action;
+  const { action: actionQuery } = req.query;
 
   // 1. Stripe Webhook Handler (?action=stripe-webhook)
   if (actionQuery === 'stripe-webhook') {
@@ -68,33 +52,65 @@ export default async function handler(req, res) {
         return res.status(200).json({ received: true });
       }
 
-      if (metadata.type === 'export_payment') {
-        const userId = metadata.userId;
-        if (!userId) {
-          console.error("Stripe webhook session completed for export_payment but userId is missing in metadata.");
-          return res.status(400).json({ error: 'Missing userId in metadata' });
+      const paymentType = metadata.type || 'export_payment';
+      const userId = metadata.userId;
+
+      if (!userId) {
+        console.error(`Stripe webhook session completed for ${paymentType} but userId is missing in metadata.`);
+        return res.status(400).json({ error: 'Missing userId in metadata' });
+      }
+
+      try {
+        let updatePayload = { updated_at: new Date().toISOString() };
+        
+        if (paymentType === 'export_payment') {
+          updatePayload.has_paid_export = true;
+        } else if (paymentType === 'bridesmaid_scan_payment') {
+          updatePayload.has_paid_bridesmaid_scan = true;
+        } else if (paymentType === 'bridesmaid_report_payment') {
+          updatePayload.has_paid_bridesmaid_report = true;
+        } else {
+          updatePayload.has_paid_export = true;
         }
 
-        try {
-          console.log(`Setting has_paid_export = true for user ${userId}...`);
-          
-          // Perform database update using Supabase service role client (bypassing RLS)
-          const { data, error } = await supabase
+        console.log(`Setting payment attributes in Supabase for user ID / Username: ${userId}`, updatePayload);
+        
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+
+        if (isUuid) {
+          // 1. Update public.profiles (registered user)
+          const { error: profileErr } = await supabase
             .from('profiles')
-            .update({ has_paid_export: true, updated_at: new Date().toISOString() })
+            .update(updatePayload)
+            .eq('id', userId);
+          if (profileErr) throw profileErr;
+
+          // 2. Fetch email to sync state back to store_profiles (guest cache table)
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('email')
             .eq('id', userId)
-            .select();
+            .maybeSingle();
 
-          if (error) {
-            console.error(`Database error setting profile payment state:`, error.message);
-            throw error;
+          if (userProfile && userProfile.email) {
+            await supabase
+              .from('store_profiles')
+              .update(updatePayload)
+              .eq('username', userProfile.email.toLowerCase());
           }
-
-          console.log(`Successfully updated profile payment state for user ${userId}. Profile data:`, data);
-        } catch (e) {
-          console.error(`Error handling database write inside Stripe webhook:`, e);
-          return res.status(500).json({ error: 'Database update failed' });
+        } else {
+          // Update store_profiles directly (guest user)
+          const { error: guestErr } = await supabase
+            .from('store_profiles')
+            .update(updatePayload)
+            .eq('username', userId.toLowerCase());
+          if (guestErr) throw guestErr;
         }
+
+        console.log(`Successfully completed payment registration in DB for user ${userId}.`);
+      } catch (e) {
+        console.error(`Error handling database write inside Stripe webhook:`, e);
+        return res.status(500).json({ error: 'Database update failed' });
       }
     }
 
@@ -131,7 +147,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const { action, userId, email } = body;
+    const { action, userId, email, amount, productName, productDescription, paymentType, successUrl, cancelUrl } = body;
 
     // Action: create-checkout-session
     if (action === 'create-checkout-session') {
@@ -147,7 +163,14 @@ export default async function handler(req, res) {
       const stripe = new Stripe(stripeKey);
       const origin = req.headers.origin || `https://${req.headers.host}`;
 
-      console.log(`Creating Stripe checkout session for user ${userId} (${email})...`);
+      const unitAmount = amount ? parseInt(amount) : 499;
+      const name = productName || 'STYLA Premium AI Tailor Report (80+ Measurements)';
+      const desc = productDescription || 'Unlock your complete 3D body scan export in PDF format for custom tailoring and fitting.';
+      const pType = paymentType || 'export_payment';
+      const success = successUrl || `${origin}/index.html?payment=success&type=export`;
+      const cancel = cancelUrl || `${origin}/index.html?payment=cancel`;
+
+      console.log(`Creating Stripe checkout session for user ${userId} (${email}) for product ${name} ($${(unitAmount/100).toFixed(2)})...`);
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -155,23 +178,23 @@ export default async function handler(req, res) {
         line_items: [
           {
             price_data: {
-              currency: 'cad',
+              currency: 'usd',
               product_data: {
-                name: 'STYLA Premium AI Tailor Report (80+ Measurements)',
-                description: 'Unlock your complete 3D body scan export in PDF format for custom tailoring and fitting.',
+                name: name,
+                description: desc,
               },
-              unit_amount: 749, // $7.49 CAD in cents
+              unit_amount: unitAmount,
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        success_url: `${origin}/index.html?payment=success&type=export`,
-        cancel_url: `${origin}/index.html?payment=cancel`,
+        success_url: success,
+        cancel_url: cancel,
         metadata: {
           userId: userId,
           email: email,
-          type: 'export_payment'
+          type: pType
         },
       });
 

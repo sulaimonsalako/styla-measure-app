@@ -20,22 +20,28 @@
 </head>
 <body>
   <!-- HEADER NAV -->
-  <nav class="navbar" style="border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-      <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 800; font-family: var(--font-outfit); font-size: 1.3rem; text-decoration: none; color: #fff;">
-        <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
+    <nav class="nav">
+    <div class="nav-inner">
+      <a href="/index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
         STYLA <span class="logo-accent">Measure</span>
       </a>
-      <div class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
-        <a href="index.html" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">Shopper Home</a>
-        <a href="brands.html" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; font-weight: 500;">For Brands</a>
+      <div id="auth-status-container" class="nav-actions" style="display: flex; align-items: center; gap: 1.5rem;">
+        <a href="/bridesmaid.html" class="nav-link" id="nav-link-bridesmaid" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Bridesmaid</a>
+        <a href="/brands.html" class="nav-link nav-link-brands" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
+        <a href="/blogs" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Blogs</a>
+        <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log In</button>
+        <div id="logged-in-status" style="display: none; align-items: center; gap: 16px;">
+          <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
+          <button id="btn-logout" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log out</button>
+        </div>
       </div>
     </div>
   </nav>
 
   <div class="container" style="max-width: 800px; margin: 3rem auto; padding: 0 1.5rem; box-sizing: border-box;">
     <div style="text-align: center; margin-bottom: 2rem;">
-      <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #ffffff 40%, var(--accent-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Merchant Admin Tools</h2>
+      <h2 style="font-family: var(--font-outfit); font-size: 2.2rem; font-weight: 800; margin: 0; color: #ffffff;">Merchant Admin Tools</h2>
       <p style="margin: 6px 0 0 0; font-size: 0.95rem; color: var(--text-secondary);">Legacy Size Chart & Sizing Analysis Uploader</p>
     </div>
 
@@ -147,5 +153,50 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
   <script src="decoder.js?v=20260621"></script>
+<script>
+  (function() {
+    try {
+      const path = window.location.pathname;
+      if (path.includes('bridesmaid.html')) {
+        const link = document.getElementById('nav-link-bridesmaid');
+        if (link) {
+          link.classList.add('active');
+          link.style.color = 'var(--accent-light)';
+        }
+      }
+    } catch(e) {}
+  })();
+</script>
+<script>
+  (function() {
+    try {
+      const token = localStorage.getItem('sb-tneflxtpmzodauygtslk-auth-token');
+      if (token) {
+        document.body.classList.add('user-logged-in');
+        const showLoginBtn = document.getElementById('btn-show-login');
+        const loggedInStatus = document.getElementById('logged-in-status');
+        if (showLoginBtn) showLoginBtn.style.display = 'none';
+        if (loggedInStatus) loggedInStatus.style.display = 'flex';
+      }
+      
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', function() {
+          localStorage.clear();
+          window.location.href = '/index.html';
+        });
+      }
+      
+      const btnLogin = document.getElementById('btn-show-login');
+      if (btnLogin) {
+        btnLogin.addEventListener('click', function() {
+          window.location.href = '/index.html?login=true';
+        });
+      }
+    } catch(e) {
+      console.warn("Auth sync failed", e);
+    }
+  })();
+</script>
 </body>
 </html>

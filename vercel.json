@@ -40,6 +40,14 @@
     {
       "source": "/api/3dlook/webhook",
       "destination": "/api/3dlook-api?route=webhook"
+    },
+    {
+      "source": "/blogs",
+      "destination": "https://journal-five-sand.vercel.app/blogs"
+    },
+    {
+      "source": "/blogs/:path*",
+      "destination": "https://journal-five-sand.vercel.app/blogs/:path*"
     }
   ]
 }
