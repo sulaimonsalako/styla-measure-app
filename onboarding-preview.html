@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Styla — Onboarding Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b0b14; --card:#14142400; --panel:#16162a; --panel2:#121222;
+    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+    --text:#ffffff; --muted:#cbd5e1; --dim:#8b90a0;
+    --pink:#ff2a75; --pink2:#ff5c96; --pinkdim:rgba(255,42,117,0.12);
+    --serif:'EB Garamond',serif; --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;
+    background-image:radial-gradient(circle at 12% 15%,rgba(255,42,117,0.06),transparent 40%),radial-gradient(circle at 88% 85%,rgba(139,92,246,0.05),transparent 40%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .frame{width:100%;max-width:900px;background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:26px 28px;box-shadow:0 30px 60px rgba(0,0,0,0.4)}
+  .bar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .step-txt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700}
+  .time-txt{font-size:11.5px;color:var(--dim)}
+  .prog{height:6px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;margin:8px 0 22px}
+  .prog i{display:block;height:100%;width:8%;background:linear-gradient(90deg,var(--pink),var(--pink2));border-radius:6px;transition:width .35s ease}
+  .grid{display:grid;grid-template-columns:1.45fr 1fr;gap:24px;align-items:start}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}.panel-side{order:-1}}
+  h2.q{font-family:var(--serif);font-size:1.9rem;font-weight:700;line-height:1.15;margin-bottom:6px}
+  p.hint{font-size:.9rem;color:var(--muted);margin-bottom:20px}
+  .cards{display:grid;gap:10px}
+  .cards.two{grid-template-columns:1fr 1fr}
+  .choice{border:1.5px solid var(--border);background:var(--panel2);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
+  .choice:hover{border-color:var(--border2)}
+  .choice.sel{border-color:var(--pink);background:var(--pinkdim);box-shadow:0 0 0 3px rgba(255,42,117,0.15)}
+  .choice .emoji{font-size:1.5rem}
+  .choice .ct{font-weight:600;font-size:.98rem}
+  .choice .cs{display:block;font-weight:400;font-size:.8rem;color:var(--dim);margin-top:2px}
+  .slider-wrap{margin-bottom:8px}
+  .slider-lbl{display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:10px}
+  .slider-lbl b{color:var(--pink2)}
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:4px;outline:none;accent-color:var(--pink)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--pink);cursor:pointer;border:3px solid #1b1b2e}
+  .toggle{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:6px}
+  .toggle button{background:transparent;border:none;color:var(--muted);padding:5px 12px;font-size:.78rem;cursor:pointer;font-family:var(--sans)}
+  .toggle button.on{background:var(--pink);color:#fff}
+  select,input[type=number],input[type=email],input[type=password]{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.95rem;font-family:var(--sans);outline:none}
+  select:focus,input:focus{border-color:var(--pink)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label.fld{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .skip{background:none;border:none;color:var(--dim);font-size:.82rem;text-decoration:underline;cursor:pointer;margin-top:14px;font-family:var(--sans)}
+  .skipnote{display:none;background:var(--pinkdim);border:1px solid rgba(255,42,117,0.25);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--muted);margin-top:12px}
+  .nav{display:flex;gap:12px;margin-top:22px}
+  .btn{border:none;border-radius:12px;padding:13px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:var(--sans);transition:transform .1s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{flex:2;background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff}
+  .btn-ghost{flex:1;background:transparent;border:1px solid var(--border);color:var(--text)}
+  /* outcome panel */
+  .panel-side{background:var(--panel2);border:1px solid var(--border);border-radius:16px;padding:18px}
+  .panel-lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:700;margin-bottom:14px}
+  .match{display:flex;align-items:center;justify-content:space-between;font-size:.86rem;font-weight:600;padding:9px 0;border-bottom:1px solid var(--border)}
+  .match span{color:var(--pink2);font-weight:700}
+  .match.lock{color:var(--dim);font-weight:500}
+  .meter{margin-top:14px;font-size:.78rem;color:var(--muted)}
+  .meter b{color:var(--text)}
+  .mbar{height:6px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-top:6px}
+  .mbar i{display:block;height:100%;width:15%;background:linear-gradient(90deg,var(--pink),var(--pink2));transition:width .4s ease}
+  /* results */
+  #s-results .reveal-list .match{font-size:.95rem}
+  .save-box{margin-top:18px;background:var(--pinkdim);border:1px solid rgba(255,42,117,0.25);border-radius:14px;padding:18px;text-align:center}
+  .save-box h3{font-family:var(--serif);font-size:1.3rem;margin-bottom:6px}
+  .save-box p{font-size:.85rem;color:var(--muted);margin-bottom:14px}
+  .oauth{display:flex;flex-direction:column;gap:8px}
+  .oauth button{background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:11px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:var(--sans)}
+  .oauth button.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .badgeline{margin-top:14px;font-size:.8rem;color:var(--dim);display:flex;align-items:center;gap:6px}
+  .hidden{display:none}
+  .note-banner{background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:10px;padding:8px 12px;font-size:.72rem;color:var(--dim);margin-bottom:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="note-banner">PROTOTYPE — clickable preview of the reworked onboarding. No data is saved.</div>
+  <div class="bar-top">
+    <span class="step-txt" id="stepTxt">Getting started</span>
+    <span class="time-txt" id="timeTxt">~2 min</span>
+  </div>
+  <div class="prog"><i id="progBar"></i></div>
+
+  <div class="grid">
+    <!-- LEFT: question column -->
+    <div id="qcol">
+
+      <!-- WHO -->
+      <div class="screen" id="s-who">
+        <h2 class="q">Who are you finding the fit for?</h2>
+        <p class="hint">We'll tailor the questions and the brands we show you.</p>
+        <div class="cards two">
+          <div class="choice" data-val="me" onclick="pick(this,'audience')"><span class="emoji">🧍</span><span class="ct">Just me<span class="cs">everyday shopping</span></span></div>
+          <div class="choice" data-val="party" onclick="pick(this,'audience')"><span class="emoji">💍</span><span class="ct">My wedding party<span class="cs">bridesmaids & suits</span></span></div>
+        </div>
+      </div>
+
+      <!-- FIT -->
+      <div class="screen hidden" id="s-fit">
+        <h2 class="q">Which fit should we use?</h2>
+        <p class="hint">This sets how brands size you. You can change it later.</p>
+        <div class="cards two">
+          <div class="choice" data-val="women" onclick="pick(this,'gender')"><span class="emoji">👗</span><span class="ct">Women's fit</span></div>
+          <div class="choice" data-val="men" onclick="pick(this,'gender')"><span class="emoji">👔</span><span class="ct">Men's fit</span></div>
+        </div>
+      </div>
+
+      <!-- HEIGHT -->
+      <div class="screen hidden" id="s-height">
+        <h2 class="q">How tall are you?</h2>
+        <p class="hint">A rough figure is fine — drag to your best guess.</p>
+        <div class="slider-wrap">
+          <div class="slider-lbl"><span>Height</span><b id="hLbl">5'4" (64 in)</b></div>
+          <input type="range" min="54" max="84" value="64" id="hRange" oninput="updH()" />
+        </div>
+        <div class="toggle"><button class="on" id="hIn" onclick="hUnit('in')">ft / in</button><button id="hCm" onclick="hUnit('cm')">cm</button></div>
+      </div>
+
+      <!-- WEIGHT -->
+      <div class="screen hidden" id="s-weight">
+        <h2 class="q">And roughly your weight?</h2>
+        <p class="hint">This helps us estimate how garments sit — nobody sees it but you.</p>
+        <div class="slider-wrap">
+          <div class="slider-lbl"><span>Weight</span><b id="wLbl">150 lb</b></div>
+          <input type="range" min="90" max="320" value="150" id="wRange" oninput="updW()" />
+        </div>
+        <div class="toggle"><button class="on" id="wLb" onclick="wUnit('lb')">lb</button><button id="wKg" onclick="wUnit('kg')">kg</button></div>
+      </div>
+
+      <!-- AGE -->
+      <div class="screen hidden" id="s-age">
+        <h2 class="q">Which age range are you in?</h2>
+        <p class="hint">Optional, but it sharpens the fit. Tap one or skip.</p>
+        <div class="cards two">
+          <div class="choice" data-val="18-24" onclick="pick(this,'age')"><span class="ct">18–24</span></div>
+          <div class="choice" data-val="25-34" onclick="pick(this,'age')"><span class="ct">25–34</span></div>
+          <div class="choice" data-val="35-44" onclick="pick(this,'age')"><span class="ct">35–44</span></div>
+          <div class="choice" data-val="45+" onclick="pick(this,'age')"><span class="ct">45+</span></div>
+        </div>
+        <button class="skip" onclick="skip('age')">Skip — I'd rather not say</button>
+        <div class="skipnote" id="sn-age"></div>
+      </div>
+
+      <!-- WOMEN: BRA -->
+      <div class="screen hidden" id="s-bra">
+        <h2 class="q">What's your usual bra size?</h2>
+        <p class="hint">This is our best single clue for your upper-body fit.</p>
+        <div class="row2">
+          <div><label class="fld">Band</label>
+            <select id="braBand"><option value="">Not sure</option><option>30</option><option>32</option><option selected>34</option><option>36</option><option>38</option><option>40</option><option>42</option><option>44</option></select></div>
+          <div><label class="fld">Cup</label>
+            <select id="braCup"><option value="">Not sure</option><option>AA</option><option>A</option><option selected>B</option><option>C</option><option>D</option><option>DD</option><option>DDD/E</option><option>F+</option></select></div>
+        </div>
+        <button class="skip" onclick="skip('bra')">I don't know my bra size</button>
+        <div class="skipnote" id="sn-bra"></div>
+      </div>
+
+      <!-- WOMEN: WAIST -->
+      <div class="screen hidden" id="s-waistw">
+        <h2 class="q">Roughly your waist?</h2>
+        <p class="hint">Your natural waist, or the waist size of jeans that fit you well.</p>
+        <div class="slider-wrap">
+          <div class="slider-lbl"><span>Waist</span><b id="wwLbl">28 in</b></div>
+          <input type="range" min="20" max="50" value="28" id="wwRange" oninput="document.getElementById('wwLbl').textContent=this.value+' in'" />
+        </div>
+        <button class="skip" onclick="skip('waistw')">Not sure — estimate it for me</button>
+        <div class="skipnote" id="sn-waistw"></div>
+      </div>
+
+      <!-- WOMEN: HIPS FIT -->
+      <div class="screen hidden" id="s-hips">
+        <h2 class="q">When something fits your hips, how's the waist?</h2>
+        <p class="hint">No wrong answer — this just tells brands how to size you.</p>
+        <div class="cards">
+          <div class="choice" data-val="loose" onclick="pick(this,'hips')"><span class="ct">Looser — I usually cinch or take it in</span></div>
+          <div class="choice" data-val="right" onclick="pick(this,'hips')"><span class="ct">About right — fits both</span></div>
+          <div class="choice" data-val="snug" onclick="pick(this,'hips')"><span class="ct">Snug — the waist is the tight part</span></div>
+        </div>
+      </div>
+
+      <!-- MEN: WAIST -->
+      <div class="screen hidden" id="s-waistm">
+        <h2 class="q">What's your pant waist size?</h2>
+        <p class="hint">The number on your jeans or trousers — most guys know this one.</p>
+        <div class="slider-wrap">
+          <div class="slider-lbl"><span>Waist</span><b id="wmLbl">32 in</b></div>
+          <input type="range" min="26" max="54" value="32" id="wmRange" oninput="document.getElementById('wmLbl').textContent=this.value+' in'" />
+        </div>
+        <button class="skip" onclick="skip('waistm')">Not sure — estimate it for me</button>
+        <div class="skipnote" id="sn-waistm"></div>
+      </div>
+
+      <!-- MEN: SHIRT -->
+      <div class="screen hidden" id="s-shirt">
+        <h2 class="q">Your usual shirt size?</h2>
+        <p class="hint">However you normally buy — letter or collar size.</p>
+        <select id="shirt"><option value="">Not sure</option><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+        <button class="skip" onclick="skip('shirt')">Skip this one</button>
+        <div class="skipnote" id="sn-shirt"></div>
+      </div>
+
+      <!-- MEN: CHEST FIT -->
+      <div class="screen hidden" id="s-chest">
+        <h2 class="q">When a shirt fits your chest, how's the waist?</h2>
+        <p class="hint">This tells us your build so jackets and shirts sit right.</p>
+        <div class="cards">
+          <div class="choice" data-val="loose" onclick="pick(this,'chest')"><span class="ct">Loose — I've got room to spare</span></div>
+          <div class="choice" data-val="right" onclick="pick(this,'chest')"><span class="ct">Just right</span></div>
+          <div class="choice" data-val="snug" onclick="pick(this,'chest')"><span class="ct">Snug — the waist is the tight part</span></div>
+        </div>
+      </div>
+
+      <!-- MEN: NECK -->
+      <div class="screen hidden" id="s-neck">
+        <h2 class="q">Your collar size?</h2>
+        <p class="hint">For dress shirts and suits. Skip if you're not sure.</p>
+        <select id="neck"><option value="">Not sure</option><option>14</option><option>14.5</option><option>15</option><option selected>15.5</option><option>16</option><option>16.5</option><option>17</option><option>17.5</option><option>18</option></select>
+        <button class="skip" onclick="skip('neck')">I don't know my collar size</button>
+        <div class="skipnote" id="sn-neck"></div>
+      </div>
+
+      <!-- MEN: JACKET (bonus) -->
+      <div class="screen hidden" id="s-jacket">
+        <h2 class="q">Know your jacket size? <span style="color:var(--dim);font-size:1rem;font-weight:400">(optional)</span></h2>
+        <p class="hint">If you do, it sharpens shoulders and length a lot. If not, skip — no problem.</p>
+        <div class="row2">
+          <div><label class="fld">Chest number</label>
+            <select id="jkNum"><option value="">—</option><option>36</option><option>38</option><option selected>40</option><option>42</option><option>44</option><option>46</option><option>48</option></select></div>
+          <div><label class="fld">Length</label>
+            <select id="jkLen"><option value="">—</option><option>Short (S)</option><option selected>Regular (R)</option><option>Long (L)</option></select></div>
+        </div>
+        <button class="skip" onclick="skip('jacket')">I don't know it — skip</button>
+        <div class="skipnote" id="sn-jacket"></div>
+      </div>
+
+      <!-- INSEAM (shared, optional) -->
+      <div class="screen hidden" id="s-inseam">
+        <h2 class="q">Last one — inseam?</h2>
+        <p class="hint">The inside-leg length of trousers that fit. Or skip and we'll estimate from your height.</p>
+        <label class="fld">Inseam (inches)</label>
+        <input type="number" id="inseam" placeholder="e.g., 30" />
+        <button class="skip" onclick="skip('inseam')">Skip — estimate from my height</button>
+        <div class="skipnote" id="sn-inseam"></div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="screen hidden" id="s-results">
+        <h2 class="q">Here are the brands cut for you.</h2>
+        <p class="hint">Ranked by how well they fit your proportions. Save your profile to see them all and get your sizes.</p>
+        <div class="reveal-list" id="finalMatches"></div>
+        <div class="save-box">
+          <h3>Save your profile</h3>
+          <p>Create your free account to save your fit profile — then unlock your full brand matches, your size in each, and the bookmarklet from your dashboard.</p>
+          <div class="oauth">
+            <input type="email" placeholder="Email address" />
+            <input type="password" placeholder="Create a password" />
+            <button onclick="goDashboard()">Create account &amp; go to my dashboard</button>
+          </div>
+          <p style="margin-top:12px;font-size:.8rem;color:var(--dim)">Already have an account? <a style="color:var(--pink2);cursor:pointer">Log in</a></p>
+        </div>
+        <div class="badgeline">🔒 No tape measure · no photos · free</div>
+      </div>
+
+      <!-- DASHBOARD (post sign-up — the paywall lives here) -->
+      <div class="screen hidden" id="s-dashboard">
+        <h2 class="q">Your fit dashboard</h2>
+        <p class="hint">Saved to your account. This is where you unlock every brand that fits your proportions.</p>
+        <div style="display:flex;gap:14px;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:18px">
+          <div style="font-size:1.5rem">✅</div>
+          <div><div style="font-weight:700">Your fit profile is ready</div><div style="font-size:.82rem;color:var(--dim)">Waist, chest, hip, inseam and more — estimated and saved.</div></div>
+        </div>
+        <div id="dashLocked">
+          <div class="panel-lbl" style="margin-bottom:10px">Brands that fit your proportions</div>
+          <div class="match" id="dashTopRow">Your top match<span>96%</span></div>
+          <div class="match lock">••••••••<span>🔒</span></div>
+          <div class="match lock">••••••••<span>🔒</span></div>
+          <div class="match lock" style="border-bottom:none">+ more matches<span>🔒</span></div>
+          <div class="save-box">
+            <h3>Unlock all your matches</h3>
+            <p>See every brand ranked by fit, your exact size in each, and the STYLA bookmarklet — one simple payment, no subscription.</p>
+            <button class="btn btn-primary" style="width:100%" onclick="unlockMatches()">Unlock everything — $9.99</button>
+            <div style="font-size:.75rem;color:var(--dim);margin-top:10px">🔒 Secure one-time payment via Stripe · no recurring charges</div>
+          </div>
+        </div>
+        <div id="dashUnlocked" class="hidden">
+          <div class="panel-lbl" style="margin-bottom:10px">Your brand matches</div>
+          <div id="dashFullList"></div>
+          <div style="background:var(--pinkdim);border:1px solid rgba(255,42,117,0.25);border-radius:12px;padding:14px;margin-top:16px;font-size:.85rem">✓ Unlocked. Your STYLA bookmarklet is now active — click it on any store's site to see your size instantly.</div>
+        </div>
+      </div>
+
+      <!-- NAV -->
+      <div class="nav" id="navRow">
+        <button class="btn btn-ghost hidden" id="backBtn" onclick="back()">Back</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="next()">Continue</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: outcome panel -->
+    <div class="panel-side" id="panelSide">
+      <div class="panel-lbl">Matches so far</div>
+      <div id="matchList"></div>
+      <div class="meter"><b id="meterTxt">Answer a few questions to start matching</b>
+        <div class="mbar"><i id="meterBar"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var state = { audience:null, gender:null, age:null, hips:null, chest:null };
+  var flow = ['who','fit']; // extended once gender chosen
+  var baseAfterFit = ['height','weight','age'];
+  var womenScreens = ['bra','waistw','hips','inseam'];
+  var menScreens = ['waistm','shirt','chest','neck','jacket','inseam'];
+  var idx = 0;
+  var answered = 0;          // how many steps engaged (for panel momentum)
+  var totalRequiredByGender = { women:6, men:8 }; // approx required incl shared
+
+  var brandsWomen = [['Birdy Grey',96],['Jenny Yoo',93],['Reformation',90],['Azazie',88],['Aritzia',85],['Everlane',82]];
+  var brandsMen  = [['Indochino',95],['Bonobos',92],['The Black Tux',90],['J.Crew',87],['Suitsupply',85],['Todd Snyder',82]];
+
+  function screenId(name){ return 's-' + name; }
+
+  function buildFlow(){
+    var g = state.gender;
+    var tail = (g === 'men') ? menScreens : womenScreens;
+    flow = ['who','fit'].concat(baseAfterFit, tail, ['results']);
+  }
+
+  function show(){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.add('hidden'); });
+    var name = flow[idx];
+    document.getElementById(screenId(name)).classList.remove('hidden');
+    // progress + labels
+    var pct = Math.round((idx)/(flow.length-1)*100);
+    document.getElementById('progBar').style.width = Math.max(8,pct) + '%';
+    var stepNum = Math.min(idx+1, flow.length);
+    document.getElementById('stepTxt').textContent = (name==='results') ? 'Your matches' : ('Step ' + (idx+1) + ' of ' + flow.length);
+    document.getElementById('timeTxt').textContent = (name==='results') ? 'Done 🎉' : ('~' + Math.max(1, Math.ceil((flow.length-1-idx)*0.25)) + ' min');
+    // nav visibility
+    document.getElementById('backBtn').classList.toggle('hidden', idx===0);
+    document.getElementById('nextBtn').classList.toggle('hidden', name==='results');
+    // panel hidden on results (matches shown inline)
+    document.getElementById('panelSide').style.display = (name==='results') ? 'none' : '';
+    if(name==='results'){ renderFinal(); }
+    updatePanel();
+  }
+
+  function next(){
+    var name = flow[idx];
+    // require a choice on the pick screens
+    if((name==='who'||name==='fit'||name==='hips'||name==='chest') && !pickedOn(name)){
+      flash(); return;
+    }
+    if(name==='fit'){ buildFlow(); }
+    if(idx < flow.length-1){ idx++; answered++; show(); }
+  }
+  function back(){ if(idx>0){ idx--; show(); } }
+
+  function pickedOn(name){
+    if(name==='who') return !!state.audience;
+    if(name==='fit') return !!state.gender;
+    if(name==='hips') return !!state.hips;
+    if(name==='chest') return !!state.chest;
+    return true;
+  }
+  function flash(){
+    document.getElementById('nextBtn').animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'translateX(0)'}],{duration:200});
+  }
+
+  function pick(el, key){
+    var group = el.parentElement.querySelectorAll('.choice');
+    group.forEach(function(c){ c.classList.remove('sel'); });
+    el.classList.add('sel');
+    state[key] = el.getAttribute('data-val');
+    // auto-advance on the single-choice routing screens for snappiness
+    if(key==='audience' || key==='gender'){ setTimeout(next, 180); }
+  }
+
+  function skip(key){
+    var note = document.getElementById('sn-'+key);
+    if(note){ note.style.display='block'; note.textContent = "No problem — you can add this in your dashboard anytime. It makes your matches more accurate."; }
+    setTimeout(next, 650);
+  }
+
+  // sliders
+  function updH(){
+    var v = +document.getElementById('hRange').value;
+    if(hMode==='in'){ var ft=Math.floor(v/12), inch=v%12; document.getElementById('hLbl').textContent = ft+"'"+inch+'" ('+v+' in)'; }
+    else { document.getElementById('hLbl').textContent = Math.round(v*2.54)+' cm'; }
+  }
+  var hMode='in';
+  function hUnit(m){ hMode=m; document.getElementById('hIn').classList.toggle('on',m==='in'); document.getElementById('hCm').classList.toggle('on',m==='cm'); updH(); }
+  function updW(){
+    var v=+document.getElementById('wRange').value;
+    document.getElementById('wLbl').textContent = (wMode==='lb') ? v+' lb' : Math.round(v*0.4536)+' kg';
+  }
+  var wMode='lb';
+  function wUnit(m){ wMode=m; document.getElementById('wLb').classList.toggle('on',m==='lb'); document.getElementById('wKg').classList.toggle('on',m==='kg'); updW(); }
+
+  // outcome panel
+  function updatePanel(){
+    var g = state.gender || 'women';
+    var brands = (g==='men') ? brandsMen : brandsWomen;
+    var total = totalRequiredByGender[g] || 6;
+    var pct = Math.min(100, Math.round(answered/total*100));
+    var html='';
+    if(answered<=1){
+      html = '<div class="match lock">Your top match<span>🔒</span></div>';
+    } else {
+      var topPct = Math.min(brands[0][1], 62 + Math.round(pct*0.34)); // refines as they answer
+      html = '<div class="match">'+brands[0][0]+'<span>'+topPct+'%</span></div>';
+      for(var i=1;i<4;i++){ html += '<div class="match lock">••••••••<span>🔒</span></div>'; }
+      html += '<div class="match lock" style="border-bottom:none">+ more matches<span>🔒</span></div>';
+    }
+    document.getElementById('matchList').innerHTML = html;
+    document.getElementById('meterBar').style.width = Math.max(15,pct)+'%';
+    document.getElementById('meterTxt').innerHTML = (pct>=100) ? '<b>Locked in</b> — we\'ve got what we need' : '<b>Getting more accurate</b> — '+pct+'% there';
+  }
+
+  // Turn the answers into a real measurement profile (the body index input).
+  function computeProfile(){
+    var g = state.gender || 'women';
+    var height = +document.getElementById('hRange').value;   // inches
+    var weight = +document.getElementById('wRange').value;   // lb
+    var bmi = (weight * 703) / (height * height);
+    var p = { gender:g, height:height, weight:weight, age:state.age || null };
+    if(g === 'women'){
+      var band = parseFloat(document.getElementById('braBand').value) || 34;
+      var cup = document.getElementById('braCup').value || 'B';
+      var cupMod = ({AA:0.5,A:1,B:2,C:3,D:4,DD:5,'DDD/E':6,'F+':7})[cup]; if(cupMod==null) cupMod = 2;
+      p.chest = band + cupMod;
+      p.waist = +document.getElementById('wwRange').value;
+      var drop = state.hips === 'loose' ? 6 : state.hips === 'snug' ? 1 : 3.5; // hip-to-waist
+      p.hips = p.waist + drop + 2 + bmi*0.2;
+      p.shoulder = 10 + height*0.085;
+      var iw = document.getElementById('inseam').value; p.inseam = iw ? +iw : height*0.45;
+    } else {
+      p.waist = +document.getElementById('wmRange').value;
+      var shirt = document.getElementById('shirt').value;
+      var chest = ({XS:35,S:37,M:40,L:43,XL:46,XXL:49})[shirt] || (p.waist + 6);
+      if(state.chest === 'loose') chest += 1.5;   // roomy chest = bigger drop
+      if(state.chest === 'snug')  chest -= 1.5;
+      p.chest = chest;
+      p.neck = parseFloat(document.getElementById('neck').value) || (12.5 + (chest-38)*0.15);
+      p.hips = p.waist + 2 + bmi*0.15;
+      p.shoulder = 12 + height*0.08 + (chest - p.waist)*0.15;
+      var jk = parseFloat(document.getElementById('jkNum').value);
+      if(jk) p.chest = (p.chest + jk) / 2;        // blend in jacket chest if known
+      var im = document.getElementById('inseam').value; p.inseam = im ? +im : height*0.44;
+    }
+    ['chest','waist','hips','shoulder','inseam','neck'].forEach(function(k){ if(p[k]!=null) p[k]=Math.round(p[k]*10)/10; });
+    return p;
+  }
+
+  // Show the top match — real from /api/rank-brands when available, demo fallback otherwise.
+  async function renderFinal(){
+    var g = state.gender || 'women';
+    var demo = (g==='men') ? brandsMen : brandsWomen;
+    var topName = demo[0][0], topPct = demo[0][1], topSize = '', lockedCount = demo.length - 1;
+    try {
+      var profile = computeProfile();
+      var resp = await fetch('/api/rank-brands', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ profile: profile, limit: 20 })
+      });
+      if(resp.ok){
+        var data = await resp.json();
+        if(data.matches && data.matches.length){
+          topName = data.matches[0].brand;
+          topPct = data.matches[0].score;
+          topSize = data.matches[0].recommended_size;
+          lockedCount = data.matches.length - 1;
+        }
+      }
+    } catch(e){ /* offline / not deployed -> demo fallback */ }
+    var html = '<div class="match">'+topName+'<span>'+(topSize ? topSize+' · ' : '')+topPct+'%</span></div>';
+    for(var i=0;i<Math.max(1,lockedCount);i++){ html += '<div class="match lock">••••••••<span>🔒</span></div>'; }
+    document.getElementById('finalMatches').innerHTML = html;
+  }
+
+  function goDashboard(){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.add('hidden'); });
+    document.getElementById('s-dashboard').classList.remove('hidden');
+    document.getElementById('stepTxt').textContent = 'Your dashboard';
+    document.getElementById('timeTxt').textContent = 'Saved ✓';
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('backBtn').classList.add('hidden');
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('panelSide').style.display = 'none';
+    var g = state.gender || 'women'; var brands = (g==='men') ? brandsMen : brandsWomen;
+    document.getElementById('dashTopRow').innerHTML = brands[0][0] + '<span>'+brands[0][1]+'%</span>';
+  }
+  function unlockMatches(){
+    var g = state.gender || 'women'; var brands = (g==='men') ? brandsMen : brandsWomen;
+    var html='';
+    for(var i=0;i<brands.length;i++){ html += '<div class="match">'+brands[i][0]+'<span>'+brands[i][1]+'%</span></div>'; }
+    document.getElementById('dashFullList').innerHTML = html;
+    document.getElementById('dashLocked').classList.add('hidden');
+    document.getElementById('dashUnlocked').classList.remove('hidden');
+  }
+
+  // init
+  updH(); updW(); show();
+</script>
+</body>
+</html>
