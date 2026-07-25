@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find your size · Styla</title>
+  <meta name="robots" content="noindex" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#0b0b14;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;}
+    body{font-family:var(--body);background:var(--bg);color:var(--white);padding:1.5rem;display:flex;flex-direction:column;}
+    .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+    .brandmark{display:flex;align-items:center;gap:8px;font-family:var(--head);font-weight:700;letter-spacing:2px;font-size:1.1rem;}
+    .brandmark img{height:26px;width:26px;border-radius:50%;}
+    .x{background:none;border:none;color:var(--dim);font-size:1.5rem;cursor:pointer;line-height:1;}
+    h2{font-family:var(--head);font-size:1.6rem;font-weight:700;line-height:1.15;margin-bottom:0.4rem;}
+    p.sub{color:var(--muted);font-size:0.92rem;margin-bottom:1.3rem;}
+    .screen{display:none;flex:1;flex-direction:column;} .screen.on{display:flex;}
+    .btn{display:block;width:100%;border:none;cursor:pointer;font-family:var(--body);font-weight:700;border-radius:100px;padding:14px;font-size:0.98rem;transition:transform .12s;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px rgba(255,42,117,0.25);}
+    .btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border);margin-top:0.7rem;}
+    .btn-sm{padding:10px;font-size:0.9rem;}
+    label{display:block;font-size:0.8rem;color:var(--muted);margin:0.9rem 0 0.4rem;}
+    input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:#fff;font-size:0.95rem;font-family:var(--body);}
+    input:focus,select:focus{outline:none;border-color:var(--pink);}
+    input[type=range]{padding:0;accent-color:var(--pink);}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;}
+    .seg{display:flex;gap:0.5rem;margin-top:0.3rem;}
+    .seg button{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:9px;font-size:0.85rem;cursor:pointer;font-family:var(--body);}
+    .seg button.on{border-color:var(--pink);color:#fff;background:rgba(255,42,117,0.12);}
+    .rangelbl{font-size:0.82rem;color:var(--dim);float:right;}
+    .msg{font-size:0.84rem;min-height:1em;margin-top:0.6rem;}
+    .spacer{flex:1;}
+    .foot{color:var(--dim);font-size:0.8rem;text-align:center;margin-top:0.9rem;}
+    .foot a,.linky{color:var(--pink);font-weight:600;cursor:pointer;}
+    /* Result */
+    .sizebox{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.8rem;text-align:center;margin-bottom:1.2rem;}
+    .sizebox .lbl{font-size:0.78rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);}
+    .sizebox .sz{font-family:var(--head);font-size:3.6rem;font-weight:700;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .sizebox .fit{color:var(--muted);font-size:0.9rem;}
+    .loader{color:var(--dim);font-size:0.9rem;text-align:center;padding:2rem 0;}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brandmark"><img src="/logo.png" alt="Styla" /> STYLA</div>
+    <button class="x" onclick="parent.postMessage('styla-close','*')">&times;</button>
+  </div>
+
+  <!-- START -->
+  <div class="screen on" id="s-start">
+    <h2>Find your size in <span id="brandName">this store</span></h2>
+    <p class="sub">Get your correct size here in under two minutes — no tape measure, no guessing.</p>
+    <button class="btn btn-primary" onclick="go('questions')">Answer a few quick questions</button>
+    <button class="btn btn-ghost" onclick="go('login')">I have a Styla account</button>
+    <div class="spacer"></div>
+    <p class="foot">Powered by Styla · your size, everywhere</p>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="screen" id="s-login">
+    <h2>Welcome back</h2>
+    <p class="sub">Log in and we'll pull your saved fit profile.</p>
+    <label>Email</label><input type="email" id="li-email" autocomplete="email" />
+    <label>Password</label><input type="password" id="li-pass" autocomplete="current-password" />
+    <div class="msg" id="li-msg"></div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" onclick="doLogin()">Log in &amp; see my size</button>
+    <p class="foot"><span class="linky" onclick="go('start')">← back</span></p>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div class="screen" id="s-questions">
+    <h2>A few quick questions</h2>
+    <p class="sub">This is how Styla estimates your size — no measuring.</p>
+    <label>You're shopping for</label>
+    <div class="seg" id="seg-gender">
+      <button data-g="women" class="on" onclick="setG('women')">Women's</button>
+      <button data-g="men" onclick="setG('men')">Men's</button>
+    </div>
+
+    <label>Height <span class="rangelbl" id="hLbl">5'6"</span></label>
+    <input type="range" min="54" max="82" value="66" id="hRange" oninput="updH()" />
+    <label>Weight <span class="rangelbl" id="wLbl">150 lb</span></label>
+    <input type="range" min="90" max="330" value="150" id="wRange" oninput="document.getElementById('wLbl').textContent=this.value+' lb'" />
+
+    <!-- women -->
+    <div id="q-women">
+      <div class="row">
+        <div><label>Bra band</label><select id="braBand"><option>30</option><option>32</option><option selected>34</option><option>36</option><option>38</option><option>40</option><option>42</option></select></div>
+        <div><label>Cup</label><select id="braCup"><option>A</option><option selected>B</option><option>C</option><option>D</option><option>DD</option><option>F</option></select></div>
+      </div>
+      <label>Usual waist size (in) <span class="rangelbl" id="wwLbl">28 in</span></label>
+      <input type="range" min="22" max="48" value="28" id="wwRange" oninput="document.getElementById('wwLbl').textContent=this.value+' in'" />
+      <label>How do you like bottoms to fit at the hip?</label>
+      <div class="seg" id="seg-hips">
+        <button data-h="snug" onclick="setFit('hips','snug')">Fitted</button>
+        <button data-h="regular" class="on" onclick="setFit('hips','regular')">Regular</button>
+        <button data-h="loose" onclick="setFit('hips','loose')">Relaxed</button>
+      </div>
+    </div>
+
+    <!-- men -->
+    <div id="q-men" style="display:none;">
+      <label>Usual shirt size</label>
+      <select id="shirt"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+      <label>Usual waist size (in) <span class="rangelbl" id="wmLbl">32 in</span></label>
+      <input type="range" min="26" max="54" value="32" id="wmRange" oninput="document.getElementById('wmLbl').textContent=this.value+' in'" />
+      <label>How do you like tops to fit in the chest?</label>
+      <div class="seg" id="seg-chest">
+        <button data-c="snug" onclick="setFit('chest','snug')">Fitted</button>
+        <button data-c="regular" class="on" onclick="setFit('chest','regular')">Regular</button>
+        <button data-c="loose" onclick="setFit('chest','loose')">Relaxed</button>
+      </div>
+    </div>
+
+    <div class="msg" id="q-msg"></div>
+    <div class="spacer" style="min-height:1rem;"></div>
+    <button class="btn btn-primary" onclick="submitQuestions()">See my size</button>
+    <p class="foot"><span class="linky" onclick="go('start')">← back</span></p>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="s-result">
+    <div id="result-body"><div class="loader">Calculating your size…</div></div>
+  </div>
+
+  <script>
+    var SUPABASE_URL="https://tneflxtpmzodauygtslk.supabase.co";
+    var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    function el(id){return document.getElementById(id);}
+
+    var params=new URLSearchParams(location.search);
+    var BRAND=params.get('brand')||'';
+    var CATEGORY=params.get('category')||'';
+    var GENDER=(params.get('gender')||'women').toLowerCase();
+    if(BRAND) el('brandName').textContent=BRAND;
+
+    var state={gender:GENDER,hips:'regular',chest:'regular'};
+    var lastProfile=null;
+
+    function go(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));el('s-'+name).classList.add('on');}
+    function setG(g){state.gender=g;document.querySelectorAll('#seg-gender button').forEach(b=>b.classList.toggle('on',b.dataset.g===g));el('q-women').style.display=g==='women'?'':'none';el('q-men').style.display=g==='men'?'':'none';}
+    function setFit(key,val){state[key]=val;var seg=el('seg-'+key);seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',(b.dataset.h||b.dataset.c)===val));}
+    function updH(){var v=+el('hRange').value;var ft=Math.floor(v/12),inch=v%12;el('hLbl').textContent=ft+"'"+inch+'"';}
+    if(GENDER==='men') setG('men');
+
+    function computeProfile(){
+      var p={};var g=state.gender;
+      var height=+el('hRange').value;var weight=+el('wRange').value;
+      var bmi=(weight/(height*height))*703;
+      p.height=height;
+      if(g==='women'){
+        var band=parseFloat(el('braBand').value)||34;
+        var cup=el('braCup').value||'B';
+        var cupMod=({A:1,B:2,C:3,D:4,DD:5,F:6})[cup]||2;
+        p.chest=band+cupMod;
+        p.waist=+el('wwRange').value;
+        var drop=state.hips==='loose'?6:state.hips==='snug'?1:3.5;
+        p.hips=Math.round((p.waist+drop+2+bmi*0.2)*10)/10;
+        p.inseam=Math.round(height*0.45);
+      }else{
+        p.waist=+el('wmRange').value;
+        var shirt=el('shirt').value;
+        var chest=({XS:35,S:37,M:40,L:43,XL:46,XXL:49})[shirt]||(p.waist+6);
+        if(state.chest==='loose')chest+=1.5;if(state.chest==='snug')chest-=1.5;
+        p.chest=chest;
+        p.neck=Math.round((12.5+(chest-38)*0.15)*10)/10;
+        p.hips=Math.round((p.waist+2+bmi*0.15)*10)/10;
+        p.inseam=Math.round(height*0.44);
+      }
+      return p;
+    }
+
+    async function callSize(payload){
+      var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({brand:BRAND,category:CATEGORY,gender:state.gender},payload))});
+      return r.json();
+    }
+
+    async function doLogin(){
+      var email=el('li-email').value.trim();var pass=el('li-pass').value;var msg=el('li-msg');
+      if(!email||!pass){msg.style.color='#ff9db5';msg.textContent='Enter your email and password.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Logging in…';
+      var out=await sb.auth.signInWithPassword({email:email,password:pass});
+      if(out.error){msg.style.color='#ff9db5';msg.textContent=out.error.message||'Login failed.';return;}
+      go('result');el('result-body').innerHTML='<div class="loader">Calculating your size…</div>';
+      var token=out.data.session.access_token;
+      var res=await callSize({accessToken:token});
+      showResult(res,false);
+    }
+
+    async function submitQuestions(){
+      var p=computeProfile();lastProfile=p;
+      go('result');el('result-body').innerHTML='<div class="loader">Calculating your size…</div>';
+      var res=await callSize({profile:p});
+      showResult(res,true);
+    }
+
+    function showResult(res,guest){
+      if(res.error||!res.size){
+        el('result-body').innerHTML='<h2>Hmm.</h2><p class="sub">'+(res.error||'We couldn\'t find a size for this store yet.')+'</p><button class="btn btn-ghost" onclick="go(\'start\')">Try again</button>';
+        return;
+      }
+      var pct=res.score!=null?res.score+'% fit':'';
+      var html='<h2>Your size'+(BRAND?(' in '+BRAND):'')+'</h2>'
+        +'<div class="sizebox"><div class="lbl">Recommended size</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>';
+      if(guest){
+        html+='<p class="sub">Save this and see every other brand that fits you — free.</p>'
+          +'<label>Email</label><input type="email" id="ac-email" autocomplete="email" />'
+          +'<label>Password</label><input type="password" id="ac-pass" autocomplete="new-password" />'
+          +'<div class="msg" id="ac-msg"></div>'
+          +'<button class="btn btn-primary btn-sm" style="margin-top:0.8rem;" onclick="createAccount()">Save my size &amp; discover brands</button>'
+          +'<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">No thanks, close</span></p>';
+      }else{
+        html+='<a class="btn btn-primary" href="/dashboard.html" target="_blank" style="text-decoration:none;text-align:center;">See all my matches</a>'
+          +'<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
+      }
+      el('result-body').innerHTML=html;
+    }
+
+    async function createAccount(){
+      var email=el('ac-email').value.trim();var pass=el('ac-pass').value;var msg=el('ac-msg');
+      if(!email||!pass){msg.style.color='#ff9db5';msg.textContent='Enter an email and password.';return;}
+      if(pass.length<6){msg.style.color='#ff9db5';msg.textContent='Password must be at least 6 characters.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Creating your account…';
+      var p=lastProfile||{};
+      try{
+        // Stash for the dashboard to persist after email confirmation (same styla.ca origin).
+        if(p.chest)localStorage.setItem('styla_twin_chest',p.chest);
+        if(p.waist)localStorage.setItem('styla_twin_waist',p.waist);
+        if(p.hips)localStorage.setItem('styla_twin_hips',p.hips);
+        if(p.height)localStorage.setItem('styla_twin_height',p.height);
+        if(p.inseam)localStorage.setItem('styla_twin_inseam',p.inseam);
+        // Seed a guest record with the measurements.
+        await fetch('/api/store-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guest-init',username:email,manual_measurements:p})});
+      }catch(e){}
+      var out=await sb.auth.signUp({email:email,password:pass,options:{emailRedirectTo:SUPABASE_URL?'https://www.styla.ca/dashboard.html':undefined}});
+      if(out.error){msg.style.color='#ff9db5';msg.textContent=out.error.message||'Could not create account.';return;}
+      el('result-body').innerHTML='<h2>Check your email 📩</h2><p class="sub">We sent a confirmation link to <b>'+email+'</b>. Confirm it and your size — plus every brand that fits you — will be waiting in your dashboard.</p><button class="btn btn-ghost" onclick="parent.postMessage(\'styla-close\',\'*\')">Done</button>';
+    }
+  </script>
+</body>
+</html>
