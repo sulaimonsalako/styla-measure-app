@@ -15,6 +15,7 @@
   var brand = script.getAttribute('data-styla-brand') || '';
   var category = script.getAttribute('data-styla-category') || '';
   var gender = script.getAttribute('data-styla-gender') || '';
+  var chart = script.getAttribute('data-styla-chart') || '';   // optional explicit chart override
   var label = script.getAttribute('data-styla-label') || 'Find your size';
 
   function build() {
@@ -48,7 +49,9 @@
         iframe = document.createElement('iframe');
         var src = ORIGIN + '/widget.html?brand=' + encodeURIComponent(brand) +
           '&category=' + encodeURIComponent(category) +
-          '&gender=' + encodeURIComponent(gender);
+          '&gender=' + encodeURIComponent(gender) +
+          '&product=' + encodeURIComponent(location.href) +
+          (chart ? '&chart=' + encodeURIComponent(chart) : '');
         iframe.src = src;
         iframe.setAttribute('title', 'Styla size finder');
         iframe.style.cssText = [

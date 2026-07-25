@@ -14,7 +14,7 @@ export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { profile, accessToken, brand, brandId, category, gender } = req.body || {};
+    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId } = req.body || {};
 
     // Logged-in shopper: load their saved profile with the service-role client.
     if (accessToken && !profile) {
@@ -42,6 +42,40 @@ export default async function widgetSize(req, res) {
       neck: profile.neck,
     };
 
+    // Helper: normalize a chart row + run the engine, returning the API payload.
+    function resultFor(cd, resolvedBy) {
+      const norm = normalizeChart(cd || {}, { flatMeasures: (cd && cd.flat_measures) || [] });
+      if (!norm.sizes.length) return null;
+      const r = runSizingEngine(user, norm);
+      return {
+        size: r.recommended_size,
+        score: r.fit_match_score,
+        spectrum: r.fit_spectrum,
+        category: norm.garment_category,
+        fits: !r.warning,
+        resolvedBy,
+      };
+    }
+
+    // 1) EXACT CHART OVERRIDE (for the minority of brands with per-design charts):
+    //    explicit chartId, or a product URL mapped in products_cache -> size_chart_id.
+    let overrideChartId = chartId || null;
+    if (!overrideChartId && productUrl) {
+      const { data: pc } = await supabaseAdmin
+        .from('products_cache').select('size_chart_id').eq('url', productUrl).maybeSingle();
+      if (pc && pc.size_chart_id) overrideChartId = pc.size_chart_id;
+    }
+    if (overrideChartId) {
+      const { data: chart } = await supabaseAdmin
+        .from('size_charts').select('id, chart_data').eq('id', overrideChartId).maybeSingle();
+      if (chart) {
+        const out = resultFor(chart.chart_data, 'product');
+        if (out) return res.status(200).json(out);
+      }
+    }
+
+    // 2) DEFAULT: brand + category (category comes from the store platform —
+    //    Shopify product.type / collection, Woo category — passed by the widget).
     // Resolve the brand id from a name if needed.
     let bId = brandId;
     if (!bId && brand) {

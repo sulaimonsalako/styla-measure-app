@@ -139,6 +139,8 @@
     var BRAND=params.get('brand')||'';
     var CATEGORY=params.get('category')||'';
     var GENDER=(params.get('gender')||'women').toLowerCase();
+    var PRODUCT=params.get('product')||'';
+    var CHART=params.get('chart')||'';
     if(BRAND) el('brandName').textContent=BRAND;
 
     var state={gender:GENDER,hips:'regular',chest:'regular'};
@@ -178,7 +180,7 @@
     }
 
     async function callSize(payload){
-      var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({brand:BRAND,category:CATEGORY,gender:state.gender},payload))});
+      var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({brand:BRAND,category:CATEGORY,gender:state.gender,productUrl:PRODUCT,chartId:CHART},payload))});
       return r.json();
     }
 
