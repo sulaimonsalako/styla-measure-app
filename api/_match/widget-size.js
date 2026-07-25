@@ -14,7 +14,8 @@ export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId } = req.body || {};
+    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId, domain } = req.body || {};
+    const normDom = (d) => String(d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
 
     // Logged-in shopper: load their saved profile with the service-role client.
     if (accessToken && !profile) {
@@ -81,10 +82,11 @@ export default async function widgetSize(req, res) {
     let bId = brandId;
     let aliases = {};
     {
-      const { data: brows } = await supabaseAdmin.from('brands').select('id, name, category_aliases');
+      const { data: brows } = await supabaseAdmin.from('brands').select('id, name, domain, category_aliases');
       const m = (brows || []).find(b =>
         (bId && b.id === bId) ||
-        (!bId && brand && b.name && b.name.toLowerCase() === String(brand).toLowerCase()));
+        (!bId && brand && b.name && b.name.toLowerCase() === String(brand).toLowerCase()) ||
+        (!bId && !brand && domain && b.domain && normDom(b.domain) === normDom(domain)));
       if (m) { bId = m.id; aliases = m.category_aliases || {}; }
     }
 

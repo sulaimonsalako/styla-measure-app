@@ -155,6 +155,7 @@
     var GENDER=(params.get('gender')||'women').toLowerCase();
     var PRODUCT=params.get('product')||'';
     var CHART=params.get('chart')||'';
+    var DOMAIN=params.get('domain')||'';
     if(BRAND) el('brandName').textContent=BRAND;
 
     var state={gender:GENDER,hips:'regular',chest:'regular'};
@@ -196,7 +197,7 @@
     }
 
     async function callSize(payload){
-      var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({brand:BRAND,category:CATEGORY,gender:state.gender,productUrl:PRODUCT,chartId:CHART},payload))});
+      var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({brand:BRAND,category:CATEGORY,gender:state.gender,productUrl:PRODUCT,chartId:CHART,domain:DOMAIN},payload))});
       return r.json();
     }
 
@@ -293,6 +294,19 @@
       if(typing) html+='<div class="bubble a">…</div>';
       log.innerHTML=html; log.scrollTop=log.scrollHeight;
     }
+
+    // Auto-run: a logged-in shopper (widget or bookmarklet) gets their size instantly.
+    (async function initWidget(){
+      try{
+        var s=await sb.auth.getSession();
+        if(s && s.data && s.data.session){
+          go('result');
+          el('result-body').innerHTML='<div class="loader">Getting your size…</div>';
+          var res=await callSize({accessToken:s.data.session.access_token});
+          showResult(res,false);
+        }
+      }catch(e){ /* stay on start screen */ }
+    })();
   </script>
 </body>
 </html>
