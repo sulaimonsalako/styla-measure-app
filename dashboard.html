@@ -26,6 +26,12 @@
   .welcome b{color:var(--green)}
   .layout{display:grid;grid-template-columns:230px 1fr;gap:22px}
   @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  @media(max-width:560px){
+    .nav{padding:12px 16px}
+    .navr{gap:12px}
+    .navr .sync, .navr a{display:none}
+    .logo{font-size:1.12rem}
+  }
   .side{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:12px;height:fit-content}
   .navitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:3px;border:1px solid transparent}
   .navitem:hover{color:var(--text)}
