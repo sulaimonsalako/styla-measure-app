@@ -1,4 +1,5 @@
 import { runSizingEngine } from './_helpers/sizing-engine.js';
+import { supabaseAdmin } from './_helpers/supabase-admin.js';
 
 export const config = {
   api: {
@@ -106,28 +107,47 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { 
-      chest, 
-      waist, 
-      belly, 
-      hips, 
-      height, 
-      inseam, 
+    let {
+      accessToken,
+      chest,
+      waist,
+      belly,
+      hips,
+      height,
+      inseam,
       shoulder,
       sleeve,
       thigh,
       neck,
       api_scans,
       measurement_overrides,
-      pageTitle, 
-      pageText, 
-      imagesBase64, 
+      pageTitle,
+      pageText,
+      imagesBase64,
       tableHtml,
       url
     } = req.body;
 
-    if (!chest || !waist || !belly || !hips) {
-      return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Belly, Hips are required).' });
+    // Logged-in shopper (bookmarklet / widget): load saved measurements server-side
+    // so the client never has to hold them.
+    if (accessToken && (!chest || !waist || !hips)) {
+      try {
+        const { data: au } = await supabaseAdmin.auth.getUser(accessToken);
+        if (au && au.user) {
+          const { data: prof } = await supabaseAdmin.from('profiles')
+            .select('chest,waist,hips,belly,height,inseam,shoulder').eq('id', au.user.id).maybeSingle();
+          if (prof) {
+            chest = chest || prof.chest; waist = waist || prof.waist; hips = hips || prof.hips;
+            belly = belly || prof.belly || prof.waist; height = height || prof.height;
+            inseam = inseam || prof.inseam; shoulder = shoulder || prof.shoulder;
+          }
+        }
+      } catch (e) { /* fall through to validation */ }
+    }
+    if (!belly) belly = waist;
+
+    if (!chest || !waist || !hips) {
+      return res.status(400).json({ error: 'Missing body measurements. Log in or complete your fit profile first.' });
     }
 
     const apiKey = process.env.GOOGLE_API_KEY;

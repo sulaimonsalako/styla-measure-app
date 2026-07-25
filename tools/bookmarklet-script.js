@@ -1,15 +1,34 @@
 /*
  * Styla bookmarklet loader.
- * Injected on ANY retail site by the user's bookmarklet. Opens the Styla size
- * finder (the same modern widget used for brand installs) in an overlay,
- * resolving the store's brand from its domain. The shopper logs in once — the
- * session persists (styla.ca origin) so subsequent sites recognize them and
- * show their size instantly, with the AI fit chat included.
+ * Injected on ANY retail product page. Reads the size chart + product info that
+ * are printed ON the page, then opens the Styla size finder (the modern widget)
+ * which matches the shopper's body to that chart — returning their size, or
+ * telling them their size isn't in the chart. Works on any site, onboarded or not.
+ * The shopper logs in / answers once; the session persists (styla.ca origin) so
+ * later pages recognize them instantly. Includes the AI fit chat.
  */
 (function () {
   var ORIGIN = 'https://www.styla.ca';
   var existing = document.getElementById('styla-bm-overlay');
   if (existing) { existing.style.display = 'flex'; return; }
+
+  // Scrape what's on THIS page: visible text, every table's HTML, title, url.
+  function scrape() {
+    var text = '';
+    try { text = (document.body.innerText || '').replace(/\s+\n/g, '\n').slice(0, 22000); } catch (e) {}
+    var tables = '';
+    try {
+      var ts = document.querySelectorAll('table');
+      for (var i = 0; i < ts.length && tables.length < 45000; i++) { tables += ts[i].outerHTML; }
+    } catch (e) {}
+    return {
+      pageTitle: (document.title || '').slice(0, 300),
+      pageText: text,
+      tableHtml: tables,
+      url: location.href
+    };
+  }
+  var pageData = scrape();
 
   var overlay = document.createElement('div');
   overlay.id = 'styla-bm-overlay';
@@ -20,10 +39,7 @@
   ].join(';');
 
   var iframe = document.createElement('iframe');
-  iframe.src = ORIGIN + '/widget.html'
-    + '?domain=' + encodeURIComponent(location.hostname)
-    + '&product=' + encodeURIComponent(location.href)
-    + '&bookmarklet=1';
+  iframe.src = ORIGIN + '/widget.html?bookmarklet=1&decode=1&domain=' + encodeURIComponent(location.hostname);
   iframe.title = 'Styla size finder';
   iframe.style.cssText = [
     'width:100%', 'max-width:440px', 'height:660px', 'max-height:92vh',
@@ -33,7 +49,14 @@
   overlay.appendChild(iframe);
   overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.style.display = 'none'; });
   document.body.appendChild(overlay);
+
+  // Handshake: when the widget says it's ready, send it the scraped page.
   window.addEventListener('message', function (ev) {
-    if (ev.origin === ORIGIN && ev.data === 'styla-close') overlay.style.display = 'none';
+    if (ev.origin !== ORIGIN) return;
+    if (ev.data === 'styla-ready') {
+      try { iframe.contentWindow.postMessage({ type: 'styla-page', page: pageData }, ORIGIN); } catch (e) {}
+    } else if (ev.data === 'styla-close') {
+      overlay.style.display = 'none';
+    }
   });
 })();

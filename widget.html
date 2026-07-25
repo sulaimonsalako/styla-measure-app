@@ -156,6 +156,8 @@
     var PRODUCT=params.get('product')||'';
     var CHART=params.get('chart')||'';
     var DOMAIN=params.get('domain')||'';
+    var DECODE=params.get('decode')==='1'||params.get('bookmarklet')==='1'; // bookmarklet: read chart off the page
+    var PAGE=null;
     if(BRAND) el('brandName').textContent=BRAND;
 
     var state={gender:GENDER,hips:'regular',chest:'regular'};
@@ -207,6 +209,7 @@
       msg.style.color='var(--muted)';msg.textContent='Logging in…';
       var out=await sb.auth.signInWithPassword({email:email,password:pass});
       if(out.error){msg.style.color='#ff9db5';msg.textContent=out.error.message||'Login failed.';return;}
+      if(DECODE){ runDecode(); return; }
       go('result');el('result-body').innerHTML='<div class="loader">Calculating your size…</div>';
       var token=out.data.session.access_token;
       var res=await callSize({accessToken:token});
@@ -215,6 +218,7 @@
 
     async function submitQuestions(){
       var p=computeProfile();lastProfile=p;
+      if(DECODE){ runDecode(); return; }
       go('result');el('result-body').innerHTML='<div class="loader">Calculating your size…</div>';
       var res=await callSize({profile:p});
       showResult(res,true);
@@ -295,18 +299,43 @@
       log.innerHTML=html; log.scrollTop=log.scrollHeight;
     }
 
-    // Auto-run: a logged-in shopper (widget or bookmarklet) gets their size instantly.
-    (async function initWidget(){
+    // ---- Bookmarklet decode: read the size chart printed on the current page ----
+    function mapDecode(d){
+      if(!d || d.error) return { error:(d&&d.error)||'We could not read this page.' };
+      if(d.size_chart_detected===false || !d.recommended_size){
+        return { error:(d.warning||'No size chart was found on this page — try opening the size guide first, then click again.'), size:null };
+      }
+      return { size:d.recommended_size, score:d.fit_match_score, spectrum:d.fit_spectrum, category:d.garment_category||d.category||'', fits:true };
+    }
+    async function decode(extra){
+      if(!PAGE) return;
+      go('result'); el('result-body').innerHTML='<div class="loader">Reading the size chart on this page…</div>';
+      var body=Object.assign({pageTitle:PAGE.pageTitle,pageText:PAGE.pageText,tableHtml:PAGE.tableHtml,url:PAGE.url},extra);
       try{
-        var s=await sb.auth.getSession();
-        if(s && s.data && s.data.session){
-          go('result');
-          el('result-body').innerHTML='<div class="loader">Getting your size…</div>';
-          var res=await callSize({accessToken:s.data.session.access_token});
-          showResult(res,false);
-        }
-      }catch(e){ /* stay on start screen */ }
-    })();
+        var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var d=await r.json();
+        showResult(mapDecode(d), !extra.accessToken);
+      }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
+    }
+    async function runDecode(){
+      var s=await sb.auth.getSession();
+      if(s.data.session){ decode({accessToken:s.data.session.access_token}); }
+      else if(lastProfile){ decode({chest:lastProfile.chest,waist:lastProfile.waist,belly:lastProfile.waist,hips:lastProfile.hips,height:lastProfile.height,inseam:lastProfile.inseam}); }
+      else { go('start'); }
+    }
+
+    if(DECODE){
+      // Bookmarklet mode: get the scraped page from the injected script, then decode.
+      window.addEventListener('message', function(ev){
+        if(ev.data && ev.data.type==='styla-page'){ PAGE=ev.data.page; runDecode(); }
+      });
+      try{ parent.postMessage('styla-ready','*'); }catch(e){}
+    } else {
+      // Brand widget mode: instant size for a logged-in shopper.
+      (async function(){
+        try{ var s=await sb.auth.getSession(); if(s&&s.data&&s.data.session){ go('result'); el('result-body').innerHTML='<div class="loader">Getting your size…</div>'; var res=await callSize({accessToken:s.data.session.access_token}); showResult(res,false); } }catch(e){}
+      })();
+    }
   </script>
 </body>
 </html>
