@@ -55,6 +55,18 @@
     .hidden{display:none;}
     .link-box{background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;font-size:0.82rem;color:var(--muted);word-break:break-all;margin-top:0.8rem;}
     footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center;color:var(--dim);font-size:0.82rem;}
+    @media (max-width:560px){
+      .wrap{padding:0 1.1rem;}
+      nav.top .row{height:60px;padding:0 1.1rem;}
+      main{padding:2rem 0 3.5rem;}
+      h1{font-size:1.85rem;}
+      .card{padding:1.4rem;}
+      .row2{grid-template-columns:1fr;}
+      .list-item{flex-wrap:wrap;}
+      .li-actions{margin-left:0;width:100%;}
+      .li-actions .btn{flex:1;text-align:center;}
+      .btn-primary{padding:11px 18px;font-size:0.9rem;}
+    }
   </style>
 </head>
 <body>
