@@ -10,6 +10,10 @@
       "destination": "/api/store-api?route=rank-brands"
     },
     {
+      "source": "/api/connections",
+      "destination": "/api/store-api?route=connections"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

@@ -642,6 +642,20 @@ export async function sendStylaWelcomeEmail(email, firstName, { dashboardUrl } =
   return sendStylaMail(email, `You're in, ${name} — here are your brand matches`, html, text);
 }
 
+// Size-share invite — someone shared their size with this person (gifting / stylist / partner)
+export async function sendShareInviteEmail(email, { ownerEmail = 'Someone', relationship = '', acceptUrl } = {}) {
+  const rel = relationship ? ` as their ${relationship}` : '';
+  const html = buildStylaEmail({
+    heading: `${ownerEmail} shared their size with you`,
+    bodyHtml: `${ownerEmail} wants you to be able to shop for them${rel} — without guessing their size or spoiling a surprise. Accept below to see their Styla size and the brands that fit them. Nothing to measure.`,
+    ctaText: 'See their size',
+    ctaUrl: acceptUrl || STYLA_SITE,
+    footerNote: "Didn't expect this? You can ignore this email — nothing is shared until you accept."
+  });
+  const text = `${ownerEmail} shared their Styla size with you${rel}. Accept here: ${acceptUrl || STYLA_SITE}`;
+  return sendStylaMail(email, `${ownerEmail} shared their size with you on Styla`, html, text);
+}
+
 // #8 — Wedding party invite (call when a coordinator invites a member)
 export async function sendWeddingInviteEmail(email, { coordinatorName = 'A friend', partyName = 'their wedding party', inviteUrl } = {}) {
   const html = buildStylaEmail({
