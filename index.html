@@ -458,7 +458,14 @@
         const authed = !!session;
         document.getElementById('btn-login').style.display = authed ? 'none' : '';
         document.getElementById('btn-logout').style.display = authed ? '' : 'none';
-        document.getElementById('nav-dashboard').style.display = authed ? '' : 'none';
+        document.getElementById('nav-dashboard').style.display = 'none';
+        if (authed) {
+          // Logged-in users don't need to re-run the quiz — send CTAs to the dashboard.
+          document.querySelectorAll('a.btn-primary[href="/start.html"]').forEach(function(a){
+            a.setAttribute('href', '/dashboard.html');
+            a.textContent = 'My dashboard';
+          });
+        }
       } catch (e) { /* no-op */ }
     }
     refreshAuthUI();
@@ -492,7 +499,7 @@
     // Log out
     document.getElementById('btn-logout').addEventListener('click', async function(){
       await sb.auth.signOut();
-      refreshAuthUI();
+      location.reload();
     });
 
     // Scroll reveal

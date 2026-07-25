@@ -175,7 +175,7 @@
     Object.keys(m).forEach(function(k){ if(m[k]!=null && m[k]!=='') m[k] = parseFloat(m[k]); });
 
     // TASK 16: no fit profile yet -> send them to build one.
-    if(!m.chest && !m.waist && !m.hips){ window.location.href = '/start.html'; return; }
+    if(!m.chest && !m.waist && !m.hips){ window.location.href = '/start.html?onboard=1'; return; }
 
     var _pay = new URLSearchParams(window.location.search).get('payment');
     paid = !!profile.has_paid_matches || _pay === 'success';

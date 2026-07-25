@@ -34,6 +34,10 @@
     background-image:radial-gradient(circle at 12% 15%,rgba(255,42,117,0.06),transparent 40%),radial-gradient(circle at 88% 85%,rgba(139,92,246,0.05),transparent 40%);
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
   .frame{width:100%;max-width:900px;background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:26px 28px;box-shadow:0 30px 60px rgba(0,0,0,0.4)}
+  @media(max-width:640px){
+    body{align-items:flex-start;padding-top:66px;padding-bottom:32px}
+    .frame{padding:20px 18px}
+  }
   .bar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
   .step-txt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700}
   .time-txt{font-size:11.5px;color:var(--dim)}
@@ -340,6 +344,19 @@
   var SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
   function getSupabase(){ return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+
+  // Guard: a logged-in user shouldn't redo the fit quiz from the homepage.
+  // Send them to their dashboard — unless they're mid-onboarding (?onboard=1,
+  // from the dashboard's "no profile yet" bounce) or starting a party (?for=party).
+  (function guardAuth(){
+    try {
+      var qs = new URLSearchParams(location.search);
+      if (qs.get('onboard') === '1' || qs.get('for') === 'party') return;
+      getSupabase().auth.getSession().then(function(res){
+        if (res && res.data && res.data.session) window.location.replace('/dashboard.html');
+      });
+    } catch(e){}
+  })();
 
   var state = { audience:null, gender:null, age:null, hips:null, chest:null };
   var flow = ['who','fit']; // extended once gender chosen
