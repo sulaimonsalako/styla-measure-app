@@ -18,6 +18,10 @@
       "destination": "/api/store-api?route=widget-size"
     },
     {
+      "source": "/api/brand-admin",
+      "destination": "/api/store-api?route=brand-admin"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

@@ -38,10 +38,10 @@ export default async function rankBrands(req, res) {
 
     const { data: brandRows, error: bErr } = await supabaseAdmin
       .from('brands')
-      .select('id, name');
+      .select('id, name, logo_url');
     if (bErr) throw bErr;
     const brandMap = {};
-    (brandRows || []).forEach(function(b){ brandMap[b.id] = b.name; });
+    (brandRows || []).forEach(function(b){ brandMap[b.id] = { name: b.name, logo: b.logo_url || null }; });
 
     const matches = [];
     for (const c of (charts || [])) {
@@ -57,7 +57,8 @@ export default async function rankBrands(req, res) {
 
       const r = runSizingEngine(user, norm);
       matches.push({
-        brand: brandMap[c.brand_id] || 'Unknown',
+        brand: (brandMap[c.brand_id] && brandMap[c.brand_id].name) || 'Unknown',
+        logo: (brandMap[c.brand_id] && brandMap[c.brand_id].logo) || null,
         category: norm.garment_category,
         recommended_size: r.recommended_size,
         score: r.fit_match_score,

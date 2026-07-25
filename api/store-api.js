@@ -7,6 +7,7 @@ import exportPaymentHandler from './_store/export-payment.js';
 import rankBrandsHandler from './_match/rank-brands.js';
 import widgetSizeHandler from './_match/widget-size.js';
 import connectionsHandler from './_share/connections.js';
+import brandAdminHandler from './_admin/brand-admin.js';
 
 export const config = {
   api: {
@@ -71,6 +72,8 @@ export default async function handler(req, res) {
     return widgetSizeHandler(req, res);
   } else if (route === 'connections' || pathname.includes('/connections')) {
     return connectionsHandler(req, res);
+  } else if (route === 'brand-admin' || pathname.includes('/brand-admin')) {
+    return brandAdminHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

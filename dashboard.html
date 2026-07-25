@@ -233,6 +233,12 @@
     renderMatches();
   }
 
+  function brandCell(mm){
+    var logo = mm.logo
+      ? '<img src="'+mm.logo+'" alt="" style="width:24px;height:24px;border-radius:5px;object-fit:contain;background:#fff;flex:none" onerror="this.replaceWith(document.createTextNode(\'\'))"/>'
+      : '<span style="width:24px;height:24px;border-radius:5px;background:var(--pinkdim);color:var(--pink2);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none">'+((mm.brand||'?').charAt(0))+'</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:9px">'+logo+'<span>'+mm.brand+'</span></span>';
+  }
   function renderMatches(){
     var locked = document.getElementById('matchLocked');
     var unlocked = document.getElementById('matchUnlocked');
@@ -243,14 +249,14 @@
     if(paid){
       var h = '';
       curMatches.forEach(function(mm,i){
-        h += '<div class="row"'+(i===curMatches.length-1?' style="border-bottom:none"':'')+'><div class="r">'+mm.brand+
+        h += '<div class="row"'+(i===curMatches.length-1?' style="border-bottom:none"':'')+'><div class="r">'+brandCell(mm)+
              '</div><div class="r"><span class="size">Your size: '+mm.recommended_size+'</span><span class="pct">'+mm.score+'%</span></div></div>';
       });
       h += '<div class="ok-banner">✓ Unlocked — every brand that fits you, with your size in each.</div>';
       unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
     } else {
       var top = curMatches[0], rest = curMatches.length - 1;
-      var h = '<div class="row"><div class="r">'+top.brand+'</div><div class="r"><span class="size">Size '+top.recommended_size+'</span><span class="pct">'+top.score+'%</span></div></div>';
+      var h = '<div class="row"><div class="r">'+brandCell(top)+'</div><div class="r"><span class="size">Size '+top.recommended_size+'</span><span class="pct">'+top.score+'%</span></div></div>';
       for(var i=0;i<Math.min(3,rest);i++) h += '<div class="row lock"><div class="r">••••••••••</div><span>🔒</span></div>';
       if(rest>0) h += '<div class="row lock" style="border-bottom:none"><div class="r">+ '+rest+' more matches</div><span>🔒</span></div>';
       h += '<div class="unlock"><h3>Unlock all your matches</h3><p>Every brand ranked by fit, plus your exact size in each.</p>'+

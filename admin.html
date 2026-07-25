@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brand & Size Chart Admin · Styla</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#0b0b14;--bg2:#121222;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--green:#34d399;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--body);background:var(--bg);color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--pink);text-decoration:none;}
+    .wrap{max-width:1000px;margin:0 auto;padding:0 1.4rem;}
+    nav{border-bottom:1px solid var(--border);background:rgba(11,11,20,.8);backdrop-filter:blur(12px);}
+    nav .row{max-width:1000px;margin:0 auto;padding:14px 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+    .logo{display:flex;align-items:center;gap:9px;font-family:var(--head);font-weight:700;letter-spacing:2px;color:#fff;}
+    .logo img{height:26px;width:26px;border-radius:50%;}
+    .tagpill{font-size:.7rem;color:var(--dim);border:1px solid var(--border);border-radius:100px;padding:3px 10px;}
+    main{padding:2rem 0 4rem;}
+    h1{font-family:var(--head);font-size:1.9rem;font-weight:700;margin-bottom:.3rem;}
+    h2{font-family:var(--head);font-size:1.4rem;font-weight:700;margin:1.4rem 0 .8rem;}
+    .btn{border:none;cursor:pointer;font-family:var(--body);font-weight:700;border-radius:100px;transition:transform .12s;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:var(--grad);color:#fff;padding:11px 22px;font-size:.9rem;}
+    .btn-ghost{background:transparent;color:#fff;border:1px solid var(--border);padding:9px 16px;font-size:.85rem;}
+    .btn-sm{padding:7px 14px;font-size:.8rem;}
+    .btn-danger{background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.3);padding:7px 14px;font-size:.8rem;border-radius:100px;cursor:pointer;font-weight:600;font-family:var(--body);}
+    label{display:block;font-size:.78rem;color:var(--muted);margin:.7rem 0 .3rem;}
+    input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--body);}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pink);}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;margin-bottom:1rem;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;}
+    .brandrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:9px;background:rgba(255,255,255,.02);}
+    .brandrow .lg{width:40px;height:40px;border-radius:8px;object-fit:contain;background:#fff;flex:none;}
+    .brandrow .lgph{width:40px;height:40px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}
+    .brandrow .bmain{min-width:0;flex:1;} .brandrow .bn{font-weight:600;} .brandrow .bmeta{color:var(--dim);font-size:.78rem;}
+    .brandrow .bact{display:flex;gap:7px;}
+    .msg{font-size:.85rem;margin:.6rem 0;min-height:1em;}
+    .chart-item{border:1px solid var(--border);border-radius:11px;padding:.9rem;margin-bottom:.7rem;background:rgba(255,255,255,.02);}
+    .chart-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+    .badge{font-size:.7rem;padding:3px 9px;border-radius:100px;background:rgba(255,42,117,.14);color:var(--pink);font-weight:700;}
+    .badge.def{background:rgba(52,211,153,.14);color:var(--green);}
+    table.sizes{width:100%;border-collapse:collapse;margin-top:.6rem;}
+    table.sizes th{font-size:.7rem;color:var(--dim);text-transform:uppercase;text-align:left;padding:4px 6px;font-weight:600;}
+    table.sizes td{padding:3px 4px;}
+    table.sizes input{padding:7px 8px;font-size:.82rem;}
+    .hide{display:none;}
+    .hint{color:var(--dim);font-size:.78rem;margin-top:.3rem;}
+    .kv{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-bottom:.4rem;align-items:center;}
+    .loader{color:var(--dim);padding:2rem 0;text-align:center;}
+  </style>
+</head>
+<body>
+  <nav><div class="row">
+    <div class="logo"><img src="logo.png" alt="Styla"/> STYLA <span class="tagpill">Admin</span></div>
+    <div><span id="whoami" class="tagpill hide"></span> <button id="logoutBtn" class="btn btn-ghost btn-sm hide">Log out</button></div>
+  </div></nav>
+
+  <main class="wrap">
+    <div id="loading" class="loader">Loading…</div>
+
+    <!-- LOGIN -->
+    <div id="loginView" class="hide">
+      <h1>Admin sign in</h1>
+      <p class="hint">Use your Styla admin account.</p>
+      <div class="card" style="max-width:400px;">
+        <div class="msg" id="loginMsg"></div>
+        <label>Email</label><input type="email" id="liEmail" autocomplete="email"/>
+        <label>Password</label><input type="password" id="liPass" autocomplete="current-password"/>
+        <button class="btn btn-primary" style="width:100%;margin-top:1rem;" id="liBtn">Sign in</button>
+      </div>
+    </div>
+
+    <!-- DENIED -->
+    <div id="deniedView" class="hide">
+      <h1>Not authorized</h1>
+      <p class="hint">This account isn't an admin. <a href="#" id="denyLogout">Log out</a></p>
+    </div>
+
+    <!-- BRANDS LIST -->
+    <div id="brandsView" class="hide">
+      <h1>Brands &amp; size charts</h1>
+      <div class="msg" id="brandsMsg"></div>
+      <div class="card">
+        <h2 style="margin-top:0">Add a brand</h2>
+        <div class="row3">
+          <div><label>Name *</label><input id="nbName" placeholder="e.g. Reformation"/></div>
+          <div><label>Domain</label><input id="nbDomain" placeholder="reformation.com"/></div>
+          <div><label>Logo URL</label><input id="nbLogo" placeholder="https://…/logo.png"/></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:.9rem" id="nbBtn">Add brand</button>
+      </div>
+      <div id="brandsList"></div>
+    </div>
+
+    <!-- BRAND DETAIL -->
+    <div id="detailView" class="hide">
+      <button class="btn btn-ghost btn-sm" id="backBtn">← All brands</button>
+      <div class="msg" id="detailMsg"></div>
+
+      <div class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0">Brand</h2>
+        <div class="row3">
+          <div><label>Name</label><input id="edName"/></div>
+          <div><label>Domain</label><input id="edDomain"/></div>
+          <div><label>Logo URL</label><input id="edLogo"/></div>
+        </div>
+        <label style="margin-top:1rem">Category aliases <span class="hint">(platform category → Styla category, e.g. "maxi dress" → "dresses")</span></label>
+        <div id="aliasRows"></div>
+        <button class="btn btn-ghost btn-sm" id="addAliasBtn" style="margin-top:.4rem">+ Add alias</button>
+        <div style="margin-top:1rem"><button class="btn btn-primary btn-sm" id="saveBrandBtn">Save brand</button>
+          <button class="btn-danger" id="delBrandBtn" style="margin-left:.5rem">Delete brand</button></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h2 style="margin:0">Size charts</h2>
+          <button class="btn btn-primary btn-sm" id="addChartBtn">+ Add chart</button>
+        </div>
+        <div id="chartsList" style="margin-top:1rem"></div>
+      </div>
+    </div>
+
+    <!-- CHART EDITOR -->
+    <div id="chartView" class="hide">
+      <button class="btn btn-ghost btn-sm" id="chartBackBtn">← Back to brand</button>
+      <div class="msg" id="chartMsg"></div>
+      <div class="card" style="margin-top:1rem;">
+        <h2 style="margin-top:0" id="chartTitle">Size chart</h2>
+        <div class="row3">
+          <div><label>Category</label><input id="chCat" placeholder="dresses, tops, bottoms…"/></div>
+          <div><label>Gender</label><select id="chGender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
+          <div><label>Chart type</label><select id="chType"><option value="body">Body (to-fit)</option><option value="garment">Garment (flat)</option></select></div>
+        </div>
+        <label style="margin-top:.8rem"><input type="checkbox" id="chDefault" style="width:auto;margin-right:6px"/> Default chart for this category (used in dashboard brand-matching)</label>
+
+        <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
+        <table class="sizes">
+          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th>Neck</th><th></th></tr></thead>
+          <tbody id="sizeRows"></tbody>
+        </table>
+        <button class="btn btn-ghost btn-sm" id="addRowBtn" style="margin-top:.6rem">+ Add size</button>
+
+        <div style="margin-top:1.2rem"><button class="btn btn-primary btn-sm" id="saveChartBtn">Save chart</button></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    var SUPABASE_URL="https://tneflxtpmzodauygtslk.supabase.co";
+    var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    function el(id){return document.getElementById(id);}
+    function show(id){['loading','loginView','deniedView','brandsView','detailView','chartView'].forEach(function(v){el(v).classList.toggle('hide',v!==id);});}
+
+    var state={brand:null,charts:[],editingChart:null};
+
+    async function token(){var s=await sb.auth.getSession();return s.data.session?s.data.session.access_token:null;}
+    async function api(action,extra){
+      var t=await token();
+      var r=await fetch('/api/brand-admin',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+      return r.json();
+    }
+
+    async function boot(){
+      var s=await sb.auth.getSession();
+      if(!s.data.session){show('loginView');return;}
+      var res=await api('list-brands');
+      if(res.error){ if(/admin/i.test(res.error)){show('deniedView');return;} el('brandsMsg').textContent=res.error; }
+      el('whoami').textContent=s.data.session.user.email;el('whoami').classList.remove('hide');
+      el('logoutBtn').classList.remove('hide');
+      renderBrands(res.brands||[]);
+      show('brandsView');
+    }
+
+    el('liBtn').addEventListener('click',async function(){
+      var email=el('liEmail').value.trim(),pass=el('liPass').value,msg=el('loginMsg');
+      if(!email||!pass){msg.textContent='Enter email and password.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Signing in…';
+      var out=await sb.auth.signInWithPassword({email:email,password:pass});
+      if(out.error){msg.style.color='#fca5a5';msg.textContent=out.error.message;return;}
+      boot();
+    });
+    function doLogout(){sb.auth.signOut().then(function(){location.reload();});}
+    el('logoutBtn').addEventListener('click',doLogout);
+    el('denyLogout').addEventListener('click',function(e){e.preventDefault();doLogout();});
+
+    // ---- Brands list ----
+    function renderBrands(brands){
+      el('brandsList').innerHTML=brands.map(function(b){
+        var lg=b.logo_url?'<img class="lg" src="'+b.logo_url+'" alt="" onerror="this.outerHTML=\'<span class=&quot;lgph&quot;>'+(b.name||'?').charAt(0)+'</span>\'"/>':'<span class="lgph">'+(b.name||'?').charAt(0)+'</span>';
+        return '<div class="brandrow">'+lg+'<div class="bmain"><div class="bn">'+b.name+'</div><div class="bmeta">'+(b.domain||'no domain')+' · '+b.chart_count+' chart(s)</div></div>'+
+          '<div class="bact"><button class="btn btn-ghost btn-sm" onclick="openBrand(\''+b.id+'\')">Manage</button></div></div>';
+      }).join('')||'<p class="hint">No brands yet — add one above.</p>';
+    }
+    el('nbBtn').addEventListener('click',async function(){
+      var name=el('nbName').value.trim();var msg=el('brandsMsg');
+      if(!name){msg.style.color='#fca5a5';msg.textContent='Brand name required.';return;}
+      var res=await api('create-brand',{name:name,domain:el('nbDomain').value.trim(),logo_url:el('nbLogo').value.trim()});
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      el('nbName').value=el('nbDomain').value=el('nbLogo').value='';msg.style.color='var(--green)';msg.textContent='Brand added.';
+      boot();
+    });
+
+    // ---- Brand detail ----
+    window.openBrand=async function(id){
+      var res=await api('get-brand',{id:id});
+      if(res.error){alert(res.error);return;}
+      state.brand=res.brand;state.charts=res.charts||[];
+      el('edName').value=res.brand.name||'';el('edDomain').value=res.brand.domain||'';el('edLogo').value=res.brand.logo_url||'';
+      renderAliases(res.brand.category_aliases||{});
+      renderCharts();
+      el('detailMsg').textContent='';
+      show('detailView');
+    };
+    el('backBtn').addEventListener('click',boot);
+
+    function renderAliases(al){
+      var rows=Object.keys(al||{}).map(function(k){return aliasRow(k,al[k]);});
+      el('aliasRows').innerHTML=rows.join('')||'';
+    }
+    function aliasRow(k,v){
+      return '<div class="kv"><input placeholder="platform category" value="'+(k||'')+'"/><input placeholder="styla category" value="'+(v||'')+'"/><button class="btn-danger" onclick="this.parentNode.remove()">✕</button></div>';
+    }
+    el('addAliasBtn').addEventListener('click',function(){el('aliasRows').insertAdjacentHTML('beforeend',aliasRow('',''));});
+
+    function collectAliases(){
+      var al={};el('aliasRows').querySelectorAll('.kv').forEach(function(kv){
+        var ins=kv.querySelectorAll('input');var k=ins[0].value.trim().toLowerCase(),v=ins[1].value.trim().toLowerCase();
+        if(k&&v)al[k]=v;
+      });return al;
+    }
+    el('saveBrandBtn').addEventListener('click',async function(){
+      var msg=el('detailMsg');msg.style.color='var(--muted)';msg.textContent='Saving…';
+      var res=await api('update-brand',{id:state.brand.id,name:el('edName').value.trim(),domain:el('edDomain').value.trim(),logo_url:el('edLogo').value.trim(),category_aliases:collectAliases()});
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      msg.style.color='var(--green)';msg.textContent='Saved.';
+    });
+    el('delBrandBtn').addEventListener('click',async function(){
+      if(!confirm('Delete this brand and ALL its size charts? This cannot be undone.'))return;
+      var res=await api('delete-brand',{id:state.brand.id});
+      if(res.error){alert(res.error);return;} boot();
+    });
+
+    // ---- Charts ----
+    function renderCharts(){
+      el('chartsList').innerHTML=state.charts.map(function(c){
+        var n=(c.chart_data&&c.chart_data.sizes)?c.chart_data.sizes.length:0;
+        return '<div class="chart-item"><div class="chart-head">'+
+          '<span class="badge">'+(c.category||'—')+'</span><span class="badge">'+(c.gender||'—')+'</span>'+
+          (c.is_default?'<span class="badge def">default</span>':'')+
+          '<span class="hint">'+n+' sizes · '+((c.chart_data&&c.chart_data.chart_type)||'body')+'</span>'+
+          '<span style="margin-left:auto;display:flex;gap:7px"><button class="btn btn-ghost btn-sm" onclick="editChart(\''+c.id+'\')">Edit</button>'+
+          '<button class="btn-danger" onclick="delChart(\''+c.id+'\')">Delete</button></span></div></div>';
+      }).join('')||'<p class="hint">No charts yet.</p>';
+    }
+    el('addChartBtn').addEventListener('click',function(){openChart(null);});
+    window.editChart=function(id){openChart(state.charts.find(function(c){return c.id===id;}));};
+    window.delChart=async function(id){ if(!confirm('Delete this chart?'))return; var res=await api('delete-chart',{id:id}); if(res.error){alert(res.error);return;} openBrand(state.brand.id); };
+
+    var MCOLS=['chest','waist','hips','inseam','neck'];
+    function openChart(c){
+      state.editingChart=c;
+      el('chartTitle').textContent=c?'Edit size chart':'New size chart';
+      el('chCat').value=c?(c.category||''):'';
+      el('chGender').value=c?(c.gender||'women'):'women';
+      el('chType').value=(c&&c.chart_data&&c.chart_data.chart_type)||'body';
+      el('chDefault').checked=c?!!c.is_default:false;
+      el('sizeRows').innerHTML='';
+      var sizes=(c&&c.chart_data&&c.chart_data.sizes)||[{name:''}];
+      sizes.forEach(addSizeRow);
+      el('chartMsg').textContent='';
+      show('chartView');
+    }
+    function fmt(v){ if(Array.isArray(v))return v.join('-'); return (v===undefined||v===null)?'':v; }
+    function addSizeRow(s){
+      s=s||{};
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><input value="'+(s.name||'')+'" placeholder="M"/></td>'+
+        MCOLS.map(function(k){return '<td><input value="'+fmt(s[k])+'" placeholder="—"/></td>';}).join('')+
+        '<td><button class="btn-danger" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+      el('sizeRows').appendChild(tr);
+    }
+    el('addRowBtn').addEventListener('click',function(){addSizeRow();});
+    el('chartBackBtn').addEventListener('click',function(){openBrand(state.brand.id);});
+
+    function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return [p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
+
+    el('saveChartBtn').addEventListener('click',async function(){
+      var msg=el('chartMsg');
+      var sizes=[];
+      el('sizeRows').querySelectorAll('tr').forEach(function(tr){
+        var ins=tr.querySelectorAll('input');var name=ins[0].value.trim();if(!name)return;
+        var row={name:name};MCOLS.forEach(function(k,i){var v=parseVal(ins[i+1].value);if(v!==undefined)row[k]=v;});
+        sizes.push(row);
+      });
+      if(!sizes.length){msg.style.color='#fca5a5';msg.textContent='Add at least one size.';return;}
+      var type=el('chType').value;
+      var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_type:type,sizes:sizes};
+      if(type==='garment')chart_data.flat_measures=['chest','waist','hips','thigh']; // flat charts: circumferences are half-width
+      var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked};
+      msg.style.color='var(--muted)';msg.textContent='Saving…';
+      var res=state.editingChart?await api('update-chart',Object.assign({id:state.editingChart.id},payload)):await api('create-chart',payload);
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      openBrand(state.brand.id);
+    });
+
+    boot();
+  </script>
+</body>
+</html>

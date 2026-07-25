@@ -76,15 +76,25 @@ export default async function widgetSize(req, res) {
 
     // 2) DEFAULT: brand + category (category comes from the store platform —
     //    Shopify product.type / collection, Woo category — passed by the widget).
-    // Resolve the brand id from a name if needed.
+    // Resolve the brand (id + category aliases) from id or name.
     let bId = brandId;
-    if (!bId && brand) {
-      const { data: brows } = await supabaseAdmin.from('brands').select('id, name');
-      const m = (brows || []).find(b => b.name && b.name.toLowerCase() === String(brand).toLowerCase());
-      if (m) bId = m.id;
+    let aliases = {};
+    {
+      const { data: brows } = await supabaseAdmin.from('brands').select('id, name, category_aliases');
+      const m = (brows || []).find(b =>
+        (bId && b.id === bId) ||
+        (!bId && brand && b.name && b.name.toLowerCase() === String(brand).toLowerCase()));
+      if (m) { bId = m.id; aliases = m.category_aliases || {}; }
     }
 
-    let query = supabaseAdmin.from('size_charts').select('id, brand_id, category, gender, chart_data');
+    // Map the platform's category name onto our canonical category via the brand's aliases
+    // (e.g. Shopify product.type "Maxi Dress" -> "dresses").
+    let canonCategory = category;
+    if (category && aliases && aliases[String(category).toLowerCase()]) {
+      canonCategory = aliases[String(category).toLowerCase()];
+    }
+
+    let query = supabaseAdmin.from('size_charts').select('id, brand_id, category, gender, chart_data, is_default');
     if (bId) query = query.eq('brand_id', bId);
     const { data: charts, error } = await query;
     if (error) throw error;
@@ -92,14 +102,16 @@ export default async function widgetSize(req, res) {
 
     // Prefer the requested category, then gender, else fall back to what exists.
     let chosen = charts;
-    if (category) {
-      const byCat = charts.filter(c => ((c.chart_data && c.chart_data.garment_category) || c.category) === category);
+    if (canonCategory) {
+      const byCat = charts.filter(c => ((c.chart_data && c.chart_data.garment_category) || c.category) === canonCategory);
       if (byCat.length) chosen = byCat;
     }
     if (gender) {
       const byGender = chosen.filter(c => !c.gender || c.gender.toLowerCase() === 'unisex' || c.gender.toLowerCase() === String(gender).toLowerCase());
       if (byGender.length) chosen = byGender;
     }
+    // Among the survivors, prefer the brand's default chart for this category.
+    chosen = chosen.slice().sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0));
 
     const c = chosen[0];
     const cd = c.chart_data || {};
@@ -113,6 +125,7 @@ export default async function widgetSize(req, res) {
       spectrum: r.fit_spectrum,
       category: norm.garment_category,
       fits: !r.warning,
+      resolvedBy: 'brand-category',
     });
   } catch (e) {
     console.error('widget-size error:', e);
