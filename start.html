@@ -281,6 +281,7 @@
           <h3>Save your profile</h3>
           <p>Create your free account to save your fit profile — then unlock your full brand matches, your size in each, and the bookmarklet from your dashboard.</p>
           <div class="oauth">
+            <input type="text" id="su-name" placeholder="First name" autocomplete="given-name" />
             <input type="email" id="su-email" placeholder="Email address" />
             <div style="position:relative">
               <input type="password" id="su-pass" placeholder="Create a password (6+ characters)" style="padding-right:52px" />
@@ -561,7 +562,9 @@
   async function doSignup(){
     var email = (document.getElementById('su-email').value || '').trim().toLowerCase();
     var pass = document.getElementById('su-pass').value || '';
+    var name = (document.getElementById('su-name').value || '').trim();
     var msg = document.getElementById('su-msg');
+    if(!name){ msg.style.display='block'; msg.textContent='Please enter your first name.'; return; }
     var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if(!re.test(email)){ msg.style.display='block'; msg.textContent='Please enter a valid email address.'; return; }
     if(pass.length < 6){ msg.style.display='block'; msg.textContent='Password must be at least 6 characters.'; return; }
@@ -577,6 +580,7 @@
       localStorage.setItem('styla_twin_hips', profile.hips);
       localStorage.setItem('styla_twin_height', profile.height);
       if(profile.inseam) localStorage.setItem('styla_twin_inseam', profile.inseam);
+      if(name) localStorage.setItem('styla_first_name', name);
     } catch(e){}
 
     // Lead capture (best effort — works once deployed).
@@ -588,7 +592,7 @@
     // Real account.
     try {
       var sb = getSupabase();
-      var out = await sb.auth.signUp({ email: email, password: pass, options: { emailRedirectTo: window.location.origin + '/dashboard.html' } });
+      var out = await sb.auth.signUp({ email: email, password: pass, options: { data: { first_name: name }, emailRedirectTo: window.location.origin + '/dashboard.html' } });
       if(out.error) throw out.error;
       var box = document.querySelector('.save-box');
       if(box) box.innerHTML = '<h3>Check your email</h3><p style="font-size:.85rem;color:var(--muted);margin-top:6px">We sent a confirmation link to <b style="color:var(--text)">'+email+'</b>. Click it to activate your account, then log in to see all your matches and the bookmarklet.</p>';

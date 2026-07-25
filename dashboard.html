@@ -155,13 +155,20 @@
     var sess = (await sb.auth.getSession()).data.session;
     if(!sess){ window.location.href = '/index.html?login=true'; return; }
     user = sess.user;
-    document.getElementById('welcomeEmail').textContent = user.email;
     document.getElementById('accountEmail').textContent = user.email;
 
     try {
       var q = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
       profile = q.data || {};
     } catch(e){ profile = {}; }
+
+    // First-name identity: greet by name, and persist it to the profile if we have it.
+    var lsName = null; try { lsName = localStorage.getItem('styla_first_name'); } catch(e){}
+    var firstName = profile.first_name || (user.user_metadata && user.user_metadata.first_name) || lsName || '';
+    document.getElementById('welcomeEmail').textContent = firstName || user.email;
+    if(firstName && !profile.first_name){
+      try { await sb.from('profiles').update({ first_name: firstName }).eq('id', user.id); profile.first_name = firstName; } catch(e){}
+    }
     var ov = profile.measurement_overrides || {};
     var ls = function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } };
     var m = {

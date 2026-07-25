@@ -243,6 +243,7 @@
         + spec + chat;
       if(guest){
         html+='<p class="sub">Save this and see every other brand that fits you — free.</p>'
+          +'<label>First name</label><input type="text" id="ac-name" autocomplete="given-name" />'
           +'<label>Email</label><input type="email" id="ac-email" autocomplete="email" />'
           +'<label>Password</label><input type="password" id="ac-pass" autocomplete="new-password" />'
           +'<div class="msg" id="ac-msg"></div>'
@@ -257,6 +258,7 @@
 
     async function createAccount(){
       var email=el('ac-email').value.trim();var pass=el('ac-pass').value;var msg=el('ac-msg');
+      var name=(el('ac-name')?el('ac-name').value.trim():'');
       if(!email||!pass){msg.style.color='#ff9db5';msg.textContent='Enter an email and password.';return;}
       if(pass.length<6){msg.style.color='#ff9db5';msg.textContent='Password must be at least 6 characters.';return;}
       msg.style.color='var(--muted)';msg.textContent='Creating your account…';
@@ -268,10 +270,11 @@
         if(p.hips)localStorage.setItem('styla_twin_hips',p.hips);
         if(p.height)localStorage.setItem('styla_twin_height',p.height);
         if(p.inseam)localStorage.setItem('styla_twin_inseam',p.inseam);
+        if(name)localStorage.setItem('styla_first_name',name);
         // Seed a guest record with the measurements.
         await fetch('/api/store-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guest-init',username:email,manual_measurements:p})});
       }catch(e){}
-      var out=await sb.auth.signUp({email:email,password:pass,options:{emailRedirectTo:SUPABASE_URL?'https://www.styla.ca/dashboard.html':undefined}});
+      var out=await sb.auth.signUp({email:email,password:pass,options:{data:{first_name:name},emailRedirectTo:'https://www.styla.ca/dashboard.html'}});
       if(out.error){msg.style.color='#ff9db5';msg.textContent=out.error.message||'Could not create account.';return;}
       el('result-body').innerHTML='<h2>Check your email 📩</h2><p class="sub">We sent a confirmation link to <b>'+email+'</b>. Confirm it and your size — plus every brand that fits you — will be waiting in your dashboard.</p><button class="btn btn-ghost" onclick="parent.postMessage(\'styla-close\',\'*\')">Done</button>';
     }
