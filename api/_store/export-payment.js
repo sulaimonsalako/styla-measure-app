@@ -57,6 +57,12 @@ export default async function handler(req, res) {
       }
 
       try {
+        // Wedding-party report unlock — coordinator paid once for the whole party.
+        if (metadata.partyId) {
+          try { await supabase.from('wedding_parties').update({ has_paid_report: true }).eq('id', metadata.partyId); }
+          catch (e) { console.error('party report flag update failed:', e); }
+        }
+
         let updatePayload = { updated_at: new Date().toISOString() };
         
         if (paymentType === 'export_payment') {
@@ -168,7 +174,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const { action, userId, email, amount, productName, productDescription, paymentType, successUrl, cancelUrl } = body;
+    const { action, userId, email, amount, productName, productDescription, paymentType, successUrl, cancelUrl, partyId } = body;
 
     // Action: create-checkout-session
     if (action === 'create-checkout-session') {
@@ -212,11 +218,7 @@ export default async function handler(req, res) {
         mode: 'payment',
         success_url: success,
         cancel_url: cancel,
-        metadata: {
-          userId: userId,
-          email: email,
-          type: pType
-        },
+        metadata: Object.assign({ userId: userId, email: email, type: pType }, partyId ? { partyId: String(partyId) } : {}),
       });
 
       console.log(`Session created: ${session.id}`);

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Wedding Party · Styla</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    :root{--bg:#0b0b14;--bg2:#121222;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--green:#34d399;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--body);background:var(--bg);color:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--pink);text-decoration:none;}
+    .wrap{max-width:820px;margin:0 auto;padding:0 1.4rem;}
+    nav{border-bottom:1px solid var(--border);background:rgba(11,11,20,.8);backdrop-filter:blur(12px);}
+    nav .row{max-width:820px;margin:0 auto;padding:14px 1.4rem;display:flex;align-items:center;justify-content:space-between;}
+    .logo{display:flex;align-items:center;gap:9px;font-family:var(--head);font-weight:700;letter-spacing:2px;color:#fff;}
+    .logo img{height:26px;width:26px;border-radius:50%;}
+    .btn{border:none;cursor:pointer;font-family:var(--body);font-weight:700;border-radius:100px;transition:transform .12s;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:var(--grad);color:#fff;padding:11px 22px;font-size:.9rem;}
+    .btn-ghost{background:transparent;color:#fff;border:1px solid var(--border);padding:9px 16px;font-size:.85rem;}
+    .btn-sm{padding:7px 14px;font-size:.8rem;}
+    main{padding:2rem 0 4rem;}
+    h1{font-family:var(--head);font-size:1.9rem;font-weight:700;margin-bottom:.3rem;}
+    h2{font-family:var(--head);font-size:1.35rem;font-weight:700;margin:0 0 .7rem;}
+    label{display:block;font-size:.78rem;color:var(--muted);margin:.7rem 0 .3rem;}
+    input,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--body);}
+    input:focus,select:focus{outline:none;border-color:var(--pink);}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.3rem;margin-bottom:1rem;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+    .msg{font-size:.85rem;margin:.5rem 0;min-height:1em;}
+    .prow{display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--border);border-radius:11px;margin-bottom:8px;background:rgba(255,255,255,.02);}
+    .prow .pn{font-weight:600;} .prow .pe{color:var(--dim);font-size:.78rem;}
+    .pill{margin-left:auto;font-size:.7rem;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.06);color:var(--dim);font-weight:700;}
+    .pill.done{background:rgba(52,211,153,.14);color:var(--green);}
+    .hint{color:var(--dim);font-size:.8rem;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}
+    .style{border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.8rem;background:rgba(255,255,255,.02);}
+    .style .sh{display:flex;align-items:center;gap:10px;margin-bottom:.6rem;}
+    .style .sh .bn{font-weight:700;} .style .sh .gs{margin-left:auto;color:var(--green);font-weight:700;font-size:.85rem;}
+    .style .lg{width:30px;height:30px;border-radius:6px;object-fit:contain;background:#fff;flex:none;}
+    .mrow{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);padding:3px 0;}
+    .hide{display:none;}
+    .loader{color:var(--dim);padding:2rem 0;text-align:center;}
+    .unlock{background:linear-gradient(135deg,rgba(225,29,72,.12),rgba(139,92,246,.1));border:1px solid var(--border);border-radius:14px;padding:1.6rem;text-align:center;}
+    .unlock .amt{font-family:var(--head);font-size:2.4rem;font-weight:700;}
+  </style>
+</head>
+<body>
+  <nav><div class="row">
+    <a href="/dashboard.html" class="logo"><img src="logo.png" alt="Styla"/> STYLA</a>
+    <div><a href="/dashboard.html" class="btn btn-ghost btn-sm" id="dashLink" style="display:none">Dashboard</a> <button class="btn btn-ghost btn-sm hide" id="logoutBtn">Log out</button></div>
+  </div></nav>
+
+  <main class="wrap">
+    <div id="loading" class="loader">Loading…</div>
+
+    <div id="loginView" class="hide">
+      <h1>Log in</h1>
+      <p class="hint">Log in to manage your wedding party.</p>
+      <div class="card" style="max-width:400px">
+        <div class="msg" id="loginMsg"></div>
+        <label>Email</label><input type="email" id="liEmail" autocomplete="email"/>
+        <label>Password</label><input type="password" id="liPass" autocomplete="current-password"/>
+        <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="liBtn">Log in</button>
+        <p class="hint" style="text-align:center;margin-top:.9rem">New here? <a href="/start.html?for=party">Start a party →</a></p>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div id="listView" class="hide">
+      <h1>My wedding parties</h1>
+      <div class="msg" id="listMsg"></div>
+      <div class="card">
+        <h2>Start a new party</h2>
+        <div class="row2">
+          <div><label>Party name</label><input id="npName" placeholder="The Hensley Wedding"/></div>
+          <div><label>Outfit type</label><select id="npCat"><option value="dresses">Bridesmaid dresses</option><option value="suits">Groomsmen suits</option></select></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:.9rem" id="npBtn">Create party</button>
+      </div>
+      <div id="partyList"></div>
+    </div>
+
+    <!-- DETAIL -->
+    <div id="detailView" class="hide">
+      <button class="btn btn-ghost btn-sm" id="backBtn">← All parties</button>
+      <h1 id="pTitle" style="margin-top:1rem"></h1>
+      <div class="msg" id="detailMsg"></div>
+
+      <div class="card">
+        <h2>Party members</h2>
+        <p class="hint" style="margin-top:-.4rem">Invite each person by email. They answer a few questions privately — no account or measuring needed.</p>
+        <div id="memberList" style="margin:1rem 0"></div>
+        <div class="row2">
+          <div><label>Name</label><input id="amName" placeholder="Sarah"/></div>
+          <div><label>Email</label><input id="amEmail" placeholder="sarah@email.com"/></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:.9rem" id="amBtn">Send invite</button>
+      </div>
+
+      <div class="card" id="reportCard">
+        <h2>Group fit report</h2>
+        <div id="reportBody"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    var SUPABASE_URL="https://tneflxtpmzodauygtslk.supabase.co";
+    var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+    var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    function el(id){return document.getElementById(id);}
+    function show(v){['loading','loginView','listView','detailView'].forEach(function(s){el(s).classList.toggle('hide',s!==v);});}
+    var params=new URLSearchParams(location.search);
+    var curParty=null;
+
+    async function token(){var s=await sb.auth.getSession();return s.data.session?s.data.session.access_token:null;}
+    async function api(action,extra){
+      var t=await token();
+      var r=await fetch('/api/party',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+      return r.json();
+    }
+
+    async function boot(){
+      var s=await sb.auth.getSession();
+      if(!s.data.session){ show('loginView'); return; }
+      el('dashLink').style.display='';el('logoutBtn').classList.remove('hide');
+      // Return from Stripe? open the party.
+      var pid=params.get('party'); var pay=params.get('payment');
+      if(pid){ openParty(pid, pay==='success'); return; }
+      loadList();
+    }
+
+    el('liBtn').addEventListener('click',async function(){
+      var email=el('liEmail').value.trim(),pass=el('liPass').value,msg=el('loginMsg');
+      if(!email||!pass){msg.textContent='Enter email and password.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Logging in…';
+      var out=await sb.auth.signInWithPassword({email:email,password:pass});
+      if(out.error){msg.style.color='#fca5a5';msg.textContent=out.error.message;return;}
+      boot();
+    });
+    el('logoutBtn').addEventListener('click',function(){sb.auth.signOut().then(function(){location.href='/index.html';});});
+
+    async function loadList(){
+      show('listView');
+      var res=await api('list-parties');
+      var list=el('partyList');
+      if(res.error){el('listMsg').textContent=res.error;return;}
+      var ps=res.parties||[];
+      list.innerHTML=ps.map(function(p){
+        return '<div class="prow"><span class="avatar">'+(p.name||'?').charAt(0)+'</span>'+
+          '<div><div class="pn">'+p.name+'</div><div class="pe">'+p.members.done+'/'+p.members.total+' fits in · '+(p.garment_category||'')+(p.has_paid_report?' · unlocked':'')+'</div></div>'+
+          '<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openParty(\''+p.id+'\')">Open</button></div>';
+      }).join('')||'<p class="hint">No parties yet — create one above.</p>';
+    }
+    el('npBtn').addEventListener('click',async function(){
+      var name=el('npName').value.trim();var msg=el('listMsg');
+      if(!name){msg.style.color='#fca5a5';msg.textContent='Enter a party name.';return;}
+      var res=await api('create-party',{name:name,garment_category:el('npCat').value});
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      el('npName').value='';openParty(res.id);
+    });
+
+    window.openParty=async function(id, justPaid){
+      var res=await api('get-party',{party_id:id});
+      if(res.error){alert(res.error);return;}
+      curParty=res.party;
+      el('pTitle').textContent=res.party.name;
+      renderMembers(res.members||[]);
+      show('detailView');
+      renderReport(res.party, res.members||[], justPaid);
+    };
+    el('backBtn').addEventListener('click',function(){history.replaceState({},'','/party.html');loadList();});
+
+    function renderMembers(members){
+      el('memberList').innerHTML=members.map(function(m){
+        return '<div class="prow"><span class="avatar">'+((m.name||m.email||'?').charAt(0).toUpperCase())+'</span>'+
+          '<div><div class="pn">'+(m.name||m.email)+'</div><div class="pe">'+(m.email||'')+'</div></div>'+
+          '<span class="pill '+(m.status==='completed'?'done':'')+'">'+(m.status==='completed'?'fit added':'invited')+'</span></div>';
+      }).join('')||'<p class="hint">No members yet — invite your party below.</p>';
+    }
+    el('amBtn').addEventListener('click',async function(){
+      var email=el('amEmail').value.trim();var msg=el('detailMsg');
+      if(!email){msg.style.color='#fca5a5';msg.textContent='Enter their email.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Sending invite…';
+      var res=await api('add-members',{party_id:curParty.id,members:[{name:el('amName').value.trim(),email:email}]});
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      el('amName').value=el('amEmail').value='';msg.style.color='var(--green)';msg.textContent='Invite sent.';
+      openParty(curParty.id);
+    });
+
+    async function renderReport(p, members, justPaid){
+      var done=(members||[]).filter(function(m){return m.status==='completed';}).length;
+      var body=el('reportBody');
+      if(!p.has_paid_report){
+        body.innerHTML='<div class="unlock"><div class="amt grad-text" style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">$29.99</div>'+
+          '<p class="hint" style="margin:.5rem 0 1rem">One payment unlocks the styles that fit your whole party — with each person\'s size. '+done+' member(s) have added their fit so far.</p>'+
+          '<button class="btn btn-primary" onclick="unlockReport()">Unlock the party report</button></div>';
+        return;
+      }
+      body.innerHTML='<div class="loader">Building your group fit report…</div>';
+      var res=await api('get-report',{party_id:p.id});
+      if(res.error){body.innerHTML='<p class="hint">'+res.error+'</p>';return;}
+      var styles=res.styles||[];
+      if(!styles.length){body.innerHTML='<p class="hint">'+(res.note||'No single style fits everyone yet. As more members add their fit — or once you add charts for more brands — matches will appear here.')+'</p>';return;}
+      body.innerHTML='<p class="hint" style="margin-bottom:1rem">Styles that fit all '+(res.memberCount||done)+' members, best first. Each person\'s size is listed.</p>'+
+        styles.map(function(s){
+          var lg=s.logo?'<img class="lg" src="'+s.logo+'"/>':'';
+          var mem=s.members.map(function(m){return '<div class="mrow"><span>'+m.name+'</span><span>Size '+m.size+' · '+m.score+'%</span></div>';}).join('');
+          return '<div class="style"><div class="sh">'+lg+'<span class="bn">'+s.brand+'</span><span class="gs">'+s.group_score+'% group fit</span></div>'+mem+'</div>';
+        }).join('');
+    }
+
+    window.unlockReport=async function(){
+      var t=await token();
+      var s=await sb.auth.getSession();
+      var res=await fetch('/api/export-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        action:'create-checkout-session', userId:s.data.session.user.id, email:s.data.session.user.email,
+        amount:2999, paymentType:'bridesmaid_report_payment', partyId:curParty.id,
+        productName:'Styla Wedding Party Fit Report', productDescription:'Unlock the styles that fit your whole party, with each person\'s size.',
+        successUrl:location.origin+'/party.html?party='+curParty.id+'&payment=success',
+        cancelUrl:location.origin+'/party.html?party='+curParty.id
+      })});
+      var data=await res.json();
+      if(data.error){alert(data.error);return;}
+      var stripe=Stripe(data.publishableKey);
+      stripe.redirectToCheckout({sessionId:data.id});
+    };
+
+    boot();
+  </script>
+</body>
+</html>

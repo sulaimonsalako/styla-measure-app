@@ -26,6 +26,10 @@
       "destination": "/api/store-api?route=brand-sync"
     },
     {
+      "source": "/api/party",
+      "destination": "/api/store-api?route=party"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

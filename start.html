@@ -352,7 +352,7 @@
   (function guardAuth(){
     try {
       var qs = new URLSearchParams(location.search);
-      if (qs.get('onboard') === '1' || qs.get('for') === 'party') return;
+      if (qs.get('onboard') === '1' || qs.get('for') === 'party' || qs.get('party')) return;
       getSupabase().auth.getSession().then(function(res){
         if (res && res.data && res.data.session) window.location.replace('/dashboard.html');
       });
@@ -602,8 +602,35 @@
     }
   }
 
+  // ---- Wedding-party member mode: submit fit to the party instead of signing up ----
+  var PARTY_TOKEN = new URLSearchParams(location.search).get('party') || '';
+  var PARTY_MEMBER = new URLSearchParams(location.search).get('member') || '';
+  function setupPartyMode(){
+    if(!PARTY_TOKEN) return;
+    var box = document.querySelector('#s-results .save-box');
+    if(!box) return;
+    box.innerHTML = '<h3>Add your fit to the party</h3>'
+      + '<p>Add your fit so the couple can find one style that fits everyone. Private — only your recommended size is shared, never your measurements.</p>'
+      + '<div class="oauth"><input type="text" id="pm-name" placeholder="Your first name" autocomplete="given-name" />'
+      + '<button id="pm-btn" onclick="submitPartyFit()">Add my fit to the party</button></div>'
+      + '<div id="pm-msg" style="margin-top:10px;font-size:.82rem;color:var(--pink2);display:none"></div>';
+  }
+  window.submitPartyFit = async function(){
+    var name=(document.getElementById('pm-name').value||'').trim();
+    var msg=document.getElementById('pm-msg');
+    if(!name){ msg.style.display='block'; msg.textContent='Please enter your first name.'; return; }
+    var btn=document.getElementById('pm-btn'); btn.disabled=true; btn.textContent='Adding…';
+    var profile=computeProfile();
+    try{
+      var r=await fetch('/api/party',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'submit-member',token:PARTY_TOKEN,member_id:PARTY_MEMBER,name:name,measurements:profile})});
+      var d=await r.json(); if(d.error) throw new Error(d.error);
+      var box=document.querySelector('#s-results .save-box');
+      box.innerHTML='<h3>You\'re in! 🎉</h3><p>Your fit has been added to the party. The couple will find a style that fits everyone — you can close this page.</p>';
+    }catch(e){ btn.disabled=false; btn.textContent='Add my fit to the party'; msg.style.display='block'; msg.textContent='Could not submit: '+(e.message||e); }
+  };
+
   // init
-  updH(); updW(); show();
+  updH(); updW(); show(); setupPartyMode();
 </script>
 </body>
 </html>
