@@ -3,859 +3,324 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smarter Sizing for Fashion Brands | Styla</title>
-  <meta name="description" content="Help your customers find their perfect size, aggregate sizing measurements to produce better fitting garments, and answer fit questions with our AI widget." />
+
+  <!-- SEO -->
+  <title>Styla for Fashion Brands — Cut Sizing Returns, Lift Conversion</title>
+  <meta name="description" content="Styla helps fashion brands recommend the right size on-site, aggregate real customer body data, and cut sizing returns. No-code Shopify install. Book a demo." />
+  <meta name="keywords" content="fashion sizing software, reduce clothing returns, size recommendation widget, apparel fit technology, Shopify size chart, ecommerce sizing" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.styla.ca/brands.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Styla" />
+  <meta property="og:title" content="Styla for Fashion Brands" />
+  <meta property="og:description" content="Recommend the right size on-site, aggregate real body data, and cut sizing returns. Book a demo." />
+  <meta property="og:url" content="https://www.styla.ca/brands.html" />
+  <meta property="og:image" content="https://www.styla.ca/logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Styla for Fashion Brands" />
+  <meta name="twitter:description" content="Cut sizing returns, lift checkout conversion. Book a demo." />
+  <meta name="twitter:image" content="https://www.styla.ca/logo.png" />
+
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Styla",
+    "url": "https://www.styla.ca/",
+    "logo": "https://www.styla.ca/logo.png",
+    "description": "Styla provides sizing and fit technology for fashion brands — on-site size recommendations, aggregated body data, and returns reduction."
+  }
+  </script>
+
   <style>
     :root {
-      --purple-glow: rgba(139, 92, 246, 0.04);
-      --pink-glow: rgba(59, 130, 246, 0.03);
+      --bg:#0b0b14; --bg-2:#121222; --card:#16162a; --border:rgba(255,255,255,0.08);
+      --white:#fff; --muted:#cbd5e1; --dim:#8b90a0; --pink:#ff2a75; --pink-2:#e11d48;
+      --green:#34d399; --purple:#a78bfa; --blue:#60a5fa;
+      --grad:linear-gradient(135deg,#e11d48 0%,#ff2a75 100%);
+      --head:'EB Garamond',serif; --body:'Inter',sans-serif;
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--body);background:var(--bg);color:var(--white);line-height:1.65;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+    a{color:inherit;text-decoration:none;} img{display:block;max-width:100%;}
+    .wrap{max-width:1160px;margin:0 auto;padding:0 1.5rem;}
+    .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .blob{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;pointer-events:none;opacity:0.5;}
+    .blob.a{width:480px;height:480px;background:rgba(255,42,117,0.14);top:-140px;right:-120px;}
+    .blob.b{width:420px;height:420px;background:rgba(139,92,246,0.12);bottom:10%;left:-160px;}
 
-    body {
-      background: var(--bg-base);
-      background-image: 
-        radial-gradient(circle at 10% 20%, var(--purple-glow) 0%, transparent 45%),
-        radial-gradient(circle at 90% 80%, var(--rose-glow) 0%, transparent 45%);
-    }
+    nav.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(11,11,20,0.72);border-bottom:1px solid var(--border);}
+    nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;}
+    .logo{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:700;font-size:1.35rem;letter-spacing:2px;}
+    .logo img{height:32px;width:32px;border-radius:50%;}
+    .nav-right{display:flex;align-items:center;gap:1.25rem;}
+    .nav-link{color:var(--muted);font-size:0.9rem;font-weight:500;} .nav-link:hover{color:var(--white);}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:var(--body);font-weight:700;border-radius:100px;transition:transform .15s ease,box-shadow .15s ease;}
+    .btn-primary{background:var(--grad);color:#fff;padding:12px 28px;font-size:0.95rem;box-shadow:0 6px 20px rgba(255,42,117,0.25);}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,42,117,0.35);}
+    .btn-ghost{background:transparent;color:var(--white);border:1px solid var(--border);padding:11px 22px;font-size:0.9rem;}
+    .btn-ghost:hover{background:rgba(255,255,255,0.05);}
+    .btn-lg{padding:16px 38px;font-size:1.05rem;}
 
-    /* Hero Section Override */
-    .brand-hero {
-      position: relative;
-      padding: 130px 0 60px;
-      text-align: center;
-      overflow: hidden;
-    }
+    header.hero{position:relative;z-index:1;padding:5rem 0 3rem;text-align:center;}
+    .eyebrow{display:inline-block;font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--pink);background:rgba(255,42,117,0.1);padding:7px 14px;border-radius:100px;margin-bottom:1.4rem;}
+    h1.hero-h{font-family:var(--head);font-weight:700;font-size:clamp(2.4rem,5.2vw,3.9rem);line-height:1.08;letter-spacing:-0.5px;}
+    .hero-sub{color:var(--muted);font-size:1.15rem;margin:1.4rem auto 2rem;max-width:40em;}
+    .hero-cta-row{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;}
 
-    .brand-hero-title {
-      font-family: var(--font-head);
-      font-size: clamp(2.2rem, 5.5vw, 3.8rem);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin-bottom: 20px;
-      color: #ffffff;
-    }
+    .roi{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:900px;margin:3.5rem auto 0;}
+    .roi-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;text-align:center;}
+    .roi-card .big{font-family:var(--head);font-size:2.9rem;font-weight:700;line-height:1;}
+    .roi-card h4{margin:0.6rem 0 0.4rem;font-size:1.05rem;font-weight:700;}
+    .roi-card p{color:var(--muted);font-size:0.88rem;}
 
-    .brand-hero-title em {
-      color: #3b82f6;
-      font-style: italic;
-    }
+    /* Dashboard mock */
+    .mock{max-width:960px;margin:3.5rem auto 0;background:linear-gradient(160deg,#14142a,#101020);border:1px solid var(--border);border-radius:22px;padding:1.4rem;box-shadow:0 40px 80px rgba(0,0,0,0.5);text-align:left;}
+    .mock-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;}
+    .mock-title{font-size:0.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);}
+    .mock-badge{font-size:0.72rem;color:var(--green);display:flex;align-items:center;gap:6px;}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(52,211,153,0.5);animation:pulse 2s infinite;}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,0.4);}70%{box-shadow:0 0 0 8px rgba(52,211,153,0);}100%{box-shadow:0 0 0 0 rgba(52,211,153,0);}}
+    .mock-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:1rem;}
+    .mpanel{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;padding:1.1rem;}
+    .mpanel .pt{font-size:0.78rem;color:var(--muted);margin-bottom:1rem;}
+    .bars{display:flex;align-items:flex-end;gap:10px;height:130px;}
+    .bargrp{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;}
+    .bar{width:100%;border-radius:6px 6px 0 0;background:var(--grad);height:0;transition:height 1s ease;}
+    .barlbl{font-size:0.7rem;color:var(--dim);}
+    .act{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--border);}
+    .act:last-child{border-bottom:none;} .act b{color:var(--white);} .act .t{margin-left:auto;color:var(--dim);font-size:0.72rem;}
+    .mstrip{display:grid;grid-template-columns:repeat(3,1fr);margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;text-align:center;}
+    .mstrip .mv{font-family:var(--head);font-size:1.4rem;font-weight:700;}
+    .mstrip .ml{font-size:0.72rem;color:var(--dim);}
 
-    .brand-hero-sub {
-      font-size: clamp(1rem, 1.8vw, 1.2rem);
-      color: var(--text-secondary);
-      max-width: 760px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
-    }
+    section.block{position:relative;z-index:1;padding:5rem 0;}
+    .kicker{text-align:center;font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--pink);margin-bottom:0.8rem;}
+    h2.sec{font-family:var(--head);font-weight:700;font-size:clamp(2rem,4vw,2.9rem);text-align:center;letter-spacing:-0.5px;line-height:1.12;}
+    .sec-sub{text-align:center;color:var(--muted);max-width:42em;margin:1.1rem auto 0;font-size:1.05rem;}
 
-    /* Feature Pillars Section */
-    .pillars-section {
-      padding: 80px 0;
-    }
+    .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;}
+    .pillar{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;}
+    .pillar .ic{font-size:2rem;margin-bottom:1rem;}
+    .pillar h3{font-family:var(--head);font-size:1.4rem;font-weight:700;margin-bottom:0.6rem;}
+    .pillar p{color:var(--muted);font-size:0.96rem;}
 
-    .section-header {
-      text-align: center;
-      margin-bottom: 48px;
-    }
+    .eco{position:relative;z-index:1;}
+    .eco-inner{background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,92,246,0.08));border:1px solid var(--border);border-radius:24px;padding:2.6rem 3rem;display:grid;grid-template-columns:auto 1fr;gap:1.5rem;align-items:center;}
+    .eco-inner .gic{font-size:2.4rem;}
+    .eco-inner h3{font-family:var(--head);font-size:1.7rem;font-weight:700;}
+    .eco-inner p{color:var(--muted);margin-top:0.5rem;}
 
-    .section-badge {
-      display: inline-block;
-      padding: 6px 14px;
-      background: rgba(37, 99, 235, 0.04);
-      border: 1px solid var(--border-accent);
-      border-radius: 100px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent-light);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
+    .final{text-align:center;padding:6rem 0;position:relative;z-index:1;}
+    .final h2{font-family:var(--head);font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;letter-spacing:-0.5px;}
+    .final p{color:var(--muted);margin:1rem auto 2.2rem;font-size:1.1rem;max-width:34em;}
 
-    .section-title-large {
-      font-family: var(--font-head);
-      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text-primary);
-      line-height: 1.2;
-    }
+    footer{border-top:1px solid var(--border);padding:3.5rem 0 2rem;position:relative;z-index:1;}
+    .fcols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:2rem;}
+    .fcol h5{font-size:0.76rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:0.9rem;}
+    .fcol a{display:block;color:var(--muted);font-size:0.9rem;margin-bottom:0.6rem;} .fcol a:hover{color:var(--white);}
+    .fcol.brand .logo{margin-bottom:0.9rem;}
+    .ftag{color:var(--muted);font-size:0.9rem;max-width:24em;margin-bottom:1.1rem;}
+    .fsocials{display:flex;gap:0.7rem;}
+    .fsocials a{width:36px;height:36px;border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+    .fsocials a:hover{color:var(--pink);border-color:var(--pink);}
+    .fbottom{border-top:1px solid var(--border);margin-top:2.5rem;padding-top:1.5rem;color:var(--dim);font-size:0.82rem;text-align:center;}
 
-    .pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-    }
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+    .reveal.in{opacity:1;transform:none;}
 
-    .pillar-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 32px 28px;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
+    @media (max-width:860px){
+      .roi{grid-template-columns:1fr;}
+      .mock-grid{grid-template-columns:1fr;}
+      .pillars{grid-template-columns:1fr;}
+      .eco-inner{grid-template-columns:1fr;text-align:center;}
+      .fcols{grid-template-columns:1fr 1fr;}
+      .nav-link.hide-sm{display:none;}
     }
-
-    .pillar-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      background: var(--primary-gradient);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+    @media (max-width:560px){
+      .wrap{padding:0 1.1rem;}
+      nav.top .wrap{height:60px;}
+      .nav-right{gap:0.55rem;}
+      .btn-primary{padding:10px 16px;font-size:0.82rem;}
+      .btn-ghost{padding:9px 13px;font-size:0.8rem;}
+      .logo{font-size:1.1rem;letter-spacing:1px;} .logo img{height:28px;width:28px;}
+      header.hero{padding:3rem 0 2rem;}
+      .hero-cta-row .btn-lg{width:100%;justify-content:center;padding:14px 20px;}
+      section.block{padding:3.5rem 0;}
+      .eco-inner{padding:2rem 1.4rem;}
     }
-
-    .pillar-card:hover::before {
-      opacity: 1;
-    }
-
-    .pillar-icon {
-      font-size: 1.8rem;
-      margin-bottom: 20px;
-      background: rgba(37, 99, 235, 0.02);
-      width: 50px; height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(37, 99, 235, 0.1);
-      color: var(--accent-light);
-    }
-
-    .pillar-title {
-      font-family: var(--font-body);
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: var(--text-primary);
-    }
-
-    .pillar-desc {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin: 0;
-    }
-
-    /* Environmental Callout */
-    .brand-eco-section {
-      padding: 60px 0;
-    }
-
-    .brand-eco-card {
-      background: rgba(16, 185, 129, 0.02);
-      border: 1px solid rgba(16, 185, 129, 0.1);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      display: flex;
-      align-items: center;
-      gap: 28px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .brand-eco-icon {
-      font-size: 2.5rem;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.04);
-      width: 70px; height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      border: 1px solid rgba(16, 185, 129, 0.15);
-      flex-shrink: 0;
-    }
-
-    .brand-eco-title {
-      font-family: var(--font-body);
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .brand-eco-desc {
-      font-size: 0.92rem;
-      color: var(--text-secondary);
-      line-height: 1.55;
-      margin: 0;
-    }
-
-    /* Waitlist Form Section */
-    .brand-waitlist-section {
-      padding: 80px 0 120px;
-      position: relative;
-    }
-
-    .waitlist-card {
-      max-width: 600px;
-      margin: 0 auto;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 40px;
-      box-shadow: var(--shadow-card);
-    }
-
-    .form-group-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      .pillars-grid { grid-template-columns: 1fr; gap: 20px; }
-      .brand-eco-card { flex-direction: column; text-align: center; padding: 24px; gap: 16px; }
-      .form-group-grid { grid-template-columns: 1fr; gap: 0; }
-      .waitlist-card { padding: 28px 18px; }
-    }
-
-
-
-    /* Dark theme for dashboard mock to align with styla.ca main page theme */
-    .dashboard-mock {
-      background: rgba(14, 14, 28, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
-    }
-    .dashboard-title {
-      color: #fff !important;
-    }
-    .chart-container, .activity-container {
-      background: rgba(255, 255, 255, 0.02) !important;
-      border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-    .chart-bar-group:nth-child(even) .chart-bar {
-      background: linear-gradient(180deg, #555555 0%, rgba(85, 85, 85, 0.2) 100%) !important;
-    }
-    .activity-item {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-    .activity-text {
-      color: var(--text-secondary) !important;
-    }
-    .dashboard-metrics-strip div div:first-child {
-      color: #fff !important;
-    }
-    .dashboard-metrics-strip div {
-      border-color: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    /* Premium Modernization Upgrades */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #07070c;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 42, 117, 0.15);
-      border-color: #60a5fa;
-    }
-
-    .pillar-card {
-      background: rgba(255, 255, 255, 0.03) !important;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    }
-
-    .waitlist-card {
-      background: rgba(255, 255, 255, 0.03) !important;
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    }
-
-    .styled-input, .styled-select, .styled-textarea {
-      background: rgba(255, 255, 255, 0.03) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-    .styled-input:focus, .styled-select:focus, .styled-textarea:focus {
-      border-color: #60a5fa !important;
-      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
-      background: rgba(255, 255, 255, 0.05) !important;
-    }
-    
-    .nav-cta, .btn-primary, button {
-      transition: all 0.2s ease !important;
-    }
-    .nav-cta:hover, .btn-primary:hover, button:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 10px 25px rgba(255, 42, 117, 0.35) !important;
-    }
-
-    .dashboard-metrics-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-top: 24px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding-top: 20px;
-      text-align: center;
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 0 16px !important;
-      }
-      .nav {
-        padding: 0 12px !important;
-      }
-      .nav-inner {
-        height: 56px !important;
-      }
-      .logo {
-        font-size: 1.1rem !important;
-      }
-      .logo img {
-        height: 24px !important;
-      }
-      .nav-actions {
-        gap: 0.5rem !important;
-      }
-      .nav-actions .nav-link {
-        display: none !important; /* Hide Shopper Site link to prevent overlap */
-      }
-      .nav-actions .nav-cta {
-        padding: 6px 12px !important;
-        font-size: 0.75rem !important;
-      }
-      .dashboard-mock {
-        padding: 16px !important;
-        margin-top: 20px !important;
-      }
-      .dashboard-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 8px !important;
-      }
-      .dashboard-title {
-        font-size: 0.8rem !important;
-      }
-      .dashboard-metrics-strip {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-      }
-      .chart-bars {
-        height: 120px !important;
-      }
-      .chart-label {
-        font-size: 0.65rem !important;
-      }
-      /* Prevent horizontal scroll from containers */
-      .brand-hero {
-        padding: 100px 0 40px !important; /* Clears fixed header on mobile */
-      }
-      .pillars-section, .brand-eco-section, .brand-waitlist-section {
-        padding: 40px 0 !important;
-      }
-      .brand-hero-title {
-        font-size: 2rem !important;
-      }
-      .brand-hero-sub {
-        font-size: 0.95rem !important;
-        margin-bottom: 24px !important;
-      }
-    }
-
-    /* Premium Modernization Upgrades & Form Elements */
-    .brand-hero {
-      padding: 150px 0 60px !important;
-    }
-    
-    .waitlist-card {
-      background: rgba(255, 255, 255, 0.03) !important;
-      backdrop-filter: blur(20px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 28px !important;
-      padding: 48px !important;
-      box-shadow: var(--shadow-card) !important;
-    }
-
-    .form-group label {
-      font-size: 0.85rem !important;
-      font-weight: 600 !important;
-      color: #cbd5e1 !important;
-      margin-bottom: 8px !important;
-    }
-
-    .styled-input, .styled-select, .styled-textarea {
-      background: rgba(255, 255, 255, 0.03) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 14px !important;
-      padding: 14px 18px !important;
-      font-size: 1rem !important;
-      color: #fff !important;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      box-sizing: border-box;
-    }
-    .styled-input:focus, .styled-select:focus, .styled-textarea:focus {
-      border-color: #60a5fa !important;
-      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15) !important;
-      background: rgba(255, 255, 255, 0.05) !important;
-    }
-    
-    #btn-submit {
-      padding: 14px 28px !important;
-      font-size: 1.05rem !important;
-      border-radius: 100px !important;
-      font-weight: 700 !important;
-    }
-
-    /* Prevent horizontal scroll overflow globally */
-    html, body {
-      overflow-x: hidden !important;
-      max-width: 100% !important;
-    }
-  
-    .logo-accent { color: #ff2a75 !important; }
   </style>
 </head>
 <body>
+  <div class="blob a"></div>
+  <div class="blob b"></div>
 
   <!-- NAV -->
-    <nav class="nav">
-    <div class="nav-inner">
-      <a href="/index.html" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-        <img src="/logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
-        STYLA
-      </a>
-      <div id="auth-status-container" class="nav-actions" style="display: flex; align-items: center; gap: 1.5rem;">
-        <a href="/bridesmaid.html" class="nav-link" id="nav-link-bridesmaid" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Bridesmaid</a>
-        <a href="/brands.html" class="nav-link nav-link-brands" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">For Fashion Brands</a>
-        <a href="/blogs" class="nav-link" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; transition: color 0.2s; text-decoration: none;" onmouseover="this.style.color='var(--accent-light)'" onmouseout="this.style.color='var(--text-secondary)'">Blogs</a>
-        <button id="btn-show-login" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log In</button>
-        <div id="logged-in-status" style="display: none; align-items: center; gap: 16px;">
-          <span id="cloud-sync-status" class="logged-in-email" style="font-size: 0.85rem; font-weight: 600; color: #10b981;">✔ Synced</span>
-          <button id="btn-logout" class="nav-cta" style="font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; background: var(--primary-gradient); color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 100px; box-shadow: 0 4px 15px rgba(255, 42, 117, 0.2);">Log out</button>
-        </div>
+  <nav class="top">
+    <div class="wrap">
+      <a href="/index.html" class="logo"><img src="logo.png" alt="Styla logo" /> STYLA</a>
+      <div class="nav-right">
+        <a href="/index.html" class="nav-link hide-sm">For shoppers</a>
+        <a href="/bridesmaid.html" class="nav-link hide-sm">Wedding parties</a>
+        <a href="https://calendly.com/contact-styla/30min" target="_blank" rel="noopener" class="btn btn-primary">Book a demo</a>
       </div>
     </div>
   </nav>
 
   <!-- HERO -->
-  <section class="brand-hero">
-    <div class="hero-bg-grid"></div>
-    <div class="hero-glow hero-glow--left" style="background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);"></div>
-    <div class="hero-glow hero-glow--right" style="background: radial-gradient(circle, rgba(225,29,72,0.04) 0%, transparent 70%);"></div>
-    
-    <div class="container">
-
-
-      <h1 class="brand-hero-title">
-        Smarter Sizing for<br /><em>modern fashion brands.</em>
-      </h1>
-
-      <p class="brand-hero-sub" style="max-width: 680px; margin-left: auto; margin-right: auto; font-size: 1.15rem;">
-        Collect customer sizing data, recommend the perfect size on-site, and answer fit questions instantly to drive conversions and eliminate sizing returns.
-      </p>
-
-      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 20px;">
-        <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex; font-size: 1rem; padding: 0.8rem 1.6rem; background: var(--primary-gradient); border: none;">
-          <span>Book a Demo</span>
-          <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg>
-        </a>
-        <a href="#pillars" class="btn-primary" style="text-decoration: none; display: inline-flex; font-size: 1rem; padding: 0.8rem 1.6rem; background: transparent; border: 1px solid var(--border);">
-          <span>Learn How It Works</span>
-        </a>
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Styla for fashion brands</span>
+      <h1 class="hero-h">Smarter sizing for<br><span class="grad-text">modern fashion brands.</span></h1>
+      <p class="hero-sub">Recommend the right size on-site, aggregate real customer body data, and turn sizing hesitation into sales — while cutting the returns that eat your margin.</p>
+      <div class="hero-cta-row">
+        <a href="https://calendly.com/contact-styla/30min" target="_blank" rel="noopener" class="btn btn-primary btn-lg">Book a demo</a>
+        <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
       </div>
 
-      <!-- 3-Metric ROI Block -->
-      <section class="roi-section" style="max-width: 1200px; margin: 3rem auto; padding: 0 1.5rem; box-sizing: border-box;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-          <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center;">
-            <div style="font-size: 2.8rem; font-weight: 900; color: #10b981; margin-bottom: 8px;">-38%</div>
-            <h4 style="margin: 0 0 6px 0; color: #fff; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">Return Rate Reduction</h4>
-            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Settle sizing doubts at point-of-sale and eliminate size-related shipping waste.</p>
-          </div>
-          <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center;">
-            <div style="font-size: 2.8rem; font-weight: 900; color: #a78bfa; margin-bottom: 8px;">+22%</div>
-            <h4 style="margin: 0 0 6px 0; color: #fff; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">Checkout Conversion</h4>
-            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Give hesitant buyers immediate size recommendations and checkout confidence.</p>
-          </div>
-          <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center;">
-            <div style="font-size: 2.8rem; font-weight: 900; color: #3b82f6; margin-bottom: 8px;">2-Min</div>
-            <h4 style="margin: 0 0 6px 0; color: #fff; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700;">No-Code Integration</h4>
-            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Install as a native Shopify Theme App Extension with zero coding.</p>
-          </div>
-        </div>
-      </section>
+      <!-- ROI -->
+      <div class="roi">
+        <div class="roi-card reveal"><div class="big" style="color:var(--green);">−<span class="count" data-to="38">0</span>%</div><h4>Sizing returns</h4><p>Settle fit doubts at the point of sale and cut size-related returns and shipping waste.</p></div>
+        <div class="roi-card reveal"><div class="big" style="color:var(--purple);">+<span class="count" data-to="22">0</span>%</div><h4>Checkout conversion</h4><p>Give hesitant shoppers an instant size recommendation and the confidence to buy.</p></div>
+        <div class="roi-card reveal"><div class="big" style="color:var(--blue);">2-min</div><h4>No-code install</h4><p>Ships as a native Shopify theme app extension — live with zero engineering.</p></div>
+      </div>
 
-      <!-- INTERACTIVE CSS SaaS DASHBOARD PREVIEW -->
-      <div class="dashboard-mock">
-        <div class="dashboard-header">
-          <div class="dashboard-title">STYLA BRAND PORTAL — ANALYTICS</div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div class="activity-dot pulse"></div>
-            <span class="dashboard-badge">Live Integration</span>
-          </div>
+      <!-- Dashboard mock -->
+      <div class="mock reveal">
+        <div class="mock-head">
+          <div class="mock-title">Styla Brand Portal — Analytics</div>
+          <div class="mock-badge"><span class="dot"></span> Live integration</div>
         </div>
-        <div class="dashboard-grid">
-          <!-- Sizing Distribution Histogram -->
-          <div class="chart-container">
-            <div class="chart-title">Customer Body Sizing Distribution</div>
-            <div class="chart-bars">
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 25px;"></div>
-                <span class="chart-label">XS</span>
-              </div>
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 55px;"></div>
-                <span class="chart-label">S</span>
-              </div>
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 110px;"></div>
-                <span class="chart-label">M</span>
-              </div>
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 95px;"></div>
-                <span class="chart-label">L</span>
-              </div>
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 45px;"></div>
-                <span class="chart-label">XL</span>
-              </div>
-              <div class="chart-bar-group">
-                <div class="chart-bar" style="height: 15px;"></div>
-                <span class="chart-label">XXL</span>
-              </div>
+        <div class="mock-grid">
+          <div class="mpanel">
+            <div class="pt">Customer body-size distribution</div>
+            <div class="bars">
+              <div class="bargrp"><div class="bar" data-h="25"></div><span class="barlbl">XS</span></div>
+              <div class="bargrp"><div class="bar" data-h="60"></div><span class="barlbl">S</span></div>
+              <div class="bargrp"><div class="bar" data-h="100"></div><span class="barlbl">M</span></div>
+              <div class="bargrp"><div class="bar" data-h="85"></div><span class="barlbl">L</span></div>
+              <div class="bargrp"><div class="bar" data-h="45"></div><span class="barlbl">XL</span></div>
+              <div class="bargrp"><div class="bar" data-h="18"></div><span class="barlbl">XXL</span></div>
             </div>
           </div>
-          <!-- Live Scan Activities -->
-          <div class="activity-container">
-            <div class="chart-title">Live Sizing Scans</div>
-            <div class="activity-list">
-              <div class="activity-item">
-                <div class="activity-dot"></div>
-                <span class="activity-text">Customer scan matched <b>Size M</b></span>
-                <span class="activity-time">Just now</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-dot"></div>
-                <span class="activity-text">Customer scan matched <b>Size L</b></span>
-                <span class="activity-time">2m ago</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-dot"></div>
-                <span class="activity-text">Customer scan matched <b>Size S</b></span>
-                <span class="activity-time">5m ago</span>
-              </div>
-            </div>
+          <div class="mpanel">
+            <div class="pt">Live size matches</div>
+            <div class="act"><span class="dot"></span><span>Matched <b>Size M</b></span><span class="t">now</span></div>
+            <div class="act"><span class="dot"></span><span>Matched <b>Size L</b></span><span class="t">2m</span></div>
+            <div class="act"><span class="dot"></span><span>Matched <b>Size S</b></span><span class="t">5m</span></div>
           </div>
         </div>
-        <!-- Metrics strip -->
-        <div class="dashboard-metrics-strip">
-          <div>
-            <div style="font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: #34d399;">+25%</div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">Conversion Rate Lift</div>
-          </div>
-          <div style="border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: #60a5fa;">-40%</div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">Sizing Returns Reduced</div>
-          </div>
-          <div>
-            <div style="font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; color: #a78bfa;">-30%</div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">Garment Waste Saved</div>
-          </div>
+        <div class="mstrip">
+          <div><div class="mv grad-text">+25%</div><div class="ml">Conversion lift</div></div>
+          <div style="border-left:1px solid var(--border);border-right:1px solid var(--border);"><div class="mv grad-text">−40%</div><div class="ml">Sizing returns</div></div>
+          <div><div class="mv grad-text">−30%</div><div class="ml">Garment waste</div></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PILLARS -->
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="kicker reveal">How we help brands</div>
+      <h2 class="sec reveal">Sizing confidence, simplified.</h2>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <div class="ic">📊</div>
+          <h3>Aggregate sizing data</h3>
+          <p>Collect and aggregate your customers' real body measurements. Use true-to-life sizing data to refine your garment dimensions and optimize manufacturing runs.</p>
+        </div>
+        <div class="pillar reveal">
+          <div class="ic">🛍️</div>
+          <h3>On-site fit recommender</h3>
+          <p>Tell shoppers exactly what size to buy and how it will fit as they browse — turning sizing hesitation into checkout conversions.</p>
+        </div>
+        <div class="pillar reveal">
+          <div class="ic">💬</div>
+          <h3>AI sizing widget</h3>
+          <p>Embed an AI assistant trained to answer real-time questions about fabric stretch, fit preference, and sizing, so customers buy with confidence.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW WE HELP BRANDS -->
-  <section class="pillars-section" id="pillars">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-badge">How We Help Brands</span>
-        <h2 class="section-title-large">Sizing Confidence. Simplified.</h2>
-      </div>
-
-      <div class="pillars-grid">
-        <!-- Pillar 1 -->
-        <div class="pillar-card">
-          <div class="pillar-icon">📊</div>
-          <h3 class="pillar-title">1. Aggregate Sizing Data</h3>
-          <p class="pillar-desc">
-            We help you collect and aggregate your customers' body measurements. Use real-world sizing data to improve your garment dimensions and optimize manufacturing runs.
-          </p>
-        </div>
-
-        <!-- Pillar 2 -->
-        <div class="pillar-card">
-          <div class="pillar-icon">🛍️</div>
-          <h3 class="pillar-title">2. On-Site Fit Recommender</h3>
-          <p class="pillar-desc">
-            Instantly tell shoppers what size to buy and how it fits as they browse your site. Convert sizing hesitation into sales and improve e-commerce conversions.
-          </p>
-        </div>
-
-        <!-- Pillar 3 -->
-        <div class="pillar-card">
-          <div class="pillar-icon">💬</div>
-          <h3 class="pillar-title">3. AI Sizing Widget</h3>
-          <p class="pillar-desc">
-            Embed our AI assistant trained to answer real-time questions about fabric stretch, fit preference, and sizing. Let customers buy with absolute confidence.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ENVIRONMENTAL & WASTE SCORE SECTION -->
-  <section class="brand-eco-section">
-    <div class="container">
-      <div class="brand-eco-card">
-        <div class="brand-eco-icon">🌱</div>
+  <!-- ECO -->
+  <section class="block eco">
+    <div class="wrap">
+      <div class="eco-inner reveal">
+        <div class="gic">🌱</div>
         <div>
-          <h3 class="brand-eco-title">Improve Your Environmental Rating</h3>
-          <p class="brand-eco-desc">
-            Sizing returns double logistics emissions and contribute to massive fabric waste. By helping customers place orders in their correct size and aligning your manufacturing cuts to real-world dimensions, STYLA significantly improves your brand's environmental score.
-          </p>
+          <h3>Improve your environmental rating</h3>
+          <p>Sizing returns double logistics emissions and drive fabric waste. By helping customers order their correct size and aligning your cuts to real-world dimensions, Styla measurably improves your brand's environmental footprint.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- WAITLIST FORM -->
-  <section class="brand-waitlist-section" id="lead-form" style="max-width: 800px; margin: 4rem auto; padding: 0 1.5rem; text-align: center; box-sizing: border-box;">
-    <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; padding: 3.5rem 2rem; text-align: center;">
-      <h2 style="font-family: var(--font-head); font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em;">Ready to Optimize Your Store?</h2>
-      <p style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 2.2rem; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-        Schedule a brief 15-minute product tour. See how STYLA integrates with your Shopify theme and calculates real-time sizing ease.
-      </p>
-      <a href="https://calendly.com/contact-styla/30min" target="_blank" class="btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; padding: 14px 36px; background: var(--primary-gradient); text-decoration: none; border-radius: 8px; color: #fff; font-weight: 700; font-family: var(--font-head); font-size: 1.05rem; border: none; box-shadow: 0 4px 15px rgba(59,130,246,0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <span>Book a Demo</span>
-        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-      </a>
+  <!-- FINAL CTA -->
+  <section class="final">
+    <div class="wrap">
+      <h2 class="reveal">See it on your store.</h2>
+      <p class="reveal">Book a 15-minute demo — we'll show you how Styla installs on your Shopify theme and recommends sizes in real time.</p>
+      <a href="https://calendly.com/contact-styla/30min" target="_blank" rel="noopener" class="btn btn-primary btn-lg reveal">Book a demo</a>
     </div>
   </section>
 
   <!-- FOOTER -->
-      <footer class="footer">
-    <div class="container">
-      <div class="footer-inner" style="flex-direction: column; gap: 20px;">
-        <div class="logo" style="display: flex; align-items: center; gap: 10px; justify-content: center;">
-          <img src="logo.png" alt="STYLA Logo" style="height: 32px; width: auto; border-radius: 50%;" />
-          STYLA
+  <footer>
+    <div class="wrap fcols">
+      <div class="fcol brand">
+        <a href="/index.html" class="logo"><img src="logo.png" alt="Styla logo" /> STYLA</a>
+        <p class="ftag">Fit and sizing technology that cuts returns and lifts conversion for fashion brands.</p>
+        <div class="fsocials">
+          <a href="https://instagram.com/stylaca" target="_blank" rel="noopener" aria-label="Styla on Instagram"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg></a>
+          <a href="https://tiktok.com/@stylaca" target="_blank" rel="noopener" aria-label="Styla on TikTok"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.3 2.2 1.8 3.9 4 4.2v2.9c-1.5.1-2.9-.4-4-1.2v5.6c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6c.34 0 .67.03 1 .08v3.1c-.32-.1-.66-.18-1-.18-1.6 0-2.9 1.3-2.9 2.9S8.4 17.2 10 17.2s3-1.2 3-2.9V3h3z"/></svg></a>
+          <a href="https://x.com/stylaca" target="_blank" rel="noopener" aria-label="Styla on X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h3l-7.5 8.6L22 22h-6.8l-4.7-6.2L5 22H2l8-9.2L2 2h6.9l4.3 5.7L18 2zm-1.2 18h1.7L7.3 3.8H5.5L16.8 20z"/></svg></a>
         </div>
-
-        <div class="footer-socials" style="display: flex; gap: 20px; align-items: center; justify-content: center;">
-          <a href="https://instagram.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Instagram</a>
-          <a href="https://tiktok.com/@stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">TikTok</a>
-          <a href="https://x.com/stylaca" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">X (Twitter)</a>
-        </div>
-
-        <div class="footer-links" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 10px 0;">
-          <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Home</a>
-          <a href="bridesmaid.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Bridesmaid</a>
-          <a href="brands.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">For Fashion Brands</a>
-          <a href="https://calendly.com/contact-styla/30min" target="_blank" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Book a Demo</a>
-          <a href="tools/pricing-calculator.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">MOQ Price Calculator</a>
-          <a href="tools/size-chart-maker.html" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">AI Size Chart Maker</a>
-          <a href="/blogs" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Blogs</a>
-          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Privacy Policy</a>
-          <a href="#" style="color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">Terms of Service</a>
-        </div>
-
-        <p class="footer-copy" style="text-align: center; color: #5a5a7a; font-size: 0.8rem; margin: 5px 0;">&copy; 2026 Styla. All rights reserved.</p>
-        <p class="footer-tagline" style="text-align: center; color: #5a5a7a; font-size: 0.8rem;">Your body. Your size. Everywhere.</p>
+      </div>
+      <div class="fcol">
+        <h5>Product</h5>
+        <a href="/index.html">For shoppers</a>
+        <a href="/bridesmaid.html">Wedding parties</a>
+        <a href="https://calendly.com/contact-styla/30min" target="_blank" rel="noopener">Book a demo</a>
+      </div>
+      <div class="fcol">
+        <h5>Tools</h5>
+        <a href="/tools/size-chart-maker.html">AI Size Chart Maker</a>
+        <a href="/tools/pricing-calculator.html">MOQ Price Calculator</a>
+        <a href="/blogs">Blog</a>
+      </div>
+      <div class="fcol">
+        <h5>Legal</h5>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
       </div>
     </div>
+    <div class="wrap fbottom">© <span id="year"></span> Styla · Your body. Your size. Everywhere.</div>
   </footer>
 
-  <!-- Toast Notification Client JS -->
   <script>
-    const AIRTABLE_TOKEN  = 'patuqcskKn0ND0pAF.e2c4932ac9a25ad9acd248888e3b91f12e5d1a031e27a7d4bfa0cdd1c8d4905b';
-    const AIRTABLE_BASE   = 'app42bPMORZ7p5JND';
-    const AIRTABLE_TABLE  = 'Waitlist';
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-    async function handleBrandSubmit(event) {
-      event.preventDefault();
+    // Scroll reveal
+    const io = new IntersectionObserver((entries)=>{entries.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{threshold:0.12});
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 
-      const form = event.target;
-      const brandName = document.getElementById('brand-name').value.trim();
-      const email = document.getElementById('brand-email').value.trim();
-      const volume = document.getElementById('brand-volume').value;
-      const returns = document.getElementById('brand-returns').value;
-      const painpoints = document.getElementById('brand-painpoints').value.trim();
+    // Count-up
+    function runCount(el){const to=parseInt(el.dataset.to,10);let c=0;const s=Math.max(1,Math.round(to/40));const t=setInterval(()=>{c+=s;if(c>=to){c=to;clearInterval(t);}el.textContent=c;},25);}
+    const cio=new IntersectionObserver((entries)=>{entries.forEach(en=>{if(en.isIntersecting){runCount(en.target);cio.unobserve(en.target);}});},{threshold:0.6});
+    document.querySelectorAll('.count').forEach(el=>cio.observe(el));
 
-      const btn = document.getElementById('btn-submit');
-      const btnTxt = document.getElementById('btn-text');
-
-      if (!email || !brandName) return;
-
-      // Loading state
-      btn.disabled = true;
-      btnTxt.textContent = 'Submitting...';
-
-      // Format metadata into Notes field
-      const notesContent = `Brand: ${brandName} | Volume: ${volume} | Est Returns: ${returns} | Pain Points: ${painpoints}`;
-
-      try {
-        const response = await fetch(
-          `https://api.airtable.com/v0/${AIRTABLE_BASE}/${encodeURIComponent(AIRTABLE_TABLE)}`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fields: {
-                Email: email,
-                'Sign Up Date': new Date().toISOString().split('T')[0],
-                Source: 'Brands Page',
-                Notes: notesContent
-              }
-            })
-          }
-        );
-
-        if (response.ok) {
-          form.reset();
-          showToast('🎉 Success! Your application has been submitted.');
-        } else {
-          const err = await response.json();
-          console.error('Airtable error:', err);
-          showToast('Something went wrong. Please try again.', 'error');
-        }
-      } catch (err) {
-        console.error('Network error:', err);
-        // Fallback success for local development / network blockages
-        showToast('🎉 Success! Your application has been logged.');
-      } finally {
-        btn.disabled = false;
-        btnTxt.textContent = 'Apply for Pilot Access';
-      }
-    }
-
-    function showToast(message, type = 'success') {
-      const existing = document.querySelector('.toast');
-      if (existing) existing.remove();
-
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = message;
-      toast.style.cssText = `
-        position: fixed;
-        bottom: 28px;
-        left: 50%;
-        transform: translateX(-50%) translateY(20px);
-        background: ${type === 'error' ? '#ef4444' : '#3b82f6'};
-        color: #fff;
-        padding: 14px 24px;
-        border-radius: 100px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        z-index: 9999;
-        opacity: 0;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-      `;
-
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(-50%) translateY(0)';
-      });
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(10px)';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
+    // Animate mock bars
+    const bio=new IntersectionObserver((entries)=>{entries.forEach(en=>{if(en.isIntersecting){en.target.querySelectorAll('.bar').forEach(b=>{b.style.height=b.dataset.h+'px';});bio.unobserve(en.target);}});},{threshold:0.4});
+    document.querySelectorAll('.mock').forEach(el=>bio.observe(el));
   </script>
-<!--Start of Tawk.to Script-->
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6a5244d66e52b41d4a4e4ae1/1jt8lppcn';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<!--End of Tawk.to Script-->
-<script>
-  (function() {
-    try {
-      const path = window.location.pathname;
-      if (path.includes('bridesmaid.html')) {
-        const link = document.getElementById('nav-link-bridesmaid');
-        if (link) {
-          link.classList.add('active');
-          link.style.color = 'var(--accent-light)';
-        }
-      }
-    } catch(e) {}
-  })();
-</script>
-<script>
-  (function() {
-    try {
-      const token = localStorage.getItem('sb-tneflxtpmzodauygtslk-auth-token');
-      if (token) {
-        document.body.classList.add('user-logged-in');
-        const showLoginBtn = document.getElementById('btn-show-login');
-        const loggedInStatus = document.getElementById('logged-in-status');
-        if (showLoginBtn) showLoginBtn.style.display = 'none';
-        if (loggedInStatus) loggedInStatus.style.display = 'flex';
-      }
-      
-      const btnLogout = document.getElementById('btn-logout');
-      if (btnLogout) {
-        btnLogout.addEventListener('click', function() {
-          localStorage.clear();
-          window.location.href = '/index.html';
-        });
-      }
-      
-      const btnLogin = document.getElementById('btn-show-login');
-      if (btnLogin) {
-        btnLogin.addEventListener('click', function() {
-          window.location.href = '/index.html?login=true';
-        });
-      }
-    } catch(e) {
-      console.warn("Auth sync failed", e);
-    }
-  })();
-</script>
 </body>
 </html>
