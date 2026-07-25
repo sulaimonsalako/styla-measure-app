@@ -54,6 +54,7 @@ export default async function widgetSize(req, res) {
         category: norm.garment_category,
         fits: !r.warning,
         resolvedBy,
+        measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
       };
     }
 
@@ -126,6 +127,7 @@ export default async function widgetSize(req, res) {
       category: norm.garment_category,
       fits: !r.warning,
       resolvedBy: 'brand-category',
+      measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
     });
   } catch (e) {
     console.error('widget-size error:', e);

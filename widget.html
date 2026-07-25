@@ -43,6 +43,20 @@
     .sizebox .sz{font-family:var(--head);font-size:3.6rem;font-weight:700;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
     .sizebox .fit{color:var(--muted);font-size:0.9rem;}
     .loader{color:var(--dim);font-size:0.9rem;text-align:center;padding:2rem 0;}
+    .screen.on{overflow-y:auto;}
+    .spectrum{text-align:center;color:var(--muted);font-size:0.85rem;margin:-0.4rem 0 1.1rem;}
+    .spectrum b{color:#fff;}
+    .chat{border-top:1px solid var(--border);margin-top:0.4rem;padding-top:1rem;}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.7rem;}
+    .chip{background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:100px;padding:6px 12px;font-size:0.76rem;cursor:pointer;}
+    .chip:hover{border-color:var(--pink);color:#fff;}
+    .chatlog{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:0.7rem;}
+    .bubble{padding:9px 12px;border-radius:13px;font-size:0.85rem;max-width:86%;line-height:1.4;}
+    .bubble.u{background:var(--grad);color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+    .bubble.a{background:var(--card);border:1px solid var(--border);color:var(--muted);align-self:flex-start;border-bottom-left-radius:3px;}
+    .chatin{display:flex;gap:8px;}
+    .chatin input{flex:1;}
+    .chatin button{background:var(--grad);border:none;color:#fff;border-radius:10px;padding:0 16px;font-weight:700;cursor:pointer;font-family:var(--body);font-size:0.85rem;}
   </style>
 </head>
 <body>
@@ -145,6 +159,8 @@
 
     var state={gender:GENDER,hips:'regular',chest:'regular'};
     var lastProfile=null;
+    var MEAS=null;      // measurements for the fit chat
+    var CHAT=[];        // chat history (Gemini format)
 
     function go(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));el('s-'+name).classList.add('on');}
     function setG(g){state.gender=g;document.querySelectorAll('#seg-gender button').forEach(b=>b.classList.toggle('on',b.dataset.g===g));el('q-women').style.display=g==='women'?'':'none';el('q-men').style.display=g==='men'?'':'none';}
@@ -208,9 +224,18 @@
         el('result-body').innerHTML='<h2>Hmm.</h2><p class="sub">'+(res.error||'We couldn\'t find a size for this store yet.')+'</p><button class="btn btn-ghost" onclick="go(\'start\')">Try again</button>';
         return;
       }
+      MEAS = res.measurements || lastProfile || {};
+      CHAT = [];
       var pct=res.score!=null?res.score+'% fit':'';
+      var spec = res.spectrum ? '<div class="spectrum">Fit read: <b>'+res.spectrum+'</b></div>' : '';
+      var chips = ['Does it run small?',"I'm between sizes",'How does the fabric fit?']
+        .map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
+      var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
+        +'<div class="chatlog" id="chatlog"></div>'
+        +'<div class="chatin"><input id="chatin" placeholder="Ask about the fit…" onkeydown="if(event.key===&quot;Enter&quot;)sendChat()" /><button onclick="sendChat()">Ask</button></div></div>';
       var html='<h2>Your size'+(BRAND?(' in '+BRAND):'')+'</h2>'
-        +'<div class="sizebox"><div class="lbl">Recommended size</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>';
+        +'<div class="sizebox"><div class="lbl">Recommended size</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
+        + spec + chat;
       if(guest){
         html+='<p class="sub">Save this and see every other brand that fits you — free.</p>'
           +'<label>Email</label><input type="email" id="ac-email" autocomplete="email" />'
@@ -244,6 +269,29 @@
       var out=await sb.auth.signUp({email:email,password:pass,options:{emailRedirectTo:SUPABASE_URL?'https://www.styla.ca/dashboard.html':undefined}});
       if(out.error){msg.style.color='#ff9db5';msg.textContent=out.error.message||'Could not create account.';return;}
       el('result-body').innerHTML='<h2>Check your email 📩</h2><p class="sub">We sent a confirmation link to <b>'+email+'</b>. Confirm it and your size — plus every brand that fits you — will be waiting in your dashboard.</p><button class="btn btn-ghost" onclick="parent.postMessage(\'styla-close\',\'*\')">Done</button>';
+    }
+    // ---- Fit chat (Gemini via /api/chat) ----
+    window.askChat=function(q){ var i=el('chatin'); if(i) i.value=q; sendChat(); };
+    window.sendChat=async function(){
+      var input=el('chatin'); if(!input) return;
+      var q=input.value.trim(); if(!q) return;
+      input.value='';
+      CHAT.push({role:'user',parts:[{text:q}]});
+      renderChat(true);
+      var m=MEAS||{};
+      try{
+        var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chest:m.chest,waist:m.waist,hips:m.hips,belly:m.belly,history:CHAT})});
+        var data=await r.json();
+        var reply=(data && (data.reply||data.error))||'Sorry, I could not answer that.';
+        CHAT.push({role:'model',parts:[{text:reply}]});
+      }catch(e){ CHAT.push({role:'model',parts:[{text:'Something went wrong — please try again.'}]}); }
+      renderChat(false);
+    };
+    function renderChat(typing){
+      var log=el('chatlog'); if(!log) return;
+      var html=CHAT.map(function(mm){var who=mm.role==='user'?'u':'a';return '<div class="bubble '+who+'">'+mm.parts[0].text+'</div>';}).join('');
+      if(typing) html+='<div class="bubble a">…</div>';
+      log.innerHTML=html; log.scrollTop=log.scrollHeight;
     }
   </script>
 </body>
