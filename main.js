@@ -1,5 +1,5 @@
 /* ============================================
-   STYLA MEASURE — main.js
+   STYLA — main.js
    Handles: waitlist form, scroll reveals, counter
    ============================================ */
 

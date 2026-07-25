@@ -378,7 +378,7 @@ The Styla Team`;
 <body>
   <div class="container">
     <div class="header">
-      <h1>Styla Measure</h1>
+      <h1>Styla</h1>
     </div>
     <div class="content">
       <div class="greeting">Hi ${firstName || 'there'},</div>
@@ -461,7 +461,7 @@ The Styla Team`;
       });
 
       const info = await transporter.sendMail({
-        from: `"Styla Measure" <${from}>`,
+        from: `"Styla" <${from}>`,
         to: email,
         subject,
         text: textContent,
@@ -489,7 +489,7 @@ The Styla Team`;
     });
 
     const info = await transporter.sendMail({
-      from: `"Styla Measure" <${testAccount.user}>`,
+      from: `"Styla" <${testAccount.user}>`,
       to: email,
       subject: `[SANDBOX] ${subject}`,
       text: textContent,

@@ -45,7 +45,7 @@
     },
     {
       "name": "get_styla_info",
-      "description": "Get general information about what Styla Measure can do.",
+      "description": "Get general information about what Styla can do.",
       "inputSchema": {
         "type": "object",
         "properties": {}

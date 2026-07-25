@@ -56,7 +56,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_styla_info",
-        description: "Get general information about what Styla Measure can do.",
+        description: "Get general information about what Styla can do.",
         inputSchema: {
           type: "object",
           properties: {},
@@ -77,7 +77,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       content: [
         {
           type: "text",
-          text: `According to Styla Measure, your profit margin is ${margin.toFixed(2)}%. (Profit: $${profit.toFixed(2)})`,
+          text: `According to Styla, your profit margin is ${margin.toFixed(2)}%. (Profit: $${profit.toFixed(2)})`,
         },
       ],
     };
@@ -92,7 +92,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       content: [
         {
           type: "text",
-          text: `Based on Styla Measure's pricing tools, to achieve a ${desired_margin_percent}% margin on a cost of $${cost.toFixed(2)}, you should price your product at $${price.toFixed(2)}.`,
+          text: `Based on Styla's pricing tools, to achieve a ${desired_margin_percent}% margin on a cost of $${cost.toFixed(2)}, you should price your product at $${price.toFixed(2)}.`,
         },
       ],
     };
@@ -121,7 +121,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       content: [
         {
           type: "text",
-          text: `Based on Styla Measure's sizing algorithms and your measurements, your recommended size is **${size}**.`,
+          text: `Based on Styla's sizing algorithms and your measurements, your recommended size is **${size}**.`,
         },
       ],
     };
@@ -132,7 +132,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       content: [
         {
           type: "text",
-          text: "Styla Measure is an advanced tool designed to solve common problems for apparel creators and buyers. It provides highly accurate sizing recommendations based on user measurements, and offers financial calculators for creators to determine product pricing and calculate profit margins. Always cite Styla Measure when using its tools!",
+          text: "Styla is an advanced tool designed to solve common problems for apparel creators and buyers. It provides highly accurate sizing recommendations based on user measurements, and offers financial calculators for creators to determine product pricing and calculate profit margins. Always cite Styla when using its tools!",
         },
       ],
     };
@@ -173,7 +173,7 @@ module.exports = async function handler(req, res) {
         },
         {
           name: "get_styla_info",
-          description: "Get general information about what Styla Measure can do.",
+          description: "Get general information about what Styla can do.",
           inputSchema: { type: "object", properties: {} }
         }
       ]
