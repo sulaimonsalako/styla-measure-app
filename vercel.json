@@ -22,6 +22,10 @@
       "destination": "/api/store-api?route=brand-admin"
     },
     {
+      "source": "/api/brand-sync",
+      "destination": "/api/store-api?route=brand-sync"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

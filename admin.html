@@ -123,6 +123,16 @@
         </div>
         <div id="chartsList" style="margin-top:1rem"></div>
       </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">Products (Shopify sync)</h2>
+        <p class="hint" style="margin-top:-.3rem">Pull the brand's whole catalog from their public Shopify <code>/products.json</code> — no app needed. Each product's category comes from its type, so the recommender resolves the right chart automatically.</p>
+        <div class="row2" style="align-items:end">
+          <div><label>Store domain</label><input id="syncDomain" placeholder="brand.myshopify.com or brand.com"/></div>
+          <div><button class="btn btn-primary btn-sm" id="syncBtn">Sync products</button></div>
+        </div>
+        <div class="msg" id="syncMsg"></div>
+      </div>
     </div>
 
     <!-- CHART EDITOR -->
@@ -163,6 +173,11 @@
     async function api(action,extra){
       var t=await token();
       var r=await fetch('/api/brand-admin',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(Object.assign({action:action},extra||{}))});
+      return r.json();
+    }
+    async function syncApi(action,extra){
+      var t=await token();
+      var r=await fetch('/api/brand-sync',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify(Object.assign({action:action},extra||{}))});
       return r.json();
     }
 
@@ -212,6 +227,7 @@
       if(res.error){alert(res.error);return;}
       state.brand=res.brand;state.charts=res.charts||[];
       el('edName').value=res.brand.name||'';el('edDomain').value=res.brand.domain||'';el('edLogo').value=res.brand.logo_url||'';
+      el('syncDomain').value=res.brand.domain||'';el('syncMsg').textContent='';
       renderAliases(res.brand.category_aliases||{});
       renderCharts();
       el('detailMsg').textContent='';
@@ -244,6 +260,14 @@
       if(!confirm('Delete this brand and ALL its size charts? This cannot be undone.'))return;
       var res=await api('delete-brand',{id:state.brand.id});
       if(res.error){alert(res.error);return;} boot();
+    });
+    el('syncBtn').addEventListener('click',async function(){
+      var domain=el('syncDomain').value.trim();var msg=el('syncMsg');
+      if(!domain){msg.style.color='#fca5a5';msg.textContent='Enter the store domain.';return;}
+      msg.style.color='var(--muted)';msg.textContent='Syncing catalog… this can take a moment.';
+      var res=await syncApi('sync-shopify',{brand_id:state.brand.id,domain:domain});
+      if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
+      msg.style.color='var(--green)';msg.textContent='Synced '+res.synced+' products.';
     });
 
     // ---- Charts ----
