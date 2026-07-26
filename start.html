@@ -580,6 +580,8 @@
       localStorage.setItem('styla_twin_hips', profile.hips);
       localStorage.setItem('styla_twin_height', profile.height);
       if(profile.inseam) localStorage.setItem('styla_twin_inseam', profile.inseam);
+      if(profile.shoulder) localStorage.setItem('styla_twin_shoulder', profile.shoulder);
+      if(profile.neck) localStorage.setItem('styla_twin_neck', profile.neck);
       if(name) localStorage.setItem('styla_first_name', name);
     } catch(e){}
 
@@ -680,7 +682,12 @@
       var sess = (await sb2.auth.getSession()).data.session;
       if(!sess) throw new Error('You are logged out — log in and retake the quiz.');
       var p = computeProfile();
+      // Merge neck into overrides without clobbering sleeve/thigh etc.
+      var ovq = await sb2.from('profiles').select('measurement_overrides').eq('id', sess.user.id).maybeSingle();
+      var ov = (ovq.data && ovq.data.measurement_overrides) || {};
+      if(p.neck) ov.neck = p.neck;
       var upd = { chest:p.chest, waist:p.waist, hips:p.hips, height:p.height, inseam:p.inseam,
+                  shoulder: p.shoulder || null, measurement_overrides: ov,
                   gender: state.gender || null, updated_at: new Date().toISOString() };
       var r = await sb2.from('profiles').update(upd).eq('id', sess.user.id);
       if(r.error) throw r.error;
