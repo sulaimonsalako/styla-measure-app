@@ -605,6 +605,38 @@
   // ---- Wedding-party member mode: submit fit to the party instead of signing up ----
   var PARTY_TOKEN = new URLSearchParams(location.search).get('party') || '';
   var PARTY_MEMBER = new URLSearchParams(location.search).get('member') || '';
+
+  // Existing Styla users don't need to redo the quiz — offer their saved fit in one tap.
+  async function offerSavedFit(){
+    if(!PARTY_TOKEN) return;
+    try {
+      var sb2 = getSupabase();
+      var sess = (await sb2.auth.getSession()).data.session;
+      if(!sess) return;
+      var q = await sb2.from('profiles').select('first_name,chest,waist,hips,height,inseam').eq('id', sess.user.id).maybeSingle();
+      var p = q.data;
+      if(!p || !p.chest || !p.waist) return; // no usable saved fit
+      var host = document.querySelector('.frame');
+      var bar = document.createElement('div');
+      bar.style.cssText = 'background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:.88rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+      bar.innerHTML = '<span>👋 You already have a Styla fit profile — no need to redo the quiz.</span>'
+        + '<button id="savedFitBtn" style="background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:100px;padding:9px 18px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit">Use my saved fit</button>';
+      host.insertBefore(bar, host.firstChild);
+      document.getElementById('savedFitBtn').addEventListener('click', async function(){
+        this.disabled = true; this.textContent = 'Adding…';
+        try {
+          var r = await fetch('/api/party',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+            action:'submit-member', token:PARTY_TOKEN, member_id:PARTY_MEMBER,
+            name: p.first_name || (sess.user.email||'').split('@')[0],
+            measurements: { chest:p.chest, waist:p.waist, hips:p.hips, height:p.height, inseam:p.inseam }
+          })});
+          var d = await r.json(); if(d.error) throw new Error(d.error);
+          bar.innerHTML = '<span>🎉 <b>You\'re in!</b> Your saved fit was added to the party — you can close this page or <a href="/dashboard.html" style="color:#ff5c96">go to your dashboard</a>.</span>';
+        } catch(e){ this.disabled=false; this.textContent='Use my saved fit'; alert('Could not add your fit: '+(e.message||e)); }
+      });
+    } catch(e){ /* silently fall back to the quiz */ }
+  }
+
   function setupPartyMode(){
     if(!PARTY_TOKEN) return;
     var box = document.querySelector('#s-results .save-box');
@@ -660,7 +692,7 @@
   };
 
   // init
-  updH(); updW(); show(); setupPartyMode(); setupRetakeMode();
+  updH(); updW(); show(); setupPartyMode(); setupRetakeMode(); offerSavedFit();
 </script>
 </body>
 </html>
