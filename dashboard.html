@@ -70,6 +70,8 @@
   .tag{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:100px}
   .tag.conf{background:rgba(52,211,153,.12);color:var(--green)}
   .tag.miss{background:var(--pinkdim);color:var(--pink2)}
+  .tag.opt{background:rgba(255,255,255,.06);color:var(--dim)}
+  .mcard .use{font-size:.66rem;color:var(--dim);margin-top:6px}
   .member{display:flex;align-items:center;justify-content:space-between;padding:12px 6px;border-bottom:1px solid var(--border);font-size:.9rem}
   .lockbox{background:var(--panel2);border:1px dashed var(--border);border-radius:14px;padding:26px;text-align:center;color:var(--dim);font-size:.9rem}
   .loader{text-align:center;color:var(--dim);padding:60px 0}
@@ -119,8 +121,11 @@
           </div>
         </div>
         <p class="cs">These power your matches. <b>All measurements are in inches.</b> They were estimated from your quiz — if you have exact measurements from a tailor, or a tape measure and a few minutes, feel free to enter your own below. Real measurements make your matches even more accurate.</p>
+        <p class="cs" style="margin-bottom:8px"><b style="color:var(--text)">Essentials</b> — required for accurate matches.</p>
         <div class="mgrid" id="profileGrid"></div>
-        <p class="cs" style="margin:16px 0 8px"><b style="color:var(--text)">About you</b> — used to pick the right charts.</p>
+        <p class="cs" style="margin:18px 0 8px"><b style="color:var(--text)">Fine-tune</b> — optional. Each one sharpens your fit for specific garments.</p>
+        <div class="mgrid" id="extraGrid"></div>
+        <p class="cs" style="margin:18px 0 8px"><b style="color:var(--text)">About you</b> — used to pick the right charts.</p>
         <div class="mgrid" id="aboutGrid"></div>
         <div id="editBar" style="margin-top:18px;display:none;align-items:center;gap:14px">
           <button class="btn-primary" onclick="saveProfile()">Save</button>
@@ -148,6 +153,18 @@
             <div class="mcard"><div class="lab">Neck</div>
               <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M33 24h14" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
               <div style="font-size:.8rem;color:var(--muted)">Around the base of your neck where a collar sits, with one finger inside the tape for comfort.</div></div>
+            <div class="mcard"><div class="lab">Belly</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M25 60h30" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around the fullest part of your midsection, over the belly button. Relax — don't hold your breath.</div></div>
+            <div class="mcard"><div class="lab">Shoulder width</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M24 33h32" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Straight across the back, from the corner of one shoulder to the other — where jacket seams would sit.</div></div>
+            <div class="mcard"><div class="lab">Sleeve length</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M56 33l14 30" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">From the shoulder corner, down a slightly bent arm, to the wrist bone.</div></div>
+            <div class="mcard"><div class="lab">Thigh</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M28 72h12" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around the fullest part of one thigh, just below the seat, standing naturally.</div></div>
           </div>
         </details>
       </div>
@@ -207,7 +224,17 @@
   var SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
   var sb, user, profile = {}, paid = false, curMatches = [];
-  var FIELDS = [['chest','Chest / Bust'],['waist','Waist'],['hips','Hips'],['height','Height'],['inseam','Inseam'],['neck','Neck']];
+  // Two tiers: CORE is required for a fit; EXTRA is optional and sharpens accuracy
+  // for specific garment types (the engine coverage-weights whatever is present).
+  var FIELDS_CORE = [['chest','Chest / Bust'],['waist','Waist'],['hips','Hips'],['height','Height']];
+  var FIELDS_EXTRA = [
+    ['belly','Belly','tops, dresses & outerwear'],
+    ['shoulder','Shoulder width','jackets & suits'],
+    ['inseam','Inseam','trousers & jeans'],
+    ['neck','Neck','dress shirts'],
+    ['sleeve','Sleeve length','shirts & jackets'],
+    ['thigh','Thigh','jeans & fitted trousers']
+  ];
 
   function tab(name, el){
     document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
@@ -244,7 +271,11 @@
       hips: profile.hips || ls('styla_twin_hips'),
       height: profile.height || ls('styla_twin_height'),
       inseam: profile.inseam || ls('styla_twin_inseam'),
+      belly: profile.belly || null,
+      shoulder: profile.shoulder || null,
       neck: ov.neck || null,
+      sleeve: ov.sleeve || null,
+      thigh: ov.thigh || null,
     };
     Object.keys(m).forEach(function(k){ if(m[k]!=null && m[k]!=='') m[k] = parseFloat(m[k]); });
 
@@ -268,17 +299,22 @@
     renderProfile(window._m || {});
   }
 
+  function mcardFor(k, label, v, tier, use){
+    var missing = (v === '' || v == null);
+    var tag = missing
+      ? (tier === 'core' ? '<span class="tag miss">Required</span>' : '<span class="tag opt">Optional</span>')
+      : '<span class="tag conf">Set</span>';
+    return '<div class="mcard'+(missing && tier==='core' ? ' miss' : '')+'"><div class="lab">'+label+' '+tag+
+      '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+(missing?'':v)+'" placeholder="—" style="width:100%;opacity:'+(editing?'1':'.75')+'" '+(editing?'':'disabled')+' /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">in</span></div>'+
+      (use ? '<div class="use">improves: '+use+'</div>' : '')+'</div>';
+  }
   function renderProfile(m){
     var html = '';
-    FIELDS.forEach(function(f){
-      var k = f[0], label = f[1];
-      var v = (m[k]!=null && m[k]!=='') ? m[k] : '';
-      var missing = v === '';
-      html += '<div class="mcard'+(missing?' miss':'')+'"><div class="lab">'+label+' '+
-        (missing?'<span class="tag miss">Missing</span>':'<span class="tag conf">Set</span>')+
-        '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+v+'" placeholder="—" style="width:100%;opacity:'+(editing?'1':'.75')+'" '+(editing?'':'disabled')+' /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">in</span></div></div>';
-    });
+    FIELDS_CORE.forEach(function(f){ html += mcardFor(f[0], f[1], (m[f[0]]!=null && m[f[0]]!=='') ? m[f[0]] : '', 'core'); });
     document.getElementById('profileGrid').innerHTML = html;
+    var xhtml = '';
+    FIELDS_EXTRA.forEach(function(f){ xhtml += mcardFor(f[0], f[1], (m[f[0]]!=null && m[f[0]]!=='') ? m[f[0]] : '', 'extra', f[2]); });
+    document.getElementById('extraGrid').innerHTML = xhtml;
 
     // About you: gender + age (used to pick the right charts)
     var g = profile.gender || '';
@@ -294,13 +330,17 @@
 
   async function saveProfile(){
     var m = {};
-    ['chest','waist','hips','height','inseam','neck'].forEach(function(k){
+    ['chest','waist','hips','height','inseam','belly','shoulder','neck','sleeve','thigh'].forEach(function(k){
       var el = document.getElementById('m-'+k);
       if(el && el.value !== '') m[k] = parseFloat(el.value);
     });
+    // neck/sleeve/thigh have no dedicated columns — they live in measurement_overrides.
     var ov = Object.assign({}, profile.measurement_overrides || {});
-    if(m.neck != null) ov.neck = m.neck;
+    ['neck','sleeve','thigh'].forEach(function(k){
+      if(m[k] != null) ov[k] = m[k]; else delete ov[k];
+    });
     var upd = { chest:m.chest, waist:m.waist, hips:m.hips, height:m.height, inseam:m.inseam,
+                belly:m.belly || null, shoulder:m.shoulder || null,
                 gender: (document.getElementById('p-gender')||{}).value || null,
                 age_range: (document.getElementById('p-age')||{}).value || null,
                 measurement_overrides:ov, updated_at:new Date().toISOString() };
