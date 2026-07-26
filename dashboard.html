@@ -25,7 +25,13 @@
   .welcome{color:var(--muted);font-size:.95rem;margin-bottom:24px}
   .welcome b{color:var(--green)}
   .layout{display:grid;grid-template-columns:230px 1fr;gap:22px}
-  @media(max-width:720px){.layout{grid-template-columns:1fr}}
+  @media(max-width:720px){
+    .layout{grid-template-columns:1fr}
+    .side{display:flex;overflow-x:auto;padding:8px;gap:6px;-webkit-overflow-scrolling:touch}
+    .side::-webkit-scrollbar{display:none}
+    .navitem{flex:none;margin-bottom:0;padding:10px 14px;white-space:nowrap}
+    .navitem small{display:none}
+  }
   @media(max-width:560px){
     .nav{padding:12px 16px}
     .navr{gap:12px}
@@ -86,7 +92,6 @@
       <div class="navitem" onclick="location.href='/party.html'"><span class="ic">💍</span>My Wedding Party</div>
       <div class="navitem" onclick="location.href='/share.html'"><span class="ic">🎁</span>Share &amp; Gift<small>let others shop for you</small></div>
       <div class="navitem" onclick="tab('account',this)"><span class="ic">⚙️</span>Account</div>
-      <div class="retired"><s>3D Body Scans</s> — retired (no scanning)</div>
     </div>
     <div class="content">
 
@@ -94,19 +99,57 @@
       <div class="panel on" id="p-matches">
         <h2 class="ct">Brands that fit your proportions</h2>
         <p class="cs">Ranked by how well each brand's cut matches your body.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <input id="matchSearch" placeholder="Search brands or categories…" oninput="renderMatches()" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none" />
+          <select id="matchCat" onchange="renderMatches()" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none">
+            <option value="">All categories</option>
+          </select>
+        </div>
         <div id="matchLocked"><div class="loader">Matching…</div></div>
         <div id="matchUnlocked" style="display:none"></div>
       </div>
 
       <!-- PROFILE (editable — task 15) -->
       <div class="panel" id="p-profile">
-        <h2 class="ct">My fit profile</h2>
-        <p class="cs">These power your matches. Edit any value and save — your matches refresh. <b>All measurements are in inches.</b></p>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <h2 class="ct">My fit profile</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" id="btnEdit" onclick="toggleEdit(true)">✏️ Edit</button>
+            <button class="btn-ghost" onclick="location.href='/start.html?retake=1'" title="Answer the quiz again to recalculate your measurements">↺ Retake the quiz</button>
+          </div>
+        </div>
+        <p class="cs">These power your matches. <b>All measurements are in inches.</b> They were estimated from your quiz — if you have exact measurements from a tailor, or a tape measure and a few minutes, feel free to enter your own below. Real measurements make your matches even more accurate.</p>
         <div class="mgrid" id="profileGrid"></div>
-        <div style="margin-top:18px;display:flex;align-items:center;gap:14px">
-          <button class="btn-primary" onclick="saveProfile()">Save changes</button>
+        <p class="cs" style="margin:16px 0 8px"><b style="color:var(--text)">About you</b> — used to pick the right charts.</p>
+        <div class="mgrid" id="aboutGrid"></div>
+        <div id="editBar" style="margin-top:18px;display:none;align-items:center;gap:14px">
+          <button class="btn-primary" onclick="saveProfile()">Save</button>
+          <button class="btn-ghost" onclick="toggleEdit(false)">Cancel</button>
           <span id="saveMsg" style="display:none;color:var(--green);font-size:.85rem"></span>
         </div>
+
+        <!-- HOW TO MEASURE GUIDE -->
+        <details style="margin-top:26px;background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px 18px">
+          <summary style="cursor:pointer;font-weight:700;font-size:.95rem">📏 How to measure yourself (2-minute guide)</summary>
+          <p class="cs" style="margin-top:10px">Use a soft tape measure over light clothing or underwear. Keep the tape level and snug — not tight. Ask someone to help if you can.</p>
+          <div class="mgrid" style="margin-top:8px">
+            <div class="mcard"><div class="lab">Chest / Bust</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M22 42h36" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around the fullest part of your chest/bust, tape level under the arms and across the shoulder blades.</div></div>
+            <div class="mcard"><div class="lab">Waist</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M26 55h28" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around your natural waistline — the narrowest point, usually just above the belly button. Don't suck in.</div></div>
+            <div class="mcard"><div class="lab">Hips</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M23 66h34" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around the fullest part of your hips and seat, feet together, tape level all the way around.</div></div>
+            <div class="mcard"><div class="lab">Inseam</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M40 58v26" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">From the top of your inner thigh straight down to the ankle bone — or measure a pair of trousers that fit well.</div></div>
+            <div class="mcard"><div class="lab">Neck</div>
+              <svg viewBox="0 0 80 90" style="width:56px;height:64px;display:block;margin-bottom:8px"><path d="M40 8a9 9 0 110 18 9 9 0 010-18zM24 32c4-5 28-5 32 0l6 26h-8l-4 26H30l-4-26h-8z" fill="none" stroke="#8b90a0" stroke-width="2.5"/><path d="M33 24h14" stroke="#ff2a75" stroke-width="3" stroke-dasharray="4 3"/></svg>
+              <div style="font-size:.8rem;color:var(--muted)">Around the base of your neck where a collar sits, with one finger inside the tape for comfort.</div></div>
+          </div>
+        </details>
       </div>
 
       <!-- BOOKMARKLET (free) -->
@@ -128,8 +171,32 @@
       <!-- ACCOUNT -->
       <div class="panel" id="p-account">
         <h2 class="ct">Account</h2>
-        <p class="cs">Manage your login and data.</p>
-        <div class="mcard" style="max-width:420px"><div class="lab">Email</div><div style="font-size:1rem;font-weight:700" id="accountEmail">…</div></div>
+        <p class="cs">Manage your login, email, and data.</p>
+
+        <div class="mcard" style="max-width:460px;margin-bottom:14px">
+          <div class="lab">Email</div>
+          <div style="font-size:1rem;font-weight:700;margin-bottom:10px" id="accountEmail">…</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="email" id="newEmail" placeholder="New email address" style="flex:1;min-width:170px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:#fff;font-size:.85rem;font-family:var(--sans);outline:none" />
+            <button class="btn-ghost" onclick="changeEmail()">Change email</button>
+          </div>
+        </div>
+
+        <div class="mcard" style="max-width:460px;margin-bottom:14px">
+          <div class="lab">Password</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="password" id="newPass" placeholder="New password (6+ characters)" autocomplete="new-password" style="flex:1;min-width:170px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:#fff;font-size:.85rem;font-family:var(--sans);outline:none" />
+            <button class="btn-ghost" onclick="changePassword()">Update password</button>
+          </div>
+        </div>
+
+        <div class="mcard" style="max-width:460px;border-color:rgba(239,68,68,.35)">
+          <div class="lab" style="color:#fca5a5">Danger zone</div>
+          <div style="font-size:.82rem;color:var(--dim);margin-bottom:10px">Deleting your account permanently removes your fit profile, matches, shares, and wedding parties. This cannot be undone.</div>
+          <button onclick="deleteAccount()" style="background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.35);border-radius:9px;padding:9px 16px;font-weight:600;font-size:.85rem;cursor:pointer;font-family:var(--sans)">Delete my account</button>
+        </div>
+
+        <div class="msgline" id="acctMsg" style="margin-top:12px;font-size:.85rem;min-height:1em"></div>
         <div style="margin-top:14px;display:flex;gap:10px"><button class="btn-ghost" onclick="logout()">Log out</button></div>
       </div>
 
@@ -193,6 +260,14 @@
     await loadMatches(m);
   }
 
+  var editing = false;
+  function toggleEdit(on){
+    editing = on;
+    document.getElementById('editBar').style.display = on ? 'flex' : 'none';
+    document.getElementById('btnEdit').style.display = on ? 'none' : '';
+    renderProfile(window._m || {});
+  }
+
   function renderProfile(m){
     var html = '';
     FIELDS.forEach(function(f){
@@ -201,9 +276,20 @@
       var missing = v === '';
       html += '<div class="mcard'+(missing?' miss':'')+'"><div class="lab">'+label+' '+
         (missing?'<span class="tag miss">Missing</span>':'<span class="tag conf">Set</span>')+
-        '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+v+'" placeholder="—" style="width:100%" /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">in</span></div></div>';
+        '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+v+'" placeholder="—" style="width:100%;opacity:'+(editing?'1':'.75')+'" '+(editing?'':'disabled')+' /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">in</span></div></div>';
     });
     document.getElementById('profileGrid').innerHTML = html;
+
+    // About you: gender + age (used to pick the right charts)
+    var g = profile.gender || '';
+    var a = profile.age_range || '';
+    function sel(id, opts, cur){
+      return '<select id="'+id+'" '+(editing?'':'disabled')+' style="width:100%;background:transparent;border:none;color:#fff;font-size:1.05rem;font-weight:700;font-family:var(--sans);outline:none;opacity:'+(editing?'1':'.75')+'">'+
+        opts.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+' style="background:var(--panel2)">'+o[1]+'</option>'; }).join('')+'</select>';
+    }
+    document.getElementById('aboutGrid').innerHTML =
+      '<div class="mcard"><div class="lab">Shopping for</div>'+sel('p-gender',[['','—'],['women','Women\'s fit'],['men','Men\'s fit']],g)+'</div>'+
+      '<div class="mcard"><div class="lab">Age range</div>'+sel('p-age',[['','—'],['18-24','18–24'],['25-34','25–34'],['35-44','35–44'],['45+','45+']],a)+'</div>';
   }
 
   async function saveProfile(){
@@ -215,6 +301,8 @@
     var ov = Object.assign({}, profile.measurement_overrides || {});
     if(m.neck != null) ov.neck = m.neck;
     var upd = { chest:m.chest, waist:m.waist, hips:m.hips, height:m.height, inseam:m.inseam,
+                gender: (document.getElementById('p-gender')||{}).value || null,
+                age_range: (document.getElementById('p-age')||{}).value || null,
                 measurement_overrides:ov, updated_at:new Date().toISOString() };
     var msg = document.getElementById('saveMsg');
     try {
@@ -224,7 +312,7 @@
     profile = Object.assign(profile, upd);
     window._m = m;
     msg.style.display='block'; msg.style.color='var(--green)'; msg.textContent = '✓ Saved — refreshing your matches…';
-    renderProfile(m);
+    toggleEdit(false);
     await loadMatches(m);
     setTimeout(function(){ msg.style.display='none'; }, 2500);
   }
@@ -233,11 +321,29 @@
     var matches = [];
     try {
       var resp = await fetch('/api/rank-brands', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ profile:m, limit:20 }) });
+        body: JSON.stringify({ profile:m, limit:100, gender: profile.gender || undefined }) });
       if(resp.ok){ var d = await resp.json(); matches = d.matches || []; }
     } catch(e){}
     curMatches = matches;
+    // Populate the category filter from what actually matched.
+    var sel = document.getElementById('matchCat');
+    if(sel){
+      var cur = sel.value;
+      var cats = {};
+      matches.forEach(function(mm){ if(mm.category) cats[mm.category] = true; });
+      sel.innerHTML = '<option value="">All categories</option>' +
+        Object.keys(cats).sort().map(function(c){ return '<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>'; }).join('');
+    }
     renderMatches();
+  }
+  function filteredMatches(){
+    var q = ((document.getElementById('matchSearch')||{}).value || '').toLowerCase();
+    var cat = (document.getElementById('matchCat')||{}).value || '';
+    return curMatches.filter(function(mm){
+      if(cat && (mm.category||'') !== cat) return false;
+      if(q && ((mm.brand||'')+' '+(mm.category||'')).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
   }
 
   function brandCell(mm){
@@ -249,21 +355,24 @@
   function renderMatches(){
     var locked = document.getElementById('matchLocked');
     var unlocked = document.getElementById('matchUnlocked');
-    if(!curMatches.length){
-      locked.innerHTML = '<div class="row lock"><div class="r">No matches yet — check your profile is complete.</div></div>';
+    var list = filteredMatches();
+    if(!list.length){
+      var hasFilter = ((document.getElementById('matchSearch')||{}).value || '') || ((document.getElementById('matchCat')||{}).value || '');
+      locked.innerHTML = '<div class="row lock"><div class="r">'+(hasFilter ? 'No matches for this search — try clearing the filters.' : (curMatches.length ? '' : 'No matches yet — as more brands are added, they\'ll appear here.'))+'</div></div>';
       locked.style.display='block'; unlocked.style.display='none'; return;
+    }
+    function rowFor(mm, last){
+      return '<div class="row"'+(last?' style="border-bottom:none"':'')+'><div class="r">'+brandCell(mm)+
+        '</div><div class="r"><span class="size">Your size: '+mm.recommended_size+(mm.category?(' · '+mm.category):'')+'</span><span class="pct">'+mm.score+'%</span></div></div>';
     }
     if(paid){
       var h = '';
-      curMatches.forEach(function(mm,i){
-        h += '<div class="row"'+(i===curMatches.length-1?' style="border-bottom:none"':'')+'><div class="r">'+brandCell(mm)+
-             '</div><div class="r"><span class="size">Your size: '+mm.recommended_size+'</span><span class="pct">'+mm.score+'%</span></div></div>';
-      });
+      list.forEach(function(mm,i){ h += rowFor(mm, i===list.length-1); });
       h += '<div class="ok-banner">✓ Unlocked — every brand that fits you, with your size in each.</div>';
       unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
     } else {
-      var top = curMatches[0], rest = curMatches.length - 1;
-      var h = '<div class="row"><div class="r">'+brandCell(top)+'</div><div class="r"><span class="size">Size '+top.recommended_size+'</span><span class="pct">'+top.score+'%</span></div></div>';
+      var top = list[0], rest = list.length - 1;
+      var h = rowFor(top, false);
       for(var i=0;i<Math.min(3,rest);i++) h += '<div class="row lock"><div class="r">••••••••••</div><span>🔒</span></div>';
       if(rest>0) h += '<div class="row lock" style="border-bottom:none"><div class="r">+ '+rest+' more matches</div><span>🔒</span></div>';
       h += '<div class="unlock"><h3>Unlock all your matches</h3><p>Every brand ranked by fit, plus your exact size in each.</p>'+
@@ -271,6 +380,40 @@
            '<div class="fine">🔒 One-time payment via Stripe · no subscription</div></div>';
       locked.innerHTML = h; locked.style.display='block'; unlocked.style.display='none';
     }
+  }
+
+  // ---- Account management ----
+  function amsg(t, ok){ var el=document.getElementById('acctMsg'); el.style.color = ok ? 'var(--green)' : 'var(--pink2)'; el.textContent = t; }
+  async function changeEmail(){
+    var v = (document.getElementById('newEmail').value||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ amsg('Enter a valid email address.'); return; }
+    amsg('Updating email…', true);
+    var r = await sb.auth.updateUser({ email: v });
+    if(r.error){ amsg('Could not change email: '+r.error.message); return; }
+    amsg('✓ Check your inboxes — confirm the link sent to your new address to complete the change.', true);
+  }
+  async function changePassword(){
+    var v = document.getElementById('newPass').value||'';
+    if(v.length < 6){ amsg('Password must be at least 6 characters.'); return; }
+    amsg('Updating password…', true);
+    var r = await sb.auth.updateUser({ password: v });
+    if(r.error){ amsg('Could not update password: '+r.error.message); return; }
+    document.getElementById('newPass').value='';
+    amsg('✓ Password updated.', true);
+  }
+  async function deleteAccount(){
+    if(!confirm('Delete your Styla account and ALL your data? This cannot be undone.')) return;
+    if(!confirm('Last check — this permanently deletes your fit profile, matches, shares and parties. Continue?')) return;
+    amsg('Deleting your account…', true);
+    try {
+      var sess = (await sb.auth.getSession()).data.session;
+      var r = await fetch('/api/account', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sess.access_token}, body: JSON.stringify({ action:'delete-account' }) });
+      var d = await r.json();
+      if(d.error) throw new Error(d.error);
+      try { await sb.auth.signOut(); } catch(e){}
+      alert('Your account has been deleted. Goodbye — you\'re welcome back any time.');
+      location.href = '/index.html';
+    } catch(e){ amsg('Delete failed: '+(e.message||e)); }
   }
 
   async function startUnlock(){

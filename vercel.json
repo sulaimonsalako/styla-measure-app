@@ -30,6 +30,10 @@
       "destination": "/api/store-api?route=party"
     },
     {
+      "source": "/api/account",
+      "destination": "/api/store-api?route=account"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

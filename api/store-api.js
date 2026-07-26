@@ -6,6 +6,7 @@ import connectionsHandler from './_share/connections.js';
 import brandAdminHandler from './_admin/brand-admin.js';
 import brandSyncHandler from './_admin/brand-sync.js';
 import partyHandler from './_party/party.js';
+import accountHandler from './_account/account.js';
 
 export const config = {
   api: {
@@ -65,6 +66,8 @@ export default async function handler(req, res) {
     return brandSyncHandler(req, res);
   } else if (route === 'party' || pathname.includes('/party')) {
     return partyHandler(req, res);
+  } else if (route === 'account' || pathname.includes('/account')) {
+    return accountHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

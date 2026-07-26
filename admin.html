@@ -150,7 +150,7 @@
 
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
         <table class="sizes">
-          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th>Neck</th><th></th></tr></thead>
+          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th>Sleeve</th><th>Length</th><th>Neck</th><th></th></tr></thead>
           <tbody id="sizeRows"></tbody>
         </table>
         <button class="btn btn-ghost btn-sm" id="addRowBtn" style="margin-top:.6rem">+ Add size</button>
@@ -286,7 +286,7 @@
     window.editChart=function(id){openChart(state.charts.find(function(c){return c.id===id;}));};
     window.delChart=async function(id){ if(!confirm('Delete this chart?'))return; var res=await api('delete-chart',{id:id}); if(res.error){alert(res.error);return;} openBrand(state.brand.id); };
 
-    var MCOLS=['chest','waist','hips','inseam','neck'];
+    var MCOLS=['chest','waist','hips','inseam','sleeve','length','neck'];
     function openChart(c){
       state.editingChart=c;
       el('chartTitle').textContent=c?'Edit size chart':'New size chart';

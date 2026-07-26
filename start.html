@@ -352,7 +352,7 @@
   (function guardAuth(){
     try {
       var qs = new URLSearchParams(location.search);
-      if (qs.get('onboard') === '1' || qs.get('for') === 'party' || qs.get('party')) return;
+      if (qs.get('onboard') === '1' || qs.get('for') === 'party' || qs.get('party') || qs.get('retake') === '1') return;
       getSupabase().auth.getSession().then(function(res){
         if (res && res.data && res.data.session) window.location.replace('/dashboard.html');
       });
@@ -629,8 +629,38 @@
     }catch(e){ btn.disabled=false; btn.textContent='Add my fit to the party'; msg.style.display='block'; msg.textContent='Could not submit: '+(e.message||e); }
   };
 
+  // ---- Retake mode: a logged-in user redoes the quiz to recalculate their profile ----
+  var RETAKE = new URLSearchParams(location.search).get('retake') === '1';
+  function setupRetakeMode(){
+    if(!RETAKE) return;
+    var box = document.querySelector('#s-results .save-box');
+    if(!box) return;
+    box.innerHTML = '<h3>Update my fit profile</h3>'
+      + '<p>This replaces your saved measurements with the new estimates and re-ranks your matches.</p>'
+      + '<div class="oauth"><button id="rt-btn" onclick="saveRetake()">Save my new measurements</button></div>'
+      + '<div id="rt-msg" style="margin-top:10px;font-size:.82rem;color:var(--pink2);display:none"></div>';
+  }
+  window.saveRetake = async function(){
+    var btn = document.getElementById('rt-btn'); var msg = document.getElementById('rt-msg');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      var sb2 = getSupabase();
+      var sess = (await sb2.auth.getSession()).data.session;
+      if(!sess) throw new Error('You are logged out — log in and retake the quiz.');
+      var p = computeProfile();
+      var upd = { chest:p.chest, waist:p.waist, hips:p.hips, height:p.height, inseam:p.inseam,
+                  gender: state.gender || null, updated_at: new Date().toISOString() };
+      var r = await sb2.from('profiles').update(upd).eq('id', sess.user.id);
+      if(r.error) throw r.error;
+      window.location.href = '/dashboard.html';
+    } catch(e){
+      btn.disabled = false; btn.textContent = 'Save my new measurements';
+      msg.style.display='block'; msg.textContent = 'Could not save: ' + (e.message || e);
+    }
+  };
+
   // init
-  updH(); updW(); show(); setupPartyMode();
+  updH(); updW(); show(); setupPartyMode(); setupRetakeMode();
 </script>
 </body>
 </html>
