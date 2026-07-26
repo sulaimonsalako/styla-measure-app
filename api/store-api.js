@@ -1,8 +1,4 @@
 import authHandler from './_store/store-auth.js';
-import cartHandler from './_store/store-cart.js';
-import categoriesHandler from './_store/store-categories.js';
-import paymentHandler from './_store/store-payment.js';
-import productsHandler from './_store/store-products.js';
 import exportPaymentHandler from './_store/export-payment.js';
 import rankBrandsHandler from './_match/rank-brands.js';
 import widgetSizeHandler from './_match/widget-size.js';
@@ -39,17 +35,14 @@ export default async function handler(req, res) {
   const pathname = url.pathname;
   const route = url.searchParams.get('route');
 
-  // Read body if it's not store-payment (which handles raw stream itself)
-  const isPayment = route === 'store-payment' || pathname.includes('/store-payment');
-  if (!isPayment && req.method === 'POST') {
+  // Leave the raw stream intact for export-payment — its Stripe webhook needs the
+  // unparsed body for signature verification (it reads the raw body itself).
+  const isRawPassthrough = route === 'export-payment' || pathname.includes('/export-payment');
+  if (!isRawPassthrough && req.method === 'POST') {
     try {
       const rawBody = await getRawBody(req);
       const rawString = rawBody.toString('utf8');
-      if (rawString) {
-        req.body = JSON.parse(rawString);
-      } else {
-        req.body = {};
-      }
+      req.body = rawString ? JSON.parse(rawString) : {};
     } catch (err) {
       console.error("Failed to parse body in store-api router:", err);
       req.body = {};
@@ -58,14 +51,6 @@ export default async function handler(req, res) {
 
   if (route === 'store-auth' || pathname.includes('/store-auth')) {
     return authHandler(req, res);
-  } else if (route === 'store-cart' || pathname.includes('/store-cart')) {
-    return cartHandler(req, res);
-  } else if (route === 'store-categories' || pathname.includes('/store-categories')) {
-    return categoriesHandler(req, res);
-  } else if (route === 'store-payment' || pathname.includes('/store-payment')) {
-    return paymentHandler(req, res);
-  } else if (route === 'store-products' || pathname.includes('/store-products')) {
-    return productsHandler(req, res);
   } else if (route === 'export-payment' || pathname.includes('/export-payment')) {
     return exportPaymentHandler(req, res);
   } else if (route === 'rank-brands' || pathname.includes('/rank-brands')) {

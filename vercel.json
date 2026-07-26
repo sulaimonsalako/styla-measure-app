@@ -34,22 +34,6 @@
       "destination": "/api/store-api?route=store-auth"
     },
     {
-      "source": "/api/store-cart",
-      "destination": "/api/store-api?route=store-cart"
-    },
-    {
-      "source": "/api/store-categories",
-      "destination": "/api/store-api?route=store-categories"
-    },
-    {
-      "source": "/api/store-payment",
-      "destination": "/api/store-api?route=store-payment"
-    },
-    {
-      "source": "/api/store-products",
-      "destination": "/api/store-api?route=store-products"
-    },
-    {
       "source": "/api/3dlook/init-session",
       "destination": "/api/3dlook-api?route=init-session"
     },
