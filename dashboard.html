@@ -115,12 +115,16 @@
       <div class="panel" id="p-profile">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
           <h2 class="ct">My fit profile</h2>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="display:flex;border:1px solid var(--border);border-radius:100px;overflow:hidden">
+              <button id="unitIn" onclick="setUnit('in')" style="background:var(--pinkdim);border:none;color:#fff;padding:8px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:var(--sans)">in</button>
+              <button id="unitCm" onclick="setUnit('cm')" style="background:transparent;border:none;color:var(--dim);padding:8px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:var(--sans)">cm</button>
+            </div>
             <button class="btn-ghost" id="btnEdit" onclick="toggleEdit(true)">✏️ Edit</button>
             <button class="btn-ghost" onclick="location.href='/start.html?retake=1'" title="Answer the quiz again to recalculate your measurements">↺ Retake the quiz</button>
           </div>
         </div>
-        <p class="cs">These power your matches. <b>All measurements are in inches.</b> They were estimated from your quiz — if you have exact measurements from a tailor, or a tape measure and a few minutes, feel free to enter your own below. Real measurements make your matches even more accurate.</p>
+        <p class="cs">These power your matches. <b>All measurements are shown in <span id="unitWord">inches</span></b> — use the in/cm toggle to switch. They were estimated from your quiz — if you have exact measurements from a tailor, or a tape measure and a few minutes, feel free to enter your own below. Real measurements make your matches even more accurate.</p>
         <p class="cs" style="margin-bottom:8px"><b style="color:var(--text)">Essentials</b> — required for accurate matches.</p>
         <div class="mgrid" id="profileGrid"></div>
         <p class="cs" style="margin:18px 0 8px"><b style="color:var(--text)">Fine-tune</b> — optional. Each one sharpens your fit for specific garments.</p>
@@ -287,8 +291,23 @@
     window._m = m;
     document.getElementById('bootLoader').style.display = 'none';
     document.getElementById('dashLayout').style.display = 'grid';
-    renderProfile(m);
+    setUnit(unit); // applies saved in/cm preference + renders the profile
     await loadMatches(m);
+  }
+
+  // ---- Unit toggle (display only — everything is STORED in inches) ----
+  var unit = 'in';
+  try { unit = localStorage.getItem('styla_unit') || 'in'; } catch(e){}
+  function disp(v){ if(v==null||v==='') return ''; return unit==='cm' ? Math.round(v*2.54*10)/10 : v; }
+  function toIn(v){ if(v==null||isNaN(v)) return null; return unit==='cm' ? Math.round(v/2.54*10)/10 : v; }
+  function setUnit(u){
+    unit = u;
+    try { localStorage.setItem('styla_unit', u); } catch(e){}
+    var i = document.getElementById('unitIn'), c = document.getElementById('unitCm');
+    i.style.background = u==='in' ? 'var(--pinkdim)' : 'transparent'; i.style.color = u==='in' ? '#fff' : 'var(--dim)';
+    c.style.background = u==='cm' ? 'var(--pinkdim)' : 'transparent'; c.style.color = u==='cm' ? '#fff' : 'var(--dim)';
+    var w = document.getElementById('unitWord'); if(w) w.textContent = u==='cm' ? 'centimeters' : 'inches';
+    renderProfile(window._m || {});
   }
 
   var editing = false;
@@ -305,7 +324,7 @@
       ? (tier === 'core' ? '<span class="tag miss">Required</span>' : '<span class="tag opt">Optional</span>')
       : '<span class="tag conf">Set</span>';
     return '<div class="mcard'+(missing && tier==='core' ? ' miss' : '')+'"><div class="lab">'+label+' '+tag+
-      '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+(missing?'':v)+'" placeholder="—" style="width:100%;opacity:'+(editing?'1':'.75')+'" '+(editing?'':'disabled')+' /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">in</span></div>'+
+      '</div><div style="position:relative"><input type="number" step="0.1" id="m-'+k+'" value="'+(missing?'':disp(v))+'" placeholder="—" style="width:100%;opacity:'+(editing?'1':'.75')+'" '+(editing?'':'disabled')+' /><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--dim);pointer-events:none">'+unit+'</span></div>'+
       (use ? '<div class="use">improves: '+use+'</div>' : '')+'</div>';
   }
   function renderProfile(m){
@@ -332,7 +351,7 @@
     var m = {};
     ['chest','waist','hips','height','inseam','belly','shoulder','neck','sleeve','thigh'].forEach(function(k){
       var el = document.getElementById('m-'+k);
-      if(el && el.value !== '') m[k] = parseFloat(el.value);
+      if(el && el.value !== '') m[k] = toIn(parseFloat(el.value)); // convert display unit -> inches for storage
     });
     // neck/sleeve/thigh have no dedicated columns — they live in measurement_overrides.
     var ov = Object.assign({}, profile.measurement_overrides || {});
