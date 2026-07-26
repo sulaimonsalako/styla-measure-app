@@ -12,14 +12,23 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
+// SUPABASE_URL and the anon key are public (they ship in the client HTML), so we
+// fall back to hardcoded values if the env vars are missing — this keeps the
+// server from crashing with "supabaseUrl is required" and lets READ paths work
+// via the public-read RLS policies. The SERVICE ROLE key is secret and stays
+// env-only; without it, writes to RLS-protected tables will fail (as intended).
+const PUBLIC_URL = 'https://tneflxtpmzodauygtslk.supabase.co';
+const PUBLIC_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc';
+
+const supabaseUrl = process.env.SUPABASE_URL || PUBLIC_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const anonKey = process.env.SUPABASE_ANON_KEY || '';
+const anonKey = process.env.SUPABASE_ANON_KEY || PUBLIC_ANON;
 
 if (!serviceRoleKey) {
   console.warn(
     '[supabase-admin] SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to the anon key. ' +
-    'Once RLS is enabled on store_* tables, backend writes will FAIL until this key is configured.'
+    'Reads work via public-read policies, but backend WRITES to RLS-protected tables will FAIL ' +
+    'until this key is configured in Vercel.'
   );
 }
 
