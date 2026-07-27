@@ -583,6 +583,7 @@
       if(profile.shoulder) localStorage.setItem('styla_twin_shoulder', profile.shoulder);
       if(profile.neck) localStorage.setItem('styla_twin_neck', profile.neck);
       if(name) localStorage.setItem('styla_first_name', name);
+      localStorage.setItem('styla_twin_email', email); // scope the handoff to THIS account only
     } catch(e){}
 
     // Lead capture (best effort — works once deployed).
@@ -608,22 +609,28 @@
   var PARTY_TOKEN = new URLSearchParams(location.search).get('party') || '';
   var PARTY_MEMBER = new URLSearchParams(location.search).get('member') || '';
 
-  // Existing Styla users don't need to redo the quiz — offer their saved fit in one tap.
+  // Party invitees: an EXISTING Styla user should log in and reuse their saved fit
+  // — not redo the quiz. Logged out -> login banner; logged in with a usable
+  // profile -> one-tap "Use my saved fit"; brand-new -> the quiz below.
   async function offerSavedFit(){
     if(!PARTY_TOKEN) return;
+    var host = document.querySelector('.frame'); if(!host) return;
+    var bar = document.getElementById('partyAuthBar');
+    if(!bar){
+      bar = document.createElement('div'); bar.id = 'partyAuthBar';
+      bar.style.cssText = 'background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:.88rem';
+      host.insertBefore(bar, host.firstChild);
+    }
     try {
       var sb2 = getSupabase();
       var sess = (await sb2.auth.getSession()).data.session;
-      if(!sess) return;
+      if(!sess){ renderPartyLogin(bar, sb2); return; }
       var q = await sb2.from('profiles').select('first_name,chest,waist,hips,height,inseam').eq('id', sess.user.id).maybeSingle();
       var p = q.data;
-      if(!p || !p.chest || !p.waist) return; // no usable saved fit
-      var host = document.querySelector('.frame');
-      var bar = document.createElement('div');
-      bar.style.cssText = 'background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:.88rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
-      bar.innerHTML = '<span>👋 You already have a Styla fit profile — no need to redo the quiz.</span>'
-        + '<button id="savedFitBtn" style="background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:100px;padding:9px 18px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit">Use my saved fit</button>';
-      host.insertBefore(bar, host.firstChild);
+      if(!p || !p.chest || !p.waist){ bar.style.display='none'; return; } // no usable saved fit -> quiz
+      bar.style.display='';
+      bar.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span>👋 You already have a Styla fit profile — no need to redo the quiz.</span>'
+        + '<button id="savedFitBtn" style="background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:100px;padding:9px 18px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit">Use my saved fit</button></div>';
       document.getElementById('savedFitBtn').addEventListener('click', async function(){
         this.disabled = true; this.textContent = 'Adding…';
         try {
@@ -637,6 +644,24 @@
         } catch(e){ this.disabled=false; this.textContent='Use my saved fit'; alert('Could not add your fit: '+(e.message||e)); }
       });
     } catch(e){ /* silently fall back to the quiz */ }
+  }
+
+  function renderPartyLogin(bar, sb2){
+    bar.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span>👋 Already a Styla user? <b>Log in</b> to add your saved fit in one tap — no quiz needed. New here? Just answer the questions below.</span>'
+      + '<button id="pShowLogin" style="background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:100px;padding:9px 18px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit">Log in</button></div>'
+      + '<div id="pLoginForm" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap;align-items:center">'
+      + '<input id="pLoginEmail" type="email" placeholder="Email" autocomplete="email" style="flex:1;min-width:150px;background:#0b0b14;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 11px;color:#fff;font-size:.85rem;font-family:inherit"/>'
+      + '<span style="position:relative;flex:1;min-width:150px;display:inline-block"><input id="pLoginPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;background:#0b0b14;border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 48px 9px 11px;color:#fff;font-size:.85rem;font-family:inherit"/>'
+      + '<button type="button" onclick="var i=document.getElementById(\'pLoginPass\');this.textContent=i.type===\'password\'?\'Hide\':\'Show\';i.type=i.type===\'password\'?\'text\':\'password\';" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#8b90a0;cursor:pointer;font-size:.75rem;font-family:inherit">Show</button></span>'
+      + '<button id="pLoginGo" style="background:linear-gradient(135deg,#e11d48,#ff2a75);border:none;color:#fff;border-radius:100px;padding:9px 18px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit">Log in</button>'
+      + '<div id="pLoginMsg" style="width:100%;color:#ff5c96;font-size:.8rem"></div></div>';
+    document.getElementById('pShowLogin').onclick = function(){ document.getElementById('pLoginForm').style.display='flex'; this.style.display='none'; };
+    document.getElementById('pLoginGo').onclick = async function(){
+      var msg = document.getElementById('pLoginMsg'); msg.style.color='#cbd5e1'; msg.textContent='Logging in…';
+      var out = await sb2.auth.signInWithPassword({ email:(document.getElementById('pLoginEmail').value||'').trim(), password:document.getElementById('pLoginPass').value||'' });
+      if(out.error){ msg.style.color='#ff5c96'; msg.textContent = out.error.message || 'Login failed.'; return; }
+      offerSavedFit(); // re-render as logged-in
+    };
   }
 
   function setupPartyMode(){

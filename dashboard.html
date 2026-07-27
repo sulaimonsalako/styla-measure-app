@@ -89,7 +89,7 @@
   <div class="layout" id="dashLayout" style="display:none">
     <div class="side">
       <div class="navitem on" onclick="tab('matches',this)"><span class="ic">✨</span>My Matches<small>brands that fit you</small></div>
-      <div class="navitem" onclick="tab('profile',this)"><span class="ic">📐</span>My Fit Profile<small>measurements</small></div>
+      <div class="navitem" onclick="tab('profile',this)"><span class="ic">📐</span>My Fit Profile<small>measurements</small><span id="profileWarn" style="margin-left:auto;display:none" title="Your fit profile is incomplete — matches may be inaccurate">⚠️</span></div>
       <div class="navitem" onclick="tab('book',this)"><span class="ic">⚡</span>Bookmarklet<small>free — add to your browser</small></div>
       <div class="navitem" onclick="location.href='/party.html'"><span class="ic">💍</span>My Wedding Party</div>
       <div class="navitem" onclick="location.href='/share.html'"><span class="ic">🎁</span>Share &amp; Gift<small>let others shop for you</small></div>
@@ -260,15 +260,28 @@
       profile = q.data || {};
     } catch(e){ profile = {}; }
 
+    // The quiz->dashboard localStorage handoff is only valid for the SAME person
+    // who took the quiz. Gate every styla_twin_* read on the email matching, and
+    // clear stale keys so another account on this browser never inherits them.
+    var lsRaw = function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } };
+    var twinEmail = (lsRaw('styla_twin_email') || '').toLowerCase();
+    var lsOk = !!twinEmail && twinEmail === (user.email || '').toLowerCase();
+    if(!lsOk){
+      ['styla_twin_chest','styla_twin_waist','styla_twin_hips','styla_twin_height','styla_twin_inseam',
+       'styla_twin_shoulder','styla_twin_neck','styla_twin_email','styla_first_name'].forEach(function(k){
+        try { localStorage.removeItem(k); } catch(e){}
+      });
+    }
+
     // First-name identity: greet by name, and persist it to the profile if we have it.
-    var lsName = null; try { lsName = localStorage.getItem('styla_first_name'); } catch(e){}
+    var lsName = lsOk ? lsRaw('styla_first_name') : null;
     var firstName = profile.first_name || (user.user_metadata && user.user_metadata.first_name) || lsName || '';
     document.getElementById('welcomeEmail').textContent = firstName || user.email;
     if(firstName && !profile.first_name){
       try { await sb.from('profiles').update({ first_name: firstName }).eq('id', user.id); profile.first_name = firstName; } catch(e){}
     }
     var ov = profile.measurement_overrides || {};
-    var ls = function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } };
+    var ls = function(k){ return lsOk ? lsRaw(k) : null; };
     var m = {
       chest: profile.chest || ls('styla_twin_chest'),
       waist: profile.waist || ls('styla_twin_waist'),
@@ -285,6 +298,10 @@
 
     // TASK 16: no fit profile yet -> send them to build one.
     if(!m.chest && !m.waist && !m.hips){ window.location.href = '/start.html?onboard=1'; return; }
+
+    // Caution badge: essentials incomplete -> warn on the profile tab.
+    var essMissing = !m.chest || !m.waist || !m.hips || !m.height;
+    document.getElementById('profileWarn').style.display = essMissing ? '' : 'none';
 
     var _pay = new URLSearchParams(window.location.search).get('payment');
     paid = !!profile.has_paid_matches || _pay === 'success';

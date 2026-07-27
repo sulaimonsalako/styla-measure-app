@@ -80,7 +80,10 @@
     <h2>Welcome back</h2>
     <p class="sub">Log in and we'll pull your saved fit profile.</p>
     <label>Email</label><input type="email" id="li-email" autocomplete="email" />
-    <label>Password</label><input type="password" id="li-pass" autocomplete="current-password" />
+    <label>Password</label>
+    <div style="position:relative"><input type="password" id="li-pass" autocomplete="current-password" style="padding-right:52px" />
+      <button type="button" onclick="var i=document.getElementById('li-pass');this.textContent=i.type==='password'?'Hide':'Show';i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:.78rem;font-family:var(--body)">Show</button>
+    </div>
     <div class="msg" id="li-msg"></div>
     <div class="spacer"></div>
     <button class="btn btn-primary" onclick="doLogin()">Log in &amp; see my size</button>
@@ -271,6 +274,7 @@
         if(p.height)localStorage.setItem('styla_twin_height',p.height);
         if(p.inseam)localStorage.setItem('styla_twin_inseam',p.inseam);
         if(name)localStorage.setItem('styla_first_name',name);
+        localStorage.setItem('styla_twin_email',email);
         // Seed a guest record with the measurements.
         await fetch('/api/store-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'guest-init',username:email,manual_measurements:p})});
       }catch(e){}

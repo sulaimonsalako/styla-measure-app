@@ -65,7 +65,10 @@
       <div class="card" style="max-width:400px">
         <div class="msg" id="loginMsg"></div>
         <label>Email</label><input type="email" id="liEmail" autocomplete="email"/>
-        <label>Password</label><input type="password" id="liPass" autocomplete="current-password"/>
+        <label>Password</label>
+        <div style="position:relative"><input type="password" id="liPass" autocomplete="current-password" style="padding-right:52px"/>
+          <button type="button" onclick="var i=document.getElementById('liPass');this.textContent=i.type==='password'?'Hide':'Show';i.type=i.type==='password'?'text':'password';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:.78rem;font-family:var(--body)">Show</button>
+        </div>
         <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="liBtn">Log in</button>
         <p class="hint" style="text-align:center;margin-top:.9rem">New here? <a href="/start.html?for=party">Start a party →</a></p>
       </div>
