@@ -146,6 +146,27 @@
     .f3 { transform: rotateY(180deg) translateZ(120px); }
     .f4 { transform: rotateY(270deg) translateZ(120px); }
     .tag-caption { text-align: center; color: var(--dim); font-size: 0.82rem; margin-top: 0.5rem; }
+    .tag-face { justify-content: center; gap: 4px; }
+    .tag-face .size { font-size: 2.5rem; margin: 2px 0; }
+    .tf-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .tf-logo { width: 26px; height: 26px; border-radius: 6px; background: #fff; object-fit: contain; padding: 2px; box-sizing: border-box; }
+    .tf-brand { font-size: 0.85rem; font-weight: 700; }
+    .tf-lbl { font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); }
+    .tf-pill { font-size: 0.62rem; font-weight: 700; padding: 3px 12px; border-radius: 100px; background: rgba(255,42,117,0.14); color: var(--pink); }
+    .tf-pill.top { background: rgba(52,211,153,0.15); color: #34d399; }
+    .tf-fit { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+    /* Brand marquee */
+    .marquee-wrap { position: relative; z-index: 1; padding: 1.6rem 0 2.4rem; }
+    .marquee-kicker { text-align: center; color: var(--dim); font-size: 0.85rem; margin-bottom: 1.1rem; }
+    .marquee-kicker b { color: var(--muted); }
+    .marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+    .mtrack { display: flex; gap: 12px; width: max-content; animation: mscroll 36s linear infinite; }
+    .marquee:hover .mtrack { animation-play-state: paused; }
+    @keyframes mscroll { to { transform: translateX(-50%); } }
+    .mchip { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; white-space: nowrap; }
+    .mchip img { width: 24px; height: 24px; border-radius: 6px; background: #fff; object-fit: contain; padding: 2px; box-sizing: border-box; }
+    .mchip span { font-size: 0.92rem; font-weight: 600; color: var(--muted); }
 
     /* Stats */
     .stats { position: relative; z-index: 1; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.015); }
@@ -275,8 +296,8 @@
     <div class="wrap hero-grid">
       <div>
         <span class="eyebrow">Made for the way you're actually shaped</span>
-        <h1 class="hero-h">You're a size 6 in one brand<br>and a <span class="grad-text">10 in the next.</span></h1>
-        <p class="hero-sub">You're not the problem — the sizing is. Answer a few quick questions and Styla shows you the brands cut for <em>your</em> body, with your exact size in each. No tape measure. No photos.</p>
+        <h1 class="hero-h">Answer a few questions.<br><span class="grad-text">Know your size in every brand.</span></h1>
+        <p class="hero-sub">You're a 6 in one brand and a 10 in the next — stop guessing. Styla learns your body from a 2-minute quiz and gives you your exact size in Zara, Old Navy, Aritzia and more, before you buy. No tape measure. No photos.</p>
         <div class="hero-cta-row">
           <a href="/start.html" class="btn btn-primary btn-lg">Find my fit — free</a>
           <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
@@ -286,16 +307,55 @@
       <div>
         <div class="tag-stage">
           <div class="tag">
-            <div class="tag-face f1"><span class="hole"></span><span class="brand">Brand A</span><span class="size grad-text">6</span><span class="cut">"fits perfectly"</span></div>
-            <div class="tag-face f2"><span class="hole"></span><span class="brand">Brand B</span><span class="size">10</span><span class="cut">"had to size up"</span></div>
-            <div class="tag-face f3"><span class="hole"></span><span class="brand">Brand C</span><span class="size grad-text">M</span><span class="cut">"too tight up top"</span></div>
-            <div class="tag-face f4"><span class="hole"></span><span class="brand">Brand D</span><span class="size">8</span><span class="cut">"needs altering"</span></div>
+            <div class="tag-face f1">
+              <span class="tf-head"><img class="tf-logo" src="https://www.google.com/s2/favicons?domain=zara.com&sz=128" alt=""/><span class="tf-brand">Zara</span></span>
+              <span class="tf-lbl">Your size</span><span class="size grad-text">M</span>
+              <span class="tf-pill top">Cut for you</span><span class="tf-fit">true to size</span>
+            </div>
+            <div class="tag-face f2">
+              <span class="tf-head"><img class="tf-logo" src="https://www.google.com/s2/favicons?domain=oldnavy.gap.com&sz=128" alt=""/><span class="tf-brand">Old Navy</span></span>
+              <span class="tf-lbl">Your size</span><span class="size">12 (L)</span>
+              <span class="tf-pill">Great fit</span><span class="tf-fit">runs snug — sized up</span>
+            </div>
+            <div class="tag-face f3">
+              <span class="tf-head"><img class="tf-logo" src="https://www.google.com/s2/favicons?domain=aritzia.com&sz=128" alt=""/><span class="tf-brand">Aritzia</span></span>
+              <span class="tf-lbl">Your size</span><span class="size grad-text">31</span>
+              <span class="tf-pill">Great fit</span><span class="tf-fit">slightly fitted on you</span>
+            </div>
+            <div class="tag-face f4">
+              <span class="tf-head"><img class="tf-logo" src="https://www.google.com/s2/favicons?domain=azazie.com&sz=128" alt=""/><span class="tf-brand">Azazie</span></span>
+              <span class="tf-lbl">Your size</span><span class="size">A10</span>
+              <span class="tf-pill">Great fit</span><span class="tf-fit">bridal sizing handled</span>
+            </div>
           </div>
         </div>
-        <p class="tag-caption">Same body. Four brands. Four "sizes."</p>
+        <p class="tag-caption">One quiz. Your size in every brand.</p>
       </div>
     </div>
   </header>
+
+  <!-- BRAND MARQUEE -->
+  <div class="marquee-wrap">
+    <p class="marquee-kicker">Discover your size in <b>top brands</b></p>
+    <div class="marquee">
+      <div class="mtrack" id="mtrack">
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=zara.com&sz=128" alt=""/><span>Zara</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=oldnavy.gap.com&sz=128" alt=""/><span>Old Navy</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=gap.com&sz=128" alt=""/><span>Gap</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=bananarepublic.gap.com&sz=128" alt=""/><span>Banana Republic</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=aritzia.com&sz=128" alt=""/><span>Aritzia</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=azazie.com&sz=128" alt=""/><span>Azazie</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=davidsbridal.com&sz=128" alt=""/><span>David's Bridal</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=birdygrey.com&sz=128" alt=""/><span>Birdy Grey</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=torrid.com&sz=128" alt=""/><span>Torrid</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=lanebryant.com&sz=128" alt=""/><span>Lane Bryant</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=eloquii.com&sz=128" alt=""/><span>Eloquii</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=uniqlo.com&sz=128" alt=""/><span>UNIQLO</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=kennedyblue.com&sz=128" alt=""/><span>Kennedy Blue</span></div>
+        <div class="mchip"><img src="https://www.google.com/s2/favicons?domain=dxl.com&sz=128" alt=""/><span>DXL</span></div>
+      </div>
+    </div>
+  </div>
 
   <!-- STATS -->
   <div class="stats">
@@ -450,6 +510,10 @@
     var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Marquee: duplicate the chip track once so the -50% keyframe loops seamlessly.
+    var _mt = document.getElementById('mtrack');
+    if(_mt) _mt.innerHTML += _mt.innerHTML;
 
     // Auth-aware nav
     async function refreshAuthUI() {
