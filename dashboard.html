@@ -74,6 +74,17 @@
   .mcard .use{font-size:.66rem;color:var(--dim);margin-top:6px}
   .member{display:flex;align-items:center;justify-content:space-between;padding:12px 6px;border-bottom:1px solid var(--border);font-size:.9rem}
   .lockbox{background:var(--panel2);border:1px dashed var(--border);border-radius:14px;padding:26px;text-align:center;color:var(--dim);font-size:.9rem}
+  .bcard{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+  .bcard:hover{border-color:rgba(255,255,255,.18)}
+  .bcard.hero{border-color:rgba(255,42,117,.45)}
+  .bcard .bhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .bcard .bbody{display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:4px}
+  .bcard.open .bbody{display:block}
+  .tierpill{font-size:.66rem;font-weight:700;padding:3px 10px;border-radius:100px;white-space:nowrap}
+  .tier-top{background:rgba(52,211,153,.14);color:var(--green)}
+  .tier-great{background:var(--pinkdim);color:var(--pink2)}
+  .tier-ok{background:rgba(255,255,255,.07);color:var(--muted)}
+  .lockstrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel2);border:1px dashed var(--border);border-radius:14px;padding:14px 16px;margin-top:10px}
   .loader{text-align:center;color:var(--dim);padding:60px 0}
 </style>
 </head>
@@ -422,38 +433,86 @@
     });
   }
 
-  function brandCell(mm){
-    var logo = mm.logo
-      ? '<img src="'+mm.logo+'" alt="" style="width:24px;height:24px;border-radius:5px;object-fit:contain;background:#fff;flex:none" onerror="this.replaceWith(document.createTextNode(\'\'))"/>'
-      : '<span style="width:24px;height:24px;border-radius:5px;background:var(--pinkdim);color:var(--pink2);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none">'+((mm.brand||'?').charAt(0))+'</span>';
-    return '<span style="display:inline-flex;align-items:center;gap:9px">'+logo+'<span>'+mm.brand+'</span></span>';
+  // ---- Grouped brand cards: one card per brand, sizes per category inside. ----
+  function tierOf(score){
+    if(score >= 90) return { label:'Cut for you', cls:'tier-top' };
+    if(score >= 80) return { label:'Great fit', cls:'tier-great' };
+    return { label:'Good fit · minor tailoring', cls:'tier-ok' };
+  }
+  function fitWords(sp){
+    var map = { ideal:'true to size for you', slim:'slightly fitted on you', tight:'runs snug — sized up for you',
+                relaxed:'roomy — relaxed on you', oversized:'very roomy — size down if between' };
+    return map[sp] || (sp || '');
+  }
+  var CAT_ICON = { dresses:'👗', tops:'👕', shirts:'👔', bottoms:'👖', denim:'👖', jeans:'👖', suits:'🤵', outerwear:'🧥' };
+  function groupBrands(list){
+    var map = {}, order = [];
+    list.forEach(function(mm){
+      if(!map[mm.brand]){ map[mm.brand] = { brand:mm.brand, logo:mm.logo, domain:mm.domain, best:0, cats:[] }; order.push(mm.brand); }
+      var g = map[mm.brand];
+      g.cats.push(mm);
+      if(mm.score > g.best) g.best = mm.score;
+    });
+    var arr = order.map(function(k){ var g = map[k]; g.cats.sort(function(a,b){ return b.score - a.score; }); return g; });
+    arr.sort(function(a,b){ return b.best - a.best; });
+    return arr;
+  }
+  function logoTile(g, size){
+    size = size || 38;
+    var fs = Math.round(size * 0.42);
+    return '<span style="width:'+size+'px;height:'+size+'px;flex:none;display:inline-block;position:relative">'
+      + (g.logo ? '<img src="'+g.logo+'" alt="" style="width:100%;height:100%;border-radius:9px;object-fit:contain;background:#fff;padding:4px;box-sizing:border-box" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>' : '')
+      + '<span style="width:100%;height:100%;border-radius:9px;background:var(--pinkdim);color:var(--pink2);display:'+(g.logo?'none':'flex')+';align-items:center;justify-content:center;font-weight:700;font-size:'+fs+'px;position:absolute;top:0;left:0">'+((g.brand||'?').charAt(0))+'</span></span>';
+  }
+  function brandCard(g, hero){
+    var t = tierOf(g.best);
+    var top = g.cats[0];
+    var conf = Math.max.apply(null, g.cats.map(function(c){ return c.dims || 0; }));
+    var confTxt = conf >= 3 ? 'high confidence' : conf === 2 ? 'good confidence' : 'early estimate';
+    var rows = g.cats.map(function(c, i){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;'+(i===g.cats.length-1?'':'border-bottom:1px solid var(--border)')+'">'
+        + '<span style="width:22px;text-align:center">'+(CAT_ICON[c.category]||'👚')+'</span>'
+        + '<div style="flex:1;min-width:80px"><div style="font-size:.9rem;text-transform:capitalize">'+(c.category||'general')+'</div>'
+        + '<div style="font-size:.74rem;color:var(--dim)">'+fitWords(c.spectrum)+'</div></div>'
+        + '<div style="font-size:1.05rem;font-weight:700">'+c.recommended_size+'</div></div>';
+    }).join('');
+    var shop = g.domain ? '<a href="https://'+g.domain+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.8rem;padding:8px 14px">Shop '+g.brand+' ↗</a>' : '';
+    return '<div class="bcard'+(hero?' hero open':'')+'" onclick="this.classList.toggle(\'open\')">'
+      + '<div class="bhead">'+logoTile(g, hero?44:36)
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:'+(hero?'1.05rem':'.95rem')+'">'+g.brand+'</div>'
+      + '<div style="font-size:.74rem;color:var(--dim)">'+g.cats.length+' '+(g.cats.length>1?'categories':'category')+' · '+confTxt+'</div></div>'
+      + '<span class="tierpill '+t.cls+'">'+t.label+'</span>'
+      + '<div style="text-align:right;margin-left:4px"><div style="font-size:.66rem;color:var(--dim)">Your size</div><div style="font-size:1.15rem;font-weight:700">'+top.recommended_size+'</div></div>'
+      + '</div>'
+      + '<div class="bbody">'+rows
+      + '<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">'+shop
+      + '<span style="font-size:.7rem;color:var(--dim)">tap card to '+(hero?'collapse':'expand / collapse')+'</span></div></div>'
+      + '</div>';
   }
   function renderMatches(){
     var locked = document.getElementById('matchLocked');
     var unlocked = document.getElementById('matchUnlocked');
-    var list = filteredMatches();
-    if(!list.length){
+    var groups = groupBrands(filteredMatches());
+    if(!groups.length){
       var hasFilter = ((document.getElementById('matchSearch')||{}).value || '') || ((document.getElementById('matchCat')||{}).value || '');
-      locked.innerHTML = '<div class="row lock"><div class="r">'+(hasFilter ? 'No matches for this search — try clearing the filters.' : (curMatches.length ? '' : 'No matches yet — as more brands are added, they\'ll appear here.'))+'</div></div>';
+      locked.innerHTML = '<div class="lockbox">'+(hasFilter ? 'No matches for this search — try clearing the filters.' : 'No matches yet — as more brands are added, they\'ll appear here.')+'</div>';
       locked.style.display='block'; unlocked.style.display='none'; return;
     }
-    function rowFor(mm, last){
-      return '<div class="row"'+(last?' style="border-bottom:none"':'')+'><div class="r">'+brandCell(mm)+
-        '</div><div class="r"><span class="size">Your size: '+mm.recommended_size+(mm.category?(' · '+mm.category):'')+'</span><span class="pct">'+mm.score+'%</span></div></div>';
-    }
     if(paid){
-      var h = '';
-      list.forEach(function(mm,i){ h += rowFor(mm, i===list.length-1); });
+      var h = groups.map(function(g, i){ return brandCard(g, i === 0); }).join('');
       h += '<div class="ok-banner">✓ Unlocked — every brand that fits you, with your size in each.</div>';
       unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
     } else {
-      var top = list[0], rest = list.length - 1;
-      var h = rowFor(top, false);
-      for(var i=0;i<Math.min(3,rest);i++) h += '<div class="row lock"><div class="r">••••••••••</div><span>🔒</span></div>';
-      if(rest>0) h += '<div class="row lock" style="border-bottom:none"><div class="r">+ '+rest+' more matches</div><span>🔒</span></div>';
-      h += '<div class="unlock"><h3>Unlock all your matches</h3><p>Every brand ranked by fit, plus your exact size in each.</p>'+
-           '<button class="btn-primary" onclick="startUnlock()">Unlock everything — $9.99</button>'+
-           '<div class="fine">🔒 One-time payment via Stripe · no subscription</div></div>';
+      var rest = groups.length - 1;
+      var topCnt = groups.filter(function(g){ return g.best >= 90; }).length;
+      var h = brandCard(groups[0], true);
+      if(rest > 0){
+        h += '<div class="lockstrip">'
+          + '<div style="display:flex;gap:6px">'+groups.slice(1, 5).map(function(g){ return '<span style="filter:blur(4px);opacity:.7">'+logoTile(g, 30)+'</span>'; }).join('')+'</div>'
+          + '<div style="flex:1;min-width:150px;font-size:.85rem;color:var(--muted)">'+rest+' more brand'+(rest>1?'s':'')+' fit you'+(topCnt>1?(' — including '+(topCnt-1)+' more rated “cut for you”'):'')+'.</div>'
+          + '<button class="btn-primary" onclick="startUnlock()">Unlock all — $9.99</button></div>'
+          + '<div class="fine" style="text-align:center">🔒 One-time payment via Stripe · no subscription</div>';
+      }
       locked.innerHTML = h; locked.style.display='block'; unlocked.style.display='none';
     }
   }
