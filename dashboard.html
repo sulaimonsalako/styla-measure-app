@@ -539,23 +539,9 @@
       locked.innerHTML = '<div class="lockbox">'+(hasFilter ? 'No matches for this search — try clearing the filters.' : 'No matches yet — as more brands are added, they\'ll appear here.')+'</div>';
       locked.style.display='block'; unlocked.style.display='none'; return;
     }
-    if(paid){
-      var h = groups.map(function(g, i){ return brandCard(g, i === 0); }).join('');
-      h += '<div class="ok-banner">✓ Unlocked — every brand that fits you, with your size in each.</div>';
-      unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
-    } else {
-      var rest = groups.length - 1;
-      var topCnt = groups.filter(function(g){ return g.best >= 90; }).length;
-      var h = brandCard(groups[0], true);
-      if(rest > 0){
-        h += '<div class="lockstrip">'
-          + '<div style="display:flex;gap:6px">'+groups.slice(1, 5).map(function(g){ return '<span style="filter:blur(4px);opacity:.7">'+logoTile(g, 30)+'</span>'; }).join('')+'</div>'
-          + '<div style="flex:1;min-width:150px;font-size:.85rem;color:var(--muted)">'+rest+' more brand'+(rest>1?'s':'')+' fit you'+(topCnt>1?(' — including '+(topCnt-1)+' more rated “cut for you”'):'')+'.</div>'
-          + '<button class="btn-primary" onclick="startUnlock()">Unlock all — $9.99</button></div>'
-          + '<div class="fine" style="text-align:center">🔒 One-time payment via Stripe · no subscription</div>';
-      }
-      locked.innerHTML = h; locked.style.display='block'; unlocked.style.display='none';
-    }
+    var h = groups.map(function(g, i){ return brandCard(g, i === 0); }).join('');
+    h += '<div class="ok-banner">✓ Every brand that fits you, with your size in each — free.</div>';
+    unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
   }
 
   // ---- Feedback & requests ----
