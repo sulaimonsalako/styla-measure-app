@@ -266,6 +266,16 @@
     user = sess.user;
     document.getElementById('accountEmail').textContent = user.email;
 
+    // Returned from Stripe? Verify the session server-side BEFORE loading the
+    // profile, so the paid flag is durable even if the webhook never fires.
+    var qsPay = new URLSearchParams(window.location.search);
+    if(qsPay.get('payment') === 'success' && qsPay.get('session_id')){
+      try {
+        await fetch('/api/export-payment', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ action:'verify-session', sessionId: qsPay.get('session_id') }) });
+      } catch(e){}
+    }
+
     try {
       var q = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
       profile = q.data || {};
@@ -563,7 +573,7 @@
           productName: 'Styla — Your full brand matches',
           productDescription: 'Unlock every brand ranked by fit, with your size in each.',
           paymentType: 'match_unlock_payment',
-          successUrl: origin + '/dashboard.html?payment=success',
+          successUrl: origin + '/dashboard.html?payment=success&session_id={CHECKOUT_SESSION_ID}',
           cancelUrl: origin + '/dashboard.html?payment=cancel'
         })
       });

@@ -133,8 +133,11 @@
       var s=await sb.auth.getSession();
       if(!s.data.session){ show('loginView'); return; }
       el('dashLink').style.display='';el('logoutBtn').classList.remove('hide');
-      // Return from Stripe? open the party.
-      var pid=params.get('party'); var pay=params.get('payment');
+      // Return from Stripe? Verify the session server-side (webhook-independent), then open.
+      var pid=params.get('party'); var pay=params.get('payment'); var sid=params.get('session_id');
+      if(pay==='success' && sid){
+        try { await fetch('/api/export-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify-session',sessionId:sid})}); } catch(e){}
+      }
       if(pid){ openParty(pid, pay==='success'); return; }
       loadList();
     }
@@ -226,7 +229,7 @@
         action:'create-checkout-session', userId:s.data.session.user.id, email:s.data.session.user.email,
         amount:2999, paymentType:'bridesmaid_report_payment', partyId:curParty.id,
         productName:'Styla Wedding Party Fit Report', productDescription:'Unlock the styles that fit your whole party, with each person\'s size.',
-        successUrl:location.origin+'/party.html?party='+curParty.id+'&payment=success',
+        successUrl:location.origin+'/party.html?party='+curParty.id+'&payment=success&session_id={CHECKOUT_SESSION_ID}',
         cancelUrl:location.origin+'/party.html?party='+curParty.id
       })});
       var data=await res.json();

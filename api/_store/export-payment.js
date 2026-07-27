@@ -39,24 +39,36 @@ export default async function handler(req, res) {
     }
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const metadata = session.metadata || {};
+      const result = await fulfillCheckoutSession(event.data.object);
+      if (result.status !== 200) return res.status(result.status).json({ error: result.error });
+    }
 
-      // If it is a storefront group cart checkout session, ignore gracefully in export handler
-      if (metadata.cartId) {
-        console.log("Export payment webhook received a storefront cart payment event. Ignoring gracefully.");
-        return res.status(200).json({ received: true });
-      }
+    return res.status(200).json({ received: true });
+  }
 
-      const paymentType = metadata.type || 'export_payment';
-      const userId = metadata.userId;
+  // 2. Standard Client API Actions
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+  return clientActions(req, res);
+}
 
-      if (!userId) {
-        console.error(`Stripe webhook session completed for ${paymentType} but userId is missing in metadata.`);
-        return res.status(400).json({ error: 'Missing userId in metadata' });
-      }
+// Shared fulfillment: called by BOTH the Stripe webhook and verify-session, so a
+// missed webhook can never strand a paying customer.
+async function fulfillCheckoutSession(session) {
+  const metadata = session.metadata || {};
 
-      try {
+  // Storefront group-cart sessions are not ours to fulfill.
+  if (metadata.cartId) return { status: 200 };
+
+  const paymentType = metadata.type || 'export_payment';
+  const userId = metadata.userId;
+  if (!userId) {
+    console.error(`Checkout session for ${paymentType} missing userId in metadata.`);
+    return { status: 400, error: 'Missing userId in metadata' };
+  }
+
+  try {
         // Wedding-party report unlock — coordinator paid once for the whole party.
         if (metadata.partyId) {
           try { await supabase.from('wedding_parties').update({ has_paid_report: true }).eq('id', metadata.partyId); }
@@ -135,20 +147,14 @@ export default async function handler(req, res) {
         } catch (mailErr) {
           console.error('[WEBHOOK EMAIL] Receipt send failed (non-fatal):', mailErr.message);
         }
-      } catch (e) {
-        console.error(`Error handling database write inside Stripe webhook:`, e);
-        return res.status(500).json({ error: 'Database update failed' });
-      }
-    }
-
-    return res.status(200).json({ received: true });
+    return { status: 200 };
+  } catch (e) {
+    console.error('Error fulfilling checkout session:', e);
+    return { status: 500, error: 'Database update failed' };
   }
+}
 
-  // 2. Standard Client API Actions
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
+async function clientActions(req, res) {
   try {
     let body = {};
     let rawString = '';
@@ -174,7 +180,23 @@ export default async function handler(req, res) {
       }
     }
 
-    const { action, userId, email, amount, productName, productDescription, paymentType, successUrl, cancelUrl, partyId } = body;
+    const { action, userId, email, amount, productName, productDescription, paymentType, successUrl, cancelUrl, partyId, sessionId } = body;
+
+    // Action: verify-session — client returns from Stripe with ?session_id=...;
+    // we confirm payment directly with Stripe and fulfill. Webhook-independent.
+    if (action === 'verify-session') {
+      if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+      const vKey = process.env.STRIPE_SECRET_KEY;
+      if (!vKey) return res.status(500).json({ error: 'Stripe not configured on server.' });
+      const vStripe = new Stripe(vKey);
+      const vSession = await vStripe.checkout.sessions.retrieve(sessionId);
+      if (vSession && vSession.payment_status === 'paid') {
+        const result = await fulfillCheckoutSession(vSession);
+        if (result.status !== 200) return res.status(result.status).json({ error: result.error });
+        return res.status(200).json({ ok: true, paid: true });
+      }
+      return res.status(200).json({ ok: true, paid: false });
+    }
 
     // Action: create-checkout-session
     if (action === 'create-checkout-session') {
