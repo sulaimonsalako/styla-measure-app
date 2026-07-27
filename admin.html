@@ -95,6 +95,11 @@
         <button class="btn btn-primary btn-sm" style="margin-top:.9rem" id="nbBtn">Add brand</button>
       </div>
       <div id="brandsList"></div>
+      <div class="card" style="margin-top:1.4rem">
+        <h2 style="margin-top:0">Requests &amp; feedback</h2>
+        <p class="hint" style="margin-top:-.3rem">Brand requests roll into your weekly add batch. Marking a brand request <b>done</b> automatically emails the requester that their brand is live.</p>
+        <div id="fbList" class="hint" style="margin-top:.8rem">Loading…</div>
+      </div>
     </div>
 
     <!-- BRAND DETAIL -->
@@ -206,7 +211,28 @@
       el('logoutBtn').classList.remove('hide');
       renderBrands(res.brands||[]);
       show('brandsView');
+      loadFeedback();
     }
+
+    async function loadFeedback(){
+      var res = await api('list-feedback');
+      var rows = res.feedback || [];
+      var box = el('fbList');
+      if(!rows.length){ box.textContent = 'Nothing yet — user requests and reports will appear here.'; return; }
+      var typeLbl = { brand:'🏷️ brand request', bug:'🐞 problem', idea:'💡 idea', other:'💬 other' };
+      box.innerHTML = rows.map(function(f){
+        return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border)">'
+          + '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--muted)">'+(typeLbl[f.type]||f.type)+'</span>'
+          + '<div style="flex:1;min-width:160px;color:#fff;font-size:.88rem">'+(f.brand_name?('<b>'+f.brand_name+'</b> '):'')+(f.message||'')+'<div class="hint">'+(f.email||'')+' · '+new Date(f.created_at).toLocaleDateString()+'</div></div>'
+          + '<select onchange="fbStatus(\''+f.id+'\',this.value)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 9px;color:#fff;font-size:.8rem;font-family:var(--body)">'
+          + ['new','planned','done','dismissed'].map(function(s){ return '<option value="'+s+'"'+(s===f.status?' selected':'')+'>'+s+'</option>'; }).join('')
+          + '</select></div>';
+      }).join('');
+    }
+    window.fbStatus = async function(id, status){
+      var r = await api('update-feedback', { id:id, status:status });
+      if(r.error) alert(r.error);
+    };
 
     el('liBtn').addEventListener('click',async function(){
       var email=el('liEmail').value.trim(),pass=el('liPass').value,msg=el('loginMsg');

@@ -104,6 +104,7 @@
       <div class="navitem" onclick="tab('book',this)"><span class="ic">⚡</span>Bookmarklet<small>free — add to your browser</small></div>
       <div class="navitem" onclick="location.href='/party.html'"><span class="ic">💍</span>My Wedding Party</div>
       <div class="navitem" onclick="location.href='/share.html'"><span class="ic">🎁</span>Share &amp; Gift<small>let others shop for you</small></div>
+      <div class="navitem" onclick="tab('feedback',this)"><span class="ic">💬</span>Requests &amp; Feedback<small>ask for a brand · report a bug</small></div>
       <div class="navitem" onclick="tab('account',this)"><span class="ic">⚙️</span>Account</div>
     </div>
     <div class="content">
@@ -198,6 +199,29 @@
         <h2 class="ct">My wedding party</h2>
         <p class="cs">Add everyone, let them do their 2-minute fit, and find the one dress that fits you all.</p>
         <div class="lockbox">💍 <b style="color:var(--text)">Coming soon</b><br/><br/>Invite your party, everyone builds their fit profile, and the admin unlocks the group match report ($29.99) — the styles with a size that fits every member.</div>
+      </div>
+
+      <!-- FEEDBACK & REQUESTS -->
+      <div class="panel" id="p-feedback">
+        <h2 class="ct">Requests &amp; feedback</h2>
+        <p class="cs">Ask for a brand, report a problem, or suggest an idea. Brand requests are usually added within a week — we'll email you the moment yours lands.</p>
+        <div class="mcard" style="max-width:540px">
+          <div class="lab">What is it?</div>
+          <select id="fbType" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--sans);outline:none">
+            <option value="brand">Request a brand</option>
+            <option value="bug">Report a problem</option>
+            <option value="idea">Suggest a feature</option>
+            <option value="other">Something else</option>
+          </select>
+          <div class="lab" style="margin-top:12px">Brand name <span style="font-weight:400;color:var(--dim)">(for brand requests)</span></div>
+          <input id="fbBrand" placeholder="e.g. Reformation" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--sans);outline:none"/>
+          <div class="lab" style="margin-top:12px">Details</div>
+          <textarea id="fbMsg" rows="4" placeholder="Tell us more…" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:#fff;font-size:.9rem;font-family:var(--sans);outline:none;resize:vertical"></textarea>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:12px">
+            <button class="btn-primary" onclick="sendFeedback()">Send</button>
+            <span id="fbMsgLine" style="font-size:.85rem"></span>
+          </div>
+        </div>
       </div>
 
       <!-- ACCOUNT -->
@@ -324,8 +348,9 @@
     var essMissing = !m.chest || !m.waist || !m.hips || !m.height;
     document.getElementById('profileWarn').style.display = essMissing ? '' : 'none';
 
-    var _pay = new URLSearchParams(window.location.search).get('payment');
-    paid = !!profile.has_paid_matches || _pay === 'success';
+    // Matches are FREE for everyone — revenue comes from affiliate shop links,
+    // B2B, and the wedding-party unlock. (has_paid_matches kept for history.)
+    paid = true;
     window._m = m;
     document.getElementById('bootLoader').style.display = 'none';
     document.getElementById('dashLayout').style.display = 'grid';
@@ -467,6 +492,11 @@
     arr.sort(function(a,b){ return b.best - a.best; });
     return arr;
   }
+  // Shop-link tracking: tag every outbound click so it's measurable now and
+  // swappable for per-brand affiliate links later (brands.affiliate_url).
+  function withUtm(url){
+    return url + (url.indexOf('?') > -1 ? '&' : '?') + 'utm_source=styla&utm_medium=referral&utm_campaign=matches';
+  }
   function logoTile(g, size){
     size = size || 38;
     var fs = Math.round(size * 0.42);
@@ -483,11 +513,11 @@
       return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;'+(i===g.cats.length-1?'':'border-bottom:1px solid var(--border)')+'">'
         + '<span style="width:22px;text-align:center">'+(CAT_ICON[c.category]||'👚')+'</span>'
         + '<div style="flex:1;min-width:80px"><div style="font-size:.9rem;text-transform:capitalize">'
-        + (c.category_url ? '<a href="'+c.category_url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">'+(c.category||'general')+' <span style="color:var(--pink2);font-size:.75rem">↗</span></a>' : (c.category||'general'))
+        + (c.category_url ? '<a href="'+withUtm(c.category_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">'+(c.category||'general')+' <span style="color:var(--pink2);font-size:.75rem">↗</span></a>' : (c.category||'general'))
         + '</div><div style="font-size:.74rem;color:var(--dim)">'+fitWords(c.spectrum)+'</div></div>'
         + '<div style="font-size:1.05rem;font-weight:700">'+c.recommended_size+'</div></div>';
     }).join('');
-    var shop = g.domain ? '<a href="https://'+g.domain+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.8rem;padding:8px 14px">Shop '+g.brand+' ↗</a>' : '';
+    var shop = g.domain ? '<a href="'+withUtm('https://'+g.domain)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.8rem;padding:8px 14px">Shop '+g.brand+' ↗</a>' : '';
     return '<div class="bcard'+(hero?' hero open':'')+'" onclick="this.classList.toggle(\'open\')">'
       + '<div class="bhead">'+logoTile(g, hero?44:36)
       + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:'+(hero?'1.05rem':'.95rem')+'">'+g.brand+'</div>'
@@ -526,6 +556,21 @@
       }
       locked.innerHTML = h; locked.style.display='block'; unlocked.style.display='none';
     }
+  }
+
+  // ---- Feedback & requests ----
+  async function sendFeedback(){
+    var line = document.getElementById('fbMsgLine');
+    line.style.color='var(--muted)'; line.textContent='Sending…';
+    try {
+      var sess = (await sb.auth.getSession()).data.session;
+      var r = await fetch('/api/feedback', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sess.access_token},
+        body: JSON.stringify({ action:'submit', type:document.getElementById('fbType').value,
+          brand_name:document.getElementById('fbBrand').value, message:document.getElementById('fbMsg').value }) });
+      var d = await r.json(); if(d.error) throw new Error(d.error);
+      document.getElementById('fbBrand').value=''; document.getElementById('fbMsg').value='';
+      line.style.color='var(--green)'; line.textContent='✓ Got it — thank you!';
+    } catch(e){ line.style.color='var(--pink2)'; line.textContent = e.message || e; }
   }
 
   // ---- Account management ----

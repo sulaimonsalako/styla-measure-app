@@ -341,7 +341,7 @@ function buildStylaEmail({ heading, bodyHtml, ctaText, ctaUrl, receiptHtml = '',
 </div>`;
 }
 
-async function sendStylaMail(to, subject, html, text) {
+export async function sendStylaMail(to, subject, html, text) {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;

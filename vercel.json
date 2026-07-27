@@ -34,6 +34,10 @@
       "destination": "/api/store-api?route=account"
     },
     {
+      "source": "/api/feedback",
+      "destination": "/api/store-api?route=feedback"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

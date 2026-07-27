@@ -5,6 +5,7 @@
 // Body: { action, accessToken?, ... }  (token may also come from Authorization: Bearer)
 
 import { supabaseAdmin } from '../_helpers/supabase-admin.js';
+import { sendStylaMail } from '../_helpers/email-helper.js';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'sulaimonasalako@gmail.com')
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -119,6 +120,35 @@ export default async function brandAdmin(req, res) {
       if (!b.id) return res.status(400).json({ error: 'chart id required.' });
       const { error } = await supabaseAdmin.from('size_charts').delete().eq('id', b.id);
       if (error) throw error;
+      return res.status(200).json({ ok: true });
+    }
+
+    // ---- FEEDBACK QUEUE ----
+    if (action === 'list-feedback') {
+      const { data } = await supabaseAdmin.from('feedback')
+        .select('id, email, type, brand_name, message, status, created_at')
+        .order('created_at', { ascending: false }).limit(200);
+      return res.status(200).json({ feedback: data || [] });
+    }
+
+    if (action === 'update-feedback') {
+      if (!b.id || !b.status) return res.status(400).json({ error: 'id and status required.' });
+      const { data: row } = await supabaseAdmin.from('feedback')
+        .select('email, type, brand_name, status').eq('id', b.id).maybeSingle();
+      const { error } = await supabaseAdmin.from('feedback').update({ status: b.status }).eq('id', b.id);
+      if (error) throw error;
+      // Brand request fulfilled -> tell the person who asked.
+      if (b.status === 'done' && row && row.type === 'brand' && row.email && row.status !== 'done') {
+        try {
+          const bn = row.brand_name || 'The brand you asked for';
+          await sendStylaMail(row.email, bn + ' is now on Styla 🎉',
+            '<div style="font-family:Helvetica,Arial,sans-serif;background:#0b0b14;color:#fff;padding:36px 24px;max-width:600px;margin:0 auto;border-radius:8px">'
+            + '<h2 style="font-family:Georgia,serif;margin:0 0 10px">' + bn + ' just landed on Styla</h2>'
+            + '<p style="color:#cbd5e1;line-height:1.6">You asked, we added it. Your size in ' + bn + ' is already waiting in your matches.</p>'
+            + '<a href="https://www.styla.ca/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff;text-decoration:none;font-weight:700;padding:12px 28px;border-radius:100px;margin-top:8px">See my size</a></div>',
+            bn + ' is now on Styla — see your size: https://www.styla.ca/dashboard.html');
+        } catch (e) { /* non-fatal */ }
+      }
       return res.status(200).json({ ok: true });
     }
 
