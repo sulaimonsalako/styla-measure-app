@@ -146,6 +146,13 @@
           <div><label>Gender</label><select id="chGender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
           <div><label>Chart type</label><select id="chType"><option value="body">Body (to-fit)</option><option value="garment">Garment (flat)</option></select></div>
         </div>
+        <div class="row3" style="margin-top:.8rem">
+          <div><label>Source</label><select id="chSource"><option value="admin">Entered by Styla (me)</option><option value="brand">Provided by the brand</option><option value="parsed">Auto-parsed</option></select></div>
+          <div><label>Category / product page URL <span class="hint">(shop link)</span></label><input id="chCatUrl" placeholder="https://brand.com/collections/dresses"/></div>
+          <div style="display:flex;align-items:end;gap:1rem;padding-bottom:6px">
+            <label style="margin:0"><input type="checkbox" id="chVerified" style="width:auto;margin-right:6px"/> ✓ Verified by me</label>
+          </div>
+        </div>
         <label style="margin-top:.8rem"><input type="checkbox" id="chDefault" style="width:auto;margin-right:6px"/> Default chart for this category (used in dashboard brand-matching)</label>
 
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
@@ -274,9 +281,13 @@
     function renderCharts(){
       el('chartsList').innerHTML=state.charts.map(function(c){
         var n=(c.chart_data&&c.chart_data.sizes)?c.chart_data.sizes.length:0;
+        var srcLbl = c.source==='brand' ? 'from brand' : c.source==='parsed' ? 'auto-parsed' : 'by Styla';
         return '<div class="chart-item"><div class="chart-head">'+
           '<span class="badge">'+(c.category||'—')+'</span><span class="badge">'+(c.gender||'—')+'</span>'+
           (c.is_default?'<span class="badge def">default</span>':'')+
+          (c.verified?'<span class="badge def">✓ verified</span>':'<span class="badge" style="background:rgba(255,255,255,.06);color:var(--dim)">unverified</span>')+
+          '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--dim)">'+srcLbl+'</span>'+
+          (c.category_url?'<span class="badge" style="background:rgba(255,255,255,.06);color:var(--dim)">🔗 linked</span>':'')+
           '<span class="hint">'+n+' sizes · '+((c.chart_data&&c.chart_data.chart_type)||'body')+'</span>'+
           '<span style="margin-left:auto;display:flex;gap:7px"><button class="btn btn-ghost btn-sm" onclick="editChart(\''+c.id+'\')">Edit</button>'+
           '<button class="btn-danger" onclick="delChart(\''+c.id+'\')">Delete</button></span></div></div>';
@@ -294,6 +305,9 @@
       el('chGender').value=c?(c.gender||'women'):'women';
       el('chType').value=(c&&c.chart_data&&c.chart_data.chart_type)||'body';
       el('chDefault').checked=c?!!c.is_default:false;
+      el('chSource').value=(c&&c.source)||'admin';
+      el('chVerified').checked=c?!!c.verified:false;
+      el('chCatUrl').value=(c&&c.category_url)||'';
       el('sizeRows').innerHTML='';
       var sizes=(c&&c.chart_data&&c.chart_data.sizes)||[{name:''}];
       sizes.forEach(addSizeRow);
@@ -326,7 +340,8 @@
       var type=el('chType').value;
       var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_type:type,sizes:sizes};
       if(type==='garment')chart_data.flat_measures=['chest','waist','hips','thigh']; // flat charts: circumferences are half-width
-      var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked};
+      var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked,
+        source:el('chSource').value,verified:el('chVerified').checked,category_url:el('chCatUrl').value.trim()||null};
       msg.style.color='var(--muted)';msg.textContent='Saving…';
       var res=state.editingChart?await api('update-chart',Object.assign({id:state.editingChart.id},payload)):await api('create-chart',payload);
       if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}

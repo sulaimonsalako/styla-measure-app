@@ -482,8 +482,9 @@
     var rows = g.cats.map(function(c, i){
       return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;'+(i===g.cats.length-1?'':'border-bottom:1px solid var(--border)')+'">'
         + '<span style="width:22px;text-align:center">'+(CAT_ICON[c.category]||'👚')+'</span>'
-        + '<div style="flex:1;min-width:80px"><div style="font-size:.9rem;text-transform:capitalize">'+(c.category||'general')+'</div>'
-        + '<div style="font-size:.74rem;color:var(--dim)">'+fitWords(c.spectrum)+'</div></div>'
+        + '<div style="flex:1;min-width:80px"><div style="font-size:.9rem;text-transform:capitalize">'
+        + (c.category_url ? '<a href="'+c.category_url+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">'+(c.category||'general')+' <span style="color:var(--pink2);font-size:.75rem">↗</span></a>' : (c.category||'general'))
+        + '</div><div style="font-size:.74rem;color:var(--dim)">'+fitWords(c.spectrum)+'</div></div>'
         + '<div style="font-size:1.05rem;font-weight:700">'+c.recommended_size+'</div></div>';
     }).join('');
     var shop = g.domain ? '<a href="https://'+g.domain+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.8rem;padding:8px 14px">Shop '+g.brand+' ↗</a>' : '';
