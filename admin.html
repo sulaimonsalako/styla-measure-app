@@ -155,6 +155,15 @@
         </div>
         <label style="margin-top:.8rem"><input type="checkbox" id="chDefault" style="width:auto;margin-right:6px"/> Default chart for this category (used in dashboard brand-matching)</label>
 
+        <div id="aiZone" style="margin-top:1rem;border:1px dashed var(--border);border-radius:11px;padding:.9rem 1rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer">
+          <span style="font-size:1.3rem">📷</span>
+          <div style="flex:1;min-width:180px">
+            <div style="font-size:.88rem;font-weight:600">Paste a screenshot of the size chart (Ctrl+V), drop an image, or click to upload</div>
+            <div class="hint">AI reads the chart and fills the table below — review it, then save. Centimeters convert to inches automatically. PDFs work too.</div>
+          </div>
+          <span id="aiMsg" class="hint"></span>
+          <input type="file" id="aiFile" accept="image/*,.pdf" style="display:none"/>
+        </div>
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
         <table class="sizes">
           <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th>Sleeve</th><th>Length</th><th>Neck</th><th></th></tr></thead>
@@ -346,6 +355,49 @@
       var res=state.editingChart?await api('update-chart',Object.assign({id:state.editingChart.id},payload)):await api('create-chart',payload);
       if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
       openBrand(state.brand.id);
+    });
+
+    // ---- AI chart import: paste / drop / upload a screenshot, AI fills the table ----
+    var POM_MAP = { chest:'chest', bust:'chest', 'chest width':'chest', 'bust width':'chest',
+      waist:'waist', 'waist width':'waist', hip:'hips', hips:'hips', seat:'hips',
+      inseam:'inseam', sleeve:'sleeve', 'sleeve length':'sleeve',
+      length:'length', 'back length':'length', 'body length':'length', 'torso':'length',
+      neck:'neck', collar:'neck' };
+    function aiSay(t, ok){ var e = el('aiMsg'); e.textContent = t; e.style.color = ok ? 'var(--green)' : 'var(--dim)'; }
+    async function parseChartFile(file){
+      if(!file) return;
+      aiSay('Reading the chart with AI…');
+      try {
+        var dataUrl = await new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = rej; r.readAsDataURL(file); });
+        var resp = await fetch('/api/parse-size-chart', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ fileData: dataUrl, mimeType: file.type || 'image/png' }) });
+        var d = await resp.json();
+        if(d.error) throw new Error(d.error);
+        el('sizeRows').innerHTML = '';
+        (d.sizes || []).forEach(function(name){
+          var src = (d.sizeChart || {})[name] || {};
+          var row = { name: String(name) };
+          Object.keys(src).forEach(function(pom){
+            var k = POM_MAP[pom.toLowerCase().trim()];
+            if(k && src[pom] != null && src[pom] !== '') row[k] = src[pom];
+          });
+          addSizeRow(row);
+        });
+        el('chSource').value = 'parsed';
+        el('chVerified').checked = false; // parsed charts start unverified — review, then tick
+        aiSay('✓ Parsed '+(d.sizes||[]).length+' sizes — review the table, then save', true);
+      } catch(e){ aiSay('Could not parse: '+(e.message||e)); }
+    }
+    el('aiZone').addEventListener('click', function(e){ if(e.target.id !== 'aiFile') el('aiFile').click(); });
+    el('aiFile').addEventListener('change', function(){ parseChartFile(this.files[0]); this.value=''; });
+    el('aiZone').addEventListener('dragover', function(e){ e.preventDefault(); });
+    el('aiZone').addEventListener('drop', function(e){ e.preventDefault(); parseChartFile((e.dataTransfer.files||[])[0]); });
+    document.addEventListener('paste', function(e){
+      if(el('chartView').classList.contains('hide')) return; // only in the chart editor
+      var items = (e.clipboardData || {}).items || [];
+      for(var i = 0; i < items.length; i++){
+        if(items[i].type.indexOf('image') === 0){ parseChartFile(items[i].getAsFile()); break; }
+      }
     });
 
     boot();
