@@ -325,8 +325,21 @@
       }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
     }
     async function runDecode(){
+      // 1) Personalized bookmarklet: profile embedded in the bookmark itself —
+      //    works everywhere, no login (3rd-party iframes can't see our session).
+      if(PAGE && PAGE.profile_b64){
+        try {
+          var j = JSON.parse(atob(String(PAGE.profile_b64).replace(/-/g,'+').replace(/_/g,'/')));
+          if(j && j.chest && j.waist){
+            decode({chest:j.chest,waist:j.waist,belly:j.belly||j.waist,hips:j.hips,height:j.height,inseam:j.inseam,neck:j.neck,shoulder:j.shoulder,sleeve:j.sleeve,thigh:j.thigh});
+            return;
+          }
+        } catch(e){}
+      }
+      // 2) Session (works when the widget is top-level or same-site)
       var s=await sb.auth.getSession();
       if(s.data.session){ decode({accessToken:s.data.session.access_token}); }
+      // 3) Fall back to the quick questions
       else if(lastProfile){ decode({chest:lastProfile.chest,waist:lastProfile.waist,belly:lastProfile.waist,hips:lastProfile.hips,height:lastProfile.height,inseam:lastProfile.inseam}); }
       else { go('start'); }
     }

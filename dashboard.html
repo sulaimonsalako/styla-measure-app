@@ -190,8 +190,8 @@
         <h2 class="ct">The Styla bookmarklet</h2>
         <p class="cs">Free with your account. Check your size on any store's website while you shop.</p>
         <div class="ok-banner" style="margin-top:0">Drag the button below to your bookmarks bar, then click it on any product page to see your size.</div>
-        <div style="text-align:center;margin-top:18px"><a href="javascript:(function(){var s=document.createElement('script');s.src='https://www.styla.ca/tools/bookmarklet-script.js?t='+Date.now();document.body.appendChild(s);})();" draggable="true" class="btn-primary" style="display:inline-block;cursor:grab;text-decoration:none" onclick="alert('Drag this button up to your bookmarks bar — don\\'t click it here.');return false;">⚡ Styla Stylist</a></div>
-        <p class="cs" style="margin-top:12px;font-size:.78rem">↑ Drag the pink button to your bookmarks bar. Then on any store's product page, click it to see your size.</p>
+        <div style="text-align:center;margin-top:18px"><a id="bmLink" href="javascript:void(0)" draggable="true" class="btn-primary" style="display:inline-block;cursor:grab;text-decoration:none" onclick="alert('Drag this button up to your bookmarks bar — don\\'t click it here.');return false;">⚡ Styla Stylist</a></div>
+        <p class="cs" style="margin-top:12px;font-size:.78rem">↑ Drag the pink button to your bookmarks bar. Your fit profile travels inside the button — no login needed on store sites. Re-drag it after you update your measurements.</p>
       </div>
 
       <!-- PARTY (placeholder — task 17) -->
@@ -355,7 +355,24 @@
     document.getElementById('bootLoader').style.display = 'none';
     document.getElementById('dashLayout').style.display = 'grid';
     setUnit(unit); // applies saved in/cm preference + renders the profile
+    buildBookmarklet(m);
     await loadMatches(m);
+  }
+
+  // Personalized bookmarklet: measurements ride inside the bookmark itself, so it
+  // works on any store with no login (third-party iframes can't see our session).
+  function buildBookmarklet(m){
+    var link = document.getElementById('bmLink');
+    if(!link) return;
+    var ov = profile.measurement_overrides || {};
+    var p = { chest:m.chest, waist:m.waist, belly:m.belly||m.waist, hips:m.hips,
+              height:m.height, inseam:m.inseam, neck:m.neck||ov.neck, sleeve:ov.sleeve, thigh:ov.thigh };
+    Object.keys(p).forEach(function(k){ if(p[k]==null||p[k]==='') delete p[k]; });
+    var b64 = btoa(JSON.stringify(p)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    link.setAttribute('href',
+      "javascript:(function(){var s=document.createElement('script');" +
+      "s.src='https://www.styla.ca/tools/bookmarklet-script.js?t='+Date.now();" +
+      "s.setAttribute('data-styla-p','" + b64 + "');document.body.appendChild(s);})();");
   }
 
   // ---- Unit toggle (display only — everything is STORED in inches) ----

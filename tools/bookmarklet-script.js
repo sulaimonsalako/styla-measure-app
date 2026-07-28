@@ -29,6 +29,12 @@
     };
   }
   var pageData = scrape();
+  // Personalized bookmarklet: the dashboard embeds the user's fit profile on the
+  // script tag (base64url) so no login is needed inside the store-site iframe.
+  try {
+    var pd = document.currentScript && document.currentScript.getAttribute('data-styla-p');
+    if (pd) pageData.profile_b64 = pd;
+  } catch (e) {}
 
   var overlay = document.createElement('div');
   overlay.id = 'styla-bm-overlay';
