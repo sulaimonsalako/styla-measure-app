@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
 
+# Don't waste crawl budget on internal endpoints
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /party
+Disallow: /share
+Disallow: /widget
+Disallow: /*?utm_
+Disallow: /*?ref=
+
 Sitemap: https://www.styla.ca/sitemap.xml

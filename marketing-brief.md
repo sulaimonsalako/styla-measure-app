@@ -32,9 +32,10 @@ an on-site size recommender + real body data + an embeddable widget. CTA = book 
 
 ## Proof points / stats (with sources — safe to use in copy)
 
-- 65% of women get a different size in every brand. — Sizer, 2024
-- Up to 70% of apparel returns are caused by fit/size. — McKinsey
-- A "medium" bust can vary up to 12cm (2–3 sizes) across brands. — Sizer
+- 87% of shoppers who returned an item said it didn't fit. — Journal of Business Economics, 2021 (n=8,393)
+- The same 42″ bust is labelled 4 different sizes across six brands. — Styla, from the brands' own published charts
+- A single "size 14" top varies by up to 5 inches between brands. — Styla, from the brands' own published charts
+- WITHDRAWN — do not use: "65% (Sizer 2024)", "70% of returns (McKinsey)", "12cm medium spread". See marketing/ad-copy-playbook.md §0.
 - Clothing is the #1 most-returned category; 65% of holiday returns are clothing. — Statista / Chain Store Age
 - ~60% of apparel shoppers bracket-buy (order multiple sizes to return extras).
 - Bridesmaid dresses run 1–2 sizes small; everyone lands on a different size. — Azazie / StyleCaster

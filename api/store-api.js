@@ -8,6 +8,7 @@ import brandSyncHandler from './_admin/brand-sync.js';
 import partyHandler from './_party/party.js';
 import accountHandler from './_account/account.js';
 import feedbackHandler from './_feedback/feedback.js';
+import subscribeHandler from './_subscribe/subscribe.js';
 
 export const config = {
   api: {
@@ -71,6 +72,8 @@ export default async function handler(req, res) {
     return accountHandler(req, res);
   } else if (route === 'feedback' || pathname.includes('/feedback')) {
     return feedbackHandler(req, res);
+  } else if (route === 'subscribe' || pathname.includes('/subscribe')) {
+    return subscribeHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

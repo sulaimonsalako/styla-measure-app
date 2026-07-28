@@ -38,6 +38,10 @@
       "destination": "/api/store-api?route=feedback"
     },
     {
+      "source": "/api/subscribe",
+      "destination": "/api/store-api?route=subscribe"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },
@@ -59,11 +63,31 @@
     },
     {
       "source": "/blogs",
-      "destination": "https://journal-five-sand.vercel.app/blogs"
+      "destination": "/blogs/index.html"
     },
     {
-      "source": "/blogs/:path*",
-      "destination": "https://journal-five-sand.vercel.app/blogs/:path*"
+      "source": "/blogs/:slug",
+      "destination": "/blogs/:slug.html"
+    },
+    {
+      "source": "/methodology",
+      "destination": "/methodology.html"
+    },
+    {
+      "source": "/wedding-parties",
+      "destination": "/bridesmaid.html"
+    },
+    {
+      "source": "/brands",
+      "destination": "/brands.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "styla.ca" }],
+      "destination": "https://www.styla.ca/:path*",
+      "permanent": true
     }
   ]
 }

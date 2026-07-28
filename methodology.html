@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How We Source Our Size Data | Styla</title>
+<meta name="description" content="Every size chart we publish comes from the brand's own website, with the source URL stored. Here is exactly how we collect it, what we verify, and what we refuse to guess.">
+<link rel="canonical" href="https://www.styla.ca/methodology">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How we source our size data">
+<meta property="og:description" content="From the brand's own domain, with provenance on every row. Gaps stay gaps.">
+<meta property="og:url" content="https://www.styla.ca/methodology">
+<meta property="og:locale" content="en_CA">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="/assets/journal.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage",
+"name":"How we source our size data","url":"https://www.styla.ca/methodology",
+"description":"Styla's data collection and verification methodology for brand size charts.",
+"inLanguage":"en-CA","dateModified":"2026-07-27",
+"publisher":{"@type":"Organization","name":"Styla","url":"https://www.styla.ca",
+"description":"Styla tells shoppers their size in specific clothing brands, using each brand's own published size chart."}}
+</script>
+</head>
+<body>
+<nav><div class="nav-in"><a href="/" class="logo">styla</a>
+<div class="nav-links"><a href="/blogs">Journal</a><a href="/wedding-parties">Bridesmaid</a><a href="/brands">For fashion brands</a><a href="/" class="nav-cta">Find my fit</a></div></div></nav>
+
+<article class="wrap">
+  <p class="eyebrow">Methodology</p>
+  <h1>How we source our size data</h1>
+  <p class="standfirst">We're asking you to trust our numbers over a brand's own size guide. That only works if you can check our work. Here's exactly how the data gets collected, what we verify, and what we refuse to guess at.</p>
+  <p class="byline">Last updated 27 July 2026</p>
+
+  <h2>Who writes this</h2>
+
+  <p>The Styla Journal is written by <strong>Sulaimon Salako</strong>, CEO of Styla. Articles are bylined with his name because a real person should stand behind them — and because the authority here isn't anyone's opinion anyway. It's the charts, the provenance, and the arithmetic, all of which you can check yourself.</p>
+
+  <p>We don't use invented author personas. Where an outside expert contributes to or reviews a piece, they're named with their real credentials. If no other name appears, it's Sulaimon.</p>
+
+  <h2>Where the numbers come from</h2>
+
+  <p><strong>The brand's own website. Nowhere else.</strong></p>
+
+  <p>Every chart is captured from the brand's live size guide on the brand's own domain, and we store the source URL alongside the data. We don't use size-chart aggregator sites, Pinterest, retailer resellers, or other people's blog posts. Those are second-hand at best and frequently wrong — we found one widely-linked aggregator serving a girls' bottoms chart as a women's chart.</p>
+
+  <h2>How we capture it</h2>
+
+  <p><strong>1. Rendered, not scraped raw.</strong> Most size charts load through JavaScript, in a modal or a separate chart application. A plain HTTP fetch returns an empty table or a 403. We read the chart after it has actually populated in a browser, or fetch the brand's own chart data endpoint where one exists.</p>
+
+  <p><strong>2. One capture per category.</strong> We never assume a single chart covers a whole brand. This matters more than it sounds: Gap's dresses chart differs from its tops chart by half an inch at the same size, and Aritzia runs an entirely separate numeric system for denim alongside its alpha sizing for other bottoms. Pulling each category separately is the only way to catch that.</p>
+
+  <p><strong>3. We record the chart's own settings rather than silently normalising.</strong> Unit (inches or centimetres), region, and whether the chart describes the <em>body</em> a size fits or the <em>garment's</em> flat dimensions. Conversions are done with real arithmetic and the original units are kept.</p>
+
+  <p><strong>4. Verification.</strong> Row counts and first and last values are checked against the source. Numeric size labels like "000", "00" and "0" are stored as text, because treating them as numbers destroys them.</p>
+
+  <p><strong>5. Dates are published.</strong> Brands revise their charts. Every figure we publish carries a retrieval date so you know how fresh it is.</p>
+
+  <h2>What we won't do</h2>
+
+  <p><strong>Gaps stay gaps.</strong> If we can't get a clean capture, we publish nothing for that brand and category. An estimate dressed as data is worse than an admitted hole, because you can't tell which is which.</p>
+
+  <p><strong>We don't invent coverage.</strong> The brand count we publish is the number of brands whose charts we've actually sourced with provenance. It's currently <strong>19 brands and 40 charts</strong>. It goes up as we extract more. We'd rather quote a small honest number than a large one that a single click disproves.</p>
+
+  <p><strong>We don't guess where a brand publishes nothing.</strong> Zara, for instance, publishes no brand-wide size chart for its US or Canadian sites — each product page carries its own flat garment measurements instead. The correct answer there is per-product data, not a fabricated brand chart. So we don't have a Zara chart, and we say so.</p>
+
+  <p><strong>We don't score brands out of five.</strong> A 4.8/5 rating tells you nothing checkable. We publish size range, the step between sizes, and any gaps — because those are the things that determine whether a garment fits you.</p>
+
+  <h2>How we handle statistics</h2>
+
+  <p>Every statistic we publish carries its publishing organisation and year, inline, wherever it appears. If a number can't survive having a date next to it, we don't use it.</p>
+
+  <p>Some widely-repeated figures in this industry don't survive that test, and we've retired them from our own materials. The most common is "70% of clothing returns are caused by fit and size," attributed to McKinsey. What McKinsey actually reported, in 2021, was that 70% of apparel returns were caused by "poor fit <em>or style</em>" — from a survey of around 14 retailers' executives fielded in 2019. That's retailer opinion about two combined causes, five years old, and it's misquoted almost everywhere it appears, including previously by us.</p>
+
+  <p>We also don't use "67% of American women wear size 14+", which traces back to a 2012 Plunkett Research figure with no published methodology.</p>
+
+  <p>Where we need population data, we use primary sources — currently the CDC's NHANES anthropometric reference data, which is measured rather than self-reported.</p>
+
+  <h2>What our data does and doesn't tell you</h2>
+
+  <p>Worth being direct about the limits.</p>
+
+  <p><strong>We publish body measurements, mostly.</strong> Most brands' charts describe the body a size is designed to fit, not the garment's dimensions. The gap between them — ease — is a design decision that varies with fabric and cut. Two garments with identical body measurements can fit very differently.</p>
+
+  <p><strong>We're not claiming any brand's chart is wrong.</strong> In almost every case the chart is internally consistent and accurate about that brand's own clothes. The problem we exist to solve is that there is no standard <em>between</em> brands, and shoppers are the ones absorbing the difference.</p>
+
+  <p><strong>We don't have garment-level data yet</strong> for brands that size per product rather than per brand. That's on our roadmap and we'll say so when it lands.</p>
+
+  <p><strong>A single measurement isn't a size recommendation.</strong> Where a tool on this site takes only one measurement, it's a demonstration and the page says so. Real recommendations use more.</p>
+
+  <h2>Corrections</h2>
+
+  <p>If you think a figure we've published is wrong, tell us and we'll check it against the source and fix it. Corrections are noted on the page with a date rather than quietly edited. Data is the only thing we have, so we'd rather be corrected than be wrong.</p>
+
+  <div class="cta">
+    <h3>See it applied to you</h3>
+    <p>Answer a few questions once. Your size in every brand we cover — no tape measure, no photos.</p>
+    <a class="btn" href="/">Find my fit — free</a>
+  </div>
+
+  <div class="method">
+    <h4>Related</h4>
+    <p><a href="/blogs">The Styla Journal</a> · <a href="/blogs/no-size-for-you">Every gap we've found in a published size chart</a> · <a href="/blogs/how-to-measure">How to measure yourself</a></p>
+  </div>
+</article>
+
+<footer>Styla · Your size, in every brand. Made in Canada.</footer>
+</body>
+</html>
