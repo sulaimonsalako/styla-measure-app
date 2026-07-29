@@ -125,6 +125,7 @@
         <input id="ask" placeholder="e.g. Compare Azazie and Birdy Grey sizing" aria-label="Ask a sizing question">
         <button class="btn" id="askgo">Ask</button>
       </div>
+      <div id="askans" style="display:none;margin-top:14px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:15.5px;line-height:1.65;color:var(--muted)"></div>
       <div class="prompts">
         <button class="prompt">What size bridesmaid dress should I buy?</button>
         <button class="prompt">Do Azazie dresses run small?</button>
@@ -300,8 +301,32 @@
 
 <footer class="site-footer"><div class="f-cols"><div class="f-brand"><a href="/index.html" class="logo"><img src="/logo.png" alt="Styla"/>STYLA</a><p>Find the brands that actually fit your body — with your size in each.</p><div class="f-soc"><a href="https://instagram.com/stylaca" target="_blank" rel="noopener">Instagram</a><a href="https://tiktok.com/@stylaca" target="_blank" rel="noopener">TikTok</a><a href="https://x.com/stylaca" target="_blank" rel="noopener">X</a></div></div><div><h5>Product</h5><a href="/start.html">Find my fit</a><a href="/bridesmaid.html">Wedding parties</a><a href="/share.html">Gifting &amp; sharing</a><a href="/brands.html">For brands</a></div><div><h5>Company</h5><a href="/blogs">Journal</a><a href="/methodology">Methodology</a></div><div><h5>Legal</h5><a href="/privacy.html">Privacy Policy</a><a href="/terms.html">Terms of Service</a></div></div><div class="f-bottom">© 2026 Styla · Your body. Your size. Everywhere.</div></footer>
 <script>
+// Ask the AI sizing stylist — grounded in Styla's size-chart database.
+async function askStylist(){
+  var input=document.getElementById('ask'), btn=document.getElementById('askgo'), ans=document.getElementById('askans');
+  var q=input.value.trim();
+  if(!q){ input.focus(); return; }
+  btn.disabled=true; btn.textContent='Thinking…';
+  ans.style.display='block'; ans.textContent='Checking the size charts…';
+  try{
+    var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:'journal',question:q})});
+    var d=await r.json();
+    if(d.error) throw new Error(d.error);
+    ans.innerHTML='';
+    var p=document.createElement('p'); p.style.margin='0'; p.textContent=d.reply; ans.appendChild(p);
+    var cta=document.createElement('p'); cta.style.margin='12px 0 0';
+    cta.innerHTML='<a href="/start.html" style="color:var(--pink);font-weight:600;text-decoration:none">Get your exact size in every brand — free →</a>';
+    ans.appendChild(cta);
+  }catch(err){
+    ans.textContent='Could not get an answer right now — '+(err.message||'try again in a moment.');
+  }
+  btn.disabled=false; btn.textContent='Ask';
+}
+document.getElementById('askgo').addEventListener('click', askStylist);
+document.getElementById('ask').addEventListener('keydown', function(e){ if(e.key==='Enter') askStylist(); });
 document.querySelectorAll('.prompt').forEach(b=>b.addEventListener('click',()=>{
-  var a=document.getElementById('ask'); a.value=b.textContent; a.focus();
+  var a=document.getElementById('ask'); a.value=b.textContent; askStylist();
 }));
 
 document.getElementById('nl').addEventListener('submit', async e => {

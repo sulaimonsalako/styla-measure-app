@@ -1,3 +1,5 @@
+import { supabaseAdmin } from './_helpers/supabase-admin.js';
+
 export const config = {
   api: {
     bodyParser: {
@@ -5,6 +7,64 @@ export const config = {
     },
   },
 };
+
+// Journal mode: public Q&A on the blog, grounded in OUR size-chart database.
+async function journalAnswer(req, res, apiKey) {
+  const question = String(req.body.question || '').trim().slice(0, 400);
+  if (!question) return res.status(400).json({ error: 'Ask a question first.' });
+
+  // Pull charts for any brands mentioned in the question (max 3).
+  let chartContext = 'No specific brand from our database was mentioned.';
+  try {
+    const { data: brands } = await supabaseAdmin.from('brands').select('id, name');
+    const q = question.toLowerCase();
+    const mentioned = (brands || []).filter(b => b.name && q.includes(b.name.toLowerCase())).slice(0, 3);
+    if (mentioned.length) {
+      const { data: charts } = await supabaseAdmin
+        .from('size_charts').select('brand_id, category, gender, chart_data')
+        .in('brand_id', mentioned.map(b => b.id));
+      const lines = [];
+      (charts || []).forEach(c => {
+        const bn = (mentioned.find(b => b.id === c.brand_id) || {}).name;
+        const sizes = ((c.chart_data || {}).sizes || []).map(s => {
+          const dim = (v) => Array.isArray(v) ? v.join('–') : v;
+          const parts = [];
+          if (s.chest != null) parts.push('bust ' + dim(s.chest));
+          if (s.waist != null) parts.push('waist ' + dim(s.waist));
+          if (s.hips != null) parts.push('hips ' + dim(s.hips));
+          return s.name + ' (' + parts.join(', ') + ')';
+        }).join('; ');
+        if (sizes) lines.push(bn + ' — ' + (c.category || 'general') + ' (' + (c.gender || 'unisex') + '): ' + sizes);
+      });
+      if (lines.length) chartContext = 'Size charts from our database (inches):\n' + lines.join('\n');
+    }
+  } catch (e) { /* answer without chart context */ }
+
+  const sys = `You are Styla's sizing stylist, answering a public question on the Styla Journal.
+Ground rules:
+- Answer in 2–5 plain, friendly sentences. No markdown headers or bullet lists.
+- Use ONLY the size-chart data below for specific numbers. Never invent chart figures.
+- If the data below doesn't cover the question, say so honestly and give general sizing guidance.
+- End with one short sentence inviting them to take the free 2-minute fit quiz at styla.ca/start.html for their exact size.
+
+${chartContext}`;
+
+  const payload = {
+    systemInstruction: { parts: [{ text: sys }] },
+    contents: [{ role: 'user', parts: [{ text: question }] }],
+    generationConfig: { temperature: 0.2 },
+  };
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  const data = await r.json();
+  if (data.error) return res.status(500).json({ error: data.error.message });
+  const reply = data.candidates && data.candidates[0] && data.candidates[0].content
+    && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+    && data.candidates[0].content.parts[0].text;
+  if (!reply) return res.status(500).json({ error: 'No answer generated — try rephrasing.' });
+  return res.status(200).json({ reply });
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,6 +77,10 @@ export default async function handler(req, res) {
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: 'API key not configured on server.' });
+    }
+
+    if (req.body.mode === 'journal') {
+      return await journalAnswer(req, res, apiKey);
     }
 
     if (!history || !Array.isArray(history)) {
