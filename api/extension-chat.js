@@ -12,7 +12,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart } = req.body;
+    let { accessToken, chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart } = req.body;
+
+    // Logged-in shopper: load saved measurements server-side (bookmarklet/widget).
+    if (accessToken && (!chest || !waist || !hips)) {
+      try {
+        const { supabaseAdmin } = await import('./_helpers/supabase-admin.js');
+        const { data: au } = await supabaseAdmin.auth.getUser(accessToken);
+        if (au && au.user) {
+          const { data: prof } = await supabaseAdmin.from('profiles')
+            .select('chest,waist,hips,belly,height,inseam,shoulder').eq('id', au.user.id).maybeSingle();
+          if (prof) {
+            chest = chest || prof.chest; waist = waist || prof.waist; hips = hips || prof.hips;
+            belly = belly || prof.belly; height = height || prof.height;
+            inseam = inseam || prof.inseam; shoulder = shoulder || prof.shoulder;
+          }
+        }
+      } catch (e) { /* fall through to validation */ }
+    }
+    if (!belly) belly = waist;
 
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });

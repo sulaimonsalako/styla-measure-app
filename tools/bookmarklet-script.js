@@ -71,10 +71,19 @@
   document.body.appendChild(overlay);
 
   // Handshake: when the widget says it's ready, send it the scraped page.
+  // On 'styla-rescrape' (user opened the size-guide modal), scrape AGAIN so the
+  // now-visible chart is captured, and send the fresh page.
   window.addEventListener('message', function (ev) {
     if (ev.origin !== ORIGIN) return;
     if (ev.data === 'styla-ready') {
       try { iframe.contentWindow.postMessage({ type: 'styla-page', page: pageData }, ORIGIN); } catch (e) {}
+    } else if (ev.data === 'styla-rescrape') {
+      try {
+        var fresh = scrape();
+        if (pageData.profile_b64) fresh.profile_b64 = pageData.profile_b64;
+        pageData = fresh;
+        iframe.contentWindow.postMessage({ type: 'styla-page', page: fresh }, ORIGIN);
+      } catch (e) {}
     } else if (ev.data === 'styla-close') {
       overlay.style.display = 'none';
     }

@@ -293,7 +293,20 @@
       renderChat(true);
       var m=MEAS||{};
       try{
-        var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chest:m.chest,waist:m.waist,hips:m.hips,belly:m.belly,history:CHAT})});
+        var r;
+        if(DECODE && PAGE){
+          // Bookmarklet mode: the stylist knows EVERYTHING on this product page —
+          // fabric, care, fit notes, the chart — plus the shopper's measurements.
+          var x=lastExtra||{};
+          var payload={ recommendedSize:lastSize, pageTitle:PAGE.pageTitle, pageText:PAGE.pageText,
+            tableHtml:PAGE.tableHtml, history:CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
+          if(x.accessToken) payload.accessToken=x.accessToken;
+          else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||x.waist||m.belly;
+                 payload.hips=x.hips||m.hips; payload.height=x.height; payload.inseam=x.inseam; payload.neck=x.neck; }
+          r=await fetch('/api/extension-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        } else {
+          r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chest:m.chest,waist:m.waist,hips:m.hips,belly:m.belly,history:CHAT})});
+        }
         var data=await r.json();
         var reply=(data && (data.reply||data.error))||'Sorry, I could not answer that.';
         CHAT.push({role:'model',parts:[{text:reply}]});
@@ -315,34 +328,56 @@
       }
       return { size:d.recommended_size, score:d.fit_match_score, spectrum:d.fit_spectrum, category:d.garment_category||d.category||'', fits:true };
     }
+    var lastExtra=null, lastSize=null;
     async function decode(extra){
       if(!PAGE) return;
+      lastExtra=extra;
       go('result'); el('result-body').innerHTML='<div class="loader">Reading the size chart on this page…</div>';
       var body=Object.assign({pageTitle:PAGE.pageTitle,pageText:PAGE.pageText,tableHtml:PAGE.tableHtml,url:PAGE.url},extra);
       try{
         var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         var d=await r.json();
         var m=mapDecode(d);
-        if(m.error && DOMAIN){
-          // The page hides its chart (modal/iframe/images) — fall back to this
-          // brand's OFFICIAL chart in the Styla index, matched by domain.
-          el('result-body').innerHTML='<div class="loader">Checking the Styla size index for this store…</div>';
-          try{
-            var p2={domain:DOMAIN};
-            if(extra.accessToken) p2.accessToken=extra.accessToken;
-            else p2.profile={chest:extra.chest,waist:extra.waist,belly:extra.belly,hips:extra.hips,height:extra.height,inseam:extra.inseam,neck:extra.neck};
-            var r2=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p2)});
-            var d2=await r2.json();
-            if(d2 && d2.size){
-              d2.note='From this brand’s official size chart in the Styla index.';
-              showResult(d2, !extra.accessToken);
-              return;
-            }
-          }catch(e2){}
-        }
+        if(m.error){ renderNoChart(); return; }
+        lastSize=m.size;
         showResult(m, !extra.accessToken);
       }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
     }
+
+    // No chart on the page: guide the user to open the store's size guide, then re-read.
+    function renderNoChart(){
+      var idx = DOMAIN ? '<button class="btn btn-ghost" style="margin-top:0.7rem" onclick="useIndexChart()">Use this brand’s official chart from Styla instead</button>' : '';
+      el('result-body').innerHTML =
+        '<h2>One quick step 📖</h2>'
+        + '<p class="sub">We couldn’t see a size chart on this page yet. Most stores hide it behind a link.</p>'
+        + '<p class="sub"><b style="color:var(--white)">Find the “Size guide” or “Size chart” link</b> — usually next to the size options — open it so the chart is on screen, then tap below.</p>'
+        + '<button class="btn btn-primary" onclick="reReadPage()">I opened it — read the chart</button>'
+        + idx
+        + '<p class="foot" style="margin-top:0.9rem"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
+    }
+    window.reReadPage=function(){
+      el('result-body').innerHTML='<div class="loader">Re-reading the page…</div>';
+      try{ parent.postMessage('styla-rescrape','*'); }catch(e){}
+      // Fresh page data arrives via the styla-page message and re-runs decode.
+    };
+    window.useIndexChart=async function(){
+      el('result-body').innerHTML='<div class="loader">Checking the Styla size index for this store…</div>';
+      try{
+        var p2={domain:DOMAIN};
+        var x=lastExtra||{};
+        if(x.accessToken) p2.accessToken=x.accessToken;
+        else p2.profile={chest:x.chest,waist:x.waist,belly:x.belly,hips:x.hips,height:x.height,inseam:x.inseam,neck:x.neck};
+        var r2=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p2)});
+        var d2=await r2.json();
+        if(d2 && d2.size){
+          d2.note='From this brand’s official size chart in the Styla index.';
+          lastSize=d2.size;
+          showResult(d2, !(lastExtra&&lastExtra.accessToken));
+          return;
+        }
+        renderNoChart();
+      }catch(e){ renderNoChart(); }
+    };
     async function runDecode(){
       // 1) Personalized bookmarklet: profile embedded in the bookmark itself —
       //    works everywhere, no login (3rd-party iframes can't see our session).
