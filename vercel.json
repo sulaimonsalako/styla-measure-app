@@ -42,6 +42,10 @@
       "destination": "/api/store-api?route=subscribe"
     },
     {
+      "source": "/api/notifications",
+      "destination": "/api/store-api?route=notifications"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

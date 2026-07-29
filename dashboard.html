@@ -86,12 +86,34 @@
   .tier-ok{background:rgba(255,255,255,.07);color:var(--muted)}
   .lockstrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel2);border:1px dashed var(--border);border-radius:14px;padding:14px 16px;margin-top:10px}
   .loader{text-align:center;color:var(--dim);padding:60px 0}
+  .bell{position:relative;background:none;border:none;color:#fff;font-size:1.15rem;cursor:pointer;padding:4px 6px;line-height:1}
+  .bell-dot{position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;background:var(--pink);color:#fff;border-radius:100px;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--sans)}
+  .nav{position:relative}
+  .notif-panel{position:absolute;top:62px;right:16px;width:min(360px,92vw);max-height:70vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.5);z-index:200}
+  .notif-head{padding:14px 16px;font-weight:700;border-bottom:1px solid var(--border);font-size:.95rem}
+  .notif-list{padding:6px}
+  .notif-item{padding:12px 12px;border-radius:10px}
+  .notif-item:hover{background:var(--panel2)}
+  .notif-item.unread{background:rgba(255,42,117,.06)}
+  .notif-item .nt{font-size:.86rem;font-weight:600;color:#fff;line-height:1.35}
+  .notif-item .nb{font-size:.78rem;color:var(--dim);margin-top:3px;line-height:1.4}
+  .notif-item .na{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .notif-item .na button,.notif-item .na a{font-size:.78rem;font-weight:600;border-radius:100px;padding:6px 14px;cursor:pointer;font-family:var(--sans);text-decoration:none;border:none}
+  .na .acc{background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff}
+  .na .dec{background:transparent;color:var(--dim);border:1px solid var(--border)}
+  .notif-empty{padding:26px 16px;text-align:center;color:var(--dim);font-size:.85rem}
 </style>
 </head>
 <body>
 <div class="nav">
   <a href="/index.html" class="logo" style="text-decoration:none;color:inherit;"><img src="logo.png" alt="Styla" style="height:28px;width:auto;border-radius:50%"/>STYLA</a>
-  <div class="navr"><span class="sync">✓ Synced</span><a href="/bridesmaid.html">Bridesmaid</a><a href="/blogs">Blogs</a><button class="out" onclick="logout()">Log out</button></div>
+  <div class="navr"><span class="sync">✓ Synced</span><a href="/bridesmaid.html">Bridesmaid</a><a href="/blogs">Blogs</a>
+    <button id="bellBtn" class="bell" onclick="toggleNotif(event)" aria-label="Notifications">🔔<span id="bellDot" class="bell-dot" style="display:none"></span></button>
+    <button class="out" onclick="logout()">Log out</button></div>
+  <div id="notifPanel" class="notif-panel" style="display:none">
+    <div class="notif-head">Notifications</div>
+    <div id="notifList" class="notif-list"><div class="notif-empty">Loading…</div></div>
+  </div>
 </div>
 <div class="wrap">
   <h1 class="dh">Your Fit Dashboard</h1>
@@ -356,6 +378,7 @@
     document.getElementById('dashLayout').style.display = 'grid';
     setUnit(unit); // applies saved in/cm preference + renders the profile
     buildBookmarklet(m);
+    loadNotif();
     await loadMatches(m);
   }
 
@@ -559,6 +582,59 @@
     var h = groups.map(function(g, i){ return brandCard(g, i === 0); }).join('');
     h += '<div class="ok-banner">✓ Every brand that fits you, with your size in each — free.</div>';
     unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
+  }
+
+  // ---- Notifications (social-style inbox: share requests, party invites) ----
+  var NOTIF = [];
+  async function notifFetch(action, extra){
+    var sess = (await sb.auth.getSession()).data.session;
+    if(!sess) return {};
+    var r = await fetch('/api/notifications', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sess.access_token},
+      body: JSON.stringify(Object.assign({action:action}, extra||{})) });
+    return await r.json();
+  }
+  async function loadNotif(){
+    try {
+      var d = await notifFetch('list');
+      NOTIF = d.items || [];
+      NOTIF.forEach(function(n,i){ n._unread = i < (d.unread||0); }); // newest N are unread
+      var dot = document.getElementById('bellDot');
+      if(d.unread > 0){ dot.textContent = d.unread > 9 ? '9+' : d.unread; dot.style.display='flex'; }
+      else dot.style.display='none';
+    } catch(e){}
+  }
+  function renderNotif(){
+    var box = document.getElementById('notifList');
+    if(!NOTIF.length){ box.innerHTML = '<div class="notif-empty">You’re all caught up.</div>'; return; }
+    box.innerHTML = NOTIF.map(function(n){
+      var acts = '';
+      if(n.actions && n.actions.indexOf('accept')>-1)
+        acts += '<button class="acc" onclick="respondShare(\''+n.id+'\',true)">Accept</button><button class="dec" onclick="respondShare(\''+n.id+'\',false)">Decline</button>';
+      if(n.actions && n.actions.indexOf('join')>-1)
+        acts += '<a class="acc" href="'+n.join_url+'">Add my fit</a>';
+      return '<div class="notif-item'+(n._unread?' unread':'')+'"><div class="nt">'+n.title+'</div><div class="nb">'+(n.body||'')+'</div>'
+        + (acts?'<div class="na">'+acts+'</div>':'')+'</div>';
+    }).join('');
+  }
+  async function toggleNotif(e){
+    if(e) e.stopPropagation();
+    var panel = document.getElementById('notifPanel');
+    if(panel.style.display==='none'){
+      // mark which are unread for styling before we clear the light
+      var dotShown = document.getElementById('bellDot').style.display!=='none';
+      renderNotif();
+      panel.style.display='block';
+      if(dotShown){ document.getElementById('bellDot').style.display='none'; await notifFetch('mark-seen'); }
+    } else { panel.style.display='none'; }
+  }
+  document.addEventListener('click', function(e){
+    var panel=document.getElementById('notifPanel'), bell=document.getElementById('bellBtn');
+    if(panel && panel.style.display==='block' && !panel.contains(e.target) && !bell.contains(e.target)) panel.style.display='none';
+  });
+  async function respondShare(id, accept){
+    try { await notifFetch('respond-share', {id:id, accept:accept}); } catch(e){}
+    NOTIF = NOTIF.filter(function(n){ return n.id !== id; });
+    renderNotif(); loadNotif();
   }
 
   // ---- Feedback & requests ----

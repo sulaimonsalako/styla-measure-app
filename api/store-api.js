@@ -9,6 +9,7 @@ import partyHandler from './_party/party.js';
 import accountHandler from './_account/account.js';
 import feedbackHandler from './_feedback/feedback.js';
 import subscribeHandler from './_subscribe/subscribe.js';
+import notificationsHandler from './_notifications/notifications.js';
 
 export const config = {
   api: {
@@ -74,6 +75,8 @@ export default async function handler(req, res) {
     return feedbackHandler(req, res);
   } else if (route === 'subscribe' || pathname.includes('/subscribe')) {
     return subscribeHandler(req, res);
+  } else if (route === 'notifications' || pathname.includes('/notifications')) {
+    return notificationsHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

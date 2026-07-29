@@ -89,8 +89,12 @@
   .save-box{margin-top:18px;background:var(--pinkdim);border:1px solid rgba(255,42,117,0.25);border-radius:14px;padding:18px;text-align:center}
   .save-box h3{font-family:var(--serif);font-size:1.3rem;margin-bottom:6px}
   .save-box p{font-size:.85rem;color:var(--muted);margin-bottom:14px}
-  .oauth{display:flex;flex-direction:column;gap:8px}
-  .oauth button{background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:11px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:var(--sans)}
+  .oauth{display:flex;flex-direction:column;gap:9px}
+  .oauth input{width:100%;background:#0b0b14;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px 13px;color:#fff;font-size:.92rem;font-family:var(--sans);outline:none;transition:border-color .15s}
+  .oauth input::placeholder{color:#8b90a0}
+  .oauth input:focus{border-color:var(--pink)}
+  .oauth button#su-btn,.oauth button:not(.ghost){background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff;border:none;border-radius:100px;padding:12px;font-weight:700;font-size:.92rem;cursor:pointer;font-family:var(--sans);margin-top:2px}
+  .oauth button.ghost2{background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:11px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:var(--sans)}
   .oauth button.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
   .badgeline{margin-top:14px;font-size:.8rem;color:var(--dim);display:flex;align-items:center;gap:6px}
   .hidden{display:none}
