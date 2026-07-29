@@ -508,29 +508,37 @@
     return p;
   }
 
-  // Show the top match — real from /api/rank-brands when available, demo fallback otherwise.
+  // Preview only the top ~5 matches here as a teaser. The FULL ranked list +
+  // every size lives on the dashboard once they save their profile.
   async function renderFinal(){
     var g = state.gender || 'women';
     var demo = (g==='men') ? brandsMen : brandsWomen;
-    var topName = demo[0][0], topPct = demo[0][1], topSize = '', lockedCount = demo.length - 1;
+    var top = demo.slice(0, 5).map(function(d){ return { brand:d[0], score:d[1], size:'' }; });
+    var totalCount = top.length;
     try {
       var profile = computeProfile();
       var resp = await fetch('/api/rank-brands', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ profile: profile, limit: 20 })
+        body: JSON.stringify({ profile: profile, limit: 100, gender: g })
       });
       if(resp.ok){
         var data = await resp.json();
         if(data.matches && data.matches.length){
-          topName = data.matches[0].brand;
-          topPct = data.matches[0].score;
-          topSize = data.matches[0].recommended_size;
-          lockedCount = data.matches.length - 1;
+          // De-dupe to one row per brand (best category) for a clean teaser.
+          var seen = {}, uniq = [];
+          data.matches.forEach(function(m){ if(!seen[m.brand]){ seen[m.brand]=1; uniq.push(m); } });
+          totalCount = uniq.length;
+          top = uniq.slice(0, 5).map(function(m){ return { brand:m.brand, score:m.score, size:m.recommended_size }; });
         }
       }
     } catch(e){ /* offline / not deployed -> demo fallback */ }
-    var html = '<div class="match">'+topName+'<span>'+(topSize ? topSize+' · ' : '')+topPct+'%</span></div>';
-    for(var i=0;i<Math.max(1,lockedCount);i++){ html += '<div class="match lock">••••••••<span>🔒</span></div>'; }
+    var html = top.map(function(t){
+      return '<div class="match">'+t.brand+'<span>'+(t.size ? t.size+' · ' : '')+t.score+'%</span></div>';
+    }).join('');
+    var more = totalCount - top.length;
+    if(more > 0){
+      html += '<div class="match lock" style="justify-content:center;color:var(--pink2)">+ '+more+' more brands fit you — save your profile to see them all</div>';
+    }
     document.getElementById('finalMatches').innerHTML = html;
   }
 

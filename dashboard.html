@@ -102,6 +102,8 @@
   .na .acc{background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff}
   .na .dec{background:transparent;color:var(--dim);border:1px solid var(--border)}
   .notif-empty{padding:26px 16px;text-align:center;color:var(--dim);font-size:.85rem}
+  .gseg{background:none;border:none;color:var(--dim);font-size:.82rem;font-weight:600;padding:7px 16px;border-radius:100px;cursor:pointer;font-family:var(--sans)}
+  .gseg.on{background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff}
 </style>
 </head>
 <body>
@@ -135,6 +137,11 @@
       <div class="panel on" id="p-matches">
         <h2 class="ct">Brands that fit your proportions</h2>
         <p class="cs">Ranked by how well each brand's cut matches your body.</p>
+        <div id="genderSeg" style="display:inline-flex;background:var(--panel2);border:1px solid var(--border);border-radius:100px;padding:3px;margin-bottom:12px">
+          <button class="gseg" data-g="all" onclick="setMatchGender('all')">All</button>
+          <button class="gseg" data-g="women" onclick="setMatchGender('women')">Women’s</button>
+          <button class="gseg" data-g="men" onclick="setMatchGender('men')">Men’s</button>
+        </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
           <input id="matchSearch" placeholder="Search brands or categories…" oninput="renderMatches()" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none" />
           <select id="matchCat" onchange="renderMatches()" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none">
@@ -479,11 +486,29 @@
     setTimeout(function(){ msg.style.display='none'; }, 2500);
   }
 
+  var curMeas = null, curGender = null;
+  function initGenderSeg(){
+    if(!curGender){
+      try { curGender = localStorage.getItem('styla_match_gender'); } catch(e){}
+      if(!curGender) curGender = profile.gender || 'all';
+    }
+    document.querySelectorAll('#genderSeg .gseg').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-g') === curGender);
+    });
+  }
+  function setMatchGender(g){
+    curGender = g;
+    try { localStorage.setItem('styla_match_gender', g); } catch(e){}
+    initGenderSeg();
+    if(curMeas) loadMatches(curMeas);
+  }
   async function loadMatches(m){
+    curMeas = m;
+    initGenderSeg();
     var matches = [];
     try {
       var resp = await fetch('/api/rank-brands', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ profile:m, limit:100, gender: profile.gender || undefined }) });
+        body: JSON.stringify({ profile:m, limit:100, gender: (curGender && curGender!=='all') ? curGender : undefined }) });
       if(resp.ok){ var d = await resp.json(); matches = d.matches || []; }
     } catch(e){}
     curMatches = matches;
