@@ -236,6 +236,7 @@
       CHAT = [];
       var pct=res.score!=null?res.score+'% fit':'';
       var spec = res.spectrum ? '<div class="spectrum">Fit read: <b>'+res.spectrum+'</b></div>' : '';
+      if(res.note) spec += '<div class="spectrum" style="font-size:0.78rem;color:var(--dim)">'+res.note+'</div>';
       var chips = ['Does it run small?',"I'm between sizes",'How does the fabric fit?']
         .map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
       var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
@@ -321,7 +322,25 @@
       try{
         var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         var d=await r.json();
-        showResult(mapDecode(d), !extra.accessToken);
+        var m=mapDecode(d);
+        if(m.error && DOMAIN){
+          // The page hides its chart (modal/iframe/images) — fall back to this
+          // brand's OFFICIAL chart in the Styla index, matched by domain.
+          el('result-body').innerHTML='<div class="loader">Checking the Styla size index for this store…</div>';
+          try{
+            var p2={domain:DOMAIN};
+            if(extra.accessToken) p2.accessToken=extra.accessToken;
+            else p2.profile={chest:extra.chest,waist:extra.waist,belly:extra.belly,hips:extra.hips,height:extra.height,inseam:extra.inseam,neck:extra.neck};
+            var r2=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p2)});
+            var d2=await r2.json();
+            if(d2 && d2.size){
+              d2.note='From this brand’s official size chart in the Styla index.';
+              showResult(d2, !extra.accessToken);
+              return;
+            }
+          }catch(e2){}
+        }
+        showResult(m, !extra.accessToken);
       }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
     }
     async function runDecode(){

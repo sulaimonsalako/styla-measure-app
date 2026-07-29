@@ -12,18 +12,32 @@
   var existing = document.getElementById('styla-bm-overlay');
   if (existing) { existing.style.display = 'flex'; return; }
 
-  // Scrape what's on THIS page: visible text, every table's HTML, title, url.
+  // Scrape what's on THIS page: visible text, every table's HTML, title, url —
+  // PLUS hidden size-guide content (modals are display:none, so innerText misses
+  // them; textContent still reads them).
   function scrape() {
     var text = '';
-    try { text = (document.body.innerText || '').replace(/\s+\n/g, '\n').slice(0, 22000); } catch (e) {}
+    try { text = (document.body.innerText || '').replace(/\s+\n/g, '\n').slice(0, 20000); } catch (e) {}
     var tables = '';
     try {
       var ts = document.querySelectorAll('table');
-      for (var i = 0; i < ts.length && tables.length < 45000; i++) { tables += ts[i].outerHTML; }
+      for (var i = 0; i < ts.length && tables.length < 40000; i++) { tables += ts[i].outerHTML; }
+    } catch (e) {}
+    var hidden = '';
+    try {
+      var els = document.querySelectorAll('[class*="size" i],[id*="size" i],[class*="chart" i],[id*="chart" i],[class*="guide" i],[class*="fit" i]');
+      var seen = [];
+      for (var j = 0; j < els.length && hidden.length < 18000; j++) {
+        var t = (els[j].textContent || '').replace(/\s+/g, ' ').trim();
+        if (t.length > 100 && t.length < 8000 && /\d{2}/.test(t) && seen.indexOf(t.slice(0, 80)) < 0) {
+          seen.push(t.slice(0, 80));
+          hidden += '\n---\n' + t;
+        }
+      }
     } catch (e) {}
     return {
       pageTitle: (document.title || '').slice(0, 300),
-      pageText: text,
+      pageText: text + (hidden ? '\n\n[HIDDEN SIZE-GUIDE CONTENT]\n' + hidden : ''),
       tableHtml: tables,
       url: location.href
     };
