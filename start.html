@@ -513,7 +513,7 @@
   async function renderFinal(){
     var g = state.gender || 'women';
     var demo = (g==='men') ? brandsMen : brandsWomen;
-    var top = demo.slice(0, 5).map(function(d){ return { brand:d[0], score:d[1], size:'' }; });
+    var top = demo.slice(0, 2).map(function(d){ return { brand:d[0], score:d[1], size:'' }; });
     var totalCount = top.length;
     try {
       var profile = computeProfile();
@@ -528,16 +528,19 @@
           var seen = {}, uniq = [];
           data.matches.forEach(function(m){ if(!seen[m.brand]){ seen[m.brand]=1; uniq.push(m); } });
           totalCount = uniq.length;
-          top = uniq.slice(0, 5).map(function(m){ return { brand:m.brand, score:m.score, size:m.recommended_size }; });
+          top = uniq.slice(0, 2).map(function(m){ return { brand:m.brand, score:m.score, size:m.recommended_size }; });
         }
       }
     } catch(e){ /* offline / not deployed -> demo fallback */ }
+    // 2 real named matches, then 3 blurred locked rows as a teaser.
     var html = top.map(function(t){
       return '<div class="match">'+t.brand+'<span>'+(t.size ? t.size+' · ' : '')+t.score+'%</span></div>';
     }).join('');
+    var blurred = Math.min(3, Math.max(0, totalCount - top.length));
+    for(var i=0;i<blurred;i++){ html += '<div class="match lock">••••••••<span>🔒</span></div>'; }
     var more = totalCount - top.length;
     if(more > 0){
-      html += '<div class="match lock" style="justify-content:center;color:var(--pink2)">+ '+more+' more brands fit you — save your profile to see them all</div>';
+      html += '<div class="hint" style="text-align:center;margin-top:8px;color:var(--pink2)">+ '+more+' more brands fit you — save your profile to see them all</div>';
     }
     document.getElementById('finalMatches').innerHTML = html;
   }
