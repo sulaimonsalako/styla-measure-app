@@ -8,6 +8,7 @@
 <meta name="description" content="Your Styla fit dashboard — brand matches, fit profile, and sharing." />
 <link rel="icon" type="image/png" href="logo.png" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/taxonomy.js"></script>
 <script src="https://js.stripe.com/v3"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
@@ -151,7 +152,8 @@
           <button class="gseg" data-g="men" onclick="setMatchGender('men')">Men’s</button>
         </div>
         <div id="catChips" class="chiprow"></div>
-        <div id="subChips" class="chiprow" style="margin-top:2px"></div>
+        <div id="catIncludes" style="font-size:.76rem;color:var(--dim);margin-top:7px"></div>
+        <div id="subChips" class="chiprow" style="margin-top:8px"></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px">
           <input id="matchSearch" placeholder="Search brands…" oninput="renderMatches()" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none" />
         </div>
@@ -555,9 +557,9 @@
       + '<span style="width:100%;height:100%;border-radius:9px;background:var(--pinkdim);color:var(--pink2);display:'+(logo?'none':'flex')+';align-items:center;justify-content:center;font-weight:700;font-size:'+fs+'px;position:absolute;top:0;left:0">'+((brand||'?').charAt(0))+'</span></span>';
   }
   // Category-first: pick a category, see brands ranked by fit for THAT category.
-  // Categories are measurement regions (not fabric/marketing). Fabric, fit and
-  // garment type live on the subcategory tag.
-  var CAT_LABEL = { tops:'Tops', bottoms:'Bottoms', dresses:'Dresses', outerwear:'Outerwear', suits:'Suits' };
+  // Category labels + "what's included" come from the shared taxonomy.
+  var CAT_LABEL = window.STYLA_CAT_LABEL || {};
+  var CAT_INCLUDES = window.STYLA_CAT_INCLUDES || {};
   function catLabel(c){ return CAT_LABEL[c] || (c ? c.charAt(0).toUpperCase()+c.slice(1) : 'Other'); }
 
   function matchRow(m){
@@ -598,6 +600,10 @@
     catBox.innerHTML = cats.map(function(c){
       return '<button class="cchip'+(c===curCat?' on':'')+'" onclick="setCat(\''+c+'\')">'+catLabel(c)+'<span class="cnt">'+catCount[c]+'</span></button>';
     }).join('');
+    var inc = CAT_INCLUDES[curCat];
+    catBox.setAttribute('data-inc', '');
+    var incEl = document.getElementById('catIncludes');
+    if(incEl) incEl.textContent = inc && inc.length ? ('Includes: ' + inc.join(' · ')) : '';
 
     // Within the chosen category: subcategory (fit-type) chips, if any.
     var inCat = list.filter(function(m){ return (m.category||'other')===curCat; });

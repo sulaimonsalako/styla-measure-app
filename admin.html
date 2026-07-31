@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/taxonomy.js"></script>
   <style>
     :root{--bg:#0b0b14;--bg2:#121222;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--green:#34d399;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -148,20 +149,12 @@
         <h2 style="margin-top:0" id="chartTitle">Size chart</h2>
         <div class="row3">
           <div><label>Category <span class="hint">(the body area we measure)</span></label>
-            <select id="chCat">
-              <option value="tops">Tops — chest, shoulder, sleeve</option>
-              <option value="bottoms">Bottoms — waist, hip, inseam</option>
-              <option value="dresses">Dresses — bust, waist, hip</option>
-              <option value="outerwear">Outerwear — chest, shoulder, length</option>
-              <option value="suits">Suits — chest + waist + inseam</option>
-            </select>
+            <select id="chCat" onchange="fillSubList()"></select>
+            <div id="chCatIncludes" class="hint" style="margin-top:4px"></div>
           </div>
           <div><label>Sub-tag <span class="hint">(optional — fabric, fit or garment type)</span></label>
-            <input id="chSub" list="subList" placeholder="e.g. denim, slim, athletic, skirts"/>
-            <datalist id="subList">
-              <option>slim</option><option>regular</option><option>athletic</option><option>relaxed</option><option>tall</option><option>petite</option><option>plus</option><option>curve</option>
-              <option>denim</option><option>skirts</option><option>shorts</option><option>pants</option><option>leggings</option><option>shirts</option><option>knitwear</option><option>blazers</option><option>coats</option><option>bridesmaid</option><option>jumpsuits</option>
-            </datalist>
+            <input id="chSub" list="subList" placeholder="e.g. denim, slim, athletic"/>
+            <datalist id="subList"></datalist>
           </div>
           <div><label>Gender</label><select id="chGender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
         </div>
@@ -352,10 +345,25 @@
     window.delChart=async function(id){ if(!confirm('Delete this chart?'))return; var res=await api('delete-chart',{id:id}); if(res.error){alert(res.error);return;} openBrand(state.brand.id); };
 
     var MCOLS=['chest','waist','hips','inseam','sleeve','length','neck'];
+
+    // Build the category dropdown from the shared taxonomy.
+    var FIT_TAGS=['slim','regular','athletic','relaxed','tall','petite','plus','curve'];
+    (function(){
+      var sel=el('chCat'); if(!sel||!window.STYLA_TAXONOMY) return;
+      sel.innerHTML=window.STYLA_TAXONOMY.map(function(c){return '<option value="'+c.slug+'">'+c.label+' — '+c.measures+'</option>';}).join('');
+    })();
+    function fillSubList(){
+      var cat=el('chCat').value, def=(window.STYLA_TAXONOMY||[]).filter(function(c){return c.slug===cat;})[0];
+      var inc=def?def.includes:[];
+      el('chCatIncludes').textContent = inc.length ? ('Includes: '+inc.join(', ')) : '';
+      var tags=inc.map(function(s){return s.toLowerCase();}).concat(FIT_TAGS);
+      el('subList').innerHTML=tags.map(function(t){return '<option>'+t+'</option>';}).join('');
+    }
     function openChart(c){
       state.editingChart=c;
       el('chartTitle').textContent=c?'Edit size chart':'New size chart';
-      el('chCat').value=c?(c.category||'dresses'):'dresses';
+      el('chCat').value=c?(c.category||'tops'):'tops';
+      fillSubList();
       el('chSub').value=(c&&(c.subcategory||(c.chart_data&&c.chart_data.subcategory)))||'';
       el('chGender').value=c?(c.gender||'women'):'women';
       el('chType').value=(c&&c.chart_data&&c.chart_data.chart_type)||'body';
