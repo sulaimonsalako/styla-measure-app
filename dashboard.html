@@ -555,7 +555,9 @@
       + '<span style="width:100%;height:100%;border-radius:9px;background:var(--pinkdim);color:var(--pink2);display:'+(logo?'none':'flex')+';align-items:center;justify-content:center;font-weight:700;font-size:'+fs+'px;position:absolute;top:0;left:0">'+((brand||'?').charAt(0))+'</span></span>';
   }
   // Category-first: pick a category, see brands ranked by fit for THAT category.
-  var CAT_LABEL = { dresses:'Dresses', tops:'Tops', shirts:'Shirts', bottoms:'Bottoms', denim:'Denim', jeans:'Denim', suits:'Suits', skirts:'Skirts', outerwear:'Outerwear', activewear:'Activewear', swimwear:'Swimwear' };
+  // Categories are measurement regions (not fabric/marketing). Fabric, fit and
+  // garment type live on the subcategory tag.
+  var CAT_LABEL = { tops:'Tops', bottoms:'Bottoms', dresses:'Dresses', outerwear:'Outerwear', suits:'Suits' };
   function catLabel(c){ return CAT_LABEL[c] || (c ? c.charAt(0).toUpperCase()+c.slice(1) : 'Other'); }
 
   function matchRow(m){

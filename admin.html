@@ -147,23 +147,21 @@
       <div class="card" style="margin-top:1rem;">
         <h2 style="margin-top:0" id="chartTitle">Size chart</h2>
         <div class="row3">
-          <div><label>Category <span class="hint">(one chart per category)</span></label>
+          <div><label>Category <span class="hint">(the body area we measure)</span></label>
             <select id="chCat">
-              <option value="dresses">Dresses</option>
-              <option value="tops">Tops</option>
-              <option value="bottoms">Bottoms</option>
-              <option value="denim">Denim / Jeans</option>
-              <option value="outerwear">Outerwear</option>
-              <option value="suits">Suits / Blazers</option>
-              <option value="skirts">Skirts</option>
-              <option value="activewear">Activewear</option>
-              <option value="swimwear">Swimwear</option>
-              <option value="shirts">Shirts</option>
+              <option value="tops">Tops — chest, shoulder, sleeve</option>
+              <option value="bottoms">Bottoms — waist, hip, inseam</option>
+              <option value="dresses">Dresses — bust, waist, hip</option>
+              <option value="outerwear">Outerwear — chest, shoulder, length</option>
+              <option value="suits">Suits — chest + waist + inseam</option>
             </select>
           </div>
-          <div><label>Sub-type / fit tag <span class="hint">(optional)</span></label>
-            <input id="chSub" list="subList" placeholder="e.g. slim, regular, athletic, relaxed"/>
-            <datalist id="subList"><option>slim</option><option>regular</option><option>athletic</option><option>relaxed</option><option>petite</option><option>tall</option><option>plus</option><option>curve</option></datalist>
+          <div><label>Sub-tag <span class="hint">(optional — fabric, fit or garment type)</span></label>
+            <input id="chSub" list="subList" placeholder="e.g. denim, slim, athletic, skirts"/>
+            <datalist id="subList">
+              <option>slim</option><option>regular</option><option>athletic</option><option>relaxed</option><option>tall</option><option>petite</option><option>plus</option><option>curve</option>
+              <option>denim</option><option>skirts</option><option>shorts</option><option>pants</option><option>leggings</option><option>shirts</option><option>knitwear</option><option>blazers</option><option>coats</option><option>bridesmaid</option><option>jumpsuits</option>
+            </datalist>
           </div>
           <div><label>Gender</label><select id="chGender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
         </div>
