@@ -104,6 +104,14 @@
   .notif-empty{padding:26px 16px;text-align:center;color:var(--dim);font-size:.85rem}
   .gseg{background:none;border:none;color:var(--dim);font-size:.82rem;font-weight:600;padding:7px 16px;border-radius:100px;cursor:pointer;font-family:var(--sans)}
   .gseg.on{background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff}
+  .chiprow{display:flex;gap:8px;flex-wrap:wrap}
+  .cchip{background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:.83rem;font-weight:600;padding:8px 15px;border-radius:100px;cursor:pointer;font-family:var(--sans);text-transform:capitalize}
+  .cchip:hover{border-color:rgba(255,255,255,.2)}
+  .cchip.on{background:linear-gradient(135deg,#e11d48,#ff2a75);color:#fff;border-color:transparent}
+  .cchip .cnt{opacity:.7;font-size:.72rem;margin-left:5px}
+  .subchip{background:none;border:1px solid var(--border);color:var(--dim);font-size:.76rem;font-weight:600;padding:5px 12px;border-radius:100px;cursor:pointer;font-family:var(--sans);text-transform:capitalize}
+  .subchip.on{background:var(--pinkdim);color:var(--pink2);border-color:transparent}
+  .subtag{display:inline-block;background:var(--pinkdim);color:var(--pink2);font-size:.66rem;font-weight:700;padding:2px 9px;border-radius:100px;text-transform:capitalize;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -135,18 +143,17 @@
 
       <!-- MATCHES -->
       <div class="panel on" id="p-matches">
-        <h2 class="ct">Brands that fit your proportions</h2>
-        <p class="cs">Ranked by how well each brand's cut matches your body.</p>
+        <h2 class="ct">What are you shopping for?</h2>
+        <p class="cs">Pick a category — we rank the brands whose cut fits you best.</p>
         <div id="genderSeg" style="display:inline-flex;background:var(--panel2);border:1px solid var(--border);border-radius:100px;padding:3px;margin-bottom:12px">
           <button class="gseg" data-g="all" onclick="setMatchGender('all')">All</button>
           <button class="gseg" data-g="women" onclick="setMatchGender('women')">Women’s</button>
           <button class="gseg" data-g="men" onclick="setMatchGender('men')">Men’s</button>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-          <input id="matchSearch" placeholder="Search brands or categories…" oninput="renderMatches()" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none" />
-          <select id="matchCat" onchange="renderMatches()" style="background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none">
-            <option value="">All categories</option>
-          </select>
+        <div id="catChips" class="chiprow"></div>
+        <div id="subChips" class="chiprow" style="margin-top:2px"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px">
+          <input id="matchSearch" placeholder="Search brands…" oninput="renderMatches()" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:#fff;font-size:.88rem;font-family:var(--sans);outline:none" />
         </div>
         <div id="matchLocked"><div class="loader">Matching…</div></div>
         <div id="matchUnlocked" style="display:none"></div>
@@ -486,7 +493,7 @@
     setTimeout(function(){ msg.style.display='none'; }, 2500);
   }
 
-  var curMeas = null, curGender = null;
+  var curMeas = null, curGender = null, curCat = null, curSub = '';
   function initGenderSeg(){
     if(!curGender){
       try { curGender = localStorage.getItem('styla_match_gender'); } catch(e){}
@@ -508,28 +515,18 @@
     var matches = [];
     try {
       var resp = await fetch('/api/rank-brands', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ profile:m, limit:100, gender: (curGender && curGender!=='all') ? curGender : undefined }) });
+        body: JSON.stringify({ profile:m, limit:200, gender: (curGender && curGender!=='all') ? curGender : undefined }) });
       if(resp.ok){ var d = await resp.json(); matches = d.matches || []; }
     } catch(e){}
     curMatches = matches;
-    // Populate the category filter from what actually matched.
-    var sel = document.getElementById('matchCat');
-    if(sel){
-      var cur = sel.value;
-      var cats = {};
-      matches.forEach(function(mm){ if(mm.category) cats[mm.category] = true; });
-      sel.innerHTML = '<option value="">All categories</option>' +
-        Object.keys(cats).sort().map(function(c){ return '<option value="'+c+'"'+(c===cur?' selected':'')+'>'+c+'</option>'; }).join('');
-    }
+    curCat = null; curSub = ''; // reset drill-down when the pool changes (e.g. gender)
     renderMatches();
   }
-  function filteredMatches(){
+  function searchMatches(){
     var q = ((document.getElementById('matchSearch')||{}).value || '').toLowerCase();
-    var cat = (document.getElementById('matchCat')||{}).value || '';
+    if(!q) return curMatches;
     return curMatches.filter(function(mm){
-      if(cat && (mm.category||'') !== cat) return false;
-      if(q && ((mm.brand||'')+' '+(mm.category||'')).toLowerCase().indexOf(q) < 0) return false;
-      return true;
+      return ((mm.brand||'')+' '+(mm.category||'')+' '+(mm.subcategory||'')).toLowerCase().indexOf(q) > -1;
     });
   }
 
@@ -545,69 +542,81 @@
     return map[sp] || (sp || '');
   }
   var CAT_ICON = { dresses:'👗', tops:'👕', shirts:'👔', bottoms:'👖', denim:'👖', jeans:'👖', suits:'🤵', outerwear:'🧥' };
-  function groupBrands(list){
-    var map = {}, order = [];
-    list.forEach(function(mm){
-      if(!map[mm.brand]){ map[mm.brand] = { brand:mm.brand, logo:mm.logo, domain:mm.domain, best:0, cats:[] }; order.push(mm.brand); }
-      var g = map[mm.brand];
-      g.cats.push(mm);
-      if(mm.score > g.best) g.best = mm.score;
-    });
-    var arr = order.map(function(k){ var g = map[k]; g.cats.sort(function(a,b){ return b.score - a.score; }); return g; });
-    arr.sort(function(a,b){ return b.best - a.best; });
-    return arr;
-  }
   // Shop-link tracking: tag every outbound click so it's measurable now and
   // swappable for per-brand affiliate links later (brands.affiliate_url).
   function withUtm(url){
     return url + (url.indexOf('?') > -1 ? '&' : '?') + 'utm_source=styla&utm_medium=referral&utm_campaign=matches';
   }
-  function logoTile(g, size){
+  function logoTile(brand, logo, size){
     size = size || 38;
     var fs = Math.round(size * 0.42);
     return '<span style="width:'+size+'px;height:'+size+'px;flex:none;display:inline-block;position:relative">'
-      + (g.logo ? '<img src="'+g.logo+'" alt="" style="width:100%;height:100%;border-radius:9px;object-fit:contain;background:#fff;padding:4px;box-sizing:border-box" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>' : '')
-      + '<span style="width:100%;height:100%;border-radius:9px;background:var(--pinkdim);color:var(--pink2);display:'+(g.logo?'none':'flex')+';align-items:center;justify-content:center;font-weight:700;font-size:'+fs+'px;position:absolute;top:0;left:0">'+((g.brand||'?').charAt(0))+'</span></span>';
+      + (logo ? '<img src="'+logo+'" alt="" style="width:100%;height:100%;border-radius:9px;object-fit:contain;background:#fff;padding:4px;box-sizing:border-box" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"/>' : '')
+      + '<span style="width:100%;height:100%;border-radius:9px;background:var(--pinkdim);color:var(--pink2);display:'+(logo?'none':'flex')+';align-items:center;justify-content:center;font-weight:700;font-size:'+fs+'px;position:absolute;top:0;left:0">'+((brand||'?').charAt(0))+'</span></span>';
   }
-  function brandCard(g, hero){
-    var t = tierOf(g.best);
-    var top = g.cats[0];
-    var conf = Math.max.apply(null, g.cats.map(function(c){ return c.dims || 0; }));
-    var confTxt = conf >= 3 ? 'high confidence' : conf === 2 ? 'good confidence' : 'early estimate';
-    var rows = g.cats.map(function(c, i){
-      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;'+(i===g.cats.length-1?'':'border-bottom:1px solid var(--border)')+'">'
-        + '<span style="width:22px;text-align:center">'+(CAT_ICON[c.category]||'👚')+'</span>'
-        + '<div style="flex:1;min-width:80px"><div style="font-size:.9rem;text-transform:capitalize">'
-        + (c.category_url ? '<a href="'+withUtm(c.category_url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">'+(c.category||'general')+' <span style="color:var(--pink2);font-size:.75rem">↗</span></a>' : (c.category||'general'))
-        + '</div><div style="font-size:.74rem;color:var(--dim)">'+fitWords(c.spectrum)+'</div></div>'
-        + '<div style="font-size:1.05rem;font-weight:700">'+c.recommended_size+'</div></div>';
-    }).join('');
-    var shop = g.domain ? '<a href="'+withUtm('https://'+g.domain)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.8rem;padding:8px 14px">Shop '+g.brand+' ↗</a>' : '';
-    return '<div class="bcard'+(hero?' hero open':'')+'" onclick="this.classList.toggle(\'open\')">'
-      + '<div class="bhead">'+logoTile(g, hero?44:36)
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:'+(hero?'1.05rem':'.95rem')+'">'+g.brand+'</div>'
-      + '<div style="font-size:.74rem;color:var(--dim)">'+g.cats.length+' '+(g.cats.length>1?'categories':'category')+' · '+confTxt+'</div></div>'
+  // Category-first: pick a category, see brands ranked by fit for THAT category.
+  var CAT_LABEL = { dresses:'Dresses', tops:'Tops', shirts:'Shirts', bottoms:'Bottoms', denim:'Denim', jeans:'Denim', suits:'Suits', skirts:'Skirts', outerwear:'Outerwear', activewear:'Activewear', swimwear:'Swimwear' };
+  function catLabel(c){ return CAT_LABEL[c] || (c ? c.charAt(0).toUpperCase()+c.slice(1) : 'Other'); }
+
+  function matchRow(m){
+    var t = tierOf(m.score);
+    var conf = m.dims >= 3 ? 'high confidence' : m.dims === 2 ? 'good confidence' : 'early estimate';
+    var sub = m.subcategory ? '<span class="subtag">'+m.subcategory+' fit</span>' : '';
+    var shopUrl = m.category_url ? withUtm(m.category_url) : (m.domain ? withUtm('https://'+m.domain) : null);
+    var shop = shopUrl ? '<a href="'+shopUrl+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="btn-ghost" style="text-decoration:none;font-size:.78rem;padding:7px 13px;white-space:nowrap">Shop ↗</a>' : '';
+    return '<div class="bcard" style="cursor:default"><div class="bhead">'+logoTile(m.brand, m.logo, 38)
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.98rem">'+m.brand+sub+'</div>'
+      + '<div style="font-size:.75rem;color:var(--dim)">'+fitWords(m.spectrum)+' · '+conf+'</div></div>'
       + '<span class="tierpill '+t.cls+'">'+t.label+'</span>'
-      + '<div style="text-align:right;margin-left:4px"><div style="font-size:.66rem;color:var(--dim)">Your size</div><div style="font-size:1.15rem;font-weight:700">'+top.recommended_size+'</div></div>'
-      + '</div>'
-      + '<div class="bbody">'+rows
-      + '<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">'+shop
-      + '<span style="font-size:.7rem;color:var(--dim)">tap card to '+(hero?'collapse':'expand / collapse')+'</span></div></div>'
-      + '</div>';
+      + '<div style="text-align:right;margin:0 4px"><div style="font-size:.64rem;color:var(--dim)">Your size</div><div style="font-size:1.15rem;font-weight:700">'+m.recommended_size+'</div></div>'
+      + shop + '</div></div>';
   }
   function renderMatches(){
     var locked = document.getElementById('matchLocked');
     var unlocked = document.getElementById('matchUnlocked');
-    var groups = groupBrands(filteredMatches());
-    if(!groups.length){
-      var hasFilter = ((document.getElementById('matchSearch')||{}).value || '') || ((document.getElementById('matchCat')||{}).value || '');
-      locked.innerHTML = '<div class="lockbox">'+(hasFilter ? 'No matches for this search — try clearing the filters.' : 'No matches yet — as more brands are added, they\'ll appear here.')+'</div>';
+    var list = searchMatches();
+    var catBox = document.getElementById('catChips');
+    var subBox = document.getElementById('subChips');
+
+    if(!list.length){
+      catBox.innerHTML=''; subBox.innerHTML='';
+      var searching = (document.getElementById('matchSearch')||{}).value;
+      locked.innerHTML = '<div class="lockbox">'+(searching ? 'No brands match “'+searching+'”.' : 'No matches yet — as more brands are added, they’ll appear here.')+'</div>';
       locked.style.display='block'; unlocked.style.display='none'; return;
     }
-    var h = groups.map(function(g, i){ return brandCard(g, i === 0); }).join('');
-    h += '<div class="ok-banner">✓ Every brand that fits you, with your size in each — free.</div>';
+
+    // Rank categories by their best match; build the category chip bar.
+    var catBest = {}, catCount = {};
+    list.forEach(function(m){ var c=m.category||'other';
+      if(catBest[c]==null||m.score>catBest[c]) catBest[c]=m.score;
+      catCount[c]=(catCount[c]||0)+1;
+    });
+    var cats = Object.keys(catBest).sort(function(a,b){ return catBest[b]-catBest[a]; });
+    if(!curCat || cats.indexOf(curCat)<0) curCat = cats[0];
+    catBox.innerHTML = cats.map(function(c){
+      return '<button class="cchip'+(c===curCat?' on':'')+'" onclick="setCat(\''+c+'\')">'+catLabel(c)+'<span class="cnt">'+catCount[c]+'</span></button>';
+    }).join('');
+
+    // Within the chosen category: subcategory (fit-type) chips, if any.
+    var inCat = list.filter(function(m){ return (m.category||'other')===curCat; });
+    var subs = {}; inCat.forEach(function(m){ if(m.subcategory) subs[m.subcategory]=1; });
+    var subKeys = Object.keys(subs).sort();
+    if(subKeys.length && curSub && subKeys.indexOf(curSub)<0) curSub='';
+    if(subKeys.length){
+      subBox.style.display='flex';
+      subBox.innerHTML = '<button class="subchip'+(!curSub?' on':'')+'" onclick="setSub(\'\')">All fits</button>'
+        + subKeys.map(function(s){ return '<button class="subchip'+(s===curSub?' on':'')+'" onclick="setSub(\''+s+'\')">'+s+'</button>'; }).join('');
+    } else { subBox.style.display='none'; subBox.innerHTML=''; }
+
+    // Rank brands within the (sub)category by fit.
+    var rows = inCat.filter(function(m){ return !curSub || m.subcategory===curSub; })
+                    .sort(function(a,b){ return b.score-a.score; });
+    var h = rows.map(matchRow).join('');
+    h += '<div class="ok-banner">✓ '+rows.length+' '+catLabel(curCat).toLowerCase()+' brand'+(rows.length>1?'s':'')+' ranked by how they fit you — free.</div>';
     unlocked.innerHTML = h; unlocked.style.display='block'; locked.style.display='none';
   }
+  function setCat(c){ curCat=c; curSub=''; renderMatches(); }
+  function setSub(s){ curSub=s; renderMatches(); }
 
   // ---- Notifications (social-style inbox: share requests, party invites) ----
   var NOTIF = [];
