@@ -310,7 +310,8 @@
     ['inseam','Inseam','trousers & jeans'],
     ['neck','Neck','dress shirts'],
     ['sleeve','Sleeve length','shirts & jackets'],
-    ['thigh','Thigh','jeans & fitted trousers']
+    ['thigh','Thigh','jeans & fitted trousers'],
+    ['underbust','Underbust','bras & swimwear']
   ];
 
   function tab(name, el){
@@ -351,7 +352,7 @@
     var lsOk = !!twinEmail && twinEmail === (user.email || '').toLowerCase();
     if(!lsOk){
       ['styla_twin_chest','styla_twin_waist','styla_twin_hips','styla_twin_height','styla_twin_inseam',
-       'styla_twin_shoulder','styla_twin_neck','styla_twin_email','styla_first_name'].forEach(function(k){
+       'styla_twin_shoulder','styla_twin_neck','styla_twin_underbust','styla_twin_email','styla_first_name'].forEach(function(k){
         try { localStorage.removeItem(k); } catch(e){}
       });
     }
@@ -376,6 +377,7 @@
       neck: ov.neck || ls('styla_twin_neck'),
       sleeve: ov.sleeve || null,
       thigh: ov.thigh || null,
+      underbust: profile.underbust || ov.underbust || ls('styla_twin_underbust'),
     };
     Object.keys(m).forEach(function(k){ if(m[k]!=null && m[k]!=='') m[k] = parseFloat(m[k]); });
 
@@ -468,7 +470,7 @@
 
   async function saveProfile(){
     var m = {};
-    ['chest','waist','hips','height','inseam','belly','shoulder','neck','sleeve','thigh'].forEach(function(k){
+    ['chest','waist','hips','height','inseam','belly','shoulder','neck','sleeve','thigh','underbust'].forEach(function(k){
       var el = document.getElementById('m-'+k);
       if(el && el.value !== '') m[k] = toIn(parseFloat(el.value)); // convert display unit -> inches for storage
     });
@@ -478,7 +480,7 @@
       if(m[k] != null) ov[k] = m[k]; else delete ov[k];
     });
     var upd = { chest:m.chest, waist:m.waist, hips:m.hips, height:m.height, inseam:m.inseam,
-                belly:m.belly || null, shoulder:m.shoulder || null,
+                belly:m.belly || null, shoulder:m.shoulder || null, underbust:m.underbust || null,
                 gender: (document.getElementById('p-gender')||{}).value || null,
                 age_range: (document.getElementById('p-age')||{}).value || null,
                 measurement_overrides:ov, updated_at:new Date().toISOString() };
