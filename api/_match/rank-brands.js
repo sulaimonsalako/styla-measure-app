@@ -33,7 +33,7 @@ export default async function rankBrands(req, res) {
 
     const { data: charts, error } = await supabaseAdmin
       .from('size_charts')
-      .select('id, brand_id, category, gender, chart_data, category_url, verified');
+      .select('id, brand_id, category, subcategory, gender, chart_data, category_url, verified');
     if (error) throw error;
 
     const { data: brandRows, error: bErr } = await supabaseAdmin
@@ -61,6 +61,7 @@ export default async function rankBrands(req, res) {
         logo: (brandMap[c.brand_id] && brandMap[c.brand_id].logo) || null,
         domain: (brandMap[c.brand_id] && brandMap[c.brand_id].domain) || null,
         category: norm.garment_category,
+        subcategory: c.subcategory || (c.chart_data && c.chart_data.subcategory) || null,
         category_url: c.category_url || null,
         verified: !!c.verified,
         recommended_size: r.recommended_size,

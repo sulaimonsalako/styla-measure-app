@@ -40,9 +40,18 @@ export default async function handler(req, res) {
       base64Data = base64Data.split(';base64,')[1];
     }
 
-    const prompt = `You are a professional fashion data parser. 
+    const prompt = `You are a professional fashion data parser.
 Analyze the provided size chart image or PDF document.
 Extract ALL size rows/columns and ALL Point of Measurement (POM) details present in the document.
+
+CRITICAL — CHART ORIENTATION: Size charts come in two layouts. You MUST detect which one and read it correctly:
+  (A) Sizes as ROWS: each row is a size (S, M, L…) and each column is a measurement (Bust, Waist…).
+  (B) Sizes as COLUMNS (transposed): the size labels run across the TOP row, and each following ROW is a measurement (e.g. left cell "Chest" then its value under each size). Many Asian/men's shirt charts use this layout.
+In BOTH cases your output "sizes" array MUST contain the SIZE LABELS (never the measurement names), and every size must map to EVERY measurement present for it. Do not stop after the first column or first row — read the entire grid.
+
+CRITICAL — COMPLETENESS: For every size, extract a value for EVERY measurement column/row that exists in the chart. Never return a size object with only one measurement when the chart clearly has more.
+
+CRITICAL — NUMBERS ONLY: values in "sizeChart" must be plain numbers (or a "min-max" string for ranges), never include units like "cm" or "\\"" or "in" in the value.
 
 Standard Point of Measurements (POMs) you should look for and extract (but not limited to):
 - Chest / Bust (or Chest Width, Bust Width)

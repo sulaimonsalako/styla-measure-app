@@ -147,8 +147,27 @@
       <div class="card" style="margin-top:1rem;">
         <h2 style="margin-top:0" id="chartTitle">Size chart</h2>
         <div class="row3">
-          <div><label>Category</label><input id="chCat" placeholder="dresses, tops, bottoms…"/></div>
+          <div><label>Category <span class="hint">(one chart per category)</span></label>
+            <select id="chCat">
+              <option value="dresses">Dresses</option>
+              <option value="tops">Tops</option>
+              <option value="bottoms">Bottoms</option>
+              <option value="denim">Denim / Jeans</option>
+              <option value="outerwear">Outerwear</option>
+              <option value="suits">Suits / Blazers</option>
+              <option value="skirts">Skirts</option>
+              <option value="activewear">Activewear</option>
+              <option value="swimwear">Swimwear</option>
+              <option value="shirts">Shirts</option>
+            </select>
+          </div>
+          <div><label>Sub-type / fit tag <span class="hint">(optional)</span></label>
+            <input id="chSub" list="subList" placeholder="e.g. slim, regular, athletic, relaxed"/>
+            <datalist id="subList"><option>slim</option><option>regular</option><option>athletic</option><option>relaxed</option><option>petite</option><option>tall</option><option>plus</option><option>curve</option></datalist>
+          </div>
           <div><label>Gender</label><select id="chGender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
+        </div>
+        <div class="row3" style="margin-top:.8rem">
           <div><label>Chart type</label><select id="chType"><option value="body">Body (to-fit)</option><option value="garment">Garment (flat)</option></select></div>
         </div>
         <div class="row3" style="margin-top:.8rem">
@@ -318,7 +337,9 @@
         var n=(c.chart_data&&c.chart_data.sizes)?c.chart_data.sizes.length:0;
         var srcLbl = c.source==='brand' ? 'from brand' : c.source==='parsed' ? 'auto-parsed' : 'by Styla';
         return '<div class="chart-item"><div class="chart-head">'+
-          '<span class="badge">'+(c.category||'—')+'</span><span class="badge">'+(c.gender||'—')+'</span>'+
+          '<span class="badge">'+(c.category||'—')+'</span>'+
+          ((c.subcategory||(c.chart_data&&c.chart_data.subcategory))?'<span class="badge" style="background:var(--pinkdim);color:var(--pink2)">'+(c.subcategory||c.chart_data.subcategory)+'</span>':'')+
+          '<span class="badge">'+(c.gender||'—')+'</span>'+
           (c.is_default?'<span class="badge def">default</span>':'')+
           (c.verified?'<span class="badge def">✓ verified</span>':'<span class="badge" style="background:rgba(255,255,255,.06);color:var(--dim)">unverified</span>')+
           '<span class="badge" style="background:rgba(255,255,255,.06);color:var(--dim)">'+srcLbl+'</span>'+
@@ -336,7 +357,8 @@
     function openChart(c){
       state.editingChart=c;
       el('chartTitle').textContent=c?'Edit size chart':'New size chart';
-      el('chCat').value=c?(c.category||''):'';
+      el('chCat').value=c?(c.category||'dresses'):'dresses';
+      el('chSub').value=(c&&(c.subcategory||(c.chart_data&&c.chart_data.subcategory)))||'';
       el('chGender').value=c?(c.gender||'women'):'women';
       el('chType').value=(c&&c.chart_data&&c.chart_data.chart_type)||'body';
       el('chDefault').checked=c?!!c.is_default:false;
@@ -373,9 +395,10 @@
       });
       if(!sizes.length){msg.style.color='#fca5a5';msg.textContent='Add at least one size.';return;}
       var type=el('chType').value;
-      var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_type:type,sizes:sizes};
+      var sub=(el('chSub').value||'').trim().toLowerCase()||null;
+      var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_type:type,sizes:sizes};
       if(type==='garment')chart_data.flat_measures=['chest','waist','hips','thigh']; // flat charts: circumferences are half-width
-      var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked,
+      var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked,
         source:el('chSource').value,verified:el('chVerified').checked,category_url:el('chCatUrl').value.trim()||null};
       msg.style.color='var(--muted)';msg.textContent='Saving…';
       var res=state.editingChart?await api('update-chart',Object.assign({id:state.editingChart.id},payload)):await api('create-chart',payload);
@@ -384,11 +407,21 @@
     });
 
     // ---- AI chart import: paste / drop / upload a screenshot, AI fills the table ----
-    var POM_MAP = { chest:'chest', bust:'chest', 'chest width':'chest', 'bust width':'chest',
-      waist:'waist', 'waist width':'waist', hip:'hips', hips:'hips', seat:'hips',
-      inseam:'inseam', sleeve:'sleeve', 'sleeve length':'sleeve',
-      length:'length', 'back length':'length', 'body length':'length', 'torso':'length',
-      neck:'neck', collar:'neck' };
+    // Fuzzy, substring-based mapping so header variants ("Bust (in)", "Hip Girth",
+    // "Waist cm", "Shoulder Width") still map. Order matters — most specific first.
+    var POM_RULES = [
+      ['inseam','inseam'], ['sleeve','sleeve'],
+      ['collar','neck'], ['neck','neck'],
+      ['bust','chest'], ['chest','chest'],
+      ['seat','hips'], ['hip','hips'],
+      ['waist','waist'],
+      ['back length','length'], ['body length','length'], ['length','length'],
+    ];
+    function mapPom(name){
+      var n = (name||'').toLowerCase().trim();
+      for(var i=0;i<POM_RULES.length;i++){ if(n.indexOf(POM_RULES[i][0]) > -1){ return POM_RULES[i][1]; } }
+      return null;
+    }
     function aiSay(t, ok){ var e = el('aiMsg'); e.textContent = t; e.style.color = ok ? 'var(--green)' : 'var(--dim)'; }
     async function parseChartFile(file){
       if(!file) return;
@@ -400,18 +433,24 @@
         var d = await resp.json();
         if(d.error) throw new Error(d.error);
         el('sizeRows').innerHTML = '';
+        var totalVals = 0, colsSeen = {};
         (d.sizes || []).forEach(function(name){
           var src = (d.sizeChart || {})[name] || {};
           var row = { name: String(name) };
           Object.keys(src).forEach(function(pom){
-            var k = POM_MAP[pom.toLowerCase().trim()];
-            if(k && src[pom] != null && src[pom] !== '') row[k] = src[pom];
+            var k = mapPom(pom);
+            if(k && src[pom] != null && src[pom] !== ''){ row[k] = src[pom]; totalVals++; colsSeen[k]=1; }
           });
           addSizeRow(row);
         });
         el('chSource').value = 'parsed';
         el('chVerified').checked = false; // parsed charts start unverified — review, then tick
-        aiSay('✓ Parsed '+(d.sizes||[]).length+' sizes — review the table, then save', true);
+        var nSizes = (d.sizes||[]).length, nCols = Object.keys(colsSeen).length;
+        if(nSizes && nCols <= 1){
+          aiSay('⚠ Parsed '+nSizes+' sizes but only '+nCols+' measurement column — check the screenshot is clear and includes all columns, then fix rows manually.', false);
+        } else {
+          aiSay('✓ Parsed '+nSizes+' sizes × '+nCols+' measurements — review, then save', true);
+        }
       } catch(e){ aiSay('Could not parse: '+(e.message||e)); }
     }
     el('aiZone').addEventListener('click', function(e){ if(e.target.id !== 'aiFile') el('aiFile').click(); });

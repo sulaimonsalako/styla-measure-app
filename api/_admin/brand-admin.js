@@ -51,7 +51,7 @@ export default async function brandAdmin(req, res) {
         .from('brands').select('id, name, domain, logo_url, category_aliases').eq('id', b.id).maybeSingle();
       if (!brand) return res.status(404).json({ error: 'Brand not found.' });
       const { data: charts } = await supabaseAdmin
-        .from('size_charts').select('id, category, gender, chart_data, is_default, raw_source_url, source, verified, category_url, created_at')
+        .from('size_charts').select('id, category, subcategory, gender, chart_data, is_default, raw_source_url, source, verified, category_url, created_at')
         .eq('brand_id', b.id).order('created_at', { ascending: false });
       return res.status(200).json({ brand, charts: charts || [] });
     }
@@ -98,6 +98,7 @@ export default async function brandAdmin(req, res) {
           source: b.source || 'admin',
           verified: !!b.verified,
           category_url: b.category_url || null,
+          subcategory: b.subcategory || null,
         }).select('id').single();
       if (error) throw error;
       if (b.is_default) await unsetOtherDefaults(b.brand_id, b.category, data.id);
@@ -107,7 +108,7 @@ export default async function brandAdmin(req, res) {
     if (action === 'update-chart') {
       if (!b.id) return res.status(400).json({ error: 'chart id required.' });
       const patch = {};
-      ['category', 'gender', 'chart_data', 'is_default', 'raw_source_url', 'source', 'verified', 'category_url'].forEach(k => {
+      ['category', 'subcategory', 'gender', 'chart_data', 'is_default', 'raw_source_url', 'source', 'verified', 'category_url'].forEach(k => {
         if (b[k] !== undefined) patch[k] = b[k];
       });
       const { error } = await supabaseAdmin.from('size_charts').update(patch).eq('id', b.id);
