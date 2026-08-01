@@ -87,6 +87,15 @@ export function runSizingEngine(user, chart) {
     let chartBelly = getVal('belly') || (category !== 'bottoms' ? chartWaist : null);
     let chartShoulder = getVal('shoulder') || getVal('shoulder_width') || getVal('shoulders');
     let chartSleeve = getVal('sleeve') || getVal('sleeve_length');
+    // Measurement-convention normalization for RAW charts (normalized charts are
+    // already canonical — flagged _normalized — so skip to avoid double-applying).
+    // Canonical: shoulder = full cross-back; sleeve = shoulder-to-wrist.
+    if (!chart._normalized) {
+      if (chartShoulder && chartShoulder < 11) chartShoulder = +(chartShoulder * 2).toFixed(2); // half -> full
+      if (chartSleeve && chartSleeve >= 26.5) { // center-back-to-wrist -> shoulder-to-wrist
+        chartSleeve = +(chartSleeve - (chartShoulder || 16) / 2 - 0.5).toFixed(2);
+      }
+    }
     let chartInseam = getVal('inseam');
     let chartThigh = getVal('thigh');
     let chartNeck = getVal('neck') || getVal('collar') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
@@ -99,16 +108,9 @@ export function runSizingEngine(user, chart) {
     const scoreDimension = (userVal, chartVal, label, critical = false) => {
       if (!chartVal || !userVal) return;
       
+      // Sleeve/shoulder are already reconciled to canonical (shoulder-to-wrist,
+      // full cross-back) above, so compare user and chart directly here.
       let targetUserVal = userVal;
-      if (label === 'sleeve') {
-        // Detect chart sleeve measurement type:
-        // If chartVal is relatively small (typically < 26.5" for adults), it's shoulder-to-wrist.
-        // Otherwise, it's center-back-to-wrist (neck-to-wrist).
-        if (chartVal < 26.5) {
-          const halfShoulder = (userShoulder || 16.0) / 2;
-          targetUserVal = userVal - halfShoulder;
-        }
-      }
 
       // Calculate physical ease
       let physicalEase = 0;

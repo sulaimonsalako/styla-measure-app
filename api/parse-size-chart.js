@@ -72,12 +72,17 @@ Strict Sizing Processing Rules:
    - If they are already in inches (typically values under 55 for chest/waist/length, e.g. 30 to 48), do NOT convert them.
 2. POM COLUMN NAMES: Extract the names of the columns (POMs) exactly as detected (or standard naming: Chest, Waist, Hips, Sleeve Length, Shoulder Width, Inseam, Neck, Thigh, Bicep, Wrist, Length).
 3. ESTIMATIONS: Do NOT invent values, only extract what is in the document. However, if a column is missing (e.g. Waist/Hips is missing for a Top product), do NOT guess unless it is essential. Only extract what is present in the source size chart.
-4. OUTPUT FORMAT:
+4. MEASUREMENT CONVENTIONS: detect and report which convention the chart uses, so downstream can normalize:
+   - "sleeve_convention": "shoulder-to-wrist" if the sleeve figures are ~22–26 in (measured from shoulder seam), or "center-back" if ~32–37 in (measured from center-back-neck across the shoulder). Use "unknown" if no sleeve column.
+   - "shoulder_convention": "full" if shoulder figures are ~14–20 in (seam-to-seam cross-back), or "half" if ~7–10 in (center-back to one shoulder). Use "unknown" if no shoulder column.
+5. OUTPUT FORMAT:
    - You MUST return ONLY valid JSON. Do not include markdown code block backticks or any other text.
    - The JSON structure must match:
 {
   "sizes": ["S", "M", "L", "XL"],
   "poms": ["Chest", "Waist", "Hips", "Sleeve Length", "Shoulder Width"],
+  "sleeve_convention": "shoulder-to-wrist",
+  "shoulder_convention": "full",
   "sizeChart": {
     "S": { "Chest": 38, "Waist": 30, "Hips": 36, "Sleeve Length": 32.5, "Shoulder Width": 17.5 },
     "M": { "Chest": 40, "Waist": 32, "Hips": 38, "Sleeve Length": 33.2, "Shoulder Width": 18 },

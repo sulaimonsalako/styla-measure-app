@@ -48,7 +48,30 @@ export function normalizeChart(raw, opts = {}) {
     units: 'in',
     measures: {},
     sizes: [],
+    _normalized: true, // engine skips its own convention conversion when it sees this
   };
+
+  // Measurement conventions -> canonical. Explicit tag wins; magnitude is fallback.
+  //   shoulder canonical = FULL cross-back (seam-to-seam). half-shoulder -> x2.
+  //   sleeve   canonical = SHOULDER-to-wrist. center-back-to-wrist -> minus half cross-back.
+  const shoulderConv = (raw.shoulder_convention || 'auto');
+  const sleeveConv = (raw.sleeve_convention || 'auto');
+  function normalizeConventions(size) {
+    if (size.shoulder) {
+      const avg = (size.shoulder[0] + size.shoulder[1]) / 2;
+      const isHalf = shoulderConv === 'half' || (shoulderConv === 'auto' && avg < 11);
+      if (isHalf) size.shoulder = size.shoulder.map((x) => +(x * 2).toFixed(2));
+    }
+    if (size.sleeve) {
+      const avg = (size.sleeve[0] + size.sleeve[1]) / 2;
+      const isCenterBack = sleeveConv === 'center-back' || (sleeveConv === 'auto' && avg >= 26.5);
+      if (isCenterBack) {
+        // subtract half the cross-back (chart's own shoulder if present, else ~16")
+        const halfCB = size.shoulder ? ((size.shoulder[0] + size.shoulder[1]) / 2) / 2 : 8;
+        size.sleeve = size.sleeve.map((x) => +(x - halfCB - 0.5).toFixed(2));
+      }
+    }
+  }
 
   for (const s of (raw.sizes || [])) {
     const size = { name: String(s.name) };
@@ -75,6 +98,7 @@ export function normalizeChart(raw, opts = {}) {
         ? [Math.min(size[key][0], range[0]), Math.max(size[key][1], range[1])]
         : range;
     }
+    normalizeConventions(size); // shoulder half->full, sleeve center-back->shoulder-to-wrist
     out.sizes.push(size);
   }
   return out;
