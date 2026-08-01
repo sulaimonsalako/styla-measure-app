@@ -165,6 +165,7 @@
           <div><label>Shoulder measured <span class="hint">(if chart has shoulder)</span></label>
             <select id="chShoulderConv"><option value="auto">Auto-detect</option><option value="full">Full cross-back (~17″)</option><option value="half">Half shoulder (~8″)</option></select></div>
         </div>
+        <div id="convHint" class="hint" style="margin-top:6px;line-height:1.5"></div>
         <div class="row3" style="margin-top:.8rem">
           <div><label>Source</label><select id="chSource"><option value="admin">Entered by Styla (me)</option><option value="brand">Provided by the brand</option><option value="parsed">Auto-parsed</option></select></div>
           <div><label>Category / product page URL <span class="hint">(shop link)</span></label><input id="chCatUrl" placeholder="https://brand.com/collections/dresses"/></div>
@@ -185,7 +186,7 @@
         </div>
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
         <table class="sizes">
-          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th>Sleeve</th><th>Length</th><th>Neck</th><th></th></tr></thead>
+          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Shoulder</th><th>Inseam</th><th>Sleeve</th><th>Length</th><th>Neck</th><th></th></tr></thead>
           <tbody id="sizeRows"></tbody>
         </table>
         <button class="btn btn-ghost btn-sm" id="addRowBtn" style="margin-top:.6rem">+ Add size</button>
@@ -348,7 +349,7 @@
     window.editChart=function(id){openChart(state.charts.find(function(c){return c.id===id;}));};
     window.delChart=async function(id){ if(!confirm('Delete this chart?'))return; var res=await api('delete-chart',{id:id}); if(res.error){alert(res.error);return;} openBrand(state.brand.id); };
 
-    var MCOLS=['chest','waist','hips','inseam','sleeve','length','neck'];
+    var MCOLS=['chest','waist','hips','shoulder','inseam','sleeve','length','neck'];
 
     // Build the category dropdown from the shared taxonomy.
     var FIT_TAGS=['slim','regular','athletic','relaxed','tall','petite','plus','curve'];
@@ -381,6 +382,7 @@
       var sizes=(c&&c.chart_data&&c.chart_data.sizes)||[{name:''}];
       sizes.forEach(addSizeRow);
       el('chartMsg').textContent='';
+      updateConvHint();
       show('chartView');
     }
     function fmt(v){ if(Array.isArray(v))return v.join('-'); return (v===undefined||v===null)?'':v; }
@@ -423,6 +425,7 @@
     // Fuzzy, substring-based mapping so header variants ("Bust (in)", "Hip Girth",
     // "Waist cm", "Shoulder Width") still map. Order matters — most specific first.
     var POM_RULES = [
+      ['shoulder','shoulder'], ['cross back','shoulder'], ['cross-back','shoulder'], ['across back','shoulder'],
       ['inseam','inseam'], ['sleeve','sleeve'],
       ['collar','neck'], ['neck','neck'],
       ['bust','chest'], ['chest','chest'],
@@ -436,6 +439,38 @@
       return null;
     }
     function aiSay(t, ok){ var e = el('aiMsg'); e.textContent = t; e.style.color = ok ? 'var(--green)' : 'var(--dim)'; }
+
+    // Live convention readout: tells the admin what their entered sleeve/shoulder
+    // numbers look like, so they know which measuring convention they're using.
+    function colAvg(colKey){
+      var idx = MCOLS.indexOf(colKey); if(idx<0) return null;
+      var vals=[];
+      el('sizeRows').querySelectorAll('tr').forEach(function(tr){
+        var v = parseVal(tr.querySelectorAll('input')[idx+1].value);
+        if(v!==undefined) vals.push(Array.isArray(v)?(v[0]+v[1])/2:v);
+      });
+      if(!vals.length) return null;
+      return vals.reduce(function(a,b){return a+b;},0)/vals.length;
+    }
+    function updateConvHint(){
+      var parts=[];
+      var sl=colAvg('sleeve');
+      if(sl!=null){
+        var slGuess = sl>=26.5 ? 'center-back → wrist' : 'shoulder → wrist';
+        parts.push('Sleeve values average <b>'+sl.toFixed(1)+'″</b> → looks like <b>'+slGuess+'</b>'
+          + (el('chSleeveConv').value==='auto' ? ' (auto)' : ''));
+      }
+      var sh=colAvg('shoulder');
+      if(sh!=null){
+        var shGuess = sh<11 ? 'half shoulder' : 'full cross-back';
+        parts.push('Shoulder values average <b>'+sh.toFixed(1)+'″</b> → looks like <b>'+shGuess+'</b>'
+          + (el('chShoulderConv').value==='auto' ? ' (auto)' : ''));
+      }
+      el('convHint').innerHTML = parts.length ? ('📏 '+parts.join('  ·  ')+'. If that\'s wrong, set it explicitly above.') : '';
+    }
+    el('sizeRows').addEventListener('input', updateConvHint);
+    el('chSleeveConv').addEventListener('change', updateConvHint);
+    el('chShoulderConv').addEventListener('change', updateConvHint);
     async function parseChartFile(file){
       if(!file) return;
       aiSay('Reading the chart with AI…');
@@ -458,6 +493,7 @@
         });
         if(d.sleeve_convention && d.sleeve_convention!=='unknown') el('chSleeveConv').value = d.sleeve_convention;
         if(d.shoulder_convention && d.shoulder_convention!=='unknown') el('chShoulderConv').value = d.shoulder_convention;
+        updateConvHint();
         el('chSource').value = 'parsed';
         el('chVerified').checked = false; // parsed charts start unverified — review, then tick
         var nSizes = (d.sizes||[]).length, nCols = Object.keys(colsSeen).length;
