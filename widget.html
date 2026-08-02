@@ -510,6 +510,20 @@
       else { go('start'); }
     }
 
+    // Cross-site identity via the Styla extension: if it's installed, it hands us
+    // the shopper's signed-in session on ANY store — no per-site login. We ask the
+    // top page (the extension's bridge answers) and set the session if we get one.
+    var EXT_IDENTITY=null;
+    window.addEventListener('message', function(ev){
+      if(ev.data && ev.data.type==='styla-identity'){
+        EXT_IDENTITY=ev.data;
+        if(ev.data.session && ev.data.session.access_token){
+          try{ sb.auth.setSession({ access_token:ev.data.session.access_token, refresh_token:ev.data.session.refresh_token }); }catch(e){}
+        }
+      }
+    });
+    try{ parent.postMessage({type:'styla-request-identity'},'*'); }catch(e){}
+
     if(DECODE){
       // Bookmarklet mode: get the scraped page from the injected script, then decode.
       window.addEventListener('message', function(ev){

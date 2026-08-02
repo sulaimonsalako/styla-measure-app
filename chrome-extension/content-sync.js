@@ -27,7 +27,21 @@
     measurement_overrides
   };
 
-  if (measurements.chest || measurements.waist || measurements.hips) {
+  // Also capture the Styla (Supabase) session token so the extension can keep the
+  // shopper signed in on EVERY store — read the auth token Supabase stores locally.
+  let session = null;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const v = JSON.parse(localStorage.getItem(k));
+        if (v && v.access_token) { session = { access_token: v.access_token, refresh_token: v.refresh_token, expires_at: v.expires_at }; }
+        break;
+      }
+    }
+  } catch (e) {}
+
+  if (measurements.chest || measurements.waist || measurements.hips || session) {
     try {
       // Accessing getManifest will throw a catchable JS exception if the context was invalidated
       chrome.runtime.getManifest();
@@ -35,6 +49,7 @@
       chrome.runtime.sendMessage({
         type: "SYNC_MEASUREMENTS",
         measurements,
+        session,
         origin: window.location.origin
       }, (response) => {
         // Read runtime.lastError to prevent Chrome from logging it as an uncaught exception

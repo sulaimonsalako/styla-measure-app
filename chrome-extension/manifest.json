@@ -36,6 +36,16 @@
         "content-sync.js"
       ],
       "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content-bridge.js"
+      ],
+      "run_at": "document_start"
     }
   ],
   "icons": {
