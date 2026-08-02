@@ -352,6 +352,11 @@ export function runSizingEngine(user, chart) {
     fit_spectrum: bestOption.spectrum,
     fit_breakdown: bestOption.breakdown,
     explanation: explanation,
-    warning: bestOption.fits ? null : `Warning: Size ${bestOption.name} may be a tight fit.`
+    warning: bestOption.fits ? null : `Warning: Size ${bestOption.name} may be a tight fit.`,
+    // Every size, in chart order, so a widget can show "how each size fits you".
+    candidates: sizes.map((s) => {
+      const c = candidateScores.find((x) => x.name === s.name) || {};
+      return { name: s.name, score: c.score ?? 0, spectrum: c.spectrum || 'ideal', fits: !!c.fits, breakdown: c.breakdown || {} };
+    }),
   };
 }

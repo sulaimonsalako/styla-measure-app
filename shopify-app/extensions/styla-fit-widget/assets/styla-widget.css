@@ -616,3 +616,85 @@
     height: 220px;
   }
 }
+
+/* ============================================================
+   Styla widget — aesthetic + UX enhancement layer (overrides)
+   ============================================================ */
+.styla-modal-overlay { background: rgba(10,10,20,.62); backdrop-filter: blur(6px); padding: 16px; }
+.styla-modal-container {
+  width: min(880px, 96vw);
+  height: min(560px, 92vh);
+  border-radius: 20px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.35);
+  animation: stylaPop .28s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes stylaPop { from { opacity:0; transform: translateY(14px) scale(.98); } to { opacity:1; transform:none; } }
+
+/* Mobile: full-screen sheet */
+@media (max-width: 720px) {
+  .styla-modal-overlay { padding: 0; align-items: stretch; }
+  .styla-modal-container { width: 100vw; height: 100vh; border-radius: 0; }
+  .styla-modal-body { flex-direction: column !important; }
+  .styla-modal-left { min-height: 140px; height: 140px; }
+  .styla-modal-right { flex: 1; }
+}
+
+/* Trigger button — cleaner, brand gradient */
+.styla-fit-btn {
+  background: linear-gradient(135deg,#e11d48,#ff2a75) !important;
+  border-radius: 100px !important; padding: 12px 22px !important;
+  box-shadow: 0 6px 18px rgba(255,42,117,.28) !important; letter-spacing: .01em;
+}
+.styla-fit-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(255,42,117,.4) !important; }
+
+/* Best-option header */
+.styla-best-option-box { border-radius: 14px; }
+.styla-option-val { font-weight: 800; letter-spacing: -.02em; }
+
+/* Fit list rows */
+.styla-text-fit-item {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 10px;
+  padding: 11px 13px; border: 1px solid #eef0f4; border-radius: 12px; margin-bottom: 8px; background:#fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.styla-text-fit-item:hover { border-color:#e2e5ec; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.styla-item-label { font-weight: 600; font-size: 14px; }
+.styla-item-ease { grid-column: 1 / -1; font-size: 12.5px; color:#64748b; }
+.styla-item-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+.styla-item-badge.ok  { background:#e7f8f0; color:#0f7a54; }
+.styla-item-badge.warn{ background:#fdf4e3; color:#9a6b0e; }
+.styla-item-badge.err { background:#fdeaea; color:#b42323; }
+
+/* Size picker pills */
+.styla-size-opt-btn {
+  min-width: 44px; height: 40px; border-radius: 100px; border:1px solid #e2e5ec; background:#fff;
+  font-weight: 700; color:#334155; cursor:pointer; transition: all .15s;
+}
+.styla-size-opt-btn:hover { border-color:#ff2a75; color:#e11d48; }
+.styla-size-opt-btn.active { background: linear-gradient(135deg,#e11d48,#ff2a75); color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(255,42,117,.3); }
+.styla-arrow-btn { border-radius:100px; border:1px solid #e2e5ec; background:#fff; width:36px; height:36px; cursor:pointer; }
+
+/* Intent card */
+.styla-intent-card { background: linear-gradient(180deg,#fff5f8,#fff); border:1px solid #ffd9e6; border-radius:14px; padding:14px 16px; }
+.styla-intent-card p { margin:0; font-size:13.5px; line-height:1.55; color:#4a4a55; }
+
+/* Tabs */
+.styla-tab-btn { font-weight:700; color:#94a3b8; }
+.styla-tab-btn.active { color:#e11d48; }
+.styla-tab-btn.active::after { background: linear-gradient(135deg,#e11d48,#ff2a75) !important; }
+
+/* Chat bubbles */
+.styla-chat-history { padding: 16px; }
+.chat-msg { max-width: 86%; margin-bottom: 10px; }
+.chat-msg p { padding: 10px 14px; border-radius: 16px; font-size: 13.5px; line-height: 1.5; margin:0; }
+.chat-msg.user { margin-left: auto; }
+.chat-msg.user p { background: linear-gradient(135deg,#e11d48,#ff2a75); color:#fff; border-bottom-right-radius: 5px; }
+.chat-msg.system p { background:#f1f3f7; color:#1e293b; border-bottom-left-radius: 5px; }
+.styla-chat-input { border-radius: 100px !important; }
+.styla-chat-send { background: linear-gradient(135deg,#e11d48,#ff2a75) !important; border-radius: 100px !important; }
+
+/* Streaming typing indicator */
+.styla-typing { display:inline-flex; gap:4px; align-items:center; }
+.styla-typing i { width:6px; height:6px; border-radius:50%; background:#c3c9d4; display:inline-block; animation: stylaBlink 1.2s infinite ease-in-out; }
+.styla-typing i:nth-child(2){ animation-delay:.2s; } .styla-typing i:nth-child(3){ animation-delay:.4s; }
+@keyframes stylaBlink { 0%,80%,100%{ opacity:.3; transform:translateY(0);} 40%{ opacity:1; transform:translateY(-3px);} }

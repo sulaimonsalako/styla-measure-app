@@ -1,305 +1,225 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const containers = document.querySelectorAll('.styla-widget-container');
-  
-  containers.forEach(container => {
-    const productId = container.getAttribute('data-product-id');
-    const productTitle = container.getAttribute('data-product-title');
-    const productHandle = container.getAttribute('data-product-handle');
-    const customerId = container.getAttribute('data-customer-id');
-    const blockId = container.id.replace('styla-widget-', '');
-    
-    // Core Elements
-    const triggerBtn = document.getElementById(`styla-trigger-btn-${blockId}`);
-    const modal = document.getElementById(`styla-modal-${blockId}`);
-    const closeBtn = document.getElementById(`styla-close-${blockId}`);
-    const bestSizeValEl = document.getElementById(`styla-best-size-val-${blockId}`);
-    const intentTextEl = document.getElementById(`styla-intent-text-${blockId}`);
-    
-    // Edit Form Elements
-    const editBtn = document.getElementById(`styla-edit-specs-${blockId}`);
-    const cancelFormBtn = document.getElementById(`styla-cancel-specs-${blockId}`);
-    const saveFormBtn = document.getElementById(`styla-save-specs-${blockId}`);
-    const formPanel = document.getElementById(`styla-form-${blockId}`);
-    const detailsBody = document.getElementById(`styla-details-body-${blockId}`);
-    
-    // Form Inputs
-    const inShoulders = document.getElementById(`styla-in-shoulders-${blockId}`);
-    const inChest = document.getElementById(`styla-in-chest-${blockId}`);
-    const inWaist = document.getElementById(`styla-in-waist-${blockId}`);
-    
-    // Size Slider Clicks
-    const sizeBtns = modal.querySelectorAll('.styla-size-opt-btn');
-    const prevBtn = document.getElementById(`styla-prev-size-${blockId}`);
-    const nextBtn = document.getElementById(`styla-next-size-${blockId}`);
-    
-    // Tabs & Chat
-    const tabs = modal.querySelectorAll('.styla-tab-btn');
-    const tabContents = modal.querySelectorAll('.styla-tab-content');
-    const chatHistory = document.getElementById(`styla-chat-history-${blockId}`);
-    const chatInput = document.getElementById(`styla-chat-input-${blockId}`);
-    const chatSend = document.getElementById(`styla-chat-send-${blockId}`);
-    
-    // Default size data
-    const sizeData = {
-      'S': {
-        size: 'S',
-        intent: 'Size S would fit too tight in the chest (-0.5" ease). Recommended to size up for the designer\'s intended fit.',
-        measurements: [
-          { label: 'Shoulders', ease: '-0.2" ease', badge: 'Slightly tight', status: 'warn' },
-          { label: 'Chest', ease: '-0.5" ease', badge: 'Tight', status: 'err' },
-          { label: 'Waist', ease: '+0.4" ease', badge: 'Ideal', status: 'ok' }
-        ]
-      },
-      'M': {
-        size: 'M',
-        intent: 'Designed as a "Relaxed Fit" tee. Size M is the recommended fit because the chest fits comfortably (+3.5" ease).',
-        measurements: [
-          { label: 'Shoulders', ease: '+0.2" ease', badge: 'Ideal', status: 'ok' },
-          { label: 'Chest', ease: '+3.5" ease', badge: 'Ideal', status: 'ok' },
-          { label: 'Waist', ease: '+2.8" ease', badge: 'Slightly loose', status: 'warn' }
-        ]
-      },
-      'L': {
-        size: 'L',
-        intent: 'Size L will look intentionally oversized (+6.0" chest ease). Great if you prefer a very baggy fit.',
-        measurements: [
-          { label: 'Shoulders', ease: '+1.5" ease', badge: 'Slightly loose', status: 'warn' },
-          { label: 'Chest', ease: '+6.0" ease', badge: 'Slightly loose', status: 'warn' },
-          { label: 'Waist', ease: '+5.2" ease', badge: 'Oversized', status: 'warn' }
-        ]
-      }
-    };
+/* Styla Fit Advisor — storefront widget.
+ * Talks to the real Styla engine at styla.ca (CORS-enabled):
+ *   POST /api/widget-size      -> recommended size + every size's fit, from the brand's chart
+ *   POST /api/extension-chat   -> page-aware AI tailor (streamed for speed)
+ * Guests answer a few measurements once (kept in localStorage); logged-in Styla
+ * users get their saved profile. No hardcoded sizing.
+ */
+(function () {
+  var API = 'https://www.styla.ca';
+  var LS_PROFILE = 'styla_widget_profile';
+  var LS_TOKEN = 'styla_widget_token';
 
-    // Product Size Chart specs (T-shirt defaults)
-    const sizeChart = {
-      'S': { shoulders: 16.0, chest: 36.0, waist: 32.0 },
-      'M': { shoulders: 17.5, chest: 40.0, waist: 36.0 },
-      'L': { shoulders: 19.0, chest: 44.0, waist: 40.0 }
-    };
+  function getProfile() { try { return JSON.parse(localStorage.getItem(LS_PROFILE) || 'null'); } catch (e) { return null; } }
+  function setProfile(p) { try { localStorage.setItem(LS_PROFILE, JSON.stringify(p)); } catch (e) {} }
+  function getToken() { try { return localStorage.getItem(LS_TOKEN) || null; } catch (e) { return null; } }
 
-    let activeSizeIndex = 1; // Default to 'M'
-    const sizesArray = ['S', 'M', 'L'];
-    let userRecommendedSize = 'M';
+  function statusFor(text) {
+    var t = (text || '').toLowerCase();
+    if (/too tight|too short|too narrow|tight \(/.test(t)) return 'err';
+    if (/snug|slim|tight collar|cropped/.test(t)) return 'warn';
+    if (/perfect|ideal/.test(t)) return 'ok';
+    if (/relaxed|loose|long|oversized|puddle/.test(t)) return 'warn';
+    return 'ok';
+  }
+  function badgeFor(text) {
+    var t = (text || '').toLowerCase();
+    if (/too tight|too short|too narrow/.test(t)) return 'Too tight';
+    if (/snug|slim/.test(t)) return 'Snug';
+    if (/perfect|ideal/.test(t)) return 'Ideal';
+    if (/relaxed|loose|long/.test(t)) return 'Relaxed';
+    if (/oversized|puddle/.test(t)) return 'Oversized';
+    return 'Good';
+  }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 
-    // Trigger Button Click -> Open Modal
-    triggerBtn.addEventListener('click', () => {
-      modal.classList.remove('styla-hidden');
-      document.body.style.overflow = 'hidden';
-      updateSizeDetails(userRecommendedSize);
-    });
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.styla-widget-container').forEach(function (container) {
+      var d = container.dataset;
+      var blockId = container.id.replace('styla-widget-', '');
+      var el = function (id) { return document.getElementById(id + '-' + blockId); };
 
-    // Close Modal
-    closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
+      var product = {
+        title: d.productTitle || '', type: d.productType || '',
+        url: d.productUrl || '', domain: (d.shopDomain || location.hostname),
+        desc: d.productDesc || ''
+      };
 
-    function closeModal() {
-      modal.classList.add('styla-hidden');
-      document.body.style.overflow = '';
-      hideEditForm();
-    }
+      var modal = document.getElementById('styla-modal-' + blockId);
+      var triggerBtn = document.getElementById('styla-trigger-btn-' + blockId);
+      var closeBtn = document.getElementById('styla-close-' + blockId);
+      var listEl = el('styla-text-list');
+      var intentEl = el('styla-intent-text');
+      var bestValEl = el('styla-best-size-val');
+      var sliderRow = modal.querySelector('.styla-size-options-list');
+      var detailsBody = el('styla-details-body');
+      var formPanel = el('styla-form');
 
-    // Tab Switching
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        
-        tab.classList.add('active');
-        const targetId = tab.getAttribute('data-tab');
-        modal.querySelector(`#${targetId}`).classList.add('active');
+      var STATE = { result: null, activeSize: null, loading: false, chatBusy: false };
+
+      // ---------- open / close ----------
+      triggerBtn.addEventListener('click', function () {
+        modal.classList.remove('styla-hidden');
+        document.body.style.overflow = 'hidden';
+        if (!STATE.result) loadFit();
       });
-    });
+      function close() { modal.classList.add('styla-hidden'); document.body.style.overflow = ''; }
+      closeBtn.addEventListener('click', close);
+      modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
 
-    // Toggle Edit Form
-    editBtn.addEventListener('click', showEditForm);
-    cancelFormBtn.addEventListener('click', hideEditForm);
-
-    function showEditForm() {
-      detailsBody.classList.add('styla-hidden');
-      formPanel.classList.remove('styla-hidden');
-    }
-
-    function hideEditForm() {
-      formPanel.classList.add('styla-hidden');
-      detailsBody.classList.remove('styla-hidden');
-    }
-
-    // Save Form & Run Sizing Engine Calculations (Styla Fit Engine specification)
-    saveFormBtn.addEventListener('click', () => {
-      const sBody = parseFloat(inShoulders.value) || 17.0;
-      const cBody = parseFloat(inChest.value) || 36.0;
-      const wBody = parseFloat(inWaist.value) || 31.0;
-
-      // Evaluate each size
-      sizesArray.forEach(sz => {
-        const specs = sizeChart[sz];
-        const diffShoulders = specs.shoulders - sBody;
-        const diffChest = specs.chest - cBody;
-        const diffWaist = specs.waist - wBody;
-
-        // Calculate badges and status based on Formula 4 Fit Score
-        const shEval = getFitScore(diffShoulders, 0.0); // 0" shoulder design ease
-        const chEval = getFitScore(diffChest, 4.0);      // 4" chest wearing + design ease
-        const waEval = getFitScore(diffWaist, 3.0);      // 3" waist ease
-
-        sizeData[sz].measurements = [
-          { label: 'Shoulders', ease: `${diffShoulders >= 0 ? '+' : ''}${diffShoulders.toFixed(1)}" ease`, badge: shEval.badge, status: shEval.status },
-          { label: 'Chest', ease: `${diffChest >= 0 ? '+' : ''}${diffChest.toFixed(1)}" ease`, badge: chEval.badge, status: chEval.status },
-          { label: 'Waist', ease: `${diffWaist >= 0 ? '+' : ''}${diffWaist.toFixed(1)}" ease`, badge: waEval.badge, status: waEval.status }
-        ];
-
-        // Custom designer intent card text
-        if (diffChest < -1.0) {
-          sizeData[sz].intent = `Size ${sz} is rejected. It will restrict movements and chest breathing (${diffChest.toFixed(1)}" ease).`;
-        } else if (diffChest <= 0.5) {
-          sizeData[sz].intent = `Size ${sz} is a snug, tailored fit. Ideal if you prefer a close body fit with minimal drape.`;
-        } else if (diffChest <= 4.0) {
-          sizeData[sz].intent = `Size ${sz} matches the designer's intent. Provides comfortable wearing ease without feeling loose.`;
-        } else {
-          sizeData[sz].intent = `Size ${sz} is a relaxed, oversized look on your body profile (+${diffChest.toFixed(1)}" ease).`;
-        }
+      // ---------- tabs ----------
+      modal.querySelectorAll('.styla-tab-btn').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          modal.querySelectorAll('.styla-tab-btn').forEach(function (t) { t.classList.remove('active'); });
+          modal.querySelectorAll('.styla-tab-content').forEach(function (c) { c.classList.remove('active'); });
+          tab.classList.add('active');
+          document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+        });
       });
 
-      // Sizing logic recommendation: find smallest size that comfortably fits chest and shoulders (Category A constraints)
-      let recommended = 'L'; // Fallback
-      if (sizeChart['S'].shoulders - sBody >= -1.0 && sizeChart['S'].chest - cBody >= -1.0) {
-        recommended = 'S';
-      } else if (sizeChart['M'].shoulders - sBody >= -1.0 && sizeChart['M'].chest - cBody >= -1.0) {
-        recommended = 'M';
+      // ---------- fetch the real fit ----------
+      async function loadFit() {
+        var profile = getProfile(), token = getToken();
+        if (!profile && !token) { showForm(true); return; }
+        setLoading(true);
+        try {
+          var body = { domain: product.domain, productUrl: product.url, category: mapType(product.type) };
+          if (token) body.accessToken = token; else body.profile = profile;
+          var r = await fetch(API + '/api/widget-size', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+          });
+          var data = await r.json();
+          if (!data || !data.size) { renderNoChart(); return; }
+          STATE.result = data;
+          STATE.activeSize = data.size;
+          renderFit();
+        } catch (e) { renderError(); } finally { setLoading(false); }
       }
 
-      userRecommendedSize = recommended;
-      activeSizeIndex = sizesArray.indexOf(userRecommendedSize);
+      // Rough Shopify product.type -> Styla measurement category.
+      function mapType(t) {
+        t = (t || '').toLowerCase();
+        if (/dress|gown/.test(t)) return 'dresses';
+        if (/suit|blazer|tux/.test(t)) return 'suits';
+        if (/jean|pant|trouser|chino/.test(t)) return 'pants';
+        if (/short/.test(t)) return 'shorts';
+        if (/legging/.test(t)) return 'leggings';
+        if (/skirt/.test(t)) return 'skirts';
+        if (/coat|jacket|outerwear|parka/.test(t)) return 'outerwear';
+        if (/bra|lingerie/.test(t)) return 'bras';
+        if (/swim|bikini/.test(t)) return 'swimwear';
+        return 'tops';
+      }
 
-      hideEditForm();
-      updateSizeDetails(userRecommendedSize);
+      // ---------- render ----------
+      function renderFit() {
+        var res = STATE.result;
+        var cands = res.candidates || [{ name: res.size, spectrum: res.spectrum, breakdown: res.breakdown, fits: res.fits }];
+        sliderRow.innerHTML = cands.map(function (c) {
+          return '<button type="button" class="styla-size-opt-btn' + (c.name === STATE.activeSize ? ' active' : '') +
+            '" data-size="' + c.name + '">' + c.name + '</button>';
+        }).join('');
+        sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
+          b.addEventListener('click', function () { STATE.activeSize = b.getAttribute('data-size'); renderSize(STATE.activeSize); });
+        });
+        renderSize(STATE.activeSize);
+      }
+      function renderSize(sizeName) {
+        var res = STATE.result;
+        var cands = res.candidates || [];
+        var c = cands.find(function (x) { return x.name === sizeName; }) ||
+                { name: sizeName, spectrum: res.spectrum, breakdown: res.breakdown, fits: res.fits };
+        bestValEl.textContent = res.size + (sizeName !== res.size ? ' → ' + sizeName : '');
+        var bk = c.breakdown || {};
+        var keys = Object.keys(bk);
+        listEl.innerHTML = keys.length ? keys.map(function (k) {
+          var txt = bk[k];
+          return '<li class="styla-text-fit-item"><span class="styla-item-label">' + cap(k) +
+            '</span><span class="styla-item-badge ' + statusFor(txt) + '">' + badgeFor(txt) +
+            '</span><span class="styla-item-ease">' + txt + '</span></li>';
+        }).join('') : '<li class="styla-text-fit-item"><span class="styla-item-ease">No overlapping measurements to compare on this chart.</span></li>';
+        var verb = (sizeName === res.size)
+          ? 'Your best fit — ' + cap(c.spectrum || res.spectrum) + '.'
+          : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
+        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.');
+        sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-size') === sizeName);
+        });
+      }
+      function renderNoChart() {
+        listEl.innerHTML = '';
+        intentEl.textContent = 'We don’t have this brand’s size chart yet, so we can’t compute your size here. Try the AI Tailor tab.';
+        bestValEl.textContent = '—';
+      }
+      function renderError() { intentEl.textContent = 'Something went wrong reaching Styla. Please try again in a moment.'; }
+      function setLoading(on) {
+        STATE.loading = on;
+        if (on) { bestValEl.textContent = '…'; intentEl.textContent = 'Matching this garment to your measurements…'; listEl.innerHTML = ''; }
+      }
+
+      // ---------- guest measurement form ----------
+      var editBtn = el('styla-edit-specs'), cancelBtn = el('styla-cancel-specs'), saveBtn = el('styla-save-specs');
+      function showForm(first) { formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) intentEl.textContent = ''; }
+      function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
+      if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
+      if (cancelBtn) cancelBtn.addEventListener('click', hideForm);
+      if (saveBtn) saveBtn.addEventListener('click', function () {
+        var chest = parseFloat((el('styla-in-chest') || {}).value);
+        var waist = parseFloat((el('styla-in-waist') || {}).value);
+        var shoulder = parseFloat((el('styla-in-shoulders') || {}).value);
+        if (!chest || !waist) return;
+        setProfile({ chest: chest, waist: waist, belly: waist, hips: waist + 4, shoulder: shoulder || undefined });
+        hideForm();
+        STATE.result = null; loadFit();
+      });
+
+      // ---------- AI Tailor chat (streamed) ----------
+      var chatHistory = el('styla-chat-history'), chatInput = el('styla-chat-input'), chatSend = el('styla-chat-send');
+      var CHAT = [];
+      function bubble(cls) {
+        var b = document.createElement('div'); b.className = 'chat-msg ' + cls;
+        var p = document.createElement('p'); b.appendChild(p);
+        chatHistory.appendChild(b); chatHistory.scrollTop = chatHistory.scrollHeight; return p;
+      }
+      async function sendChat() {
+        var q = (chatInput.value || '').trim(); if (!q || STATE.chatBusy) return;
+        chatInput.value = '';
+        bubble('user').textContent = q;
+        CHAT.push({ role: 'user', text: q });
+        var out = bubble('system'); out.innerHTML = '<span class="styla-typing"><i></i><i></i><i></i></span>';
+        STATE.chatBusy = true;
+        var profile = getProfile(), token = getToken();
+        var payload = {
+          stream: true, recommendedSize: STATE.result ? STATE.result.size : null,
+          pageTitle: product.title, pageText: product.desc,
+          sizeChart: STATE.result ? { sizes: (STATE.result.candidates || []) } : null,
+          history: CHAT
+        };
+        if (token) payload.accessToken = token;
+        else if (profile) { payload.chest = profile.chest; payload.waist = profile.waist; payload.belly = profile.belly || profile.waist; payload.hips = profile.hips; payload.shoulder = profile.shoulder; }
+        else { payload.chest = 38; payload.waist = 31; payload.belly = 31; payload.hips = 40; }
+        try {
+          var r = await fetch(API + '/api/extension-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (r.body && r.body.getReader) {
+            var reader = r.body.getReader(), decr = new TextDecoder(), acc = '';
+            out.textContent = '';
+            while (true) {
+              var chunk = await reader.read();
+              if (chunk.done) break;
+              acc += decr.decode(chunk.value, { stream: true });
+              out.textContent = acc;
+              chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+            CHAT.push({ role: 'model', text: acc });
+          } else {
+            var data = await r.json(); var reply = (data && (data.reply || data.error)) || '…';
+            out.textContent = reply; CHAT.push({ role: 'model', text: reply });
+          }
+        } catch (e) { out.textContent = 'Sorry — I couldn’t answer just now. Try again?'; }
+        STATE.chatBusy = false;
+      }
+      if (chatSend) chatSend.addEventListener('click', sendChat);
+      if (chatInput) chatInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendChat(); });
     });
-
-    // Helper to evaluate Fit Score according to rulebook thresholds
-    function getFitScore(diff, reqEase) {
-      const actualEase = diff;
-      const deviation = actualEase - reqEase;
-
-      if (actualEase < -1.0) {
-        return { badge: 'Tight', status: 'err' };
-      } else if (actualEase < -0.25) {
-        return { badge: 'Snug', status: 'warn' };
-      } else if (Math.abs(deviation) <= 0.5) {
-        return { badge: 'Ideal', status: 'ok' };
-      } else if (deviation > 0.5 && deviation <= 2.5) {
-        return { badge: 'Slightly loose', status: 'ok' };
-      } else {
-        return { badge: 'Loose', status: 'warn' };
-      }
-    }
-
-    // Handle Size Option Button Clicks
-    sizeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sizeSelected = btn.getAttribute('data-size');
-        activeSizeIndex = sizesArray.indexOf(sizeSelected);
-        updateSizeDetails(sizeSelected);
-      });
-    });
-
-    // Next/Prev Buttons
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        if (activeSizeIndex > 0) {
-          activeSizeIndex--;
-          updateSizeDetails(sizesArray[activeSizeIndex]);
-        }
-      });
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        if (activeSizeIndex < sizesArray.length - 1) {
-          activeSizeIndex++;
-          updateSizeDetails(sizesArray[activeSizeIndex]);
-        }
-      });
-    }
-
-    function updateSizeDetails(size) {
-      // 1. Update active button class
-      sizeBtns.forEach(btn => {
-        if (btn.getAttribute('data-size') === size) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-
-      const data = sizeData[size];
-      if (!data) return;
-
-      // 2. Update Best Option Value text
-      if (bestSizeValEl) {
-        bestSizeValEl.textContent = data.size;
-      }
-
-      // 3. Update Description Card
-      if (intentTextEl) {
-        intentTextEl.textContent = data.intent;
-      }
-
-      // 4. Update Text Sizing List
-      const listEl = document.getElementById(`styla-text-list-${blockId}`);
-      if (listEl) {
-        listEl.innerHTML = data.measurements.map(m => `
-          <li class="styla-text-fit-item">
-            <span class="styla-item-label">${m.label}</span>
-            <span class="styla-item-badge ${m.status}">${m.badge}</span>
-            <span class="styla-item-ease">${m.ease}</span>
-          </li>
-        `).join('');
-      }
-    }
-
-    // AI Tailor Chat Interaction
-    chatSend.addEventListener('click', handleChatSubmit);
-    chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleChatSubmit();
-    });
-
-    function appendMessage(text, type) {
-      const bubble = document.createElement('div');
-      bubble.className = `chat-msg ${type}`;
-      bubble.innerHTML = `<p>${text}</p>`;
-      chatHistory.appendChild(bubble);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-    }
-
-    function handleChatSubmit() {
-      const query = chatInput.value.trim();
-      if (!query) return;
-      
-      appendMessage(query, 'user');
-      chatInput.value = '';
-      
-      setTimeout(() => {
-        const response = generateAIResponse(query);
-        appendMessage(response, 'system');
-      }, 700);
-    }
-
-    function generateAIResponse(msg) {
-      const text = msg.toLowerCase();
-      
-      if (text.includes('waist') || text.includes('gap')) {
-        return `Based on your digital twin, Size M is correct because of your chest size. However, you will have about **+2.8" ease** at the waist. If you normally get a waist gap in trousers/tops, it will sit loosely here. This is a design feature for a relaxed silhouette.`;
-      }
-      if (text.includes('stretch') || text.includes('elastic') || text.includes('fabric')) {
-        return `This garment is made of 100% rigid organic cotton with **0% elastane stretch**. Because it is a rigid woven fabric, we have allowed for a generous **+3.5" chest ease** to guarantee comfortable movement and breathing.`;
-      }
-      if (text.includes('shrink') || text.includes('wash')) {
-        return `This fabric is pre-shrunk, but raw cotton can still shrink about 1-2% if washed in warm water. We recommend cold wash and air drying. Our sizing recommendation takes this slight shrinkage tolerance into account!`;
-      }
-      
-      return `As your STYLA AI Tailor, I recommend sticking to the calculated size. It balances your shoulders and chest requirements. Let me know if you want to compare it with any specific sizing constraints!`;
-    }
   });
-});
+})();

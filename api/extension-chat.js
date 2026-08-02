@@ -7,6 +7,11 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  // CORS — the widget runs on the merchant's storefront domain (Shopify/Woo/custom).
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -222,11 +227,48 @@ User message: ${msgText}`;
       },
       contents: contents,
       generationConfig: {
-        temperature: 0.1
+        temperature: 0.1,
+        maxOutputTokens: 400   // keep answers tight -> faster
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    // FAST PATH: stream tokens to the client as they're generated (feels instant).
+    // flash-lite is materially quicker for short fit answers.
+    const MODEL = 'gemini-2.5-flash-lite';
+    if (req.body && req.body.stream) {
+      try {
+        const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiPayload)
+        });
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        const reader = gRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let nl;
+          while ((nl = buf.indexOf('\n')) >= 0) {
+            const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+            if (!line.startsWith('data:')) continue;
+            const json = line.slice(5).trim();
+            if (json === '[DONE]') continue;
+            try {
+              const t = JSON.parse(json)?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (t) res.write(t);
+            } catch (e) {}
+          }
+        }
+        return res.end();
+      } catch (e) {
+        console.error('stream failed, falling back to full response:', e.message);
+        // fall through to the non-streaming path below
+      }
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(geminiPayload)
