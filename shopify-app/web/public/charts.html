@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Styla — Size Charts</title>
+<style>
+:root{--bg:#f6f6f8;--card:#fff;--line:#e3e5ea;--text:#1e2330;--muted:#5f6672;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--green:#0f7a54;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;}
+body{background:var(--bg);color:var(--text);padding:22px;}
+.wrap{max-width:820px;margin:0 auto;}
+h1{font-size:1.4rem;margin-bottom:4px;}
+.sub{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+.card h2{font-size:1.05rem;margin-bottom:10px;}
+label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px;font-weight:600;}
+select,input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.92rem;background:#fff;color:var(--text);}
+select:focus,input:focus{outline:none;border-color:var(--pink);}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.hint{color:var(--muted);font-size:.78rem;}
+.drop{margin-top:14px;border:1.5px dashed var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center;cursor:pointer;background:#fafbfc;}
+.drop:hover{border-color:var(--pink);}
+.drop .big{font-size:1.5rem;}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.86rem;}
+th{text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;padding:6px 6px;}
+td{padding:3px 4px;}
+td input{padding:7px 8px;}
+.btn{border:none;border-radius:100px;padding:11px 20px;font-weight:700;font-size:.9rem;cursor:pointer;}
+.btn-primary{background:var(--grad);color:#fff;}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--text);}
+.btn-sm{padding:7px 13px;font-size:.82rem;}
+.msg{font-size:.85rem;margin-top:10px;min-height:1em;}
+.chartrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);}
+.badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:100px;background:#eef0f4;color:var(--muted);text-transform:capitalize;}
+.badge.v{background:#e7f8f0;color:var(--green);}
+.empty{color:var(--muted);font-size:.88rem;padding:8px 0;}
+.warn{background:#fdf4e3;border:1px solid #f0d9a0;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#8a5a00;margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Your size charts</h1>
+  <p class="sub" id="shopline">Add your size guide once — Styla uses it to give every shopper their correct size and to answer fit questions on your product pages.</p>
+
+  <div class="card">
+    <h2>Add / update a size chart</h2>
+    <div class="row3">
+      <div><label>Category</label><select id="cat"></select></div>
+      <div><label>Sub-tag <span class="hint">(optional)</span></label><input id="sub" placeholder="e.g. slim, denim"/></div>
+      <div><label>Fit for</label><select id="gender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
+    </div>
+    <div id="includes" class="hint" style="margin-top:6px"></div>
+
+    <div class="drop" id="drop">
+      <span class="big">📷</span>
+      <div style="flex:1"><b>Paste a screenshot of your size chart (Ctrl/⌘+V), drop an image, or click to upload.</b>
+        <div class="hint">Our AI reads it and fills the table below — review, then save. Centimeters convert to inches automatically.</div></div>
+      <span id="aimsg" class="hint"></span>
+      <input type="file" id="file" accept="image/*,.pdf" style="display:none"/>
+    </div>
+
+    <table>
+      <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <button class="btn btn-ghost btn-sm" id="addRow" style="margin-top:8px">+ Add size</button>
+
+    <div id="chartWarn" class="warn" style="display:none"></div>
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+      <button class="btn btn-primary" id="save">Save chart</button>
+      <span class="msg" id="saveMsg"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Charts you've added</h2>
+    <div id="list"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
+<script>
+var STYLA='https://www.styla.ca';
+var SHOP=new URLSearchParams(location.search).get('shop')||'';
+document.getElementById('shopline').textContent = SHOP ? ('Store: '+SHOP+' — add your size guide once and every shopper gets their correct size.') : 'Open this from your Shopify admin (Styla app) so we know your store.';
+var TAX=[
+ {slug:'tops',label:'Tops',inc:'T-shirts, shirts, knitwear'},{slug:'outerwear',label:'Outerwear',inc:'Jackets, coats, blazers'},
+ {slug:'suits',label:'Suits',inc:'Suits, tuxedos'},{slug:'pants',label:'Pants',inc:'Trousers, jeans, chinos'},
+ {slug:'skirts',label:'Skirts',inc:'Mini, midi, maxi'},{slug:'shorts',label:'Shorts',inc:'Denim, tailored, athletic'},
+ {slug:'leggings',label:'Leggings',inc:'Full-length, capri'},{slug:'dresses',label:'Dresses',inc:'Everyday, cocktail, formal'},
+ {slug:'jumpsuits',label:'Jumpsuits',inc:'Jumpsuits, rompers'},{slug:'bridal',label:'Bridal',inc:'Wedding gowns'},
+ {slug:'bridesmaid',label:'Bridesmaid',inc:'Bridesmaid dresses'},{slug:'bras',label:'Bras',inc:'Band + cup'},
+ {slug:'shapewear',label:'Shapewear',inc:'Bodysuits, slips'},{slug:'swimwear',label:'Swimwear',inc:'One-piece, bikini'}
+];
+var MCOLS=['chest','waist','hips','inseam'];
+document.getElementById('cat').innerHTML=TAX.map(function(c){return '<option value="'+c.slug+'">'+c.label+'</option>';}).join('');
+function updInc(){var c=TAX.filter(function(x){return x.slug===document.getElementById('cat').value;})[0];document.getElementById('includes').textContent=c?('Includes: '+c.inc):'';}
+document.getElementById('cat').addEventListener('change',updInc);updInc();
+
+function el(id){return document.getElementById(id);}
+function fmt(v){return Array.isArray(v)?v.join('-'):(v==null?'':v);}
+function addRow(s){s=s||{};var tr=document.createElement('tr');
+  tr.innerHTML='<td><input value="'+(s.name||'')+'" placeholder="M"/></td>'+MCOLS.map(function(k){return '<td><input value="'+fmt(s[k])+'" placeholder="—"/></td>';}).join('')+'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+  el('rows').appendChild(tr);}
+el('addRow').addEventListener('click',function(){addRow();});
+addRow();addRow();addRow();
+
+function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
+var POM=[['inseam','inseam'],['bust','chest'],['chest','chest'],['seat','hips'],['hip','hips'],['waist','waist']];
+function mapPom(n){n=(n||'').toLowerCase().trim();for(var i=0;i<POM.length;i++)if(n.indexOf(POM[i][0])>-1)return POM[i][1];return null;}
+
+// paste / drop / upload -> parse on styla.ca
+async function parseFile(file){if(!file)return;var m=el('aimsg');m.textContent='Reading your chart…';
+  try{var d=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(file);});
+    var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData:d,mimeType:file.type||'image/png'})});
+    var j=await resp.json();if(j.error)throw new Error(j.error);
+    el('rows').innerHTML='';var cols={};
+    (j.sizes||[]).forEach(function(name){var src=(j.sizeChart||{})[name]||{};var row={name:String(name)};
+      Object.keys(src).forEach(function(p){var k=mapPom(p);if(k&&src[p]!=null&&src[p]!==''){row[k]=src[p];cols[k]=1;}});addRow(row);});
+    m.style.color='';m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+Object.keys(cols).length+' measurements — review, then save.';
+  }catch(e){m.textContent='Could not read that: '+(e.message||e);}}
+el('drop').addEventListener('click',function(e){if(e.target.id!=='file')el('file').click();});
+el('file').addEventListener('change',function(){parseFile(this.files[0]);this.value='';});
+el('drop').addEventListener('dragover',function(e){e.preventDefault();});
+el('drop').addEventListener('drop',function(e){e.preventDefault();parseFile((e.dataTransfer.files||[])[0]);});
+document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){parseFile(it[i].getAsFile());break;}});
+
+function collectSizes(){var sizes=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=ins[0].value.trim();if(!name)return;var row={name:name};MCOLS.forEach(function(k,i){var v=parseVal(ins[i+1].value);if(v!==undefined)row[k]=v;});sizes.push(row);});return sizes;}
+function validate(sizes){var w=[];var num=function(x){return Array.isArray(x)?(x[0]+x[1])/2:x;};
+  if(!sizes.some(function(s){return ['chest','waist','hips','inseam'].some(function(k){return s[k]!=null;});}))w.push('No measurements found — add at least chest/waist/hips so we can size shoppers.');
+  sizes.forEach(function(s){if(s.chest!=null&&s.waist!=null&&num(s.chest)<num(s.waist))w.push('Size “'+s.name+'”: chest is smaller than waist — check the values.');});
+  return w;}
+var pending=false;
+el('save').addEventListener('click',async function(){
+  var msg=el('saveMsg');var sizes=collectSizes();
+  if(!sizes.length){msg.style.color='#c0392b';msg.textContent='Add at least one size.';return;}
+  var warns=validate(sizes);var wbox=el('chartWarn');
+  if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
+  wbox.style.display='none';this.textContent='Save chart';pending=false;
+  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',sizes:sizes};
+  msg.style.color='';msg.textContent='Saving…';
+  try{var r=await fetch('/api/merchant/charts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
+    var d=await r.json();if(d.error)throw new Error(d.error);
+    msg.style.color='var(--green)';msg.textContent='✓ Saved! Shoppers now get their size in your '+el('cat').value+'.';loadCharts();
+  }catch(e){msg.style.color='#c0392b';msg.textContent=e.message||'Save failed.';}
+});
+
+async function loadCharts(){var box=el('list');
+  try{var r=await fetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
+    if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';return;}
+    var charts=d.charts||[];if(!charts.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
+    box.innerHTML=charts.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
+      return '<div class="chartrow"><span class="badge">'+(c.category||'—')+'</span>'+(c.subcategory?'<span class="badge">'+c.subcategory+'</span>':'')+'<span class="badge">'+(c.gender||'—')+'</span>'
+        +'<span class="badge '+(c.verified?'v':'')+'">'+(c.verified?'✓ verified':'live')+'</span>'
+        +'<span class="hint" style="flex:1">'+n+' sizes</span>'
+        +'<button class="btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
+  }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
+window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await fetch('/api/merchant/delete-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
+loadCharts();
+</script>
+</body>
+</html>

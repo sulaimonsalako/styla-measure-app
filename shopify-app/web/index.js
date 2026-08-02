@@ -517,6 +517,83 @@ app.post('/api/size-chart', async (req, res) => {
   res.json({ success: true, data });
 });
 
+// ----------------------------------------------------
+// 5. Merchant self-service: manage size charts (writes into Styla's real
+//    brands/size_charts so the storefront widget + AI use them immediately).
+// ----------------------------------------------------
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/charts', (req, res) => res.sendFile(path.join(__dirname, 'public', 'charts.html')));
+
+async function shopInstalled(shop) {
+  if (!shop) return false;
+  const { data } = await supabase.from('merchant_sessions').select('shop').eq('shop', shop).maybeSingle();
+  return !!data;
+}
+// A connected shop maps to a Styla brand keyed by its domain, so widget-size
+// resolves this store's charts by domain with no extra config.
+async function ensureBrandForShop(shop) {
+  const domain = String(shop || '').toLowerCase();
+  if (!domain) return null;
+  let { data: brand } = await supabase.from('brands').select('id').eq('domain', domain).maybeSingle();
+  if (!brand) {
+    const name = domain.replace('.myshopify.com', '');
+    const { data: created, error } = await supabase.from('brands').insert({ name, domain }).select('id').single();
+    if (error) throw error;
+    brand = created;
+  }
+  return brand ? brand.id : null;
+}
+
+app.get('/api/merchant/charts', async (req, res) => {
+  try {
+    const shop = String(req.query.shop || '').toLowerCase();
+    if (!(await shopInstalled(shop))) return res.status(401).json({ error: 'Shop not connected — install the Styla app first.' });
+    const brandId = await ensureBrandForShop(shop);
+    const { data: charts } = await supabase.from('size_charts')
+      .select('id, category, subcategory, gender, chart_data, verified, is_default, created_at')
+      .eq('brand_id', brandId).order('created_at', { ascending: false });
+    res.json({ shop, brandId, charts: charts || [] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/merchant/charts', async (req, res) => {
+  try {
+    const { shop, id, category, subcategory, gender, chart_data, is_default } = req.body || {};
+    const s = String(shop || '').toLowerCase();
+    if (!(await shopInstalled(s))) return res.status(401).json({ error: 'Shop not connected.' });
+    if (!category || !chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Category and at least one size are required.' });
+    const brandId = await ensureBrandForShop(s);
+    const row = {
+      brand_id: brandId, category, subcategory: subcategory || null, gender: gender || 'unisex',
+      chart_data, is_default: is_default !== false, source: 'brand', verified: false,
+    };
+    if (id) {
+      await supabase.from('size_charts').update(row).eq('id', id).eq('brand_id', brandId);
+    } else {
+      // manual upsert on (brand, category, gender, subcategory)
+      let q = supabase.from('size_charts').select('id')
+        .eq('brand_id', brandId).eq('category', category).eq('gender', row.gender);
+      q = row.subcategory ? q.eq('subcategory', row.subcategory) : q.is('subcategory', null);
+      const { data: existing } = await q.maybeSingle();
+      if (existing) await supabase.from('size_charts').update(row).eq('id', existing.id);
+      else await supabase.from('size_charts').insert(row);
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/merchant/delete-chart', async (req, res) => {
+  try {
+    const { shop, id } = req.body || {};
+    const s = String(shop || '').toLowerCase();
+    if (!(await shopInstalled(s))) return res.status(401).json({ error: 'Shop not connected.' });
+    const brandId = await ensureBrandForShop(s);
+    await supabase.from('size_charts').delete().eq('id', id).eq('brand_id', brandId);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`STYLA Shopify App Server is booting on port ${PORT}`);
