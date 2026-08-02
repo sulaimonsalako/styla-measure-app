@@ -712,3 +712,13 @@
 .styla-shopfor { display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:12px; background:#f7f8fb; border:1px solid #eef0f4; border-radius:12px; }
 .styla-shopfor-lbl { font-size:13px; font-weight:600; color:#334155; white-space:nowrap; }
 .styla-shopfor-sel { flex:1; border:1px solid #e2e5ec; border-radius:10px; padding:8px 10px; font-size:13.5px; background:#fff; }
+
+/* Constrain the trigger button so themes can't blow it up to full width */
+.styla-widget-container { display: inline-block !important; width: auto !important; }
+.styla-fit-btn {
+  width: auto !important; max-width: max-content !important; display: inline-flex !important;
+  font-size: 14px !important; line-height: 1 !important; white-space: nowrap !important;
+  padding: 11px 18px !important; gap: 8px !important;
+}
+.styla-btn-icon { width: 18px !important; height: 18px !important; flex: 0 0 18px !important; }
+.styla-btn-text { font-size: 14px !important; font-weight: 600 !important; }
