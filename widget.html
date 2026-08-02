@@ -57,6 +57,21 @@
     .chatin{display:flex;gap:8px;}
     .chatin input{flex:1;}
     .chatin button{background:var(--grad);border:none;color:#fff;border-radius:10px;padding:0 16px;font-weight:700;cursor:pointer;font-family:var(--body);font-size:0.85rem;}
+    /* ---- polish layer ---- */
+    body{padding:clamp(1rem,4vw,1.6rem);}
+    .sizebox{background:radial-gradient(120% 120% at 50% 0%,rgba(255,42,117,.10),transparent 60%),var(--card);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:pop .3s cubic-bezier(.2,.8,.2,1);}
+    @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+    #shopfor{margin-bottom:.9rem;} #shopfor select{margin-top:.35rem;}
+    /* fit spectrum bar */
+    .specbar{height:6px;border-radius:4px;background:linear-gradient(90deg,#5b8def,#34d399,#fbbf24,#e11d48);position:relative;margin:.2rem 0 .3rem;opacity:.9;}
+    .specbar i{position:absolute;top:-4px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transform:translateX(-50%);transition:left .3s;}
+    .specscale{display:flex;justify-content:space-between;font-size:.66rem;color:var(--dim);}
+    /* streaming typing dots */
+    .typing{display:inline-flex;gap:4px;align-items:center;}
+    .typing i{width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;animation:blink 1.2s infinite ease-in-out;}
+    .typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}
+    @keyframes blink{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
+    .chip{transition:border-color .15s,color .15s;}
   </style>
 </head>
 <body>
@@ -165,6 +180,7 @@
 
     var state={gender:GENDER,hips:'regular',chest:'regular'};
     var lastProfile=null;
+    var SHOPFOR={ token:null, people:[], activeOwnerId:null }; // "shop for someone you share with"
     var MEAS=null;      // measurements for the fit chat
     var CHAT=[];        // chat history (Gemini format)
 
@@ -235,15 +251,18 @@
       MEAS = res.measurements || lastProfile || {};
       CHAT = [];
       var pct=res.score!=null?res.score+'% fit':'';
-      var spec = res.spectrum ? '<div class="spectrum">Fit read: <b>'+res.spectrum+'</b></div>' : '';
+      var pos=({tight:8,slim:22,ideal:48,relaxed:72,oversized:92})[res.spectrum]!=null?({tight:8,slim:22,ideal:48,relaxed:72,oversized:92})[res.spectrum]:48;
+      var spec = res.spectrum ? '<div class="specbar"><i style="left:'+pos+'%"></i></div><div class="specscale"><span>snug</span><span>ideal</span><span>relaxed</span></div><div class="spectrum" style="margin-top:.5rem">Fit read: <b>'+res.spectrum+'</b></div>' : '';
       if(res.note) spec += '<div class="spectrum" style="font-size:0.78rem;color:var(--dim)">'+res.note+'</div>';
       var chips = ['Does it run small?',"I'm between sizes",'How does the fabric fit?']
         .map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
       var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
         +'<div class="chatlog" id="chatlog"></div>'
         +'<div class="chatin"><input id="chatin" placeholder="Ask about the fit…" onkeydown="if(event.key===&quot;Enter&quot;)sendChat()" /><button onclick="sendChat()">Ask</button></div></div>';
-      var html='<h2>Your size'+(BRAND?(' in '+BRAND):'')+'</h2>'
-        +'<div class="sizebox"><div class="lbl">Recommended size</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
+      var whoLabel = SHOPFOR.activeOwnerId ? ' for '+((SHOPFOR.people.find(function(p){return p.owner_id===SHOPFOR.activeOwnerId;})||{}).owner_email||'them') : '';
+      var html='<h2>'+(SHOPFOR.activeOwnerId?'Their size':'Your size')+(BRAND?(' in '+BRAND):'')+'</h2>'
+        +'<div id="shopfor"></div>'
+        +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel+'</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
         + spec + chat;
       if(guest){
         html+='<p class="sub">Save this and see every other brand that fits you — free.</p>'
@@ -258,7 +277,53 @@
           +'<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
       }
       el('result-body').innerHTML=html;
+      setTimeout(populateShopFor, 0);
     }
+
+    // ---- Shop for someone who shares their size with you ----
+    async function currentToken(){
+      var x=lastExtra||{};
+      if(x.accessToken) return x.accessToken;
+      try{ var s=await sb.auth.getSession(); if(s.data.session) return s.data.session.access_token; }catch(e){}
+      return null;
+    }
+    async function conn(action, body){
+      return (await fetch('/api/store-api?route=connections',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+SHOPFOR.token},
+        body:JSON.stringify(Object.assign({action:action}, body||{}))})).json();
+    }
+    async function populateShopFor(){
+      var host=el('shopfor'); if(!host) return;
+      var token=await currentToken(); if(!token) return; // only for signed-in shoppers
+      SHOPFOR.token=token;
+      try{
+        var d=await conn('list');
+        var people=(d.sharedWithMe||[]);
+        if(!people.length) return;
+        SHOPFOR.people=people;
+        host.innerHTML='<label style="margin-top:0">🛍️ Shopping for</label>'
+          +'<select id="shopforSel" onchange="shopForChange(this.value)"><option value="me">Me</option>'
+          + people.map(function(p){return '<option value="'+p.owner_id+'">'+(p.owner_email||'Someone')+(p.relationship?(' · '+p.relationship):'')+'</option>';}).join('')
+          + '</select>';
+        el('shopforSel').value = SHOPFOR.activeOwnerId || 'me';
+      }catch(e){}
+    }
+    window.shopForChange=async function(ownerId){
+      SHOPFOR.activeOwnerId = (ownerId==='me') ? null : ownerId;
+      el('result-body').innerHTML='<div class="loader">Getting the right size…</div>';
+      var extra;
+      if(!SHOPFOR.activeOwnerId){
+        extra = lastExtra || { accessToken: SHOPFOR.token };
+      } else {
+        try{
+          var d=await conn('get-profile',{ownerId:SHOPFOR.activeOwnerId});
+          var pr=d.profile||{};
+          extra={chest:pr.chest,waist:pr.waist,belly:pr.belly||pr.waist,hips:pr.hips,shoulder:pr.shoulder,height:pr.height,inseam:pr.inseam};
+        }catch(e){ extra=lastExtra; }
+      }
+      if(DECODE){ lastExtra=extra; decode(extra); }
+      else { var res=await callSize(extra.accessToken?{accessToken:extra.accessToken}:{profile:extra}); showResult(res, false); }
+    };
 
     async function createAccount(){
       var email=el('ac-email').value.trim();var pass=el('ac-pass').value;var msg=el('ac-msg');
@@ -322,8 +387,8 @@
     };
     function renderChat(typing){
       var log=el('chatlog'); if(!log) return;
-      var html=CHAT.map(function(mm){var who=mm.role==='user'?'u':'a';return '<div class="bubble '+who+'">'+mm.parts[0].text+'</div>';}).join('');
-      if(typing) html+='<div class="bubble a">…</div>';
+      var html=CHAT.map(function(mm){var who=mm.role==='user'?'u':'a';return '<div class="bubble '+who+'">'+(mm.parts[0].text||'')+'</div>';}).join('');
+      if(typing) html+='<div class="bubble a"><span class="typing"><i></i><i></i><i></i></span></div>';
       log.innerHTML=html; log.scrollTop=log.scrollHeight;
     }
 
@@ -369,17 +434,39 @@
       }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
     }
 
-    // No chart on the page: guide the user to open the store's size guide, then re-read.
-    function renderNoChart(){
-      var idx = DOMAIN ? '<button class="btn btn-ghost" style="margin-top:0.7rem" onclick="useIndexChart()">Use this brand’s official chart from Styla instead</button>' : '';
+    // No chart on the page: guide the user to open the store's size guide, then re-read,
+    // OR let them upload a screenshot of the chart, OR use our indexed chart.
+    window.renderNoChart=function(){
+      var idx = DOMAIN ? '<button class="btn btn-ghost" onclick="useIndexChart()">Use this brand’s official chart from Styla</button>' : '';
       el('result-body').innerHTML =
         '<h2>One quick step 📖</h2>'
-        + '<p class="sub">We couldn’t see a size chart on this page yet. Most stores hide it behind a link.</p>'
-        + '<p class="sub"><b style="color:var(--white)">Find the “Size guide” or “Size chart” link</b> — usually next to the size options — open it so the chart is on screen, then tap below.</p>'
-        + '<button class="btn btn-primary" onclick="reReadPage()">I opened it — read the chart</button>'
+        + '<p class="sub">We couldn’t see a size chart on this page. Do any of these:</p>'
+        + '<button class="btn btn-primary" onclick="reReadPage()">I opened the size guide — read it</button>'
+        + '<label class="btn btn-ghost" style="cursor:pointer;text-align:center">📷 Upload a screenshot of the chart'
+        + '<input type="file" accept="image/*" style="display:none" onchange="uploadShot(this.files[0])"/></label>'
         + idx
-        + '<p class="foot" style="margin-top:0.9rem"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
-    }
+        + '<p class="sub" style="margin-top:1rem;font-size:.8rem;color:var(--dim)">Tip: screenshot the brand’s size chart and drop it here — we’ll read it and give you your size.</p>'
+        + '<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
+    };
+    // Screenshot upload -> parse the chart from the image + return the user's size.
+    window.uploadShot=async function(file){
+      if(!file) return;
+      el('result-body').innerHTML='<div class="loader">Reading your screenshot…</div>';
+      try{
+        var dataUrl=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(file);});
+        var x=lastExtra||{};
+        var body={ imagesBase64:[dataUrl], pageTitle:(PAGE&&PAGE.pageTitle)||'', pageText:(PAGE&&PAGE.pageText)||'', url:(PAGE&&PAGE.url)||'' };
+        if(x.accessToken) body.accessToken=x.accessToken;
+        else { body.chest=x.chest; body.waist=x.waist; body.belly=x.belly||x.waist; body.hips=x.hips; body.height=x.height; body.inseam=x.inseam; body.neck=x.neck; body.shoulder=x.shoulder; }
+        var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        var d=await r.json();
+        var m=mapDecode(d);
+        if(m.error){ el('result-body').innerHTML='<h2>Hmm.</h2><p class="sub">'+m.error+'</p><button class="btn btn-ghost" onclick="renderNoChart()">Try another way</button>'; return; }
+        lastSize=m.size;
+        if(PAGE) PAGE.pageText=((PAGE.pageText||'')+'\n[Shopper uploaded this size chart; it was parsed and used.]');
+        showResult(m, !x.accessToken);
+      }catch(e){ el('result-body').innerHTML='<h2>Hmm.</h2><p class="sub">Could not read that image — try a clearer, cropped screenshot of just the chart.</p><button class="btn btn-ghost" onclick="renderNoChart()">Back</button>'; }
+    };
     window.reReadPage=function(){
       el('result-body').innerHTML='<div class="loader">Re-reading the page…</div>';
       try{ parent.postMessage('styla-rescrape','*'); }catch(e){}
