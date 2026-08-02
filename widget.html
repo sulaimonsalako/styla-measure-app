@@ -298,12 +298,19 @@
           // Bookmarklet mode: the stylist knows EVERYTHING on this product page —
           // fabric, care, fit notes, the chart — plus the shopper's measurements.
           var x=lastExtra||{};
-          var payload={ recommendedSize:lastSize, pageTitle:PAGE.pageTitle, pageText:PAGE.pageText,
+          var payload={ stream:true, recommendedSize:lastSize, pageTitle:PAGE.pageTitle, pageText:PAGE.pageText,
             tableHtml:PAGE.tableHtml, history:CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
           if(x.accessToken) payload.accessToken=x.accessToken;
           else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||x.waist||m.belly;
                  payload.hips=x.hips||m.hips; payload.height=x.height; payload.inseam=x.inseam; payload.neck=x.neck; }
           r=await fetch('/api/extension-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          if(r.body && r.body.getReader){
+            // Stream tokens into a live bubble — feels instant.
+            var reader=r.body.getReader(), dec=new TextDecoder(), acc='';
+            CHAT.push({role:'model',parts:[{text:''}]});
+            while(true){ var ch=await reader.read(); if(ch.done) break; acc+=dec.decode(ch.value,{stream:true}); CHAT[CHAT.length-1].parts[0].text=acc; renderChat(false); }
+            return;
+          }
         } else {
           r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chest:m.chest,waist:m.waist,hips:m.hips,belly:m.belly,history:CHAT})});
         }
@@ -329,10 +336,28 @@
       return { size:d.recommended_size, score:d.fit_match_score, spectrum:d.fit_spectrum, category:d.garment_category||d.category||'', fits:true };
     }
     var lastExtra=null, lastSize=null;
+    // FAST PATH: for a brand we already index, resolve the size from our DB by
+    // domain (a few ms) instead of sending the page to Gemini (several seconds).
+    async function tryIndexChart(extra){
+      if(!DOMAIN) return false;
+      try{
+        var p={domain:DOMAIN, category:CATEGORY||undefined, productUrl:PRODUCT||undefined};
+        if(extra.accessToken) p.accessToken=extra.accessToken;
+        else p.profile={chest:extra.chest,waist:extra.waist,belly:extra.belly,hips:extra.hips,height:extra.height,inseam:extra.inseam,neck:extra.neck,shoulder:extra.shoulder};
+        var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+        var d=await r.json();
+        if(d && d.size){ d.note='From this brand’s official size chart in Styla.'; lastSize=d.size; showResult(d, !extra.accessToken); return true; }
+      }catch(e){}
+      return false;
+    }
     async function decode(extra){
       if(!PAGE) return;
       lastExtra=extra;
-      go('result'); el('result-body').innerHTML='<div class="loader">Reading the size chart on this page…</div>';
+      go('result'); el('result-body').innerHTML='<div class="loader">Finding your size…</div>';
+      // 1) Try the Styla index first (instant for known brands).
+      if(await tryIndexChart(extra)) return;
+      // 2) Otherwise read the chart printed on the page (slower, works anywhere).
+      el('result-body').innerHTML='<div class="loader">Reading the size chart on this page…</div>';
       var body=Object.assign({pageTitle:PAGE.pageTitle,pageText:PAGE.pageText,tableHtml:PAGE.tableHtml,url:PAGE.url},extra);
       try{
         var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
