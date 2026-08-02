@@ -41,15 +41,19 @@ export default async function notifications(req, res) {
     if (b.action === 'respond-share') {
       if (!b.id) return res.status(400).json({ error: 'Missing id.' });
       const { data: share } = await supabaseAdmin.from('profile_shares')
-        .select('id, shared_with_email, owner_id, status').eq('id', b.id).maybeSingle();
-      if (!share || (share.shared_with_email || '').toLowerCase() !== myEmail) {
-        return res.status(403).json({ error: 'This request is not for you.' });
-      }
-      const upd = b.accept
-        ? { shared_with_id: myId, status: 'accepted', accepted_at: new Date().toISOString() }
-        : { status: 'declined', declined_at: new Date().toISOString() };
+        .select('id, shared_with_email, owner_email, owner_id, status').eq('id', b.id).maybeSingle();
+      if (!share) return res.status(404).json({ error: 'Not found.' });
+
+      const isShareOffer = share.status === 'pending' && (share.shared_with_email || '').toLowerCase() === myEmail; // I'm the shopper
+      const isRequest = share.status === 'requested' && (share.owner_email || '').toLowerCase() === myEmail;        // I'm the source
+      if (!isShareOffer && !isRequest) return res.status(403).json({ error: 'This request is not for you.' });
+
+      let upd;
+      if (!b.accept) upd = { status: 'declined', declined_at: new Date().toISOString() };
+      else if (isRequest) upd = { owner_id: myId, owner_email: myEmail, status: 'accepted', accepted_at: new Date().toISOString() };
+      else upd = { shared_with_id: myId, status: 'accepted', accepted_at: new Date().toISOString() };
       await supabaseAdmin.from('profile_shares').update(upd).eq('id', share.id);
-      return res.status(200).json({ ok: true, ownerId: share.owner_id, accepted: !!b.accept });
+      return res.status(200).json({ ok: true, accepted: !!b.accept });
     }
 
     if (b.action === 'list') {
@@ -58,15 +62,27 @@ export default async function notifications(req, res) {
       const seenAt = prof && prof.notifications_seen_at ? new Date(prof.notifications_seen_at).getTime() : 0;
       const items = [];
 
-      // 1) Size-shares someone sent ME, awaiting my response (actionable).
+      // 1a) Someone shared THEIR size with me (I can shop for them) — awaiting my accept.
       const { data: incoming } = await supabaseAdmin.from('profile_shares')
         .select('id, owner_email, relationship, status, created_at')
         .eq('shared_with_email', myEmail).eq('status', 'pending')
         .order('created_at', { ascending: false });
       (incoming || []).forEach(s => items.push({
-        kind: 'share_request', id: s.id, at: s.created_at,
-        title: (s.owner_email || 'Someone') + ' wants to share their size with you',
-        body: s.relationship ? ('Relationship: ' + s.relationship) : 'So you can shop for them with confidence.',
+        kind: 'share_offer', id: s.id, at: s.created_at,
+        title: (s.owner_email || 'Someone') + ' shared their size with you',
+        body: 'Accept to shop for them with confidence' + (s.relationship ? ' (' + s.relationship + ')' : '') + '.',
+        actions: ['accept', 'decline'],
+      }));
+
+      // 1b) Someone asked to shop for ME (they need my size) — awaiting my approval.
+      const { data: requests } = await supabaseAdmin.from('profile_shares')
+        .select('id, shared_with_email, relationship, status, created_at')
+        .eq('owner_email', myEmail).eq('status', 'requested')
+        .order('created_at', { ascending: false });
+      (requests || []).forEach(s => items.push({
+        kind: 'shop_request', id: s.id, at: s.created_at,
+        title: (s.shared_with_email || 'Someone') + ' wants to shop for you',
+        body: 'Approve to let them see your size (never your measurements)' + (s.relationship ? ' (' + s.relationship + ')' : '') + '.',
         actions: ['accept', 'decline'],
       }));
 

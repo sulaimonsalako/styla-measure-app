@@ -100,13 +100,14 @@
         </div>
       </div>
 
-      <!-- ACCEPT INVITE -->
+      <!-- ACCEPT INVITE (copy set dynamically by direction) -->
       <div id="state-accept" class="hidden">
-        <h1>You've been given someone's <span class="grad-text">size</span>.</h1>
-        <p class="lead" id="accept-lead">Accept to see their Styla size and the brands that fit them — so you can shop for them with confidence.</p>
+        <h1 id="accept-title">A Styla <span class="grad-text">connection</span>.</h1>
+        <p class="lead" id="accept-lead">Loading…</p>
         <div class="card">
           <div class="msg" id="accept-msg"></div>
-          <button class="btn btn-primary" id="btn-accept">Accept &amp; see their size</button>
+          <button class="btn btn-primary" id="btn-accept">Accept</button>
+          <button class="btn btn-ghost btn-sm" id="btn-decline" style="margin-left:8px;">Decline</button>
         </div>
       </div>
 
@@ -138,18 +139,39 @@
           <div class="link-box hidden" id="share-link"></div>
         </div>
 
-        <!-- People I shop for -->
+        <!-- Shop for someone (request) -->
         <div class="card">
-          <h2>People I shop for</h2>
-          <p class="sub">Sizes people have shared with you. Open one to see the brands and sizes that fit them.</p>
-          <div id="list-for"><div class="empty">No one has shared their size with you yet.</div></div>
+          <h2>Shop for someone</h2>
+          <p class="sub">Want to buy the right size for someone? Ask them to share their size. They just approve it — if they already have Styla, they simply log in (no new account).</p>
+          <div class="row2">
+            <div><label>Their email</label><input type="email" id="req-email" placeholder="them@email.com" /></div>
+            <div><label>Relationship (optional)</label>
+              <select id="req-rel">
+                <option value="">Choose…</option>
+                <option value="partner">Partner</option>
+                <option value="family member">Family member</option>
+                <option value="friend">Friend</option>
+                <option value="client">Client</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:1.2rem;" id="btn-request">Ask to shop for them</button>
+          <div class="msg" id="req-msg"></div>
+          <div class="link-box hidden" id="req-link"></div>
         </div>
 
-        <!-- People I share with -->
+        <!-- People I can shop for -->
         <div class="card">
-          <h2>People I share with</h2>
-          <p class="sub">Who can currently see your size. Revoke any time.</p>
-          <div id="list-by"><div class="empty">You haven't shared your size with anyone yet.</div></div>
+          <h2>People I can shop for</h2>
+          <p class="sub">Sizes shared with you, plus requests you've sent. Open an accepted one to see the brands and sizes that fit them.</p>
+          <div id="list-for"><div class="empty">No connections yet.</div></div>
+        </div>
+
+        <!-- Who can shop for me -->
+        <div class="card">
+          <h2>Who can shop for me</h2>
+          <p class="sub">People who can see your size, plus requests awaiting your approval.</p>
+          <div id="list-by"><div class="empty">No one yet.</div></div>
         </div>
       </div>
 
@@ -194,8 +216,29 @@
         if (token) document.getElementById('login-lead').textContent = 'Log in to accept the size that was shared with you.';
         show('login'); return;
       }
-      if (token){ show('accept'); return; }
+      if (token){ await showAccept(); return; }
       loadManage();
+    }
+
+    // Direction-aware accept screen.
+    var ACCEPT_INFO = null;
+    async function showAccept(){
+      show('accept');
+      var lead = document.getElementById('accept-lead');
+      var title = document.getElementById('accept-title');
+      var info = await api('info', { token });
+      ACCEPT_INFO = info;
+      if (info.error){ lead.textContent = info.error; document.getElementById('btn-accept').style.display='none'; document.getElementById('btn-decline').style.display='none'; return; }
+      if (info.status === 'accepted'){ lead.textContent = 'This connection is already active.'; document.getElementById('btn-accept').textContent='Go to my connections'; document.getElementById('btn-decline').style.display='none'; return; }
+      if (info.kind === 'request'){
+        title.innerHTML = (info.counterpart||'Someone') + ' wants to <span class="grad-text">shop for you</span>.';
+        lead.textContent = 'Approve to let them see your Styla size (never your measurements) so they can buy you the right size.';
+        document.getElementById('btn-accept').textContent = 'Approve';
+      } else {
+        title.innerHTML = (info.counterpart||'Someone') + ' shared their <span class="grad-text">size</span> with you.';
+        lead.textContent = 'Accept to see their Styla size and the brands that fit them — so you can shop for them with confidence.';
+        document.getElementById('btn-accept').textContent = 'Accept & see their size';
+      }
     }
 
     // ---- Login ----
@@ -211,15 +254,22 @@
     });
     document.getElementById('nav-logout').addEventListener('click', async function(){ await sb.auth.signOut(); location.href='/index.html'; });
 
-    // ---- Accept ----
+    // ---- Accept / Decline ----
     document.getElementById('btn-accept').addEventListener('click', async function(){
       const msg = document.getElementById('accept-msg');
-      msg.style.color='var(--muted)'; msg.textContent='Accepting…';
+      if (ACCEPT_INFO && ACCEPT_INFO.status === 'accepted'){ history.replaceState({},'','/share.html'); token=null; loadManage(); return; }
+      msg.style.color='var(--muted)'; msg.textContent='Saving…';
       const res = await api('accept', { token });
       if (res.error){ msg.style.color='#ff9db5'; msg.textContent=res.error; return; }
       history.replaceState({}, '', '/share.html');
+      var wasRequest = ACCEPT_INFO && ACCEPT_INFO.kind === 'request';
       token = null;
-      viewProfile(res.ownerId, res.ownerEmail);
+      if (wasRequest){ loadManage(); } // I'm the source — nothing to view; go to my connections
+      else { viewProfile(res.ownerId, ACCEPT_INFO ? ACCEPT_INFO.counterpart : ''); }
+    });
+    document.getElementById('btn-decline').addEventListener('click', async function(){
+      await api('respond-decline', { token }); // best-effort; falls through if unsupported
+      history.replaceState({}, '', '/share.html'); token=null; loadManage();
     });
 
     // ---- Manage ----
@@ -228,27 +278,45 @@
       const res = await api('list');
       const forEl = document.getElementById('list-for');
       const byEl = document.getElementById('list-by');
-      const forList = (res.sharedWithMe||[]);
-      const byList = (res.sharedByMe||[]);
+      const forList = (res.iCanShopFor||[]);   // people I can shop for + my outgoing requests
+      const byList = (res.canShopForMe||[]);    // people who can shop for me + requests to approve
 
       if (forList.length){
         forEl.innerHTML = forList.map(function(s){
-          return '<div class="list-item"><div class="avatar">'+initials(s.owner_email)+'</div>'
-            +'<div class="li-main"><div class="nm">'+s.owner_email+'</div><div class="meta">'+(s.relationship||'shared with you')+'</div></div>'
-            +'<div class="li-actions"><button class="btn btn-primary btn-sm" data-owner="'+s.owner_id+'" data-email="'+s.owner_email+'">View sizes</button></div></div>';
+          var who = s.owner_email || 'Pending…';
+          var meta = s.status==='accepted' ? (s.relationship||'shared with you')
+                   : s.status==='requested' ? 'request sent — awaiting them'
+                   : s.status==='pending' ? 'invite sent — awaiting them'
+                   : s.status;
+          var action = (s.status==='accepted' && s.owner_id)
+            ? '<button class="btn btn-primary btn-sm" data-owner="'+s.owner_id+'" data-email="'+who+'">View sizes</button>'
+            : '<span class="pill pending">'+s.status+'</span>';
+          return '<div class="list-item"><div class="avatar">'+initials(who)+'</div>'
+            +'<div class="li-main"><div class="nm">'+who+'</div><div class="meta">'+meta+'</div></div>'
+            +'<div class="li-actions">'+action+'</div></div>';
         }).join('');
         forEl.querySelectorAll('button[data-owner]').forEach(function(b){ b.addEventListener('click', function(){ viewProfile(b.dataset.owner, b.dataset.email); }); });
-      } else { forEl.innerHTML = '<div class="empty">No one has shared their size with you yet.</div>'; }
+      } else { forEl.innerHTML = '<div class="empty">No connections yet.</div>'; }
 
       if (byList.length){
         byEl.innerHTML = byList.map(function(s){
-          return '<div class="list-item"><div class="avatar">'+initials(s.shared_with_email)+'</div>'
-            +'<div class="li-main"><div class="nm">'+s.shared_with_email+'</div><div class="meta">'+(s.relationship||'')+'</div></div>'
-            +'<span class="pill '+(s.status==='accepted'?'':'pending')+'">'+s.status+'</span>'
-            +'<div class="li-actions"><button class="btn btn-ghost btn-sm" data-revoke="'+s.id+'">Revoke</button></div></div>';
+          var who = s.shared_with_email || 'Someone';
+          var isRequest = s.status==='requested'; // awaiting my approval
+          var right = isRequest
+            ? '<div class="li-actions"><button class="btn btn-primary btn-sm" data-accept="'+s.id+'">Approve</button><button class="btn btn-ghost btn-sm" data-declineid="'+s.id+'">Decline</button></div>'
+            : '<span class="pill '+(s.status==='accepted'?'':'pending')+'">'+s.status+'</span><div class="li-actions"><button class="btn btn-ghost btn-sm" data-revoke="'+s.id+'">Revoke</button></div>';
+          return '<div class="list-item"><div class="avatar">'+initials(who)+'</div>'
+            +'<div class="li-main"><div class="nm">'+who+'</div><div class="meta">'+(isRequest?'wants to shop for you':(s.relationship||''))+'</div></div>'+right+'</div>';
         }).join('');
         byEl.querySelectorAll('button[data-revoke]').forEach(function(b){ b.addEventListener('click', async function(){ b.textContent='…'; await api('revoke',{ id:b.dataset.revoke }); loadManage(); }); });
-      } else { byEl.innerHTML = '<div class="empty">You haven\'t shared your size with anyone yet.</div>'; }
+        byEl.querySelectorAll('button[data-accept]').forEach(function(b){ b.addEventListener('click', async function(){ b.textContent='…'; await notif('respond-share',{ id:b.dataset.accept, accept:true }); loadManage(); }); });
+        byEl.querySelectorAll('button[data-declineid]').forEach(function(b){ b.addEventListener('click', async function(){ b.textContent='…'; await notif('respond-share',{ id:b.dataset.declineid, accept:false }); loadManage(); }); });
+      } else { byEl.innerHTML = '<div class="empty">No one yet.</div>'; }
+    }
+    async function notif(action, extra){
+      const t = await accessToken();
+      const r = await fetch('/api/notifications', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+t}, body: JSON.stringify(Object.assign({action:action}, extra||{})) });
+      return r.json();
     }
 
     // ---- Share my size ----
@@ -264,6 +332,22 @@
       msg.style.color='#8ef5c0'; msg.textContent='Invite sent to '+email+'. You can also copy the link below.';
       linkBox.textContent = res.link; linkBox.classList.remove('hidden');
       document.getElementById('share-email').value='';
+      loadManage();
+    });
+
+    // ---- Shop for someone (request their size) ----
+    document.getElementById('btn-request').addEventListener('click', async function(){
+      const email = document.getElementById('req-email').value.trim();
+      const rel = document.getElementById('req-rel').value;
+      const msg = document.getElementById('req-msg');
+      const linkBox = document.getElementById('req-link');
+      if (!email){ msg.style.color='#ff9db5'; msg.textContent='Enter their email.'; return; }
+      msg.style.color='var(--muted)'; msg.textContent='Sending request…'; linkBox.classList.add('hidden');
+      const res = await api('request', { owner_email: email, relationship: rel });
+      if (res.error){ msg.style.color='#ff9db5'; msg.textContent=res.error; return; }
+      msg.style.color='#8ef5c0'; msg.textContent='Request sent to '+email+'. They approve it (or log in if they already use Styla).';
+      linkBox.textContent = res.link; linkBox.classList.remove('hidden');
+      document.getElementById('req-email').value='';
       loadManage();
     });
 
