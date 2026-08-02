@@ -55,7 +55,7 @@
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
 
-      var STATE = { result: null, activeSize: null, loading: false, chatBusy: false };
+      var STATE = { result: null, activeSize: null, loading: false, chatBusy: false, shopForId: null, people: [] };
 
       // ---------- open / close ----------
       triggerBtn.addEventListener('click', function () {
@@ -84,7 +84,8 @@
         setLoading(true);
         try {
           var body = { domain: product.domain, productUrl: product.url, category: mapType(product.type) };
-          if (token) body.accessToken = token; else body.profile = profile;
+          if (STATE.shopForProfile) body.profile = STATE.shopForProfile;   // shopping for someone else
+          else if (token) body.accessToken = token; else body.profile = profile;
           var r = await fetch(API + '/api/widget-size', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
           });
@@ -93,7 +94,42 @@
           STATE.result = data;
           STATE.activeSize = data.size;
           renderFit();
+          renderShopFor();
         } catch (e) { renderError(); } finally { setLoading(false); }
+      }
+
+      // ---- shop for someone who shares their size with you ----
+      async function conn(action, extra) {
+        var token = getToken(); if (!token) return {};
+        return (await fetch(API + '/api/store-api?route=connections', { method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify(Object.assign({ action: action }, extra || {})) })).json();
+      }
+      async function renderShopFor() {
+        if (!getToken()) return;
+        var host = detailsBody; if (!host) return;
+        var existing = host.querySelector('.styla-shopfor'); if (existing) return;
+        try {
+          var d = await conn('list'); var people = d.sharedWithMe || [];
+          if (!people.length) return;
+          STATE.people = people;
+          var box = document.createElement('div'); box.className = 'styla-shopfor';
+          box.innerHTML = '<span class="styla-shopfor-lbl">🛍️ Shopping for</span>' +
+            '<select class="styla-shopfor-sel"><option value="me">Me</option>' +
+            people.map(function (p) { return '<option value="' + p.owner_id + '">' + (p.owner_email || 'Someone') + (p.relationship ? ' · ' + p.relationship : '') + '</option>'; }).join('') + '</select>';
+          host.insertBefore(box, host.firstChild);
+          box.querySelector('.styla-shopfor-sel').value = STATE.shopForId || 'me';
+          box.querySelector('.styla-shopfor-sel').addEventListener('change', async function () {
+            var v = this.value;
+            STATE.shopForId = (v === 'me') ? null : v;
+            if (!STATE.shopForId) { STATE.shopForProfile = null; }
+            else {
+              var pr = (await conn('get-profile', { ownerId: v })).profile || {};
+              STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist, hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
+            }
+            STATE.result = null; loadFit();
+          });
+        } catch (e) {}
       }
 
       // Rough Shopify product.type -> Styla measurement category.
