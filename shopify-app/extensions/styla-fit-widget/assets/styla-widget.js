@@ -90,7 +90,10 @@
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
           });
           var data = await r.json();
-          if (!data || !data.size) { renderNoChart(); return; }
+          // No size, or a chart that shares no comparable measurement with the shopper,
+          // must NOT show a confident size — show the honest "can't size this" state.
+          var noOverlap = data && data.candidates && data.candidates.every(function(c){ return !c.breakdown || !Object.keys(c.breakdown).length; });
+          if (!data || !data.size || data.insufficient_data || noOverlap) { renderNoChart(); return; }
           STATE.result = data;
           STATE.activeSize = data.size;
           renderFit();
