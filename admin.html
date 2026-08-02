@@ -382,6 +382,7 @@
       var sizes=(c&&c.chart_data&&c.chart_data.sizes)||[{name:''}];
       sizes.forEach(addSizeRow);
       el('chartMsg').textContent='';
+      _pendingSave=false; el('saveChartBtn').textContent='Save chart';
       updateConvHint();
       show('chartView');
     }
@@ -399,6 +400,37 @@
 
     function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return [p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
 
+    function avgOf(sizes,k){var v=sizes.map(function(s){var x=s[k];return Array.isArray(x)?(x[0]+x[1])/2:x;}).filter(function(x){return typeof x==='number'&&!isNaN(x);});return v.length?v.reduce(function(a,b){return a+b;},0)/v.length:null;}
+    // Detect which width measures on a GARMENT chart are flat (half-width) vs full
+    // circumference, by magnitude — so we never blanket-double a full chest again.
+    function detectFlat(sizes){
+      var flat=[];
+      var bands={chest:28,waist:18,hips:24,thigh:17}; // below this avg = half-width
+      Object.keys(bands).forEach(function(k){ var a=avgOf(sizes,k); if(a!=null && a<bands[k]) flat.push(k); });
+      return flat;
+    }
+    // Sanity checks — catch mis-parsed / mislabelled charts BEFORE shoppers see them.
+    function validateChart(sizes,type,flat){
+      var w=[];
+      var bodyKeys=['chest','waist','hips','shoulder','sleeve','inseam','thigh','neck'];
+      var hasBody=sizes.some(function(s){return bodyKeys.some(function(k){return s[k]!=null;});});
+      if(!hasBody) w.push('No body measurements found — the engine can’t size this chart (it will be flagged unsizable).');
+      var num=function(x){return Array.isArray(x)?(x[0]+x[1])/2:x;};
+      // chest < waist (likely swapped/mis-parsed for tops/dresses/suits/outerwear)
+      sizes.forEach(function(s){ if(s.chest!=null&&s.waist!=null&&num(s.chest)<num(s.waist)) w.push('Size “'+s.name+'”: chest ('+num(s.chest)+') is smaller than waist ('+num(s.waist)+') — values may be swapped or half-width.'); });
+      // out-of-range values on a BODY chart
+      if(type==='body'){
+        var ac=avgOf(sizes,'chest'); if(ac!=null&&ac<26) w.push('Average chest '+ac.toFixed(1)+'" is very small for a body chart — likely half/flat values mislabelled as body.');
+      }
+      // flat doubling that would exceed plausible circumference
+      (flat||[]).forEach(function(k){ var a=avgOf(sizes,k); if(a!=null&&a*2>72) w.push(k+' will be DOUBLED to ~'+(a*2).toFixed(0)+'" — if these are already full circumferences, this chart shouldn’t be marked flat.'); });
+      // non-monotonic (a later size measurement smaller than an earlier one)
+      ['chest','waist','hips'].forEach(function(k){
+        var prev=null; for(var i=0;i<sizes.length;i++){ var v=sizes[i][k]!=null?num(sizes[i][k]):null; if(v!=null){ if(prev!=null&&v<prev-0.5){ w.push('“'+sizes[i].name+'” '+k+' ('+v+') is smaller than the previous size — possible mis-parse.'); break; } prev=v; } }
+      });
+      return w;
+    }
+    var _pendingSave=false;
     el('saveChartBtn').addEventListener('click',async function(){
       var msg=el('chartMsg');
       var sizes=[];
@@ -410,9 +442,18 @@
       if(!sizes.length){msg.style.color='#fca5a5';msg.textContent='Add at least one size.';return;}
       var type=el('chType').value;
       var sub=(el('chSub').value||'').trim().toLowerCase()||null;
+      var flat = type==='garment' ? detectFlat(sizes) : [];
+      // Sanity gate: show warnings and require a confirming second click.
+      var warns=validateChart(sizes,type,flat);
+      if(warns.length && !_pendingSave){
+        msg.style.color='#fbbf24';
+        msg.innerHTML='⚠ Please check:<br>• '+warns.join('<br>• ')+'<br><b>Click “Save anyway” to keep it, or fix the rows above.</b>';
+        this.textContent='Save anyway'; _pendingSave=true; return;
+      }
+      this.textContent='Save chart'; _pendingSave=false;
       var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_type:type,sizes:sizes,
         sleeve_convention:el('chSleeveConv').value,shoulder_convention:el('chShoulderConv').value};
-      if(type==='garment')chart_data.flat_measures=['chest','waist','hips','thigh']; // flat charts: circumferences are half-width
+      if(flat.length) chart_data.flat_measures=flat; // only the measures that are actually half-width
       var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked,
         source:el('chSource').value,verified:el('chVerified').checked,category_url:el('chCatUrl').value.trim()||null};
       msg.style.color='var(--muted)';msg.textContent='Saving…';
@@ -468,7 +509,7 @@
       }
       el('convHint').innerHTML = parts.length ? ('📏 '+parts.join('  ·  ')+'. If that\'s wrong, set it explicitly above.') : '';
     }
-    el('sizeRows').addEventListener('input', updateConvHint);
+    el('sizeRows').addEventListener('input', function(){ updateConvHint(); if(_pendingSave){ _pendingSave=false; el('saveChartBtn').textContent='Save chart'; } });
     el('chSleeveConv').addEventListener('change', updateConvHint);
     el('chShoulderConv').addEventListener('change', updateConvHint);
     async function parseChartFile(file){
