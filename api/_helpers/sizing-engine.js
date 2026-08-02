@@ -262,21 +262,27 @@ export function runSizingEngine(user, chart) {
     if (chartThigh && userThigh) scoreDimension(userThigh, chartThigh, 'thigh');
     if (chartNeck && userNeck) scoreDimension(userNeck, chartNeck, 'neck');
 
+    const rawScore = score; // keep UNCLAMPED so failing sizes still rank by closeness
     score = Math.max(0, Math.min(100, Math.round(score)));
 
     candidateScores.push({
       name: sizeName,
       score,
+      rawScore,
       fits,
+      dims: Object.keys(breakdown).length,
       spectrum: localSpectrum,
       breakdown
     });
   }
 
+  // Sort: sizes that fit first; then by RAW score. Ranking on raw (not the 0-clamped
+  // value) means a body bigger than every size gets the LARGEST size (closest), not
+  // the first one in the list — the clamp was making all failing sizes tie at 0.
   candidateScores.sort((a, b) => {
     if (a.fits && !b.fits) return -1;
     if (!a.fits && b.fits) return 1;
-    return b.score - a.score;
+    return b.rawScore - a.rawScore;
   });
 
   const bestOption = candidateScores[0];
@@ -287,6 +293,23 @@ export function runSizingEngine(user, chart) {
   const comparedDims = bestOption.breakdown ? Object.keys(bestOption.breakdown).length : 0;
   const coverageFactor = Math.min(1, 0.55 + 0.15 * comparedDims); // 1 dim→0.70, 2→0.85, 3+→1.0
   const displayScore = Math.round(bestOption.score * coverageFactor);
+
+  // Insufficient data: this chart shares NO comparable body dimension with the user
+  // (e.g. a height-only or unit-mismatched chart). Don't present a confident size —
+  // returning the first size to everyone is worse than admitting we can't size it.
+  if (comparedDims === 0) {
+    return {
+      recommended_size: bestOption.name,
+      fit_match_score: 0,
+      dimensions_compared: 0,
+      insufficient_data: true,
+      fit_spectrum: bestOption.spectrum,
+      fit_breakdown: {},
+      explanation: 'This size chart doesn’t list the measurements we compare (it may size by height or use a format we can’t read yet), so we can’t confidently pick your size here.',
+      warning: 'Not enough matching measurements on this chart to size you.',
+      candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, breakdown: {} })),
+    };
+  }
 
   // Generate dynamic, reassuring styling explanations and alterations advice
   let explanation = `Size ${bestOption.name} is recommended as your best starting fit (${bestOption.spectrum}).`;
