@@ -40,6 +40,40 @@ export default async function handler(req, res) {
 
     const cleanedUsername = username.trim().toLowerCase();
 
+    // Create a REAL Styla account (Supabase auth) from inside a storefront widget,
+    // save the shopper's measurements, and return a session so they stay signed in.
+    if (action === 'styla-register') {
+      if (!password) return res.status(400).json({ error: 'Missing password.' });
+      const email = cleanedUsername;
+      const meas = manual_measurements || {};
+      const firstName = (req.body.firstName || '').trim() || null;
+
+      const { data: created, error: cErr } = await supabase.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: { first_name: firstName || '' }
+      });
+      if (cErr && !/registered|already/i.test(cErr.message || '')) {
+        return res.status(400).json({ error: cErr.message });
+      }
+      const uid = created && created.user ? created.user.id : null;
+      if (uid) {
+        try {
+          await supabase.from('profiles').upsert({
+            id: uid, email, first_name: firstName,
+            chest: meas.chest || null, waist: meas.waist || null, hips: meas.hips || null,
+            belly: meas.belly || meas.waist || null, shoulder: meas.shoulder || null,
+            height: meas.height || null, inseam: meas.inseam || null, underbust: meas.underbust || null,
+            gender: meas.gender || null, updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        } catch (e) { /* non-fatal */ }
+      }
+      const { data: sess, error: sErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (sErr || !sess || !sess.session) {
+        // Account exists but the password didn't match (returning user) — let them log in.
+        return res.status(200).json({ ok: true, needsLogin: true });
+      }
+      return res.status(200).json({ ok: true, access_token: sess.session.access_token, refresh_token: sess.session.refresh_token, userId: uid });
+    }
+
     if (action === 'signup') {
       if (!password) {
         return res.status(400).json({ error: 'Missing password.' });

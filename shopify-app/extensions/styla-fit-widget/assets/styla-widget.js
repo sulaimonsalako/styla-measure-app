@@ -145,6 +145,41 @@
         sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
           b.classList.toggle('active', b.getAttribute('data-size') === sizeName);
         });
+        maybeShowSave();
+      }
+
+      // Guests: after they see their size, offer to save it as a free Styla account
+      // (keeps their size across this store's pages, and pitches Styla).
+      function maybeShowSave() {
+        if (getToken() || !getProfile()) return; // already signed in, or nothing to save
+        var host = detailsBody; if (!host || host.querySelector('.styla-save-cta')) return;
+        var box = document.createElement('div');
+        box.className = 'styla-save-cta';
+        box.innerHTML =
+          '<div class="styla-save-head">Save your size &amp; shop everywhere with Styla</div>' +
+          '<div class="styla-save-sub">Free account · your size in every brand you shop · no tape measure.</div>' +
+          '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
+          '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
+          '<button type="button" class="styla-save-btn">Save my size — free</button>' +
+          '<div class="styla-save-msg"></div>';
+        host.appendChild(box);
+        box.querySelector('.styla-save-btn').addEventListener('click', function () {
+          var email = (box.querySelector('.styla-save-email').value || '').trim();
+          var pass = box.querySelector('.styla-save-pass').value || '';
+          var msg = box.querySelector('.styla-save-msg');
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || pass.length < 6) { msg.textContent = 'Enter a valid email and a 6+ character password.'; return; }
+          msg.style.color = ''; msg.textContent = 'Saving…';
+          var prof = getProfile();
+          fetch(API + '/api/store-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'styla-register', username: email, password: pass, manual_measurements: prof }) })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (d.error) { msg.textContent = d.error; return; }
+              if (d.access_token) { try { localStorage.setItem(LS_TOKEN, d.access_token); } catch (e) {} }
+              box.innerHTML = '<div class="styla-save-head">✓ Saved — you’re in!</div><div class="styla-save-sub">Your Styla size profile is ready. Look for the Styla button on other stores.</div>';
+            })
+            .catch(function () { msg.textContent = 'Could not save right now — try again.'; });
+        });
       }
       function renderNoChart() {
         listEl.innerHTML = '';
