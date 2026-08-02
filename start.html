@@ -118,18 +118,8 @@
     <!-- LEFT: question column -->
     <div id="qcol">
 
-      <!-- WHO -->
-      <div class="screen" id="s-who">
-        <h2 class="q">Who are you finding the fit for?</h2>
-        <p class="hint">We'll tailor the questions and the brands we show you.</p>
-        <div class="cards two">
-          <div class="choice" data-val="me" onclick="pick(this,'audience')"><span class="emoji">🧍</span><span class="ct">Just me<span class="cs">everyday shopping</span></span></div>
-          <div class="choice" data-val="party" onclick="pick(this,'audience')"><span class="emoji">💍</span><span class="ct">My wedding party<span class="cs">bridesmaids & suits</span></span></div>
-        </div>
-      </div>
-
-      <!-- FIT -->
-      <div class="screen hidden" id="s-fit">
+      <!-- FIT (first step) -->
+      <div class="screen" id="s-fit">
         <h2 class="q">Which fit should we use?</h2>
         <p class="hint">This sets how brands size you. You can change it later.</p>
         <div class="cards two">
@@ -367,8 +357,8 @@
     } catch(e){}
   })();
 
-  var state = { audience:null, gender:null, age:null, hips:null, chest:null };
-  var flow = ['who','fit']; // extended once gender chosen
+  var state = { gender:null, age:null, hips:null, chest:null };
+  var flow = ['fit']; // gender is the first step; extended once gender chosen
   var baseAfterFit = ['height','weight','age'];
   var womenScreens = ['bra','waistw','hips','inseam'];
   var menScreens = ['waistm','shirt','chest','neck','jacket','inseam'];
@@ -384,7 +374,7 @@
   function buildFlow(){
     var g = state.gender;
     var tail = (g === 'men') ? menScreens : womenScreens;
-    flow = ['who','fit'].concat(baseAfterFit, tail, ['results']);
+    flow = ['fit'].concat(baseAfterFit, tail, ['results']);
   }
 
   function show(){
@@ -409,7 +399,7 @@
   function next(){
     var name = flow[idx];
     // require a choice on the pick screens
-    if((name==='who'||name==='fit'||name==='hips'||name==='chest') && !pickedOn(name)){
+    if((name==='fit'||name==='hips'||name==='chest') && !pickedOn(name)){
       flash(); return;
     }
     if(name==='fit'){ buildFlow(); }
@@ -418,7 +408,6 @@
   function back(){ if(idx>0){ idx--; show(); } }
 
   function pickedOn(name){
-    if(name==='who') return !!state.audience;
     if(name==='fit') return !!state.gender;
     if(name==='hips') return !!state.hips;
     if(name==='chest') return !!state.chest;
@@ -434,7 +423,7 @@
     el.classList.add('sel');
     state[key] = el.getAttribute('data-val');
     // auto-advance on the single-choice routing screens for snappiness
-    if(key==='audience' || key==='gender'){ setTimeout(next, 180); }
+    if(key==='gender'){ setTimeout(next, 180); }
   }
 
   function skip(key){
