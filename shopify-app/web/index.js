@@ -50,6 +50,43 @@ async function fetchShopifyAPI(shop, accessToken, endpoint, options = {}) {
   return response.json();
 }
 
+// --- Styla semantic index helpers -----------------------------------------
+// Base URL of the Styla API (the product index + embeddings live there).
+const STYLA_URL = process.env.STYLA_URL || 'https://www.styla.ca';
+const stripHtml = (h) => String(h || '')
+  .replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+// Map a Shopify product (REST list item OR webhook payload — same shape) into
+// the shape Styla's /api/catalog-ingest expects.
+function mapShopifyProduct(shop, p) {
+  return {
+    external_id: String(p.id),
+    handle: p.handle,
+    url: `https://${shop}/products/${p.handle}`,
+    title: p.title,
+    description: stripHtml(p.body_html),
+    vendor: p.vendor,
+    product_type: p.product_type,
+    category: p.product_type, // Styla ingest alias-normalizes this to its taxonomy
+    tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
+    price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
+    image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
+    variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: v.available })),
+    available: Array.isArray(p.variants) ? p.variants.some((v) => v.available) : true,
+  };
+}
+
+// Push upserts (products) and/or removals (remove: [externalId]) to the index.
+async function pushToStylaIndex(shop, body) {
+  const r = await fetch(`${STYLA_URL}/api/catalog-ingest`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ shop, domain: shop, ...body }),
+  });
+  const out = await r.json().catch(() => ({}));
+  if (!r.ok || out.error) throw new Error(out.error || 'Styla ingest failed.');
+  return out;
+}
+
 // ----------------------------------------------------
 // 1. Shopify OAuth Routes
 // ----------------------------------------------------
@@ -198,10 +235,19 @@ app.post('/api/webhooks', async (req, res) => {
         });
 
       console.log(`Synced product metadata for ${title} (${productId}) via webhook`);
+
+      // Keep the semantic index live: upsert this one product (content-hash
+      // gate on Styla's side skips re-embedding if nothing meaningful changed).
+      try { await pushToStylaIndex(shop, { products: [mapShopifyProduct(shop, payload)] }); }
+      catch (e) { console.error('Styla index upsert (webhook) failed:', e.message); }
     } else if (topic === 'products/delete') {
       const productId = String(payload.id);
       await supabase.from('product_size_charts').delete().eq('shopify_product_id', productId);
       console.log(`Deleted product ${productId} via webhook`);
+
+      // Remove it from the semantic index too.
+      try { await pushToStylaIndex(shop, { remove: [productId] }); }
+      catch (e) { console.error('Styla index remove (webhook) failed:', e.message); }
     }
   } catch (err) {
     console.error(`Error processing webhook topic ${topic}:`, err);
@@ -625,10 +671,6 @@ app.post('/api/merchant/delete-chart', async (req, res) => {
 //    Keyed by shop domain -> the same Styla brand the size charts use, so an
 //    ingested product lines up with this store's charts automatically.
 // ----------------------------------------------------
-const STYLA_URL = process.env.STYLA_URL || 'https://www.styla.ca';
-const stripHtml = (h) => String(h || '')
-  .replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-
 app.post('/api/merchant/sync-catalog', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
@@ -637,34 +679,12 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
       .from('merchant_sessions').select('access_token').eq('shop', shop).maybeSingle();
     if (!sess) return res.status(404).json({ error: 'Merchant session not found. Reopen the app from your Shopify admin.' });
 
-    // Pull the catalog (up to 250 published products) from the Shopify Admin API.
+    // Pull the catalog (up to 250 published products) and push to the index.
     const data = await fetchShopifyAPI(shop, sess.access_token, 'products.json?limit=250&published_status=published');
-    const products = (data.products || []).map((p) => ({
-      external_id: String(p.id),
-      handle: p.handle,
-      url: `https://${shop}/products/${p.handle}`,
-      title: p.title,
-      description: stripHtml(p.body_html),
-      vendor: p.vendor,
-      product_type: p.product_type,
-      category: p.product_type, // Styla ingest alias-normalizes this to its taxonomy
-      tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
-      price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
-      image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
-      variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: v.available })),
-      available: Array.isArray(p.variants) ? p.variants.some((v) => v.available) : true,
-    }));
-
+    const products = (data.products || []).map((p) => mapShopifyProduct(shop, p));
     if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
 
-    // Hand off to Styla's ingest (embeds + indexes). Keyed by shop domain.
-    const r = await fetch(`${STYLA_URL}/api/catalog-ingest`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shop, domain: shop, products }),
-    });
-    const out = await r.json().catch(() => ({}));
-    if (!r.ok || out.error) return res.status(502).json({ error: out.error || 'Styla ingest failed.', detail: out.detail });
-
+    const out = await pushToStylaIndex(shop, { products });
     res.json({
       ok: true,
       synced: products.length,
@@ -676,6 +696,70 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     console.error('sync-catalog error:', e);
     res.status(500).json({ error: 'Failed to sync catalog to Styla.', detail: e.message });
   }
+});
+
+// --- Assign size charts to products ----------------------------------------
+// Default behavior needs NO assignment: the storefront widget auto-matches a
+// product's type -> category -> chart. These endpoints add an optional
+// per-product (or per-type) OVERRIDE for brands who keep a chart per product.
+//
+// List the store's synced products + their current chart assignment.
+app.get('/api/merchant/products', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { data: products } = await supabase.from('catalog_products')
+      .select('id, external_id, title, product_type, category, url, image_url, size_chart_id')
+      .eq('brand_id', brandId)
+      .order('product_type', { ascending: true, nullsFirst: false })
+      .order('title', { ascending: true });
+    res.json({ shop, brandId, products: products || [] });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Assign a chart to specific product(s) or to a whole product type.
+// Body: { externalId? | externalIds?[] | productType?, chartId? }  (chartId=null clears the override)
+app.post('/api/merchant/assign-chart', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    let { externalId, externalIds, productType, chartId } = req.body || {};
+    chartId = chartId || null;
+
+    // A provided chart must belong to this store.
+    if (chartId) {
+      const { data: c } = await supabase.from('size_charts')
+        .select('id').eq('id', chartId).eq('brand_id', brandId).maybeSingle();
+      if (!c) return res.status(400).json({ error: 'That chart was not found for this store.' });
+    }
+
+    // Resolve the target products.
+    let q = supabase.from('catalog_products').select('id, url').eq('brand_id', brandId);
+    const ids = externalIds || (externalId ? [externalId] : null);
+    if (ids) q = q.in('external_id', ids.map(String));
+    else if (productType) q = q.eq('product_type', productType);
+    else return res.status(400).json({ error: 'Specify externalId, externalIds, or productType.' });
+    const { data: targets } = await q;
+    if (!targets || !targets.length) return res.json({ ok: true, updated: 0 });
+
+    // 1) record the assignment on the catalog row
+    await supabase.from('catalog_products')
+      .update({ size_chart_id: chartId }).in('id', targets.map((t) => t.id));
+
+    // 2) mirror to products_cache (url -> chart) — the per-URL override the
+    //    storefront widget-size resolver reads first.
+    for (const t of targets) {
+      if (!t.url) continue;
+      if (chartId) {
+        await supabase.from('products_cache')
+          .upsert({ url: t.url, brand_id: brandId, size_chart_id: chartId, source: 'merchant' }, { onConflict: 'url' });
+      } else {
+        await supabase.from('products_cache').delete().eq('url', t.url).eq('brand_id', brandId);
+      }
+    }
+
+    res.json({ ok: true, updated: targets.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Catch-all: any non-API GET renders the app UI (the chart manager). This makes

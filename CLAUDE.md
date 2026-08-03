@@ -143,12 +143,25 @@ same index that will power the discovery feed).
   when the shopper's message looks catalog-wide (keyword gate), it pulls top-6
   matches from the index and injects them as "OTHER PRODUCTS IN THIS STORE" so the
   AI recommends across the catalog. Best-effort, never blocks the chat.
-- **NOT yet done:** (1) a producer that actually PUSHES products into the index —
-  Shopify app should call `/api/catalog-ingest` with its products.json pull (the
-  merchant chart tool is the natural place to trigger a catalog sync); (2) widget
-  passing `shop`/`domain` to extension-chat so cross-catalog kicks in; (3) discovery
-  feed reading `/api/catalog-search`. Code is syntax-checked only — NOT run live
-  (sandbox has no Supabase DNS / no GOOGLE_API_KEY), so first real test is on deploy.
+- **Producer + freshness + assignment (DONE in code, 2026-08-03):**
+  - `/api/catalog-ingest` now also accepts `{ remove: [externalId] }` to delete
+    from the index (for product-delete webhooks). Either `products` or `remove`.
+  - Shopify app (`shopify-app/web/index.js`): shared `mapShopifyProduct` +
+    `pushToStylaIndex` helpers. `POST /api/merchant/sync-catalog` (button in the
+    app) does the initial bulk pull. The existing products/create|update|delete
+    **webhooks now also push single upserts/removals to the index**, so it stays
+    live after the first sync (best-effort; failures logged, never 401 the webhook).
+  - **Chart assignment UI:** default is auto (product type -> category -> chart, no
+    work). Optional override: `GET /api/merchant/products` lists synced products;
+    `POST /api/merchant/assign-chart` ({externalId|externalIds|productType, chartId})
+    sets `catalog_products.size_chart_id` AND mirrors to `products_cache` (url->chart)
+    which `widget-size` reads first. Frontend App.jsx has an "Assign charts to
+    products" card grouped by product type, per-row dropdown + per-type bulk assign.
+- **NOT yet done:** (1) widget passing `shop`/`domain` to extension-chat so
+  cross-catalog answers fire on storefronts; (2) discovery feed reading
+  `/api/catalog-search`; (3) catalog sync is single-page (250 products) — add
+  pagination if a store exceeds that. All new JS is syntax-checked only — NOT run
+  live (sandbox has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
 
 ## Current State — UPDATE THIS EACH SESSION
 

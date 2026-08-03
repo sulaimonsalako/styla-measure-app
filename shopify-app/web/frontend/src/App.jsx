@@ -40,13 +40,33 @@ export default function App() {
   const [charts, setCharts] = useState([]);
   const [syncmsg, setSyncmsg] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [assignmsg, setAssignmsg] = useState('');
 
   const includes = (TAX.find((t) => t.slug === cat) || {}).inc || '';
 
   const loadCharts = useCallback(async () => {
     try { const r = await authFetch('/api/merchant/charts'); const d = await r.json(); setCharts(d.charts || []); } catch (e) { /* ignore */ }
   }, [authFetch]);
-  useEffect(() => { loadCharts(); }, [loadCharts]);
+  const loadProducts = useCallback(async () => {
+    try { const r = await authFetch('/api/merchant/products'); const d = await r.json(); setProducts(d.products || []); } catch (e) { /* ignore */ }
+  }, [authFetch]);
+  useEffect(() => { loadCharts(); loadProducts(); }, [loadCharts, loadProducts]);
+
+  const chartOptionLabel = (c) =>
+    `${c.category}${c.subcategory ? '/' + c.subcategory : ''} · ${c.gender} (${((c.chart_data || {}).sizes || []).length})`;
+
+  async function assignChart(body, note) {
+    setAssignmsg('Saving assignment…');
+    try {
+      const r = await authFetch('/api/merchant/assign-chart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      setAssignmsg('✓ ' + (note || ('Updated ' + (d.updated || 0) + ' product(s).')));
+      loadProducts();
+    } catch (e) { setAssignmsg('Failed: ' + (e.message || e)); }
+  }
+  const assignType = (type, val) => assignChart({ productType: type, chartId: val === '__auto' ? null : val }, 'Updated all "' + type + '".');
 
   async function parseFile(file) {
     if (!file) return;
@@ -101,6 +121,7 @@ export default function App() {
       const d = await r.json();
       if (d.error) throw new Error(d.error);
       setSyncmsg('✓ ' + (d.message || ('Synced ' + (d.synced || 0) + ' products.')));
+      loadProducts();
     } catch (e) { setSyncmsg('Sync failed: ' + (e.message || e)); }
     setSyncing(false);
   }
@@ -162,6 +183,41 @@ export default function App() {
             </button>
             <span style={{ fontSize: 13, color: syncmsg.indexOf('✓') === 0 ? '#0f7a54' : '#6b7280' }}>{syncmsg}</span>
           </div>
+        </div>
+
+        <div style={{ background: '#fff', border: '1px solid #e3e5ea', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, marginBottom: 6 }}>Assign charts to products <span style={{ fontWeight: 400, color: '#6b7280', fontSize: 13 }}>(optional)</span></h2>
+          <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
+            By default every product uses the chart for its category — no work needed. If you keep a different
+            chart for a specific product or product type, override it here. Sync your catalog first to see products.
+          </div>
+          {products.length === 0
+            ? <div style={{ color: '#6b7280', fontSize: 14 }}>No products yet — click “Sync catalog to Styla AI” above.</div>
+            : Object.entries(products.reduce((g, p) => { const t = p.product_type || 'Uncategorized'; (g[t] = g[t] || []).push(p); return g; }, {})).map(([type, items]) => (
+              <div key={type} style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <b style={{ fontSize: 14 }}>{type}</b>
+                  <span style={{ fontSize: 12, color: '#6b7280' }}>{items.length} products</span>
+                  <select defaultValue="" onChange={(e) => { if (e.target.value !== '') assignType(type, e.target.value); }}
+                    style={{ ...input, width: 'auto', marginLeft: 'auto', fontSize: 12, padding: '6px 8px' }}>
+                    <option value="">Assign all to…</option>
+                    <option value="__auto">Auto (by category)</option>
+                    {charts.map((c) => <option key={c.id} value={c.id}>{chartOptionLabel(c)}</option>)}
+                  </select>
+                </div>
+                {items.map((p) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: '1px solid #f1f2f4' }}>
+                    <span style={{ flex: 1, fontSize: 13 }}>{p.title}</span>
+                    <select value={p.size_chart_id || ''} onChange={(e) => assignChart({ externalId: p.external_id, chartId: e.target.value || null }, 'Updated “' + p.title + '”.')}
+                      style={{ ...input, width: 240, fontSize: 12, padding: '6px 8px' }}>
+                      <option value="">Auto (by category)</option>
+                      {charts.map((c) => <option key={c.id} value={c.id}>{chartOptionLabel(c)}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            ))}
+          {assignmsg && <div style={{ fontSize: 13, color: assignmsg.indexOf('✓') === 0 ? '#0f7a54' : '#c0392b', marginTop: 6 }}>{assignmsg}</div>}
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #e3e5ea', borderRadius: 14, padding: 20 }}>

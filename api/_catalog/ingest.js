@@ -32,13 +32,15 @@ export default async function catalogIngest(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { brand, brandId, domain, shop, products } = req.body || {};
+    let { brand, brandId, domain, shop, products, remove } = req.body || {};
     const shopDom = normDom(shop || domain);
 
-    if (!Array.isArray(products) || !products.length) {
-      return res.status(400).json({ error: 'No products provided.' });
+    const hasProducts = Array.isArray(products) && products.length > 0;
+    const hasRemove = Array.isArray(remove) && remove.length > 0;
+    if (!hasProducts && !hasRemove) {
+      return res.status(400).json({ error: 'Provide products to ingest or remove.' });
     }
-    if (products.length > 500) products = products.slice(0, 500); // protect the function
+    if (hasProducts && products.length > 500) products = products.slice(0, 500); // protect the function
 
     // Resolve (or create) the brand this catalog belongs to.
     let bId = brandId || null;
@@ -55,6 +57,13 @@ export default async function catalogIngest(req, res) {
       if (nb) bId = nb.id;
     }
     if (!bId) return res.status(400).json({ error: 'Could not resolve a brand. Pass brandId, brand, or shop/domain.' });
+
+    // Removals (e.g. products/delete webhook) — drop them from the index.
+    if (hasRemove) {
+      await supabaseAdmin.from('catalog_products')
+        .delete().eq('brand_id', bId).in('external_id', remove.map(String));
+      if (!hasProducts) return res.status(200).json({ ok: true, removed: remove.length });
+    }
 
     const canonCat = (raw) => {
       const k = String(raw || '').toLowerCase().trim();
