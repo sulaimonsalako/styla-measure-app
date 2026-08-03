@@ -173,6 +173,28 @@ same index that will power the discovery feed).
   a store exceeds that. All new JS is syntax-checked only — NOT run live (sandbox
   has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
 
+## Shopify app served frontend — IMPORTANT (2026-08-03)
+
+The embedded app was still showing a STALE July-7 React mock ("STYLA Fit Engine /
+Product Size Mapping"). Root cause: `web/shopify.web.toml` runs `dev = node index.js`
+only (no Vite), so Express serves the app; `express.static(public)` was auto-serving
+the prebuilt `public/index.html` (old React bundle in `public/assets/index-*.js`) at
+`/`. The React source (`web/frontend/src/App.jsx`) was never rebuilt, and the real
+no-build tool (`public/charts.html`) was shadowed by that index.html.
+
+Decision: **`public/charts.html` is the served app** (no build step, robust). 
+- index.js: `express.static(public, { index:false })` so `/` no longer auto-serves
+  the stale bundle; `app.get('/', serveApp)` + catch-all serve charts.html.
+- charts.html now has ALL merchant features: paste-to-parse size charts (save/list/
+  delete), **Sync catalog to Styla AI** (POST /api/merchant/sync-catalog), and
+  **Assign charts to products** (GET /api/merchant/products + POST
+  /api/merchant/assign-chart, grouped by product type, per-row + per-type bulk).
+  Uses App Bridge idToken (embedded) with ?shop fallback (dev) via mfetch.
+- The React app in `web/frontend` (App.jsx has the same features) is now effectively
+  dead code for serving — leave it or delete later; don't waste time rebuilding it.
+- To see changes: restart `shopify app dev` (reloads index.js). charts.html is static,
+  no build needed. The stale `public/index.html` + `public/assets/*` can be deleted.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

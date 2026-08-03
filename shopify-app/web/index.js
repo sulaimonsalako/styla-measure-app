@@ -568,7 +568,10 @@ app.post('/api/size-chart', async (req, res) => {
 //    brands/size_charts so the storefront widget + AI use them immediately).
 // ----------------------------------------------------
 const path = require('path');
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static assets by explicit path, but DO NOT auto-serve public/index.html
+// at "/" — that file is a stale prebuilt React mock. "/" (and any app path) is
+// handled by serveApp -> charts.html, the real, no-build merchant tool.
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 // App home (embedded) = the size-chart manager. Serve it at / and /charts so the
 // app loads a real page instead of "Invalid path" when Shopify opens it.
 function serveApp(req, res) { res.sendFile(path.join(__dirname, 'public', 'charts.html')); }

@@ -78,6 +78,22 @@ td input{padding:7px 8px;}
   </div>
 
   <div class="card">
+    <h2>Teach the AI your catalog</h2>
+    <p class="hint" style="margin-bottom:10px">Sync your products so Styla's AI can answer shoppers across your whole store — recommending other items that fit them, not just the product they're viewing. Re-run any time you add or change products.</p>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost" id="syncBtn">Sync catalog to Styla AI</button>
+      <span class="msg" id="syncMsg" style="margin-top:0"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Assign charts to products <span class="hint">(optional)</span></h2>
+    <p class="hint" style="margin-bottom:10px">By default every product uses the chart for its category — no work needed. To use a different chart for a specific product or a whole product type, override it here. Sync your catalog first to see products.</p>
+    <div id="assignHost"><div class="empty">Sync your catalog to list products.</div></div>
+    <div class="msg" id="assignMsg"></div>
+  </div>
+
+  <div class="card">
     <h2>Charts you've added</h2>
     <div id="list"><div class="empty">Loading…</div></div>
   </div>
@@ -156,7 +172,7 @@ el('save').addEventListener('click',async function(){
 async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';return;}
-    var charts=d.charts||[];if(!charts.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
+    var charts=d.charts||[];CHARTS=charts;renderAssign();if(!charts.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=charts.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
       return '<div class="chartrow"><span class="badge">'+(c.category||'—')+'</span>'+(c.subcategory?'<span class="badge">'+c.subcategory+'</span>':'')+'<span class="badge">'+(c.gender||'—')+'</span>'
         +'<span class="badge '+(c.verified?'v':'')+'">'+(c.verified?'✓ verified':'live')+'</span>'
@@ -164,7 +180,46 @@ async function loadCharts(){var box=el('list');
         +'<button class="btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
 window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
+
+// ---- catalog sync + per-product chart assignment ----
+var CHARTS=[], PRODUCTS=[];
+function chartOptions(sel,includeAuto){
+  var opts=includeAuto?'<option value="">Auto (by category)</option>':'';
+  return opts+CHARTS.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
+    return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+(c.category||'—')+(c.subcategory?'/'+c.subcategory:'')+' · '+(c.gender||'')+' ('+n+')</option>';}).join('');
+}
+function renderAssign(){
+  var host=el('assignHost'); if(!host) return;
+  if(!PRODUCTS.length){host.innerHTML='<div class="empty">No products yet — click “Sync catalog to Styla AI” above.</div>';return;}
+  var groups={};PRODUCTS.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
+  host.innerHTML=Object.keys(groups).map(function(type){var items=groups[type];
+    return '<div style="margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+        +'<b style="font-size:.92rem">'+type+'</b><span class="hint">'+items.length+' products</span>'
+        +'<select data-type="'+encodeURIComponent(type)+'" class="bulkSel" style="width:auto;margin-left:auto;font-size:.8rem;padding:6px 8px">'
+        +'<option value="">Assign all to…</option><option value="__auto">Auto (by category)</option>'+chartOptions('',false)+'</select>'
+      +'</div>'
+      +items.map(function(p){return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #f1f2f4">'
+        +'<span style="flex:1;font-size:.86rem">'+(p.title||'')+'</span>'
+        +'<select data-ext="'+p.external_id+'" class="prodSel" style="width:250px;font-size:.8rem;padding:6px 8px">'+chartOptions(p.size_chart_id||'',true)+'</select>'
+        +'</div>';}).join('')
+      +'</div>';
+  }).join('');
+  host.querySelectorAll('.prodSel').forEach(function(s){s.addEventListener('change',function(){assign({externalId:this.getAttribute('data-ext'),chartId:this.value||null});});});
+  host.querySelectorAll('.bulkSel').forEach(function(s){s.addEventListener('change',function(){var v=this.value;if(v==='')return;var t=decodeURIComponent(this.getAttribute('data-type'));assign({productType:t,chartId:v==='__auto'?null:v},'all “'+t+'”');});});
+}
+async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];renderAssign();}catch(e){}}
+async function assign(body,note){var m=el('assignMsg');m.style.color='';m.textContent='Saving…';
+  try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
+    m.style.color='var(--green)';m.textContent='✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.';loadProducts();
+  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Failed.';}}
+el('syncBtn').addEventListener('click',async function(){var m=el('syncMsg');this.disabled=true;m.style.color='';m.textContent='Reading your products and teaching the AI… this can take a moment.';
+  try{var r=await mfetch('/api/merchant/sync-catalog',{method:'POST',body:JSON.stringify({shop:SHOP})});var d=await r.json();if(d.error)throw new Error(d.error);
+    m.style.color='var(--green)';m.textContent='✓ '+(d.message||('Synced '+(d.synced||0)+' products.'));loadProducts();
+  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Sync failed.';}this.disabled=false;});
+
 loadCharts();
+loadProducts();
 </script>
 </body>
 </html>
