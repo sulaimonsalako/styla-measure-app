@@ -72,6 +72,15 @@
     .typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}
     @keyframes blink{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
     .chip{transition:border-color .15s,color .15s;}
+    /* other-sizes picker */
+    .sizeopts{margin:-.5rem 0 1rem;}
+    .sizeopts .optlbl{font-size:.76rem;color:var(--dim);margin-bottom:.4rem;}
+    .optrow{display:flex;flex-wrap:wrap;gap:6px;}
+    .sizeopt{background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:100px;padding:7px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:var(--body);}
+    .sizeopt.active{background:rgba(255,42,117,.14);border-color:var(--pink);color:#fff;}
+    .bkbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;margin:0 0 1rem;}
+    .bkrow{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--muted);padding:3px 0;}
+    .bkrow span:first-child{text-transform:capitalize;color:var(--dim);}
   </style>
 </head>
 <body>
@@ -183,6 +192,43 @@
     var SHOPFOR={ token:null, people:[], activeOwnerId:null }; // "shop for someone you share with"
     var MEAS=null;      // measurements for the fit chat
     var CHAT=[];        // chat history (Gemini format)
+    var RES=null;       // last size result (for the other-sizes picker)
+    var CTX=null;       // product context handed in by the embed (page-aware chat)
+
+    // ----- other-sizes picker (parity with the on-page widget) -----
+    var SPEC_POS={tight:8,slim:22,ideal:48,relaxed:72,oversized:92};
+    function specHTML(spectrum,note){
+      if(!spectrum) return note?('<div class="spectrum" style="font-size:.78rem;color:var(--dim)">'+note+'</div>'):'';
+      var pos=SPEC_POS[spectrum]; if(pos==null)pos=48;
+      var h='<div class="specbar"><i style="left:'+pos+'%"></i></div><div class="specscale"><span>snug</span><span>ideal</span><span>relaxed</span></div><div class="spectrum" style="margin-top:.5rem">Fit read: <b>'+spectrum+'</b></div>';
+      if(note) h+='<div class="spectrum" style="font-size:.78rem;color:var(--dim)">'+note+'</div>';
+      return h;
+    }
+    function bkHTML(c){
+      if(!c||!c.breakdown) return '';
+      var bk=c.breakdown, keys=Object.keys(bk); if(!keys.length) return '';
+      return '<div class="bkbox">'+keys.map(function(k){return '<div class="bkrow"><span>'+k+'</span><span>'+bk[k]+'</span></div>';}).join('')+'</div>';
+    }
+    function candsOf(){ return (RES&&RES.candidates&&RES.candidates.length)?RES.candidates:(RES?[{name:RES.size,spectrum:RES.spectrum,breakdown:RES.breakdown,fits:RES.fits}]:[]); }
+    function renderSizeOpts(){
+      var host=el('sizeopts'); if(!host||!RES) return;
+      var cands=candsOf();
+      if(cands.length<2){ host.innerHTML=''; return; }
+      host.innerHTML='<div class="optlbl">See how other sizes fit you:</div><div class="optrow">'+cands.map(function(c){
+        return '<button class="sizeopt'+(String(c.name)===String(RES.size)?' active':'')+'" onclick="stylaPickSize(\''+String(c.name).replace(/\\/g,'').replace(/'/g,'')+'\')">'+c.name+'</button>';
+      }).join('')+'</div>';
+    }
+    window.stylaPickSize=function(name){
+      if(!RES) return;
+      var cands=candsOf();
+      var c=cands.find(function(x){return String(x.name)===String(name);})||cands[0];
+      var isBest=String(name)===String(RES.size);
+      var szv=el('szVal'); if(szv) szv.textContent=isBest?RES.size:(RES.size+' → '+name);
+      var note=isBest?RES.note:((c.fits?'':'Not ideal — ')+(c.spectrum||'')+' on you vs. your best size '+RES.size);
+      var sh=el('specHost'); if(sh) sh.innerHTML=specHTML(c.spectrum||RES.spectrum,note);
+      var bh=el('bkHost'); if(bh) bh.innerHTML=bkHTML(c);
+      document.querySelectorAll('.sizeopt').forEach(function(b){b.classList.toggle('active',String(b.textContent)===String(name));});
+    };
 
     function go(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));el('s-'+name).classList.add('on');}
     function setG(g){state.gender=g;document.querySelectorAll('#seg-gender button').forEach(b=>b.classList.toggle('on',b.dataset.g===g));el('q-women').style.display=g==='women'?'':'none';el('q-men').style.display=g==='men'?'':'none';}
@@ -249,11 +295,10 @@
         return;
       }
       MEAS = res.measurements || lastProfile || {};
+      RES = res;
       CHAT = [];
       var pct=res.score!=null?res.score+'% fit':'';
-      var pos=({tight:8,slim:22,ideal:48,relaxed:72,oversized:92})[res.spectrum]!=null?({tight:8,slim:22,ideal:48,relaxed:72,oversized:92})[res.spectrum]:48;
-      var spec = res.spectrum ? '<div class="specbar"><i style="left:'+pos+'%"></i></div><div class="specscale"><span>snug</span><span>ideal</span><span>relaxed</span></div><div class="spectrum" style="margin-top:.5rem">Fit read: <b>'+res.spectrum+'</b></div>' : '';
-      if(res.note) spec += '<div class="spectrum" style="font-size:0.78rem;color:var(--dim)">'+res.note+'</div>';
+      var spec = '<div id="specHost"></div>';
       var chips = ['Does it run small?',"I'm between sizes",'How does the fabric fit?']
         .map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
       var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
@@ -262,8 +307,9 @@
       var whoLabel = SHOPFOR.activeOwnerId ? ' for '+((SHOPFOR.people.find(function(p){return p.owner_id===SHOPFOR.activeOwnerId;})||{}).owner_email||'them') : '';
       var html='<h2>'+(SHOPFOR.activeOwnerId?'Their size':'Your size')+(BRAND?(' in '+BRAND):'')+'</h2>'
         +'<div id="shopfor"></div>'
-        +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel+'</div><div class="sz">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
-        + spec + chat;
+        +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel+'</div><div class="sz" id="szVal">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
+        +'<div class="sizeopts" id="sizeopts"></div>'
+        + spec + '<div id="bkHost"></div>' + chat;
       if(guest){
         html+='<p class="sub">Save this and see every other brand that fits you — free.</p>'
           +'<label>First name</label><input type="text" id="ac-name" autocomplete="given-name" />'
@@ -277,6 +323,8 @@
           +'<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
       }
       el('result-body').innerHTML=html;
+      renderSizeOpts();
+      stylaPickSize(res.size);   // initialize spectrum + breakdown for the best size
       setTimeout(populateShopFor, 0);
     }
 
@@ -356,28 +404,27 @@
       input.value='';
       CHAT.push({role:'user',parts:[{text:q}]});
       renderChat(true);
-      var m=MEAS||{};
+      var m=MEAS||{}; var x=lastExtra||{};
+      var ctx = PAGE || CTX || {};   // scraped page (bookmarklet) or product context (embed)
+      // Always use the page-aware tailor + pass store context so it can also
+      // recommend OTHER products in this store's catalog, not just this one.
+      var payload={ stream:true, recommendedSize:lastSize||(RES&&RES.size)||null,
+        domain:DOMAIN, shop:DOMAIN, category:CATEGORY,
+        pageTitle: ctx.pageTitle || PRODUCT || BRAND || '',
+        pageText: ctx.pageText || '', tableHtml: ctx.tableHtml || '',
+        sizeChart: RES ? { sizes:(RES.candidates||[]) } : null,
+        history: CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
+      var token = x.accessToken || await currentToken();
+      if(token) payload.accessToken=token;
+      else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||x.waist||m.belly||m.waist;
+             payload.hips=x.hips||m.hips; payload.height=x.height||m.height; payload.inseam=x.inseam||m.inseam; payload.neck=x.neck||m.neck; }
       try{
-        var r;
-        if(DECODE && PAGE){
-          // Bookmarklet mode: the stylist knows EVERYTHING on this product page —
-          // fabric, care, fit notes, the chart — plus the shopper's measurements.
-          var x=lastExtra||{};
-          var payload={ stream:true, recommendedSize:lastSize, pageTitle:PAGE.pageTitle, pageText:PAGE.pageText,
-            tableHtml:PAGE.tableHtml, history:CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
-          if(x.accessToken) payload.accessToken=x.accessToken;
-          else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||x.waist||m.belly;
-                 payload.hips=x.hips||m.hips; payload.height=x.height; payload.inseam=x.inseam; payload.neck=x.neck; }
-          r=await fetch('/api/extension-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-          if(r.body && r.body.getReader){
-            // Stream tokens into a live bubble — feels instant.
-            var reader=r.body.getReader(), dec=new TextDecoder(), acc='';
-            CHAT.push({role:'model',parts:[{text:''}]});
-            while(true){ var ch=await reader.read(); if(ch.done) break; acc+=dec.decode(ch.value,{stream:true}); CHAT[CHAT.length-1].parts[0].text=acc; renderChat(false); }
-            return;
-          }
-        } else {
-          r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chest:m.chest,waist:m.waist,hips:m.hips,belly:m.belly,history:CHAT})});
+        var r=await fetch('/api/extension-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        if(r.body && r.body.getReader){
+          var reader=r.body.getReader(), dec=new TextDecoder(), acc='';
+          CHAT.push({role:'model',parts:[{text:''}]});
+          while(true){ var ch=await reader.read(); if(ch.done) break; acc+=dec.decode(ch.value,{stream:true}); CHAT[CHAT.length-1].parts[0].text=acc; renderChat(false); }
+          return;
         }
         var data=await r.json();
         var reply=(data && (data.reply||data.error))||'Sorry, I could not answer that.';
@@ -514,6 +561,10 @@
     // the shopper's signed-in session on ANY store — no per-site login. We ask the
     // top page (the extension's bridge answers) and set the session if we get one.
     var EXT_IDENTITY=null;
+    // Universal embed hands us the product context for page-aware chat.
+    window.addEventListener('message', function(ev){
+      if(ev.data && ev.data.type==='styla-context'){ CTX = ev.data.page || null; }
+    });
     window.addEventListener('message', function(ev){
       if(ev.data && ev.data.type==='styla-identity'){
         EXT_IDENTITY=ev.data;

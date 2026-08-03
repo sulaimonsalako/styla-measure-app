@@ -223,6 +223,32 @@ expiry. SSO-style, via a styla.ca popup (first-party Supabase session).
   same-origin — rare on Shopify). NOT run live; verify on deploy (needs connect.html
   deployed to styla.ca + the widget re-pushed).
 
+## Surface parity + universal embed (DONE in code, 2026-08-03)
+
+Answers to "is X built across all surfaces":
+- **Shop-for-a-friend: fully built.** `api/_share/connections.js` (create/request/
+  list/accept/revoke/get-profile/info + invite emails), `share.html` accept page,
+  dashboard nav "Share & Gift" -> /share.html, notifications handle `respond-share`.
+  Both the Shopify widget and widget.html surface the "Shopping for" dropdown.
+- **Merchant on-page widget only exists for Shopify** (theme app extension). Other
+  platforms now covered by the universal embed below (+ the bookmarklet for shoppers).
+
+Two things shipped this pass:
+- **widget.html parity** (the styla.ca-hosted widget used by the bookmarklet iframe
+  AND the new embed): added the **other-sizes picker** (renders `widget-size`
+  candidates -> tap a size to see its spectrum + per-dimension breakdown) and made
+  the chat always call `/api/extension-chat` with `domain/shop/category` so it does
+  **catalog cross-sell** in every mode (was `/api/chat` with no store context in
+  brand-widget mode). Added a `styla-context` postMessage listener so the embed can
+  hand it product title/desc for page-aware chat.
+- **`embed.js`** (repo root, served at styla.ca/embed.js): universal snippet for
+  WooCommerce/BigCommerce/Wix/custom. A `<div id="styla-fit" data-domain data-brand
+  data-category data-gender data-product-*>` + the script mounts a "Find my size"
+  button that opens `widget.html` in a modal iframe with product context via
+  postMessage. `embed-demo.html` is a test product page (`<script src="/embed.js">`).
+- NOT run live; verify on deploy. widget.html is served from styla.ca so shoppers are
+  first-party there (no "Continue with Styla" popup needed inside that iframe).
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
