@@ -9,7 +9,7 @@ const crypto = require('crypto');
 require('dotenv').config();
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const { createClient } = require('@supabase/supabase-js');
-const { shopifyApi, ApiVersion } = require('@shopify/shopify-api');
+const { shopifyApi, ApiVersion, RequestedTokenType } = require('@shopify/shopify-api');
 
 // Express App Initialization
 const app = express();
@@ -627,6 +627,41 @@ async function ensureBrandForShop(shop) {
   return brand ? brand.id : null;
 }
 
+// Get an Admin API access token for this shop. Modern Shopify installs are
+// "managed" (no OAuth redirect through /api/auth/callback), so merchant_sessions
+// may be empty — in that case we exchange the App Bridge session token for an
+// offline access token (token exchange) and cache it. This is what makes catalog
+// sync work without a classic reinstall.
+async function getOfflineToken(req) {
+  const auth = req.headers.authorization || '';
+  const sessionToken = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  const { shop } = await getShopFromReq(req);
+  if (!shop) return null;
+
+  const { data: existing } = await supabase
+    .from('merchant_sessions').select('access_token').eq('shop', shop).maybeSingle();
+  if (existing && existing.access_token) return existing.access_token;
+
+  if (!sessionToken) return null;
+  try {
+    const { session } = await shopify.auth.tokenExchange({
+      shop,
+      sessionToken,
+      requestedTokenType: RequestedTokenType.OfflineAccessToken,
+    });
+    const token = session && session.accessToken;
+    if (token) {
+      await supabase.from('merchant_sessions')
+        .upsert({ shop, access_token: token, scope: session.scope || null, updated_at: new Date() });
+      try { await registerShopifyWebhooks(shop, token); } catch (e) { /* best-effort */ }
+    }
+    return token || null;
+  } catch (e) {
+    console.error('Token exchange failed for', shop, '-', e.message);
+    return null;
+  }
+}
+
 app.get('/api/merchant/charts', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
@@ -683,12 +718,11 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
 
-    const { data: sess } = await supabase
-      .from('merchant_sessions').select('access_token').eq('shop', shop).maybeSingle();
-    if (!sess) return res.status(404).json({ error: 'Merchant session not found. Reopen the app from your Shopify admin.' });
+    const accessToken = await getOfflineToken(req);
+    if (!accessToken) return res.status(401).json({ error: 'Could not authorize with Shopify. Reopen the app from your admin and try again.' });
 
     // Pull the catalog (up to 250 published products) and push to the index.
-    const data = await fetchShopifyAPI(shop, sess.access_token, 'products.json?limit=250&published_status=published');
+    const data = await fetchShopifyAPI(shop, accessToken, 'products.json?limit=250&published_status=published');
     const products = (data.products || []).map((p) => mapShopifyProduct(shop, p));
     if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
 
