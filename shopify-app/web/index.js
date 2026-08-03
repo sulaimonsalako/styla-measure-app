@@ -2,7 +2,12 @@ require('@shopify/shopify-api/adapters/node');
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+// Load env: the Shopify CLI-managed local .env (if present) first, then the
+// shared repo-root .env for the secrets the whole project uses (Supabase URL +
+// service-role key, Google API key, etc.). dotenv never overrides already-set
+// vars, so CLI-injected SHOPIFY_API_KEY/SECRET stay intact.
 require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const { createClient } = require('@supabase/supabase-js');
 const { shopifyApi, ApiVersion } = require('@shopify/shopify-api');
 
