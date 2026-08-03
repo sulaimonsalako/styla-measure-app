@@ -266,6 +266,9 @@
         var payload = {
           stream: true, recommendedSize: STATE.result ? STATE.result.size : null,
           pageTitle: product.title, pageText: product.desc,
+          // store context -> lets the AI reason across this shop's whole catalog
+          // (not just the current product) when the shopper asks for alternatives.
+          domain: product.domain, shop: product.domain, category: mapType(product.type),
           sizeChart: STATE.result ? { sizes: (STATE.result.candidates || []) } : null,
           history: CHAT
         };

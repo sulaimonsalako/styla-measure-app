@@ -157,11 +157,21 @@ same index that will power the discovery feed).
     sets `catalog_products.size_chart_id` AND mirrors to `products_cache` (url->chart)
     which `widget-size` reads first. Frontend App.jsx has an "Assign charts to
     products" card grouped by product type, per-row dropdown + per-type bulk assign.
-- **NOT yet done:** (1) widget passing `shop`/`domain` to extension-chat so
-  cross-catalog answers fire on storefronts; (2) discovery feed reading
-  `/api/catalog-search`; (3) catalog sync is single-page (250 products) — add
-  pagination if a store exceeds that. All new JS is syntax-checked only — NOT run
-  live (sandbox has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
+- **Widget + discovery wired (DONE in code, 2026-08-03):**
+  - `styla-widget.js` chat payload now sends `domain`/`shop`/`category`, so the
+    storefront AI Tailor gets cross-catalog retrieval (recommend other in-store
+    products, not just the current one). NOTE edge case: it sends
+    `d.shopDomain || location.hostname`; if a store uses a custom domain that
+    differs from the myshopify domain used at ingest, the shop filter won't match
+    (retrieval just returns nothing / falls back — chat still works). Verify on a
+    live storefront.
+  - `prototypes/styla-discovery.html` now calls `/api/catalog-search` (fitsMe with
+    a demo profile) and renders real results incl. product images + click-through;
+    falls back to the built-in mock when the index has no matches. Set `SHOP` var
+    to scope to one store.
+- **NOT yet done:** catalog sync is single-page (250 products) — add pagination if
+  a store exceeds that. All new JS is syntax-checked only — NOT run live (sandbox
+  has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
 
 ## Current State — UPDATE THIS EACH SESSION
 
