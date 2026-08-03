@@ -722,3 +722,16 @@
 }
 .styla-btn-icon { width: 18px !important; height: 18px !important; flex: 0 0 18px !important; }
 .styla-btn-text { font-size: 14px !important; font-weight: 600 !important; }
+
+/* Compact desktop sizing so the modal reads proportional to the store */
+.styla-modal-container { width: min(680px, 94vw) !important; height: min(500px, 88vh) !important; }
+.styla-modal-left { width: 34% !important; }
+.styla-modal-right { width: 66% !important; }
+.styla-option-val, #styla-best-size-val, [id^="styla-best-size-val"] { font-size: 22px !important; }
+.styla-modal-right, .styla-tab-content, .styla-text-rec-container { font-size: 13.5px !important; }
+.styla-panel-title, .styla-picker-title, .styla-form-title { font-size: 12px !important; }
+.styla-intent-card p { font-size: 12.5px !important; line-height: 1.5 !important; }
+.styla-fit-analysis-panel, .styla-intent-card, .styla-size-picker-section { padding: 12px 14px !important; }
+.styla-size-opt-btn { min-width: 40px !important; height: 36px !important; font-size: 14px !important; }
+.styla-tabs-bar { padding: 0 !important; }
+.styla-modal-right { padding: 16px 18px !important; }
