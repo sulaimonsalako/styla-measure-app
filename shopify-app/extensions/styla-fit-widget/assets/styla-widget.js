@@ -7,12 +7,54 @@
  */
 (function () {
   var API = 'https://www.styla.ca';
+  var STYLA_ORIGIN = 'https://www.styla.ca';
+  var SB_URL = 'https://tneflxtpmzodauygtslk.supabase.co';
+  var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc';
   var LS_PROFILE = 'styla_widget_profile';
   var LS_TOKEN = 'styla_widget_token';
+  var LS_REFRESH = 'styla_widget_refresh';
+  var LS_EXP = 'styla_widget_token_exp';
 
   function getProfile() { try { return JSON.parse(localStorage.getItem(LS_PROFILE) || 'null'); } catch (e) { return null; } }
   function setProfile(p) { try { localStorage.setItem(LS_PROFILE, JSON.stringify(p)); } catch (e) {} }
   function getToken() { try { return localStorage.getItem(LS_TOKEN) || null; } catch (e) { return null; } }
+
+  // Persist a Styla session (from the "Continue with Styla" popup or refresh).
+  function setSession(s) {
+    try {
+      if (s.access_token) localStorage.setItem(LS_TOKEN, s.access_token);
+      if (s.refresh_token) localStorage.setItem(LS_REFRESH, s.refresh_token);
+      if (s.expires_at) localStorage.setItem(LS_EXP, String(s.expires_at));
+      if (s.profile) setProfile(s.profile);
+    } catch (e) {}
+  }
+  function clearSession() { try { [LS_TOKEN, LS_REFRESH, LS_EXP, LS_PROFILE].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} }
+  function isSignedIn() { return !!getToken(); }
+
+  // Keep the shopper signed in across the ~1h token expiry: silently refresh via
+  // Supabase using the stored refresh token. Returns a valid access token or null
+  // (null => refresh failed / signed out).
+  async function ensureFreshToken() {
+    var t = getToken(); if (!t) return null;
+    var exp = parseInt(localStorage.getItem(LS_EXP) || '0', 10);
+    var rt = localStorage.getItem(LS_REFRESH);
+    if (exp && rt && (Date.now() / 1000) > (exp - 120)) {
+      try {
+        var r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+          body: JSON.stringify({ refresh_token: rt })
+        });
+        var d = await r.json();
+        if (d.access_token) {
+          setSession({ access_token: d.access_token, refresh_token: d.refresh_token,
+            expires_at: d.expires_at || (Math.floor(Date.now() / 1000) + (d.expires_in || 3600)) });
+          return d.access_token;
+        }
+        clearSession(); return null; // refresh rejected -> treat as signed out
+      } catch (e) { return t; } // network blip -> use existing token
+    }
+    return t;
+  }
 
   function statusFor(text) {
     var t = (text || '').toLowerCase();
@@ -79,7 +121,7 @@
 
       // ---------- fetch the real fit ----------
       async function loadFit() {
-        var profile = getProfile(), token = getToken();
+        var profile = getProfile(), token = await ensureFreshToken();
         if (!profile && !token) { showForm(true); return; }
         setLoading(true);
         try {
@@ -99,6 +141,39 @@
           renderFit();
           renderShopFor();
         } catch (e) { renderError(); } finally { setLoading(false); }
+      }
+
+      // ---------- Continue with Styla (one-tap sign-in) ----------
+      var _stylaPopup = null;
+      function openStylaConnect() {
+        var w = 460, h = 640;
+        var x = Math.max(0, ((window.screenX || 0) + ((window.outerWidth || screen.width) - w) / 2));
+        var y = Math.max(0, ((window.screenY || 0) + ((window.outerHeight || screen.height) - h) / 2));
+        var url = STYLA_ORIGIN + '/connect.html?origin=' + encodeURIComponent(location.origin) +
+          '&shop=' + encodeURIComponent(product.domain || location.hostname);
+        _stylaPopup = window.open(url, 'styla_connect', 'width=' + w + ',height=' + h + ',left=' + x + ',top=' + y);
+      }
+      // Receive the session the popup posts back. Verify it's really from Styla.
+      window.addEventListener('message', function (ev) {
+        if (ev.origin !== STYLA_ORIGIN) return;
+        var d = ev.data || {};
+        if (d.type !== 'styla-auth' || !d.access_token) return;
+        setSession(d);
+        try { if (_stylaPopup) _stylaPopup.close(); } catch (e) {}
+        var cta = detailsBody && detailsBody.querySelector('.styla-save-cta'); if (cta) cta.remove();
+        hideForm();
+        STATE.result = null; STATE.shopForId = null; STATE.shopForProfile = null;
+        loadFit();
+      });
+      // Inject a "Continue with Styla" button at the top of the guest form.
+      function ensureConnectBtn() {
+        if (!formPanel || formPanel.querySelector('.styla-connect-wrap')) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'styla-connect-wrap';
+        wrap.innerHTML = '<button type="button" class="styla-connect-btn">Continue with Styla</button>' +
+          '<div class="styla-connect-or">Have a Styla profile? One tap — no measuring.</div>';
+        formPanel.insertBefore(wrap, formPanel.firstChild);
+        wrap.querySelector('.styla-connect-btn').addEventListener('click', openStylaConnect);
       }
 
       // ---- shop for someone who shares their size with you ----
@@ -200,8 +275,11 @@
           '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
           '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
           '<button type="button" class="styla-save-btn">Save my size — free</button>' +
+          '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
           '<div class="styla-save-msg"></div>';
         host.appendChild(box);
+        var connLink = box.querySelector('.styla-connect-link');
+        if (connLink) connLink.addEventListener('click', openStylaConnect);
         box.querySelector('.styla-save-btn').addEventListener('click', function () {
           var email = (box.querySelector('.styla-save-email').value || '').trim();
           var pass = box.querySelector('.styla-save-pass').value || '';
@@ -233,7 +311,7 @@
 
       // ---------- guest measurement form ----------
       var editBtn = el('styla-edit-specs'), cancelBtn = el('styla-cancel-specs'), saveBtn = el('styla-save-specs');
-      function showForm(first) { formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) intentEl.textContent = ''; }
+      function showForm(first) { ensureConnectBtn(); formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) intentEl.textContent = ''; }
       function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
       if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
       if (cancelBtn) cancelBtn.addEventListener('click', hideForm);

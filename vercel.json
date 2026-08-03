@@ -90,6 +90,10 @@
       "destination": "/bridesmaid.html"
     },
     {
+      "source": "/connect",
+      "destination": "/connect.html"
+    },
+    {
       "source": "/brands",
       "destination": "/brands.html"
     }

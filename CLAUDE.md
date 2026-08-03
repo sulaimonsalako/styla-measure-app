@@ -195,6 +195,34 @@ Decision: **`public/charts.html` is the served app** (no build step, robust).
 - To see changes: restart `shopify app dev` (reloads index.js). charts.html is static,
   no build needed. The stale `public/index.html` + `public/assets/*` can be deleted.
 
+## "Continue with Styla" one-tap auth (DONE in code, 2026-08-03)
+
+Lets a storefront shopper sign into their Styla profile from the widget without
+typing a password into the merchant's page, and stay signed in across the token
+expiry. SSO-style, via a styla.ca popup (first-party Supabase session).
+
+- **`connect.html`** (repo root, served at styla.ca/connect.html; `/connect` rewrite
+  added): reads `origin`+`shop` query params (the requesting store), checks the
+  Supabase session. Signed in -> "Continue as {email}" consent (shows requesting
+  origin) -> posts `{type:'styla-auth', access_token, refresh_token, expires_at,
+  email, profile}` via `window.opener.postMessage(payload, ORIGIN)` and closes.
+  Signed out -> email/password login (Supabase) then same. Remembers approved
+  origins in localStorage for silent re-auth. Uses the public SUPABASE_URL+anon key.
+- **Widget (`styla-widget.js`):** module-scope `setSession/clearSession/ensureFreshToken`
+  (refreshes via `${SB_URL}/auth/v1/token?grant_type=refresh_token` with the stored
+  refresh token; clears on reject). `loadFit` now `await ensureFreshToken()`.
+  Per-container: `openStylaConnect()` opens the popup; a `message` listener verifies
+  `ev.origin===STYLA_ORIGIN` + `type==='styla-auth'`, stores the session, reloads fit.
+  "Continue with Styla" button injected at top of the guest form (`ensureConnectBtn`)
+  and as an "Already use Styla?" link in the save CTA. CSS in styla-widget.css.
+- Security: token is a Supabase access token (widget-size/extension-chat already
+  consume it via supabaseAdmin.auth.getUser). postMessage targets the exact store
+  origin; receiver checks the sender origin. Refresh token IS stored in the store's
+  localStorage (per-origin) — acceptable for MVP; an XSS on the merchant store could
+  read it. CAVEAT: relies on window.opener (breaks if a store sets COOP
+  same-origin — rare on Shopify). NOT run live; verify on deploy (needs connect.html
+  deployed to styla.ca + the widget re-pushed).
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

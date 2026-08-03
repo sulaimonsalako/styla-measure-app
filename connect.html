@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Continue with Styla</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0b0b14;--card:#16162a;--line:rgba(255,255,255,.10);--white:#fff;--muted:#aeb4c2;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--green:#34d399;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;}
+body{background:var(--bg);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 24px;}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:2px;font-size:1.1rem;margin-bottom:4px;}
+.brand .dot{width:24px;height:24px;border-radius:50%;background:var(--grad);}
+h1{font-size:1.15rem;margin:14px 0 4px;}
+.sub{color:var(--muted);font-size:.86rem;line-height:1.5;margin-bottom:18px;}
+.req{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.8rem;color:var(--muted);margin-bottom:16px;word-break:break-all;}
+.req b{color:#fff;}
+label{display:block;font-size:.78rem;color:var(--muted);margin:10px 0 5px;font-weight:600;}
+input{width:100%;background:#0f0f1c;border:1px solid var(--line);border-radius:10px;padding:12px 13px;color:#fff;font-size:.92rem;}
+input:focus{outline:none;border-color:var(--pink);}
+.btn{width:100%;border:none;border-radius:100px;padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;margin-top:14px;}
+.btn-primary{background:var(--grad);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--white);}
+.link{background:none;border:none;color:var(--pink);cursor:pointer;font-size:.83rem;font-weight:600;padding:0;}
+.center{text-align:center;margin-top:14px;font-size:.83rem;color:var(--muted);}
+.msg{font-size:.83rem;margin-top:10px;min-height:1em;color:#ff9db5;}
+.hide{display:none;}
+.who{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:6px;}
+.who .av{width:36px;height:36px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:800;}
+.who .em{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;}
+.spin{color:var(--muted);font-size:.9rem;text-align:center;padding:12px 0;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><span class="dot"></span>STYLA</div>
+
+  <div id="loading" class="spin">Loading…</div>
+
+  <!-- Signed-in: one-tap consent -->
+  <div id="consent" class="hide">
+    <h1>Continue with Styla</h1>
+    <p class="sub">Share your Styla size so this store can recommend your fit.</p>
+    <div class="req">Requested by <b id="reqOrigin">this store</b></div>
+    <div class="who"><div class="av" id="avatar">S</div><div class="em" id="whoEmail">you@example.com</div></div>
+    <button class="btn btn-primary" id="btnContinue">Continue</button>
+    <div class="center"><button class="link" id="btnSwitch">Use a different account</button></div>
+  </div>
+
+  <!-- Signed-out: login -->
+  <div id="login" class="hide">
+    <h1>Sign in to Styla</h1>
+    <p class="sub">Sign in to share your size with <b id="reqOrigin2">this store</b>.</p>
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="email" placeholder="you@example.com"/>
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Your password"/>
+    <button class="btn btn-primary" id="btnLogin">Sign in &amp; continue</button>
+    <div class="msg" id="loginMsg"></div>
+    <div class="center">New to Styla? <button class="link" id="btnCreate">Create your size profile</button></div>
+  </div>
+
+  <div id="errbox" class="hide">
+    <h1>Can't continue</h1>
+    <p class="sub" id="errText">Open this from a store's Styla widget.</p>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL="https://tneflxtpmzodauygtslk.supabase.co";
+var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+var sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var APPROVED_KEY="styla_connect_approved";
+
+var params=new URLSearchParams(location.search);
+var ORIGIN=params.get('origin')||'';
+var SHOP=params.get('shop')||'';
+function show(id){ ['loading','consent','login','errbox'].forEach(function(x){ document.getElementById(x).classList.toggle('hide', x!==id); }); }
+function hostOf(u){ try{ return new URL(u).host; }catch(e){ return u||'this store'; } }
+
+// Validate the requesting origin — must be a real https origin and there must be
+// an opener to post the token back to. This is the consent boundary.
+var validOrigin=false;
+try{ var uo=new URL(ORIGIN); validOrigin = (uo.protocol==='https:'||uo.protocol==='http:') && !!uo.origin; }catch(e){}
+if(!validOrigin || !window.opener){
+  document.getElementById('errText').textContent = !window.opener
+    ? 'Open this from the Styla button on a store to continue.'
+    : 'This request is missing a valid store address.';
+  show('errbox');
+} else {
+  var label=hostOf(ORIGIN);
+  document.getElementById('reqOrigin').textContent=label;
+  document.getElementById('reqOrigin2').textContent=label;
+  init();
+}
+
+function approvedOrigins(){ try{ return JSON.parse(localStorage.getItem(APPROVED_KEY)||'[]'); }catch(e){ return []; } }
+function rememberApproved(){ try{ var a=approvedOrigins(); if(a.indexOf(ORIGIN)<0){ a.push(ORIGIN); localStorage.setItem(APPROVED_KEY, JSON.stringify(a)); } }catch(e){} }
+
+async function loadProfile(uid){
+  try{
+    var r=await sb.from('profiles').select('chest,waist,hips,belly,shoulder,height,inseam').eq('id',uid).maybeSingle();
+    return (r && r.data) || null;
+  }catch(e){ return null; }
+}
+
+// Post the session to the requesting store and close.
+async function grant(session){
+  var prof=await loadProfile(session.user.id);
+  var payload={
+    type:'styla-auth',
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    expires_at: session.expires_at,
+    email: session.user.email,
+    profile: prof
+  };
+  rememberApproved();
+  try{ window.opener.postMessage(payload, ORIGIN); }catch(e){}
+  document.querySelector('.card').innerHTML='<div class="spin">✓ Signed in — you can close this window.</div>';
+  setTimeout(function(){ try{ window.close(); }catch(e){} }, 500);
+}
+
+async function init(){
+  var s=(await sb.auth.getSession()).data.session;
+  if(s){
+    // Already approved this store before -> silent one-tap.
+    if(approvedOrigins().indexOf(ORIGIN)>-1){ grant(s); return; }
+    var email=s.user.email||'your account';
+    document.getElementById('whoEmail').textContent=email;
+    document.getElementById('avatar').textContent=(email[0]||'S').toUpperCase();
+    show('consent');
+  } else {
+    show('login');
+  }
+}
+
+document.getElementById('btnContinue').addEventListener('click', async function(){
+  this.disabled=true; this.textContent='Continuing…';
+  var s=(await sb.auth.getSession()).data.session;
+  if(s) grant(s); else show('login');
+});
+document.getElementById('btnSwitch').addEventListener('click', async function(){
+  await sb.auth.signOut(); show('login');
+});
+document.getElementById('btnLogin').addEventListener('click', async function(){
+  var email=document.getElementById('email').value.trim();
+  var password=document.getElementById('password').value;
+  var msg=document.getElementById('loginMsg');
+  if(!email||!password){ msg.textContent='Enter your email and password.'; return; }
+  this.disabled=true; msg.style.color='var(--muted)'; msg.textContent='Signing in…';
+  var r=await sb.auth.signInWithPassword({ email:email, password:password });
+  if(r.error){ this.disabled=false; msg.style.color='#ff9db5'; msg.textContent=r.error.message||'Login failed.'; return; }
+  grant(r.data.session);
+});
+document.getElementById('btnCreate').addEventListener('click', function(){
+  // Send them to the full questionnaire; they can return and Continue after.
+  window.open(SUPABASE_URL ? '/start.html' : '/', '_blank');
+});
+</script>
+</body>
+</html>
