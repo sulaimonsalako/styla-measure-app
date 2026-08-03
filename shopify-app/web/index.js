@@ -32,7 +32,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY || 'mock_key',
   apiSecretKey: process.env.SHOPIFY_API_SECRET || 'mock_secret',
-  scopes: ['write_products', 'read_products', 'read_customers'],
+  scopes: ['write_products', 'read_products', 'read_customers', 'read_orders'],
   hostName: process.env.HOST ? process.env.HOST.replace(/https:\/\//, '') : 'localhost:8080',
   apiVersion: ApiVersion.April24,
   isEmbeddedApp: true

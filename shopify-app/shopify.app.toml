@@ -12,7 +12,8 @@ api_version = "2024-04"
 embedded = false
 
 [access_scopes]
-scopes = "write_products,read_products,read_customers"
+# read_orders powers fit/return analytics (the B2B "we cut your returns" value).
+scopes = "write_products,read_products,read_customers,read_orders"
 
 [auth]
 redirect_urls = [
