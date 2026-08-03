@@ -59,6 +59,7 @@ export default async function widgetSize(req, res) {
         explanation: r.explanation,
         breakdown: r.fit_breakdown,
         candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
+        chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes } : null, // full table for the AI
         measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
       };
     }
@@ -131,8 +132,13 @@ export default async function widgetSize(req, res) {
       score: r.fit_match_score,
       spectrum: r.fit_spectrum,
       category: norm.garment_category,
+      subcategory: cd.subcategory || null,
       fits: !r.warning,
       resolvedBy: 'brand-category',
+      explanation: r.explanation,
+      breakdown: r.fit_breakdown,
+      candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
+      chart: cd.sizes ? { columns: cd.columns || null, sizes: cd.sizes } : null, // full table for the AI
       measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
     });
   } catch (e) {

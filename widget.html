@@ -412,7 +412,7 @@
         domain:DOMAIN, shop:DOMAIN, category:CATEGORY,
         pageTitle: ctx.pageTitle || PRODUCT || BRAND || '',
         pageText: ctx.pageText || '', tableHtml: ctx.tableHtml || '',
-        sizeChart: RES ? { sizes:(RES.candidates||[]) } : null,
+        sizeChart: RES ? (RES.chart || { sizes:(RES.candidates||[]) }) : null,
         history: CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
       var token = x.accessToken || await currentToken();
       if(token) payload.accessToken=token;

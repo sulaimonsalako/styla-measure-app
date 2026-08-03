@@ -249,6 +249,31 @@ Two things shipped this pass:
 - NOT run live; verify on deploy. widget.html is served from styla.ca so shoppers are
   first-party there (no "Continue with Styla" popup needed inside that iframe).
 
+## Keep the chart whole: dynamic columns + AI learns the table (2026-08-03)
+
+Problem: charts.html reduced every uploaded chart to 4 fixed columns
+(chest/waist/hips/inseam) via a hardcoded mapPom, dropping shoulder/sleeve/length/
+neck/thigh/numeric-size etc. — even though the server `normalizeChart` already maps
+ALL those POMs (KEY_MAP) and the engine supports them.
+
+Fix (DONE in code):
+- **charts.html: dynamic columns.** Table columns = whatever the parser returns
+  (`poms`), plus a manual "+ Add measurement". Saves the full table AS-IS under the
+  brand's own column names + `columns` + `sleeve_convention`/`shoulder_convention`
+  into chart_data. normalizeChart (server) maps the known ones to canonical engine
+  keys and keeps ranges; unknown columns ride along for the AI. No more 4-col cap.
+- **AI learns the table.** `widget-size` now returns `chart:{columns,sizes}` (the raw
+  full table) on BOTH the override and brand-category paths (also added candidates/
+  breakdown to the brand-category path so the other-sizes picker works there too).
+  `styla-widget.js` and `widget.html` pass `result.chart` as `sizeChart` to
+  `/api/extension-chat`, so the AI can answer questions about ANY column (length in L,
+  what the numeric size maps to, etc.).
+- Also fixed: `shopify-app/web/index.js` now loads the repo-root `.env` (it had no
+  local .env -> was hitting example.supabase.co/mock-key -> "fetch failed" +
+  "merchant session not found"). Restart `shopify app dev`; if Sync still says session
+  not found, reinstall the app so OAuth stores merchant_sessions against the real DB.
+- NOT run live; verify on deploy + dev restart.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

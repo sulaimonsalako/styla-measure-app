@@ -347,7 +347,8 @@
           // store context -> lets the AI reason across this shop's whole catalog
           // (not just the current product) when the shopper asks for alternatives.
           domain: product.domain, shop: product.domain, category: mapType(product.type),
-          sizeChart: STATE.result ? { sizes: (STATE.result.candidates || []) } : null,
+          // Full brand chart (every column) so the AI can answer questions about any measurement.
+          sizeChart: STATE.result ? (STATE.result.chart || { sizes: (STATE.result.candidates || []) }) : null,
           history: CHAT
         };
         if (token) payload.accessToken = token;

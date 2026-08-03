@@ -64,11 +64,13 @@ td input{padding:7px 8px;}
       <input type="file" id="file" accept="image/*,.pdf" style="display:none"/>
     </div>
 
-    <table>
-      <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Inseam</th><th></th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <button class="btn btn-ghost btn-sm" id="addRow" style="margin-top:8px">+ Add size</button>
+    <div style="overflow-x:auto">
+      <table><thead id="thead"></thead><tbody id="rows"></tbody></table>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="addRow">+ Add size</button>
+      <button class="btn btn-ghost btn-sm" id="addCol">+ Add measurement</button>
+    </div>
 
     <div id="chartWarn" class="warn" style="display:none"></div>
     <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
@@ -116,32 +118,58 @@ var TAX=[
  {slug:'bridesmaid',label:'Bridesmaid',inc:'Bridesmaid dresses'},{slug:'bras',label:'Bras',inc:'Band + cup'},
  {slug:'shapewear',label:'Shapewear',inc:'Bodysuits, slips'},{slug:'swimwear',label:'Swimwear',inc:'One-piece, bikini'}
 ];
-var MCOLS=['chest','waist','hips','inseam'];
+// Columns are DYNAMIC — we keep the brand's chart AS-IS (every measurement the
+// parser finds, plus any you add), never a fixed 4. The server's normalizeChart
+// maps bust/chest/waist/hip/shoulder/sleeve/inseam/neck/length onto the engine's
+// canonical keys and keeps ranges; unknown columns (e.g. a numeric size alias)
+// ride along in chart_data so the AI can answer questions about them.
+var COLS=['Chest','Waist','Hips'];                 // display columns (POM names)
+var CONV={sleeve_convention:'auto',shoulder_convention:'auto'};
 document.getElementById('cat').innerHTML=TAX.map(function(c){return '<option value="'+c.slug+'">'+c.label+'</option>';}).join('');
 function updInc(){var c=TAX.filter(function(x){return x.slug===document.getElementById('cat').value;})[0];document.getElementById('includes').textContent=c?('Includes: '+c.inc):'';}
 document.getElementById('cat').addEventListener('change',updInc);updInc();
 
 function el(id){return document.getElementById(id);}
 function fmt(v){return Array.isArray(v)?v.join('-'):(v==null?'':v);}
-function addRow(s){s=s||{};var tr=document.createElement('tr');
-  tr.innerHTML='<td><input value="'+(s.name||'')+'" placeholder="M"/></td>'+MCOLS.map(function(k){return '<td><input value="'+fmt(s[k])+'" placeholder="—"/></td>';}).join('')+'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
-  el('rows').appendChild(tr);}
+function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;');}
+function parseVal(s){s=(s||'').toString().trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
+
+function renderHead(){ el('thead').innerHTML='<tr><th>Size</th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join('')+'<th></th></tr>'; }
+function rowHTML(s){s=s||{};
+  return '<td><input value="'+esc(s.name||'')+'" placeholder="M"/></td>'
+    +COLS.map(function(c){return '<td><input value="'+esc(fmt(s[c]))+'" placeholder="—"/></td>';}).join('')
+    +'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+}
+function addRow(s){var tr=document.createElement('tr');tr.innerHTML=rowHTML(s);el('rows').appendChild(tr);}
+function collectRows(){var rows=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var r={name:ins[0].value};COLS.forEach(function(c,i){r[c]=ins[i+1]?ins[i+1].value:'';});rows.push(r);});return rows;}
+function renderTable(rows){renderHead();el('rows').innerHTML='';(rows&&rows.length?rows:[{},{},{}]).forEach(addRow);}
+renderTable();
+
 el('addRow').addEventListener('click',function(){addRow();});
-addRow();addRow();addRow();
+el('addCol').addEventListener('click',function(){
+  var name=prompt('Measurement name (e.g. Shoulder, Sleeve Length, Length, Thigh, Neck):');
+  if(!name)return; name=name.trim(); if(!name||COLS.indexOf(name)>-1)return;
+  var rows=collectRows(); COLS.push(name); renderTable(rows);
+});
 
-function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
-var POM=[['inseam','inseam'],['bust','chest'],['chest','chest'],['seat','hips'],['hip','hips'],['waist','waist']];
-function mapPom(n){n=(n||'').toLowerCase().trim();for(var i=0;i<POM.length;i++)if(n.indexOf(POM[i][0])>-1)return POM[i][1];return null;}
-
-// paste / drop / upload -> parse on styla.ca
+// paste / drop / upload -> parse on styla.ca. We keep EVERY column the parser
+// returns (its own POM names) — nothing is dropped.
 async function parseFile(file){if(!file)return;var m=el('aimsg');m.textContent='Reading your chart…';
   try{var d=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(file);});
     var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData:d,mimeType:file.type||'image/png'})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
-    el('rows').innerHTML='';var cols={};
-    (j.sizes||[]).forEach(function(name){var src=(j.sizeChart||{})[name]||{};var row={name:String(name)};
-      Object.keys(src).forEach(function(p){var k=mapPom(p);if(k&&src[p]!=null&&src[p]!==''){row[k]=src[p];cols[k]=1;}});addRow(row);});
-    m.style.color='';m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+Object.keys(cols).length+' measurements — review, then save.';
+    var poms=(j.poms&&j.poms.length)?j.poms.slice():[];
+    if(!poms.length){var first=(j.sizes||[])[0]; if(first&&j.sizeChart&&j.sizeChart[first]) poms=Object.keys(j.sizeChart[first]);}
+    COLS = poms.length?poms:COLS;
+    CONV.sleeve_convention=j.sleeve_convention||'auto';
+    CONV.shoulder_convention=j.shoulder_convention||'auto';
+    var rows=(j.sizes||[]).map(function(name){var src=(j.sizeChart||{})[name]||{};var row={name:String(name)};
+      COLS.forEach(function(c){var v=src[c];
+        if(v==null){var kk=Object.keys(src).filter(function(k){return k.toLowerCase()===c.toLowerCase();})[0]; if(kk)v=src[kk];}
+        row[c]=(v==null?'':v);});
+      return row;});
+    renderTable(rows);
+    m.style.color='';m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+COLS.length+' measurements — review, then save.';
   }catch(e){m.textContent='Could not read that: '+(e.message||e);}}
 el('drop').addEventListener('click',function(e){if(e.target.id!=='file')el('file').click();});
 el('file').addEventListener('change',function(){parseFile(this.files[0]);this.value='';});
@@ -149,10 +177,15 @@ el('drop').addEventListener('dragover',function(e){e.preventDefault();});
 el('drop').addEventListener('drop',function(e){e.preventDefault();parseFile((e.dataTransfer.files||[])[0]);});
 document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){parseFile(it[i].getAsFile());break;}});
 
-function collectSizes(){var sizes=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=ins[0].value.trim();if(!name)return;var row={name:name};MCOLS.forEach(function(k,i){var v=parseVal(ins[i+1].value);if(v!==undefined)row[k]=v;});sizes.push(row);});return sizes;}
-function validate(sizes){var w=[];var num=function(x){return Array.isArray(x)?(x[0]+x[1])/2:x;};
-  if(!sizes.some(function(s){return ['chest','waist','hips','inseam'].some(function(k){return s[k]!=null;});}))w.push('No measurements found — add at least chest/waist/hips so we can size shoppers.');
-  sizes.forEach(function(s){if(s.chest!=null&&s.waist!=null&&num(s.chest)<num(s.waist))w.push('Size “'+s.name+'”: chest is smaller than waist — check the values.');});
+// Build sizes keyed by the brand's OWN column names. normalizeChart (server)
+// maps the known ones onto the engine's canonical keys and keeps ranges; the
+// rest are preserved for the AI.
+function collectSizes(){var sizes=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var row={name:name};COLS.forEach(function(c,i){var v=parseVal(ins[i+1]?ins[i+1].value:'');if(v!==undefined)row[c]=v;});sizes.push(row);});return sizes;}
+function num(x){return Array.isArray(x)?(x[0]+x[1])/2:x;}
+function colVal(s,names){for(var i=0;i<names.length;i++){var k=Object.keys(s).filter(function(kk){return kk.toLowerCase()===names[i];})[0];if(k)return s[k];}return null;}
+function validate(sizes){var w=[];
+  if(!sizes.some(function(s){return Object.keys(s).some(function(k){return k!=='name'&&s[k]!=null;});}))w.push('No measurements found — add at least one measurement column with values.');
+  sizes.forEach(function(s){var ch=colVal(s,['chest','bust']),wa=colVal(s,['waist']);if(ch!=null&&wa!=null&&num(ch)<num(wa))w.push('Size “'+s.name+'”: chest/bust is smaller than waist — check the values.');});
   return w;}
 var pending=false;
 el('save').addEventListener('click',async function(){
@@ -161,7 +194,7 @@ el('save').addEventListener('click',async function(){
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
-  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',sizes:sizes};
+  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,sizes:sizes};
   msg.style.color='';msg.textContent='Saving…';
   try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
     var d=await r.json();if(d.error)throw new Error(d.error);
