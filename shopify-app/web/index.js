@@ -523,7 +523,11 @@ app.post('/api/size-chart', async (req, res) => {
 // ----------------------------------------------------
 const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
-app.get('/charts', (req, res) => res.sendFile(path.join(__dirname, 'public', 'charts.html')));
+// App home (embedded) = the size-chart manager. Serve it at / and /charts so the
+// app loads a real page instead of "Invalid path" when Shopify opens it.
+function serveApp(req, res) { res.sendFile(path.join(__dirname, 'public', 'charts.html')); }
+app.get('/', serveApp);
+app.get('/charts', serveApp);
 
 async function shopInstalled(shop) {
   if (!shop) return false;
