@@ -10,19 +10,24 @@
 :root{--bg:#f6f6f8;--card:#fff;--line:#e3e5ea;--text:#1e2330;--muted:#5f6672;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--green:#0f7a54;}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;}
 body{background:var(--bg);color:var(--text);padding:22px;}
-.wrap{max-width:820px;margin:0 auto;}
+.wrap{max-width:760px;margin:0 auto;}
 h1{font-size:1.4rem;margin-bottom:4px;}
 .sub{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
-.card h2{font-size:1.05rem;margin-bottom:10px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+.step{display:flex;align-items:center;gap:11px;margin-bottom:4px;}
+.stepnum{width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex:none;}
+.step h2{font-size:1.1rem;}
+.card h2{font-size:1.05rem;}
+.lead{color:var(--muted);font-size:.88rem;margin:2px 0 14px 37px;line-height:1.5;}
 label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px;font-weight:600;}
-select,input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.92rem;background:#fff;color:var(--text);}
-select:focus,input:focus{outline:none;border-color:var(--pink);}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+select,input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.92rem;background:#fff;color:var(--text);font-family:inherit;}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--pink);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .hint{color:var(--muted);font-size:.78rem;}
 .drop{margin-top:14px;border:1.5px dashed var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center;cursor:pointer;background:#fafbfc;}
 .drop:hover{border-color:var(--pink);}
 .drop .big{font-size:1.5rem;}
+.prompt{border:1.5px dashed var(--line);border-radius:12px;padding:22px 16px;text-align:center;color:var(--muted);font-size:.9rem;margin-top:12px;line-height:1.5;}
 table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.86rem;}
 th{text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;padding:6px 6px;}
 td{padding:3px 4px;}
@@ -31,12 +36,21 @@ td input{padding:7px 8px;}
 .btn-primary{background:var(--grad);color:#fff;}
 .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--text);}
 .btn-sm{padding:7px 13px;font-size:.82rem;}
+.linkbtn{background:none;border:none;color:var(--pink);font-weight:700;cursor:pointer;font-size:.9rem;text-decoration:underline;padding:0;}
 .msg{font-size:.85rem;margin-top:10px;min-height:1em;}
 .chartrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);}
 .badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:100px;background:#eef0f4;color:var(--muted);text-transform:capitalize;}
 .badge.v{background:#e7f8f0;color:var(--green);}
 .empty{color:var(--muted);font-size:.88rem;padding:8px 0;}
 .warn{background:#fdf4e3;border:1px solid #f0d9a0;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#8a5a00;margin-top:10px;}
+.statusline{display:flex;align-items:center;gap:10px;font-size:.92rem;margin-bottom:12px;flex-wrap:wrap;}
+.ok{color:var(--green);font-weight:700;}
+details.adv{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
+details.adv>summary{cursor:pointer;font-weight:700;font-size:.85rem;color:var(--muted);list-style:none;user-select:none;}
+details.adv>summary::-webkit-details-marker{display:none;}
+details.adv>summary::before{content:'▸  ';}
+details.adv[open]>summary::before{content:'▾  ';}
+.advbody{padding-top:12px;}
 </style>
 </head>
 <body>
@@ -44,22 +58,24 @@ td input{padding:7px 8px;}
   <a href="/charts.html" rel="home">Size charts</a>
 </ui-nav-menu>
 <div class="wrap">
-  <h1>Your size charts</h1>
-  <p class="sub" id="shopline">Add your size guide once — Styla uses it to give every shopper their correct size and to answer fit questions on your product pages.</p>
+  <h1>Styla — size &amp; fit</h1>
+  <p class="sub" id="shopline"></p>
 
+  <!-- STEP 1 -->
   <div class="card">
-    <h2>Add / update a size chart</h2>
-    <div class="row3">
-      <div><label>Category</label><select id="cat"></select></div>
-      <div><label>Sub-tag <span class="hint">(optional)</span></label><input id="sub" placeholder="e.g. slim, denim"/></div>
-      <div><label>Fit for</label><select id="gender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex</option></select></div>
+    <div class="step"><span class="stepnum">1</span><h2>Add a size chart</h2></div>
+    <p class="lead">Upload your size guide once. Every shopper then sees their correct size right on your product pages — no work per product.</p>
+
+    <div class="row2">
+      <div><label>What kind of clothing?</label><select id="cat"></select></div>
+      <div><label>Who wears it?</label><select id="gender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex / all</option></select></div>
     </div>
     <div id="includes" class="hint" style="margin-top:6px"></div>
 
     <div class="drop" id="drop">
       <span class="big">📷</span>
-      <div style="flex:1"><b>Add screenshot(s) of your size chart — paste (Ctrl/⌘+V), drop, or click.</b>
-        <div class="hint">Add MULTIPLE images if the chart is too wide or long for one screenshot — we merge them into one. Centimeters convert to inches automatically.</div>
+      <div style="flex:1"><b>Paste or drop a screenshot of your size guide.</b>
+        <div class="hint">Too wide or long for one screenshot? Add several — we merge them. Centimetres become inches automatically.</div>
         <div id="shots" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div>
       <input type="file" id="file" accept="image/*,.pdf" multiple style="display:none"/>
     </div>
@@ -68,51 +84,71 @@ td input{padding:7px 8px;}
       <span id="aimsg" class="hint"></span>
     </div>
 
-    <div style="overflow-x:auto">
-      <table><thead id="thead"></thead><tbody id="rows"></tbody></table>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" id="addRow">+ Add size</button>
-      <button class="btn btn-ghost btn-sm" id="addCol">+ Add measurement</button>
+    <!-- empty state: shown until a chart is parsed or entered -->
+    <div class="prompt" id="chartEmpty">
+      Your sizes will appear here after you add a screenshot above.<br/>
+      <button class="linkbtn" id="enterManual" style="margin-top:6px">Or type them in by hand</button>
     </div>
 
-    <div style="margin-top:18px">
-      <label style="margin:0 0 4px">Length / proportion options <span class="hint">(optional — e.g. Petite / Regular / Tall)</span></label>
-      <div class="hint" style="margin-bottom:6px">If the garment comes in length variants tied to height, add them — shoppers get a length suggestion from their height.</div>
-      <div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Inseam/Length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead><tbody id="lens"></tbody></table></div>
-      <button class="btn btn-ghost btn-sm" id="addLen" style="margin-top:6px">+ Add length option</button>
+    <!-- the editable table (hidden until there's something to show) -->
+    <div id="chartEditor" style="display:none">
+      <div style="overflow-x:auto"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+      <button class="btn btn-ghost btn-sm" id="addRow" style="margin-top:8px">+ Add a size row</button>
     </div>
-    <div style="margin-top:16px">
-      <label style="margin:0 0 4px">Fit notes the AI can use <span class="hint">(optional)</span></label>
-      <textarea id="notes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 5'9&quot; wearing S." style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.9rem;font-family:inherit;resize:vertical"></textarea>
-    </div>
+
+    <details class="adv" id="advChart">
+      <summary>Advanced options — fit style, lengths, fit notes</summary>
+      <div class="advbody">
+        <label>Fit style <span class="hint">(optional — e.g. slim, relaxed, denim)</span></label>
+        <input id="sub" placeholder="e.g. slim"/>
+
+        <button class="btn btn-ghost btn-sm" id="addCol" style="margin-top:12px">+ Add another measurement column</button>
+
+        <div style="margin-top:16px">
+          <label style="margin:0 0 4px">Length options <span class="hint">(optional — e.g. Petite / Regular / Tall)</span></label>
+          <div class="hint" style="margin-bottom:6px">For garments that come in length variants tied to height. Shoppers get a length suggestion from their height.</div>
+          <div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Inseam/Length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead><tbody id="lens"></tbody></table></div>
+          <button class="btn btn-ghost btn-sm" id="addLen" style="margin-top:6px">+ Add length option</button>
+        </div>
+        <div style="margin-top:16px">
+          <label style="margin:0 0 4px">Fit notes the AI can use <span class="hint">(optional)</span></label>
+          <textarea id="notes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 5'9&quot; wearing S." style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </details>
 
     <div id="chartWarn" class="warn" style="display:none"></div>
-    <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
       <button class="btn btn-primary" id="save">Save chart</button>
-      <span class="msg" id="saveMsg"></span>
+      <span class="msg" id="saveMsg" style="margin-top:0"></span>
     </div>
   </div>
 
+  <!-- saved charts -->
   <div class="card">
-    <h2>Teach the AI your catalog</h2>
-    <p class="hint" style="margin-bottom:10px">Sync your products so Styla's AI can answer shoppers across your whole store — recommending other items that fit them, not just the product they're viewing. Re-run any time you add or change products.</p>
+    <h2>Your saved charts</h2>
+    <div id="list"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step"><span class="stepnum">2</span><h2>Sync your products</h2></div>
+    <p class="lead">This lets Styla's AI recommend other items in your store that fit each shopper. Your saved charts already apply automatically by clothing type — this just gives the AI your full catalog.</p>
+
+    <div class="statusline" id="syncStatus"><span class="hint">Checking…</span></div>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn btn-ghost" id="syncBtn">Sync catalog to Styla AI</button>
+      <button class="btn btn-ghost" id="syncBtn">Sync products</button>
       <span class="msg" id="syncMsg" style="margin-top:0"></span>
     </div>
-  </div>
 
-  <div class="card">
-    <h2>Assign charts to products <span class="hint">(optional)</span></h2>
-    <p class="hint" style="margin-bottom:10px">By default every product uses the chart for its category — no work needed. To use a different chart for a specific product or a whole product type, override it here. Sync your catalog first to see products.</p>
-    <div id="assignHost"><div class="empty">Sync your catalog to list products.</div></div>
-    <div class="msg" id="assignMsg"></div>
-  </div>
-
-  <div class="card">
-    <h2>Charts you've added</h2>
-    <div id="list"><div class="empty">Loading…</div></div>
+    <details class="adv" id="advAssign">
+      <summary>Use a different chart for specific products</summary>
+      <div class="advbody">
+        <p class="hint" style="margin-bottom:10px">Only needed for the odd product that differs from its type. Everything else uses its clothing-type chart automatically.</p>
+        <div id="assignHost"><div class="empty">Sync your products to list them here.</div></div>
+        <div class="msg" id="assignMsg"></div>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -123,7 +159,9 @@ var SHOP=new URLSearchParams(location.search).get('shop')||'';
 // verifies. Standalone (dev): fall back to the ?shop= param.
 async function idToken(){ try{ if(window.shopify && window.shopify.idToken) return await window.shopify.idToken(); }catch(e){} return null; }
 async function mfetch(url, opts){ opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{}); var t=await idToken(); if(t) opts.headers['Authorization']='Bearer '+t; return fetch(url, opts); }
-document.getElementById('shopline').textContent = SHOP ? ('Store: '+SHOP+' — add your size guide once and every shopper gets their correct size.') : 'Open this from your Shopify admin (Styla app) so we know your store.';
+function el(id){return document.getElementById(id);}
+el('shopline').textContent = SHOP ? ('Store: '+SHOP) : 'Open this from your Shopify admin (Styla app) so we know your store.';
+
 var TAX=[
  {slug:'tops',label:'Tops',inc:'T-shirts, shirts, knitwear'},{slug:'outerwear',label:'Outerwear',inc:'Jackets, coats, blazers'},
  {slug:'suits',label:'Suits',inc:'Suits, tuxedos'},{slug:'pants',label:'Pants',inc:'Trousers, jeans, chinos'},
@@ -134,21 +172,19 @@ var TAX=[
  {slug:'shapewear',label:'Shapewear',inc:'Bodysuits, slips'},{slug:'swimwear',label:'Swimwear',inc:'One-piece, bikini'}
 ];
 // Columns are DYNAMIC — we keep the brand's chart AS-IS (every measurement the
-// parser finds, plus any you add), never a fixed 4. The server's normalizeChart
-// maps bust/chest/waist/hip/shoulder/sleeve/inseam/neck/length onto the engine's
-// canonical keys and keeps ranges; unknown columns (e.g. a numeric size alias)
-// ride along in chart_data so the AI can answer questions about them.
-var COLS=['Chest','Waist','Hips'];                 // display columns (POM names)
+// parser finds). The server's normalizeChart maps the known ones onto the engine's
+// canonical keys; unknown columns ride along in chart_data for the AI.
+var COLS=['Chest','Waist','Hips'];
 var CONV={sleeve_convention:'auto',shoulder_convention:'auto'};
-document.getElementById('cat').innerHTML=TAX.map(function(c){return '<option value="'+c.slug+'">'+c.label+'</option>';}).join('');
-function updInc(){var c=TAX.filter(function(x){return x.slug===document.getElementById('cat').value;})[0];document.getElementById('includes').textContent=c?('Includes: '+c.inc):'';}
-document.getElementById('cat').addEventListener('change',updInc);updInc();
+el('cat').innerHTML=TAX.map(function(c){return '<option value="'+c.slug+'">'+c.label+'</option>';}).join('');
+function updInc(){var c=TAX.filter(function(x){return x.slug===el('cat').value;})[0];el('includes').textContent=c?('Includes: '+c.inc):'';}
+el('cat').addEventListener('change',updInc);updInc();
 
-function el(id){return document.getElementById(id);}
 function fmt(v){return Array.isArray(v)?v.join('-'):(v==null?'':v);}
 function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;');}
 function parseVal(s){s=(s||'').toString().trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
 
+// ---- editable chart table ----
 function renderHead(){ el('thead').innerHTML='<tr><th>Size</th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join('')+'<th></th></tr>'; }
 function rowHTML(s){s=s||{};
   return '<td><input value="'+esc(s.name||'')+'" placeholder="M"/></td>'
@@ -157,14 +193,16 @@ function rowHTML(s){s=s||{};
 }
 function addRow(s){var tr=document.createElement('tr');tr.innerHTML=rowHTML(s);el('rows').appendChild(tr);}
 function collectRows(){var rows=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var r={name:ins[0].value};COLS.forEach(function(c,i){r[c]=ins[i+1]?ins[i+1].value:'';});rows.push(r);});return rows;}
-function renderTable(rows){renderHead();el('rows').innerHTML='';(rows&&rows.length?rows:[{},{},{}]).forEach(addRow);}
-renderTable();
+function renderTable(rows){renderHead();el('rows').innerHTML='';(rows&&rows.length?rows:[{}]).forEach(addRow);}
+// Reveal the table (hides the empty prompt). Used after a parse or "type by hand".
+function showEditor(rows){ el('chartEmpty').style.display='none'; el('chartEditor').style.display='block'; renderTable(rows); }
 
+el('enterManual').addEventListener('click',function(){ showEditor([{},{}]); });
 el('addRow').addEventListener('click',function(){addRow();});
 el('addCol').addEventListener('click',function(){
   var name=prompt('Measurement name (e.g. Shoulder, Sleeve Length, Length, Thigh, Neck):');
   if(!name)return; name=name.trim(); if(!name||COLS.indexOf(name)>-1)return;
-  var rows=collectRows(); COLS.push(name); renderTable(rows);
+  var rows=collectRows(); COLS.push(name); showEditor(rows.length?rows:[{}]);
 });
 
 // ---- multi-screenshot capture: merge several images into ONE chart ----
@@ -187,15 +225,17 @@ function applyParsed(j){
       if(v==null){var kk=Object.keys(src).filter(function(k){return k.toLowerCase()===c.toLowerCase();})[0]; if(kk)v=src[kk];}
       row[c]=(v==null?'':v);});
     return row;});
-  renderTable(rows);
+  showEditor(rows);
   if(Array.isArray(j.length_options)) renderLens(j.length_options);
   if(j.notes && el('notes') && !el('notes').value) el('notes').value=j.notes;
+  // if the AI found extras, pop open Advanced so the merchant sees them
+  if((j.length_options&&j.length_options.length)||j.notes) el('advChart').open=true;
 }
 async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.style.color='';m.textContent='Reading your chart…';
   try{var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
     applyParsed(j);
-    m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+COLS.length+' measurements'+((j.length_options&&j.length_options.length)?(' + '+j.length_options.length+' length options'):'')+' — review, then save.';
+    m.textContent='✓ Read '+((j.sizes||[]).length)+' sizes — check the table, then Save chart.';
   }catch(e){m.textContent='Could not read that: '+(e.message||e);}}
 el('drop').addEventListener('click',function(e){var t=e.target;if(t.id!=='file'&&t.tagName!=='IMG'&&t.className!=='shotx')el('file').click();});
 el('file').addEventListener('change',function(){[].forEach.call(this.files||[],addShot);this.value='';});
@@ -204,7 +244,7 @@ el('drop').addEventListener('drop',function(e){e.preventDefault();[].forEach.cal
 document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){addShot(it[i].getAsFile());}});
 el('parseBtn').addEventListener('click',parseShots);
 
-// ---- length / proportion options (Petite / Regular / Tall …) ----
+// ---- length options ----
 function lenRowHTML(o){o=o||{};return '<td><input value="'+esc(o.name||'')+'" placeholder="Regular"/></td>'
   +'<td><input value="'+esc(o.inseam==null?'':o.inseam)+'" placeholder="—"/></td>'
   +'<td><input value="'+esc(o.height_min==null?'':o.height_min)+'" placeholder="—"/></td>'
@@ -215,9 +255,7 @@ function renderLens(list){el('lens').innerHTML='';(list&&list.length?list:[]).fo
 function collectLens(){var out=[];el('lens').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var o={name:name};var a=parseFloat(ins[1].value);if(!isNaN(a))o.inseam=a;var b=parseFloat(ins[2].value);if(!isNaN(b))o.height_min=b;var c=parseFloat(ins[3].value);if(!isNaN(c))o.height_max=c;out.push(o);});return out;}
 el('addLen').addEventListener('click',function(){addLen();});
 
-// Build sizes keyed by the brand's OWN column names. normalizeChart (server)
-// maps the known ones onto the engine's canonical keys and keeps ranges; the
-// rest are preserved for the AI.
+// ---- save ----
 function collectSizes(){var sizes=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var row={name:name};COLS.forEach(function(c,i){var v=parseVal(ins[i+1]?ins[i+1].value:'');if(v!==undefined)row[c]=v;});sizes.push(row);});return sizes;}
 function num(x){return Array.isArray(x)?(x[0]+x[1])/2:x;}
 function colVal(s,names){for(var i=0;i<names.length;i++){var k=Object.keys(s).filter(function(kk){return kk.toLowerCase()===names[i];})[0];if(k)return s[k];}return null;}
@@ -228,7 +266,7 @@ function validate(sizes){var w=[];
 var pending=false;
 el('save').addEventListener('click',async function(){
   var msg=el('saveMsg');var sizes=collectSizes();
-  if(!sizes.length){msg.style.color='#c0392b';msg.textContent='Add at least one size.';return;}
+  if(!sizes.length){msg.style.color='#c0392b';msg.textContent='Add at least one size first.';return;}
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
@@ -240,6 +278,7 @@ el('save').addEventListener('click',async function(){
   }catch(e){msg.style.color='#c0392b';msg.textContent=e.message||'Save failed.';}
 });
 
+// ---- saved charts list ----
 async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';return;}
@@ -252,23 +291,32 @@ async function loadCharts(){var box=el('list');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
 window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
 
-// ---- catalog sync + per-product chart assignment ----
+// ---- products: sync + optional per-product override ----
 var CHARTS=[], PRODUCTS=[];
+// Products that never need a size chart — hidden from the override list.
+var NON_APPAREL={'giftcard':1,'gift card':1,'gift_card':1,'gift cards':1};
+function apparel(){ return PRODUCTS.filter(function(p){ return !NON_APPAREL[String(p.product_type||'').toLowerCase()]; }); }
+function updateSyncStatus(){
+  var s=el('syncStatus'); var n=PRODUCTS.length;
+  if(n){ s.innerHTML='<span class="ok">✓ '+n+' products synced.</span> <span class="hint">Your charts apply to them automatically by clothing type.</span>'; el('syncBtn').textContent='Re-sync products'; }
+  else { s.innerHTML='<span class="hint">Not synced yet — click Sync products.</span>'; el('syncBtn').textContent='Sync products'; }
+}
 function chartOptions(sel,includeAuto){
-  var opts=includeAuto?'<option value="">Auto (by category)</option>':'';
+  var opts=includeAuto?'<option value="">Auto (category chart)</option>':'';
   return opts+CHARTS.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
     return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+(c.category||'—')+(c.subcategory?'/'+c.subcategory:'')+' · '+(c.gender||'')+' ('+n+')</option>';}).join('');
 }
 function renderAssign(){
   var host=el('assignHost'); if(!host) return;
-  if(!PRODUCTS.length){host.innerHTML='<div class="empty">No products yet — click “Sync catalog to Styla AI” above.</div>';return;}
-  var groups={};PRODUCTS.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
+  var list=apparel();
+  if(!list.length){host.innerHTML='<div class="empty">'+(PRODUCTS.length?'No clothing products to customize.':'Sync your products to list them here.')+'</div>';return;}
+  var groups={};list.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
   host.innerHTML=Object.keys(groups).map(function(type){var items=groups[type];
     return '<div style="margin-bottom:16px">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
         +'<b style="font-size:.92rem">'+type+'</b><span class="hint">'+items.length+' products</span>'
         +'<select data-type="'+encodeURIComponent(type)+'" class="bulkSel" style="width:auto;margin-left:auto;font-size:.8rem;padding:6px 8px">'
-        +'<option value="">Assign all to…</option><option value="__auto">Auto (by category)</option>'+chartOptions('',false)+'</select>'
+        +'<option value="">Set all to…</option><option value="__auto">Auto (category chart)</option>'+chartOptions('',false)+'</select>'
       +'</div>'
       +items.map(function(p){return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #f1f2f4">'
         +'<span style="flex:1;font-size:.86rem">'+(p.title||'')+'</span>'
@@ -279,7 +327,7 @@ function renderAssign(){
   host.querySelectorAll('.prodSel').forEach(function(s){s.addEventListener('change',function(){assign({externalId:this.getAttribute('data-ext'),chartId:this.value||null});});});
   host.querySelectorAll('.bulkSel').forEach(function(s){s.addEventListener('change',function(){var v=this.value;if(v==='')return;var t=decodeURIComponent(this.getAttribute('data-type'));assign({productType:t,chartId:v==='__auto'?null:v},'all “'+t+'”');});});
 }
-async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];renderAssign();}catch(e){}}
+async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];updateSyncStatus();renderAssign();}catch(e){}}
 async function assign(body,note){var m=el('assignMsg');m.style.color='';m.textContent='Saving…';
   try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
     m.style.color='var(--green)';m.textContent='✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.';loadProducts();
