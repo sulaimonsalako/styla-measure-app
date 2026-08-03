@@ -530,6 +530,30 @@ async function shopInstalled(shop) {
   const { data } = await supabase.from('merchant_sessions').select('shop').eq('shop', shop).maybeSingle();
   return !!data;
 }
+// Production-secure shop identity: verify the Shopify App Bridge session token
+// (a JWT signed with our app secret). Falls back to ?shop= only for local dev.
+async function getShopFromReq(req) {
+  const auth = req.headers.authorization || '';
+  if (auth.startsWith('Bearer ')) {
+    try {
+      const payload = await shopify.session.decodeSessionToken(auth.slice(7));
+      const dest = payload.dest || payload.iss || '';
+      const shop = String(dest).replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
+      if (shop) return { shop, verified: true };
+    } catch (e) {
+      return { shop: null, verified: false, error: 'Invalid or expired session token.' };
+    }
+  }
+  const shop = String(req.query.shop || (req.body && req.body.shop) || '').toLowerCase();
+  return { shop, verified: false };
+}
+async function requireShop(req, res) {
+  const { shop, verified, error } = await getShopFromReq(req);
+  if (error) { res.status(401).json({ error }); return null; }
+  // A verified token is trusted; otherwise (dev, no App Bridge) require an installed shop.
+  if (!shop || (!verified && !(await shopInstalled(shop)))) { res.status(401).json({ error: 'Shop not connected — open this from your Shopify admin.' }); return null; }
+  return shop;
+}
 // A connected shop maps to a Styla brand keyed by its domain, so widget-size
 // resolves this store's charts by domain with no extra config.
 async function ensureBrandForShop(shop) {
@@ -547,8 +571,7 @@ async function ensureBrandForShop(shop) {
 
 app.get('/api/merchant/charts', async (req, res) => {
   try {
-    const shop = String(req.query.shop || '').toLowerCase();
-    if (!(await shopInstalled(shop))) return res.status(401).json({ error: 'Shop not connected — install the Styla app first.' });
+    const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
     const { data: charts } = await supabase.from('size_charts')
       .select('id, category, subcategory, gender, chart_data, verified, is_default, created_at')
@@ -559,9 +582,8 @@ app.get('/api/merchant/charts', async (req, res) => {
 
 app.post('/api/merchant/charts', async (req, res) => {
   try {
-    const { shop, id, category, subcategory, gender, chart_data, is_default } = req.body || {};
-    const s = String(shop || '').toLowerCase();
-    if (!(await shopInstalled(s))) return res.status(401).json({ error: 'Shop not connected.' });
+    const s = await requireShop(req, res); if (!s) return;
+    const { id, category, subcategory, gender, chart_data, is_default } = req.body || {};
     if (!category || !chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Category and at least one size are required.' });
     const brandId = await ensureBrandForShop(s);
     const row = {
@@ -585,9 +607,8 @@ app.post('/api/merchant/charts', async (req, res) => {
 
 app.post('/api/merchant/delete-chart', async (req, res) => {
   try {
-    const { shop, id } = req.body || {};
-    const s = String(shop || '').toLowerCase();
-    if (!(await shopInstalled(s))) return res.status(401).json({ error: 'Shop not connected.' });
+    const s = await requireShop(req, res); if (!s) return;
+    const { id } = req.body || {};
     const brandId = await ensureBrandForShop(s);
     await supabase.from('size_charts').delete().eq('id', id).eq('brand_id', brandId);
     res.json({ ok: true });

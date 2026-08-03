@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="shopify-api-key" content="ae97233671ed9354af95498cd5c7fc62"/>
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <title>Styla — Size Charts</title>
 <style>
 :root{--bg:#f6f6f8;--card:#fff;--line:#e3e5ea;--text:#1e2330;--muted:#5f6672;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--green:#0f7a54;}
@@ -38,6 +40,9 @@ td input{padding:7px 8px;}
 </style>
 </head>
 <body>
+<ui-nav-menu>
+  <a href="/charts.html" rel="home">Size charts</a>
+</ui-nav-menu>
 <div class="wrap">
   <h1>Your size charts</h1>
   <p class="sub" id="shopline">Add your size guide once — Styla uses it to give every shopper their correct size and to answer fit questions on your product pages.</p>
@@ -81,6 +86,10 @@ td input{padding:7px 8px;}
 <script>
 var STYLA='https://www.styla.ca';
 var SHOP=new URLSearchParams(location.search).get('shop')||'';
+// Embedded in Shopify admin: App Bridge gives a signed session token the backend
+// verifies. Standalone (dev): fall back to the ?shop= param.
+async function idToken(){ try{ if(window.shopify && window.shopify.idToken) return await window.shopify.idToken(); }catch(e){} return null; }
+async function mfetch(url, opts){ opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{}); var t=await idToken(); if(t) opts.headers['Authorization']='Bearer '+t; return fetch(url, opts); }
 document.getElementById('shopline').textContent = SHOP ? ('Store: '+SHOP+' — add your size guide once and every shopper gets their correct size.') : 'Open this from your Shopify admin (Styla app) so we know your store.';
 var TAX=[
  {slug:'tops',label:'Tops',inc:'T-shirts, shirts, knitwear'},{slug:'outerwear',label:'Outerwear',inc:'Jackets, coats, blazers'},
@@ -138,14 +147,14 @@ el('save').addEventListener('click',async function(){
   wbox.style.display='none';this.textContent='Save chart';pending=false;
   var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',sizes:sizes};
   msg.style.color='';msg.textContent='Saving…';
-  try{var r=await fetch('/api/merchant/charts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
+  try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
     var d=await r.json();if(d.error)throw new Error(d.error);
     msg.style.color='var(--green)';msg.textContent='✓ Saved! Shoppers now get their size in your '+el('cat').value+'.';loadCharts();
   }catch(e){msg.style.color='#c0392b';msg.textContent=e.message||'Save failed.';}
 });
 
 async function loadCharts(){var box=el('list');
-  try{var r=await fetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
+  try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';return;}
     var charts=d.charts||[];if(!charts.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=charts.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
@@ -154,7 +163,7 @@ async function loadCharts(){var box=el('list');
         +'<span class="hint" style="flex:1">'+n+' sizes</span>'
         +'<button class="btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
-window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await fetch('/api/merchant/delete-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
+window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
 loadCharts();
 </script>
 </body>
