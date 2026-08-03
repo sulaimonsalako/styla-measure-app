@@ -46,6 +46,14 @@
       "destination": "/api/store-api?route=notifications"
     },
     {
+      "source": "/api/catalog-ingest",
+      "destination": "/api/store-api?route=catalog-ingest"
+    },
+    {
+      "source": "/api/catalog-search",
+      "destination": "/api/store-api?route=catalog-search"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

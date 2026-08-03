@@ -116,6 +116,40 @@ logs a warning when the key is missing.
 - CONFIRMED: user smoke-tested live app (store load, login, cart, guest scan) — all working
   under RLS. Service-role key is being picked up correctly. RLS remediation COMPLETE.
 
+## Product index / catalog retrieval (NEW, 2026-08-03)
+
+The AI could only ever see the ONE product on the current page. Built a real
+retrieval layer so it can reason across a store's whole catalog (and it's the
+same index that will power the discovery feed).
+
+- **DB (APPLIED to prod, migration `catalog_products_pgvector_index`):** enabled
+  `vector` (0.8.0) + `pg_trgm`. New table `public.catalog_products` (title, desc,
+  tags, price, variants, image, url, category, brand_id, shop_domain, external_id,
+  `embedding vector(768)`, `tsv`, `content_hash`). HNSW cosine index + GIN on tsv/tags.
+  RLS enabled, service-role only (matches store_* tables). RPC
+  `match_catalog_products(query_embedding, match_brand_id, match_shop,
+  filter_category, query_text, match_count)` = hybrid vector + full-text. VERIFIED
+  live: seeded 2 rows, correct product ranked 0.994, keyword filter worked, test rows deleted.
+- **Embeddings:** `api/_helpers/embeddings.js` — Gemini `text-embedding-004` (768d)
+  via existing GOOGLE_API_KEY (no new vendor/secret). `embedOne`/`embedMany` with
+  RETRIEVAL_DOCUMENT vs RETRIEVAL_QUERY taskType; batches of 100.
+- **Endpoints (behind store-api dispatcher — no new Vercel functions):**
+  `POST /api/catalog-ingest` (`api/_catalog/ingest.js`) upserts a store's products
+  keyed by (brand_id, external_id), content_hash gate skips re-embedding unchanged
+  items. `POST /api/catalog-search` (`api/_catalog/search.js`) semantic search +
+  optional `fitsMe` annotation (runs the sizing engine per result → recommendedSize/fits).
+  Shared read lib `api/_catalog/retrieve.js`. Rewrites added to vercel.json.
+- **Chat wired:** `api/extension-chat.js` now accepts `shop`/`domain`/`brandId`;
+  when the shopper's message looks catalog-wide (keyword gate), it pulls top-6
+  matches from the index and injects them as "OTHER PRODUCTS IN THIS STORE" so the
+  AI recommends across the catalog. Best-effort, never blocks the chat.
+- **NOT yet done:** (1) a producer that actually PUSHES products into the index —
+  Shopify app should call `/api/catalog-ingest` with its products.json pull (the
+  merchant chart tool is the natural place to trigger a catalog sync); (2) widget
+  passing `shop`/`domain` to extension-chat so cross-catalog kicks in; (3) discovery
+  feed reading `/api/catalog-search`. Code is syntax-checked only — NOT run live
+  (sandbox has no Supabase DNS / no GOOGLE_API_KEY), so first real test is on deploy.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

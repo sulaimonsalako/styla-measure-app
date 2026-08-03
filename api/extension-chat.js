@@ -83,6 +83,28 @@ export default async function handler(req, res) {
       if (measurement_overrides.neck) pNeck = measurement_overrides.neck;
     }
 
+    // Cross-catalog awareness: when the shopper asks about OTHER products (not
+    // just the item on the page), pull the best-matching products from this
+    // store's semantic index so the AI can recommend across the whole catalog
+    // instead of only the current product. Best-effort — never blocks the chat.
+    let catalogContext = '';
+    try {
+      const shopDom = req.body.shop || req.body.domain || null;
+      const bId = req.body.brandId || null;
+      const lastMsg = Array.isArray(history) && history.length
+        ? String(history[history.length - 1].text || history[history.length - 1].content || '')
+        : '';
+      const wantsCatalog = /\b(other|another|alternativ|instead|recommend|do you (have|sell|carry)|something (else|similar)|similar|show me|options?|browse|what else|anything|looking for|suggest)\b/i.test(lastMsg);
+      if ((shopDom || bId) && wantsCatalog && lastMsg) {
+        const { retrieveCatalog } = await import('./_catalog/retrieve.js');
+        const hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
+        if (hits && hits.length) {
+          catalogContext = 'OTHER PRODUCTS IN THIS STORE (semantically ranked for the shopper\'s request — when they ask for alternatives or other items, recommend from THESE, and include the price and link):\n'
+            + hits.map((h) => `- ${h.title}${h.price != null ? ` ($${h.price})` : ''}${h.category ? ` [${h.category}]` : ''}${h.url ? ` — ${h.url}` : ''}`).join('\n');
+        }
+      }
+    } catch (e) { /* retrieval is optional context; ignore failures */ }
+
     const systemPrompt = `You are an expert fashion tailor and sizing/styling assistant for STYLA.
 The user has the following body measurements:
 - Chest / Bust: ${pChest}"
@@ -108,7 +130,7 @@ HTML Sizing Tables found on page:
 """
 ${tableHtml || 'None'}
 """
-
+${catalogContext ? `\n${catalogContext}\n` : ''}
 You also have access to the attached images of the product. Use them to understand the design, style, fit on the model, fabric texture, and size chart details.
 
 Your role is to advise the customer, answer their questions about sizing, fabric quality, styling, fit options, and how different sizes would fit them.
