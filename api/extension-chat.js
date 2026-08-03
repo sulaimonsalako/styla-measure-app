@@ -130,6 +130,7 @@ HTML Sizing Tables found on page:
 """
 ${tableHtml || 'None'}
 """
+${sizeChart && sizeChart.notes ? `\nBRAND FIT NOTES (written by the brand — use these to answer fit questions):\n"""${sizeChart.notes}"""\n` : ''}${sizeChart && sizeChart.length_options && sizeChart.length_options.length ? `\nLENGTH / PROPORTION OPTIONS (e.g. Petite/Regular/Tall — pick by the shopper's height): ${JSON.stringify(sizeChart.length_options)}\n` : ''}
 ${catalogContext ? `\n${catalogContext}\n` : ''}
 You also have access to the attached images of the product. Use them to understand the design, style, fit on the model, fabric texture, and size chart details.
 

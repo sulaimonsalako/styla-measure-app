@@ -308,6 +308,7 @@
       var html='<h2>'+(SHOPFOR.activeOwnerId?'Their size':'Your size')+(BRAND?(' in '+BRAND):'')+'</h2>'
         +'<div id="shopfor"></div>'
         +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel+'</div><div class="sz" id="szVal">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
+        +((res.recommendedLength&&res.recommendedLength.name)?'<div class="spectrum" style="margin:-.5rem 0 1rem">Suggested length: <b>'+res.recommendedLength.name+'</b></div>':'')
         +'<div class="sizeopts" id="sizeopts"></div>'
         + spec + '<div id="bkHost"></div>' + chat;
       if(guest){

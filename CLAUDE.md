@@ -274,6 +274,27 @@ Fix (DONE in code):
   not found, reinstall the app so OAuth stores merchant_sessions against the real DB.
 - NOT run live; verify on deploy + dev restart.
 
+## Length options + multi-screenshot + chart notes (2026-08-03)
+
+Three linked additions so a chart is captured WHOLE and its non-tabular context is usable:
+- **Multi-screenshot -> one chart.** `parse-size-chart.js` now accepts
+  `files:[{fileData,mimeType}]` (up to 6) as well as single `fileData`. Prompt tells
+  Gemini to MERGE the images into one chart (de-dupe overlapping rows/cols) — for
+  charts too wide/long for one screenshot. charts.html accumulates SHOTS (paste/drop/
+  click add thumbnails, ✕ to remove) and a "Read chart (N images)" button posts them.
+- **Length / proportion options (Petite/Regular/Tall).** Parser extracts
+  `length_options:[{name,inseam,height_min,height_max,note}]` (cm->in) — garment LENGTH
+  variants tied to height, kept OUT of sizeChart. charts.html has a length-options
+  editor. `widget-size` adds `height` to the user, `pickLength(height,options)` returns
+  `recommendedLength` (range match -> nearest), returned on both paths + in `chart`.
+  Both widgets show "Suggested length: Regular" next to the size.
+- **Chart notes/context.** Parser extracts `notes` (fit guidance: "runs small", model
+  height, fabric/care). charts.html has a "Fit notes the AI can use" textarea.
+  `widget-size` returns notes (top-level + in `chart`); `extension-chat` injects
+  BRAND FIT NOTES + LENGTH OPTIONS into the system prompt so the AI answers from them.
+- chart_data now carries: columns, sizes, sleeve/shoulder_convention, length_options, notes.
+- NOT run live; verify on deploy.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

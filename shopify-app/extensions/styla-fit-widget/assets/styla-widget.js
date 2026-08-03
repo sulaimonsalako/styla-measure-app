@@ -255,7 +255,9 @@
         var verb = (sizeName === res.size)
           ? 'Your best fit — ' + cap(c.spectrum || res.spectrum) + '.'
           : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
-        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.');
+        var rl = STATE.result.recommendedLength;
+        var lenTxt = (rl && rl.name) ? ' · Suggested length: ' + rl.name : '';
+        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.') + lenTxt;
         sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
           b.classList.toggle('active', b.getAttribute('data-size') === sizeName);
         });

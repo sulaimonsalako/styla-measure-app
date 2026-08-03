@@ -10,6 +10,27 @@ import { supabaseAdmin } from '../_helpers/supabase-admin.js';
 import { runSizingEngine } from '../_helpers/sizing-engine.js';
 import { normalizeChart } from '../_helpers/normalize-chart.js';
 
+// Pick a garment length/proportion variant (Petite/Regular/Tall…) from the
+// shopper's height (inches). Prefer an option whose height range contains the
+// shopper; else the nearest by range midpoint.
+function pickLength(height, options) {
+  if (!height || !Array.isArray(options) || !options.length) return null;
+  const h = Number(height);
+  for (const o of options) {
+    const lo = o.height_min != null ? o.height_min : -Infinity;
+    const hi = o.height_max != null ? o.height_max : Infinity;
+    if (h >= lo && h <= hi) return { name: o.name, inseam: o.inseam != null ? o.inseam : null };
+  }
+  let best = null, bd = Infinity;
+  for (const o of options) {
+    const lo = o.height_min != null ? o.height_min : (o.height_max != null ? o.height_max - 6 : h);
+    const hi = o.height_max != null ? o.height_max : (o.height_min != null ? o.height_min + 6 : h);
+    const d = Math.abs((lo + hi) / 2 - h);
+    if (d < bd) { bd = d; best = o; }
+  }
+  return best ? { name: best.name, inseam: best.inseam != null ? best.inseam : null } : null;
+}
+
 export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -41,6 +62,7 @@ export default async function widgetSize(req, res) {
       inseam: profile.inseam,
       thigh: profile.thigh,
       neck: profile.neck,
+      height: profile.height,
     };
 
     // Helper: normalize a chart row + run the engine, returning the API payload.
@@ -59,7 +81,10 @@ export default async function widgetSize(req, res) {
         explanation: r.explanation,
         breakdown: r.fit_breakdown,
         candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
-        chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes } : null, // full table for the AI
+        chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
+        recommendedLength: pickLength(user.height, cd && cd.length_options),
+        lengthOptions: (cd && cd.length_options) || null,
+        notes: (cd && cd.notes) || null,
         measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
       };
     }
@@ -138,7 +163,10 @@ export default async function widgetSize(req, res) {
       explanation: r.explanation,
       breakdown: r.fit_breakdown,
       candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
-      chart: cd.sizes ? { columns: cd.columns || null, sizes: cd.sizes } : null, // full table for the AI
+      chart: cd.sizes ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
+      recommendedLength: pickLength(user.height, cd.length_options),
+      lengthOptions: cd.length_options || null,
+      notes: cd.notes || null,
       measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
     });
   } catch (e) {

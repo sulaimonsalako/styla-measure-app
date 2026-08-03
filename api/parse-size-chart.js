@@ -23,26 +23,35 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fileData, mimeType } = req.body;
+    const { fileData, mimeType, files } = req.body;
 
-    if (!fileData || !mimeType) {
-      return res.status(400).json({ error: 'Missing fileData or mimeType.' });
+    // Accept either a single image (fileData+mimeType) or MULTIPLE images
+    // (files:[{fileData,mimeType}]) — sections of one chart too wide/long for a
+    // single screenshot. All images are merged into ONE chart by the model.
+    let images = [];
+    if (Array.isArray(files) && files.length) {
+      images = files.filter((f) => f && f.fileData && f.mimeType).map((f) => ({ data: f.fileData, mime: f.mimeType }));
+    } else if (fileData && mimeType) {
+      images = [{ data: fileData, mime: mimeType }];
     }
+    if (!images.length) {
+      return res.status(400).json({ error: 'Missing image(s): provide fileData+mimeType or files:[{fileData,mimeType}].' });
+    }
+    if (images.length > 6) images = images.slice(0, 6);
 
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: 'API key not configured on server.' });
     }
 
-    // Clean up base64 payload if it has dataURL prefix
-    let base64Data = fileData;
-    if (base64Data.includes(';base64,')) {
-      base64Data = base64Data.split(';base64,')[1];
-    }
+    // Strip dataURL prefixes.
+    images = images.map((im) => ({ mime: im.mime, data: im.data.includes(';base64,') ? im.data.split(';base64,')[1] : im.data }));
 
     const prompt = `You are a professional fashion data parser.
-Analyze the provided size chart image or PDF document.
+Analyze the provided size chart image(s) or PDF document.
 Extract ALL size rows/columns and ALL Point of Measurement (POM) details present in the document.
+
+CRITICAL — MULTIPLE IMAGES: You may be given SEVERAL images. They are SECTIONS of ONE size chart (a chart too wide or too tall to capture in a single screenshot), or the chart plus its surrounding fit guidance. Treat ALL images together as a SINGLE chart: merge their rows and columns, align rows by size label, append columns that appear only in some images, and DE-DUPLICATE any rows/columns that overlap between images. Output ONE unified chart, never one-per-image.
 
 CRITICAL — CHART ORIENTATION: Size charts come in two layouts. You MUST detect which one and read it correctly:
   (A) Sizes as ROWS: each row is a size (S, M, L…) and each column is a measurement (Bust, Waist…).
@@ -75,7 +84,11 @@ Strict Sizing Processing Rules:
 4. MEASUREMENT CONVENTIONS: detect and report which convention the chart uses, so downstream can normalize:
    - "sleeve_convention": "shoulder-to-wrist" if the sleeve figures are ~22–26 in (measured from shoulder seam), or "center-back" if ~32–37 in (measured from center-back-neck across the shoulder). Use "unknown" if no sleeve column.
    - "shoulder_convention": "full" if shoulder figures are ~14–20 in (seam-to-seam cross-back), or "half" if ~7–10 in (center-back to one shoulder). Use "unknown" if no shoulder column.
-5. OUTPUT FORMAT:
+5. LENGTH / PROPORTION OPTIONS: If the chart defines LENGTH or PROPORTION variants (e.g. Petite / Regular / Tall inseam or length, Short/Long, often tied to the shopper's HEIGHT), extract them into "length_options". Convert cm to inches. Capture the height guidance as a numeric range in inches when stated (e.g. "recommended for 5'4\" and under" -> height_max 64, height_min null). These are garment LENGTH choices, NOT per-size body measurements — keep them OUT of "sizeChart". Omit the field (or []) if none.
+
+6. NOTES / CONTEXT: Extract any FIT GUIDANCE or context printed with the chart into "notes" (a short plain string the AI can use to answer shopper questions): e.g. "Runs small — size up for a relaxed fit.", "Model is 5'9\" wearing size S.", fabric/stretch/care notes, "measurements are body measurements, not garment." Empty string if none.
+
+7. OUTPUT FORMAT:
    - You MUST return ONLY valid JSON. Do not include markdown code block backticks or any other text.
    - The JSON structure must match:
 {
@@ -83,6 +96,12 @@ Strict Sizing Processing Rules:
   "poms": ["Chest", "Waist", "Hips", "Sleeve Length", "Shoulder Width"],
   "sleeve_convention": "shoulder-to-wrist",
   "shoulder_convention": "full",
+  "length_options": [
+    { "name": "Petite", "inseam": 28.3, "height_min": null, "height_max": 64, "note": "recommended for 5'4\" and under" },
+    { "name": "Regular", "inseam": 30.3, "height_min": 64, "height_max": 69, "note": "" },
+    { "name": "Tall", "inseam": 33.5, "height_min": 69, "height_max": null, "note": "recommended for 5'9\" and up" }
+  ],
+  "notes": "Bust/Waist/Hips are body measurements in cm. Petite/Regular/Tall change the inseam only.",
   "sizeChart": {
     "S": { "Chest": 38, "Waist": 30, "Hips": 36, "Sleeve Length": 32.5, "Shoulder Width": 17.5 },
     "M": { "Chest": 40, "Waist": 32, "Hips": 38, "Sleeve Length": 33.2, "Shoulder Width": 18 },
@@ -96,18 +115,13 @@ Strict Sizing Processing Rules:
         {
           parts: [
             { text: prompt },
-            {
-              inlineData: {
-                mimeType: mimeType,
-                data: base64Data
-              }
-            }
+            ...images.map((im) => ({ inlineData: { mimeType: im.mime, data: im.data } })),
           ]
         }
       ]
     };
 
-    console.log(`Sending size chart to Gemini for full POM extraction (mimeType: ${mimeType})...`);
+    console.log(`Sending ${images.length} size-chart image(s) to Gemini for full POM extraction...`);
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",

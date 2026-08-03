@@ -58,10 +58,14 @@ td input{padding:7px 8px;}
 
     <div class="drop" id="drop">
       <span class="big">📷</span>
-      <div style="flex:1"><b>Paste a screenshot of your size chart (Ctrl/⌘+V), drop an image, or click to upload.</b>
-        <div class="hint">Our AI reads it and fills the table below — review, then save. Centimeters convert to inches automatically.</div></div>
+      <div style="flex:1"><b>Add screenshot(s) of your size chart — paste (Ctrl/⌘+V), drop, or click.</b>
+        <div class="hint">Add MULTIPLE images if the chart is too wide or long for one screenshot — we merge them into one. Centimeters convert to inches automatically.</div>
+        <div id="shots" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div>
+      <input type="file" id="file" accept="image/*,.pdf" multiple style="display:none"/>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+      <button class="btn btn-primary btn-sm" id="parseBtn" style="display:none">Read chart</button>
       <span id="aimsg" class="hint"></span>
-      <input type="file" id="file" accept="image/*,.pdf" style="display:none"/>
     </div>
 
     <div style="overflow-x:auto">
@@ -70,6 +74,17 @@ td input{padding:7px 8px;}
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" id="addRow">+ Add size</button>
       <button class="btn btn-ghost btn-sm" id="addCol">+ Add measurement</button>
+    </div>
+
+    <div style="margin-top:18px">
+      <label style="margin:0 0 4px">Length / proportion options <span class="hint">(optional — e.g. Petite / Regular / Tall)</span></label>
+      <div class="hint" style="margin-bottom:6px">If the garment comes in length variants tied to height, add them — shoppers get a length suggestion from their height.</div>
+      <div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Inseam/Length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead><tbody id="lens"></tbody></table></div>
+      <button class="btn btn-ghost btn-sm" id="addLen" style="margin-top:6px">+ Add length option</button>
+    </div>
+    <div style="margin-top:16px">
+      <label style="margin:0 0 4px">Fit notes the AI can use <span class="hint">(optional)</span></label>
+      <textarea id="notes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 5'9&quot; wearing S." style="width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.9rem;font-family:inherit;resize:vertical"></textarea>
     </div>
 
     <div id="chartWarn" class="warn" style="display:none"></div>
@@ -152,30 +167,53 @@ el('addCol').addEventListener('click',function(){
   var rows=collectRows(); COLS.push(name); renderTable(rows);
 });
 
-// paste / drop / upload -> parse on styla.ca. We keep EVERY column the parser
-// returns (its own POM names) — nothing is dropped.
-async function parseFile(file){if(!file)return;var m=el('aimsg');m.textContent='Reading your chart…';
-  try{var d=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result);};r.onerror=rej;r.readAsDataURL(file);});
-    var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileData:d,mimeType:file.type||'image/png'})});
+// ---- multi-screenshot capture: merge several images into ONE chart ----
+var SHOTS=[];
+function renderShots(){var host=el('shots');if(!host)return;
+  host.innerHTML=SHOTS.map(function(s,i){return '<span style="position:relative;display:inline-block"><img src="'+s.dataUrl+'" style="height:46px;width:46px;object-fit:cover;border-radius:7px;border:1px solid var(--line)"/><button data-i="'+i+'" class="shotx" style="position:absolute;top:-6px;right:-6px;background:#111;color:#fff;border:none;border-radius:50%;width:17px;height:17px;font-size:10px;line-height:1;cursor:pointer">✕</button></span>';}).join('');
+  host.querySelectorAll('.shotx').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();SHOTS.splice(+this.getAttribute('data-i'),1);renderShots();updParseBtn();});});
+}
+function updParseBtn(){var b=el('parseBtn');if(!b)return;b.style.display=SHOTS.length?'inline-block':'none';b.textContent='Read chart ('+SHOTS.length+' image'+(SHOTS.length>1?'s':'')+')';}
+function addShot(file){if(!file)return;var r=new FileReader();r.onload=function(){SHOTS.push({dataUrl:r.result,mime:file.type||'image/png'});renderShots();updParseBtn();};r.readAsDataURL(file);}
+
+function applyParsed(j){
+  var poms=(j.poms&&j.poms.length)?j.poms.slice():[];
+  if(!poms.length){var first=(j.sizes||[])[0]; if(first&&j.sizeChart&&j.sizeChart[first]) poms=Object.keys(j.sizeChart[first]);}
+  COLS = poms.length?poms:COLS;
+  CONV.sleeve_convention=j.sleeve_convention||'auto';
+  CONV.shoulder_convention=j.shoulder_convention||'auto';
+  var rows=(j.sizes||[]).map(function(name){var src=(j.sizeChart||{})[name]||{};var row={name:String(name)};
+    COLS.forEach(function(c){var v=src[c];
+      if(v==null){var kk=Object.keys(src).filter(function(k){return k.toLowerCase()===c.toLowerCase();})[0]; if(kk)v=src[kk];}
+      row[c]=(v==null?'':v);});
+    return row;});
+  renderTable(rows);
+  if(Array.isArray(j.length_options)) renderLens(j.length_options);
+  if(j.notes && el('notes') && !el('notes').value) el('notes').value=j.notes;
+}
+async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.style.color='';m.textContent='Reading your chart…';
+  try{var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
-    var poms=(j.poms&&j.poms.length)?j.poms.slice():[];
-    if(!poms.length){var first=(j.sizes||[])[0]; if(first&&j.sizeChart&&j.sizeChart[first]) poms=Object.keys(j.sizeChart[first]);}
-    COLS = poms.length?poms:COLS;
-    CONV.sleeve_convention=j.sleeve_convention||'auto';
-    CONV.shoulder_convention=j.shoulder_convention||'auto';
-    var rows=(j.sizes||[]).map(function(name){var src=(j.sizeChart||{})[name]||{};var row={name:String(name)};
-      COLS.forEach(function(c){var v=src[c];
-        if(v==null){var kk=Object.keys(src).filter(function(k){return k.toLowerCase()===c.toLowerCase();})[0]; if(kk)v=src[kk];}
-        row[c]=(v==null?'':v);});
-      return row;});
-    renderTable(rows);
-    m.style.color='';m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+COLS.length+' measurements — review, then save.';
+    applyParsed(j);
+    m.textContent='✓ Parsed '+((j.sizes||[]).length)+' sizes × '+COLS.length+' measurements'+((j.length_options&&j.length_options.length)?(' + '+j.length_options.length+' length options'):'')+' — review, then save.';
   }catch(e){m.textContent='Could not read that: '+(e.message||e);}}
-el('drop').addEventListener('click',function(e){if(e.target.id!=='file')el('file').click();});
-el('file').addEventListener('change',function(){parseFile(this.files[0]);this.value='';});
+el('drop').addEventListener('click',function(e){var t=e.target;if(t.id!=='file'&&t.tagName!=='IMG'&&t.className!=='shotx')el('file').click();});
+el('file').addEventListener('change',function(){[].forEach.call(this.files||[],addShot);this.value='';});
 el('drop').addEventListener('dragover',function(e){e.preventDefault();});
-el('drop').addEventListener('drop',function(e){e.preventDefault();parseFile((e.dataTransfer.files||[])[0]);});
-document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){parseFile(it[i].getAsFile());break;}});
+el('drop').addEventListener('drop',function(e){e.preventDefault();[].forEach.call((e.dataTransfer.files||[]),addShot);});
+document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){addShot(it[i].getAsFile());}});
+el('parseBtn').addEventListener('click',parseShots);
+
+// ---- length / proportion options (Petite / Regular / Tall …) ----
+function lenRowHTML(o){o=o||{};return '<td><input value="'+esc(o.name||'')+'" placeholder="Regular"/></td>'
+  +'<td><input value="'+esc(o.inseam==null?'':o.inseam)+'" placeholder="—"/></td>'
+  +'<td><input value="'+esc(o.height_min==null?'':o.height_min)+'" placeholder="—"/></td>'
+  +'<td><input value="'+esc(o.height_max==null?'':o.height_max)+'" placeholder="—"/></td>'
+  +'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';}
+function addLen(o){var tr=document.createElement('tr');tr.innerHTML=lenRowHTML(o);el('lens').appendChild(tr);}
+function renderLens(list){el('lens').innerHTML='';(list&&list.length?list:[]).forEach(addLen);}
+function collectLens(){var out=[];el('lens').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var o={name:name};var a=parseFloat(ins[1].value);if(!isNaN(a))o.inseam=a;var b=parseFloat(ins[2].value);if(!isNaN(b))o.height_min=b;var c=parseFloat(ins[3].value);if(!isNaN(c))o.height_max=c;out.push(o);});return out;}
+el('addLen').addEventListener('click',function(){addLen();});
 
 // Build sizes keyed by the brand's OWN column names. normalizeChart (server)
 // maps the known ones onto the engine's canonical keys and keeps ranges; the
@@ -194,7 +232,7 @@ el('save').addEventListener('click',async function(){
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
-  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,sizes:sizes};
+  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes};
   msg.style.color='';msg.textContent='Saving…';
   try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
     var d=await r.json();if(d.error)throw new Error(d.error);
