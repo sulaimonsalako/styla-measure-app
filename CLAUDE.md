@@ -130,7 +130,7 @@ same index that will power the discovery feed).
   `match_catalog_products(query_embedding, match_brand_id, match_shop,
   filter_category, query_text, match_count)` = hybrid vector + full-text. VERIFIED
   live: seeded 2 rows, correct product ranked 0.994, keyword filter worked, test rows deleted.
-- **Embeddings:** `api/_helpers/embeddings.js` — Gemini `text-embedding-004` (768d)
+- **Embeddings:** `api/_helpers/embeddings.js` — Gemini `gemini-embedding-001` (768d; text-embedding-004 was retired)
   via existing GOOGLE_API_KEY (no new vendor/secret). `embedOne`/`embedMany` with
   RETRIEVAL_DOCUMENT vs RETRIEVAL_QUERY taskType; batches of 100.
 - **Endpoints (behind store-api dispatcher — no new Vercel functions):**

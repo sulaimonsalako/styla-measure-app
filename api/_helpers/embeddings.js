@@ -7,7 +7,9 @@
 // taskType materially improves retrieval quality: documents are embedded with
 // RETRIEVAL_DOCUMENT, live search queries with RETRIEVAL_QUERY. Always pair them.
 
-const MODEL = 'text-embedding-004';
+// gemini-embedding-001 replaced text-embedding-004 (retired by Google — v1beta
+// returns "model not found" for it). Same API, supports outputDimensionality.
+const MODEL = 'gemini-embedding-001';
 const DIMS = 768;
 const BATCH = 100; // Gemini batchEmbedContents caps at 100 requests per call.
 
