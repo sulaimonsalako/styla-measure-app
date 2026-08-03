@@ -619,6 +619,10 @@ app.post('/api/merchant/delete-chart', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Catch-all: any non-API GET renders the app UI (the chart manager). This makes
+// the embedded app load a real page no matter what path Shopify requests.
+app.get(/^(?!\/api\/).*/, serveApp);
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`STYLA Shopify App Server is booting on port ${PORT}`);
