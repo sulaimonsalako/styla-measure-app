@@ -619,6 +619,65 @@ app.post('/api/merchant/delete-chart', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ----------------------------------------------------
+// 6. Push the store's catalog into Styla's SEMANTIC product index so the AI can
+//    reason across the whole catalog (smarter answers + the discovery feed).
+//    Keyed by shop domain -> the same Styla brand the size charts use, so an
+//    ingested product lines up with this store's charts automatically.
+// ----------------------------------------------------
+const STYLA_URL = process.env.STYLA_URL || 'https://www.styla.ca';
+const stripHtml = (h) => String(h || '')
+  .replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+app.post('/api/merchant/sync-catalog', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+
+    const { data: sess } = await supabase
+      .from('merchant_sessions').select('access_token').eq('shop', shop).maybeSingle();
+    if (!sess) return res.status(404).json({ error: 'Merchant session not found. Reopen the app from your Shopify admin.' });
+
+    // Pull the catalog (up to 250 published products) from the Shopify Admin API.
+    const data = await fetchShopifyAPI(shop, sess.access_token, 'products.json?limit=250&published_status=published');
+    const products = (data.products || []).map((p) => ({
+      external_id: String(p.id),
+      handle: p.handle,
+      url: `https://${shop}/products/${p.handle}`,
+      title: p.title,
+      description: stripHtml(p.body_html),
+      vendor: p.vendor,
+      product_type: p.product_type,
+      category: p.product_type, // Styla ingest alias-normalizes this to its taxonomy
+      tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
+      price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
+      image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
+      variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: v.available })),
+      available: Array.isArray(p.variants) ? p.variants.some((v) => v.available) : true,
+    }));
+
+    if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
+
+    // Hand off to Styla's ingest (embeds + indexes). Keyed by shop domain.
+    const r = await fetch(`${STYLA_URL}/api/catalog-ingest`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shop, domain: shop, products }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || out.error) return res.status(502).json({ error: out.error || 'Styla ingest failed.', detail: out.detail });
+
+    res.json({
+      ok: true,
+      synced: products.length,
+      embedded: out.embedded,
+      skipped: out.skipped,
+      message: `Synced ${products.length} products to Styla AI (${out.embedded ?? 0} newly indexed, ${out.skipped ?? 0} unchanged).`,
+    });
+  } catch (e) {
+    console.error('sync-catalog error:', e);
+    res.status(500).json({ error: 'Failed to sync catalog to Styla.', detail: e.message });
+  }
+});
+
 // Catch-all: any non-API GET renders the app UI (the chart manager). This makes
 // the embedded app load a real page no matter what path Shopify requests.
 app.get(/^(?!\/api\/).*/, serveApp);

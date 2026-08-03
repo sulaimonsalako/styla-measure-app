@@ -38,6 +38,8 @@ export default function App() {
   const [aimsg, setAimsg] = useState('');
   const [savemsg, setSavemsg] = useState('');
   const [charts, setCharts] = useState([]);
+  const [syncmsg, setSyncmsg] = useState('');
+  const [syncing, setSyncing] = useState(false);
 
   const includes = (TAX.find((t) => t.slug === cat) || {}).inc || '';
 
@@ -91,6 +93,18 @@ export default function App() {
     try { await authFetch('/api/merchant/delete-chart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }); loadCharts(); } catch (e) { /* ignore */ }
   }
 
+  async function syncCatalog() {
+    setSyncing(true);
+    setSyncmsg('Reading your products and teaching the AI… this can take a moment for large catalogs.');
+    try {
+      const r = await authFetch('/api/merchant/sync-catalog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      setSyncmsg('✓ ' + (d.message || ('Synced ' + (d.synced || 0) + ' products.')));
+    } catch (e) { setSyncmsg('Sync failed: ' + (e.message || e)); }
+    setSyncing(false);
+  }
+
   const input = { width: '100%', padding: '9px 11px', border: '1px solid #d3d5da', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' };
   const th = { textAlign: 'left', fontSize: 11, color: '#6b7280', textTransform: 'uppercase', padding: '4px 6px' };
   const pill = { fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 100, background: '#eef0f4', textTransform: 'capitalize' };
@@ -132,6 +146,21 @@ export default function App() {
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <button onClick={save} style={{ padding: '11px 20px', border: 'none', borderRadius: 100, background: 'linear-gradient(135deg,#e11d48,#ff2a75)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Save chart</button>
             <span style={{ fontSize: 14, color: savemsg.indexOf('✓') === 0 ? '#0f7a54' : '#c0392b' }}>{savemsg}</span>
+          </div>
+        </div>
+
+        <div style={{ background: '#fff', border: '1px solid #e3e5ea', borderRadius: 14, padding: 20, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, marginBottom: 6 }}>Teach the AI your catalog</h2>
+          <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>
+            Sync your products so Styla's AI can answer shoppers across your whole store — recommending
+            other items that fit them, not just the product they're looking at. Re-run any time you add products.
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={syncCatalog} disabled={syncing}
+              style={{ padding: '11px 20px', border: 'none', borderRadius: 100, background: syncing ? '#9aa0a6' : '#111827', color: '#fff', fontWeight: 700, cursor: syncing ? 'default' : 'pointer' }}>
+              {syncing ? 'Syncing…' : 'Sync catalog to Styla AI'}
+            </button>
+            <span style={{ fontSize: 13, color: syncmsg.indexOf('✓') === 0 ? '#0f7a54' : '#6b7280' }}>{syncmsg}</span>
           </div>
         </div>
 
