@@ -135,11 +135,17 @@ export default async function widgetSize(req, res) {
     if (error) throw error;
     if (!charts || !charts.length) return res.status(404).json({ error: 'No size chart found for this brand.' });
 
-    // Prefer the requested category, then gender, else fall back to what exists.
-    let chosen = charts;
+    // Resolve the chart: an exact category match wins; otherwise fall back to the
+    // brand's GENERAL (no-category) whole-store chart — never to a different
+    // category's chart. Charts with no category apply to everything.
+    const catOf = (c) => (c.chart_data && c.chart_data.garment_category) || c.category || null;
+    const general = charts.filter(c => !catOf(c));
+    let chosen;
     if (canonCategory) {
-      const byCat = charts.filter(c => ((c.chart_data && c.chart_data.garment_category) || c.category) === canonCategory);
-      if (byCat.length) chosen = byCat;
+      const exact = charts.filter(c => catOf(c) === canonCategory);
+      chosen = exact.length ? exact : (general.length ? general : charts);
+    } else {
+      chosen = general.length ? general : charts;
     }
     if (gender) {
       const byGender = chosen.filter(c => !c.gender || c.gender.toLowerCase() === 'unisex' || c.gender.toLowerCase() === String(gender).toLowerCase());

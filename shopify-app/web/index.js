@@ -680,18 +680,21 @@ app.post('/api/merchant/charts', async (req, res) => {
   try {
     const s = await requireShop(req, res); if (!s) return;
     const { id, category, subcategory, gender, chart_data, is_default } = req.body || {};
-    if (!category || !chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Category and at least one size are required.' });
+    if (!chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Add at least one size.' });
     const brandId = await ensureBrandForShop(s);
+    // category/gender are OPTIONAL now: null = a store-default chart that applies
+    // to every product; a category/gender narrows it to specific items.
     const row = {
-      brand_id: brandId, category, subcategory: subcategory || null, gender: gender || 'unisex',
+      brand_id: brandId, category: category || null, subcategory: subcategory || null, gender: gender || null,
       chart_data, is_default: is_default !== false, source: 'brand', verified: false,
     };
     if (id) {
       await supabase.from('size_charts').update(row).eq('id', id).eq('brand_id', brandId);
     } else {
-      // manual upsert on (brand, category, gender, subcategory)
-      let q = supabase.from('size_charts').select('id')
-        .eq('brand_id', brandId).eq('category', category).eq('gender', row.gender);
+      // manual upsert on (brand, category, gender, subcategory) — .is() for nulls
+      let q = supabase.from('size_charts').select('id').eq('brand_id', brandId);
+      q = row.category ? q.eq('category', row.category) : q.is('category', null);
+      q = row.gender ? q.eq('gender', row.gender) : q.is('gender', null);
       q = row.subcategory ? q.eq('subcategory', row.subcategory) : q.is('subcategory', null);
       const { data: existing } = await q.maybeSingle();
       if (existing) await supabase.from('size_charts').update(row).eq('id', existing.id);
