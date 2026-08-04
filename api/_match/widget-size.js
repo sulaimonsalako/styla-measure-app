@@ -9,6 +9,7 @@
 import { supabaseAdmin } from '../_helpers/supabase-admin.js';
 import { runSizingEngine } from '../_helpers/sizing-engine.js';
 import { normalizeChart } from '../_helpers/normalize-chart.js';
+import { toStylaCategory } from '../_helpers/style-category.js';
 
 // Pick a garment length/proportion variant (Petite/Regular/Tall…) from the
 // shopper's height (inches). Prefer an option whose height range contains the
@@ -120,11 +121,12 @@ export default async function widgetSize(req, res) {
       if (m) { bId = m.id; aliases = m.category_aliases || {}; }
     }
 
-    // Map the platform's category name onto our canonical category via the brand's aliases
-    // (e.g. Shopify product.type "Maxi Dress" -> "dresses").
+    // Map the platform's category name onto our canonical category: brand alias
+    // first, then the keyword mapper (e.g. "Maxi Dress" -> "dresses"), else as-is.
     let canonCategory = category;
-    if (category && aliases && aliases[String(category).toLowerCase()]) {
-      canonCategory = aliases[String(category).toLowerCase()];
+    if (category) {
+      const k = String(category).toLowerCase();
+      canonCategory = (aliases && aliases[k]) || toStylaCategory({ product_type: category, category }) || category;
     }
 
     let query = supabaseAdmin.from('size_charts').select('id, brand_id, category, gender, chart_data, is_default');

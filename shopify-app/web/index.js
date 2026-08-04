@@ -72,7 +72,10 @@ function mapShopifyProduct(shop, p) {
     description: stripHtml(p.body_html),
     vendor: p.vendor,
     product_type: p.product_type,
-    category: p.product_type, // Styla ingest alias-normalizes this to its taxonomy
+    // Shopify's Standard Product Category (structured taxonomy) when set — the
+    // best signal for mapping to a Styla category; Styla's ingest also falls back
+    // to product_type/title/tags. REST may not always include it, hence the guards.
+    category: (p.category && (p.category.full_name || p.category.name)) || p.product_type || null,
     tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
     price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
     image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,

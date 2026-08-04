@@ -18,6 +18,7 @@ import crypto from 'crypto';
 import { supabaseAdmin } from '../_helpers/supabase-admin.js';
 import { embedMany, toVectorLiteral } from '../_helpers/embeddings.js';
 import { normDom } from './retrieve.js';
+import { toStylaCategory } from '../_helpers/style-category.js';
 
 // The text we actually embed — title carries the most signal, then type/tags,
 // then the description. Kept compact on purpose.
@@ -65,10 +66,13 @@ export default async function catalogIngest(req, res) {
       if (!hasProducts) return res.status(200).json({ ok: true, removed: remove.length });
     }
 
-    const canonCat = (raw) => {
-      const k = String(raw || '').toLowerCase().trim();
-      if (!k) return null;
-      return aliases[k] || k;
+    // Category, in priority order: brand alias override on the raw type ->
+    // keyword mapping over Shopify category / type / title / tags -> null.
+    // (Category is the primary match key; per-product override is the fallback.)
+    const catFor = (p) => {
+      const raw = String(p.category || p.product_type || '').toLowerCase().trim();
+      if (raw && aliases[raw]) return aliases[raw];
+      return toStylaCategory({ category: p.category, product_type: p.product_type, title: p.title, tags: p.tags });
     };
 
     // What's already indexed — so we can skip re-embedding unchanged products.
@@ -97,7 +101,7 @@ export default async function catalogIngest(req, res) {
           description: p.description || null,
           vendor: p.vendor || null,
           product_type: p.product_type || null,
-          category: canonCat(p.category || p.product_type),
+          category: catFor(p),
           tags: toTags(p.tags),
           price: p.price != null && p.price !== '' ? Number(p.price) : null,
           currency: p.currency || 'USD',

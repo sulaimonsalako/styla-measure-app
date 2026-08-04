@@ -66,10 +66,13 @@ details.adv[open]>summary::before{content:'▾  ';}
     <div class="step"><span class="stepnum">1</span><h2>Add a size chart</h2></div>
     <p class="lead">Upload your size guide once. Every shopper then sees their correct size right on your product pages — no work per product.</p>
 
-    <div class="row2">
+    <label>Chart name <span class="hint">(optional — helps you tell your charts apart)</span></label>
+    <input id="name" placeholder='e.g. "Slim Suits" or "Summer Dresses"'/>
+    <div class="row2" style="margin-top:10px">
       <div><label>What kind of clothing?</label><select id="cat"></select></div>
       <div><label>Who wears it?</label><select id="gender"><option value="women">Women</option><option value="men">Men</option><option value="unisex">Unisex / all</option></select></div>
     </div>
+    <div class="hint" style="margin-top:6px">Clothing type + who wears it is how Styla knows which products a chart applies to — automatically, no per-product work.</div>
     <div id="includes" class="hint" style="margin-top:6px"></div>
 
     <div class="drop" id="drop">
@@ -270,7 +273,7 @@ el('save').addEventListener('click',async function(){
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
-  var chart_data={garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes};
+  var chart_data={name:(el('name').value||'').trim()||null,garment_category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes};
   msg.style.color='';msg.textContent='Saving…';
   try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:el('cat').value,subcategory:(el('sub').value||'').trim().toLowerCase()||null,gender:el('gender').value,chart_data:chart_data})});
     var d=await r.json();if(d.error)throw new Error(d.error);
@@ -283,8 +286,8 @@ async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';return;}
     var charts=d.charts||[];CHARTS=charts;renderAssign();if(!charts.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
-    box.innerHTML=charts.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
-      return '<div class="chartrow"><span class="badge">'+(c.category||'—')+'</span>'+(c.subcategory?'<span class="badge">'+c.subcategory+'</span>':'')+'<span class="badge">'+(c.gender||'—')+'</span>'
+    box.innerHTML=charts.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;var nm=(c.chart_data||{}).name;
+      return '<div class="chartrow">'+(nm?'<b style="margin-right:4px">'+esc(nm)+'</b>':'')+'<span class="badge">'+(c.category||'—')+'</span>'+(c.subcategory?'<span class="badge">'+c.subcategory+'</span>':'')+'<span class="badge">'+(c.gender||'—')+'</span>'
         +'<span class="badge '+(c.verified?'v':'')+'">'+(c.verified?'✓ verified':'live')+'</span>'
         +'<span class="hint" style="flex:1">'+n+' sizes</span>'
         +'<button class="btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
@@ -303,8 +306,9 @@ function updateSyncStatus(){
 }
 function chartOptions(sel,includeAuto){
   var opts=includeAuto?'<option value="">Auto (category chart)</option>':'';
-  return opts+CHARTS.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;
-    return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+(c.category||'—')+(c.subcategory?'/'+c.subcategory:'')+' · '+(c.gender||'')+' ('+n+')</option>';}).join('');
+  return opts+CHARTS.map(function(c){var n=((c.chart_data||{}).sizes||[]).length;var nm=(c.chart_data||{}).name;
+    var lbl=nm?(nm+' ('+n+')'):((c.category||'—')+(c.subcategory?'/'+c.subcategory:'')+' · '+(c.gender||'')+' ('+n+')');
+    return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+lbl+'</option>';}).join('');
 }
 function renderAssign(){
   var host=el('assignHost'); if(!host) return;
