@@ -224,7 +224,9 @@ function renderShots(){var host=el('shots');if(!host)return;
 function updParseBtn(){var b=el('parseBtn');if(!b)return;b.style.display=SHOTS.length?'inline-block':'none';b.textContent='Read chart ('+SHOTS.length+' image'+(SHOTS.length>1?'s':'')+')';}
 function addShot(file){if(!file)return;var r=new FileReader();r.onload=function(){SHOTS.push({dataUrl:r.result,mime:file.type||'image/png'});renderShots();updParseBtn();};r.readAsDataURL(file);}
 
+var LAST_PARSE=null;   // raw AI parse, sent on save so we can learn from merchant edits
 function applyParsed(j){
+  LAST_PARSE=j;
   var poms=(j.poms&&j.poms.length)?j.poms.slice():[];
   if(!poms.length){var first=(j.sizes||[])[0]; if(first&&j.sizeChart&&j.sizeChart[first]) poms=Object.keys(j.sizeChart[first]);}
   COLS = poms.length?poms:COLS;
@@ -283,7 +285,7 @@ el('save').addEventListener('click',async function(){
   var catv=el('cat').value||null, genv=el('gender').value||null, subv=(el('sub').value||'').trim().toLowerCase()||null;
   var chart_data={name:(el('name').value||'').trim()||null,garment_category:catv,subcategory:subv,gender:genv,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes};
   msg.style.color='';msg.textContent='Saving…';
-  try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:catv,subcategory:subv,gender:genv,chart_data:chart_data})});
+  try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:catv,subcategory:subv,gender:genv,chart_data:chart_data,parsed:LAST_PARSE})});
     var d=await r.json();if(d.error)throw new Error(d.error);
     msg.style.color='var(--green)';msg.textContent=catv?('✓ Saved! Shoppers now get their size in your '+catv+'.'):'✓ Saved! This chart now covers your whole store.';loadCharts();
   }catch(e){msg.style.color='#c0392b';msg.textContent=e.message||'Save failed.';}

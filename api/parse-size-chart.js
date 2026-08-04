@@ -9,6 +9,30 @@ export const config = {
   },
 };
 
+// Deterministic tidy-up for length options: coerce to numbers, order shortest ->
+// tallest by length, and chain the height bands so they're ascending and
+// non-overlapping (shortest = no lower bound, tallest = no upper bound). The AI's
+// extraction is faithful but real charts are often sparse; this gives the merchant
+// a clean ladder to review.
+function normalizeLengthOptions(list) {
+  if (!Array.isArray(list) || !list.length) return list;
+  const num = (v) => (v != null && v !== '' && !isNaN(+v)) ? +v : null;
+  const opts = list.map((o) => ({
+    name: o && o.name != null ? String(o.name) : '',
+    inseam: num(o && o.inseam),
+    height_min: num(o && o.height_min),
+    height_max: num(o && o.height_max),
+    note: (o && o.note) || '',
+  }));
+  if (opts.every((o) => o.inseam != null)) opts.sort((a, b) => a.inseam - b.inseam);
+  for (let i = 1; i < opts.length; i++) {
+    if (opts[i - 1].height_max != null) opts[i].height_min = opts[i - 1].height_max;
+  }
+  opts[0].height_min = null;                    // shortest: no lower bound
+  opts[opts.length - 1].height_max = null;      // tallest: no upper bound
+  return opts;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -84,7 +108,11 @@ Strict Sizing Processing Rules:
 4. MEASUREMENT CONVENTIONS: detect and report which convention the chart uses, so downstream can normalize:
    - "sleeve_convention": "shoulder-to-wrist" if the sleeve figures are ~22–26 in (measured from shoulder seam), or "center-back" if ~32–37 in (measured from center-back-neck across the shoulder). Use "unknown" if no sleeve column.
    - "shoulder_convention": "full" if shoulder figures are ~14–20 in (seam-to-seam cross-back), or "half" if ~7–10 in (center-back to one shoulder). Use "unknown" if no shoulder column.
-5. LENGTH / PROPORTION OPTIONS: If the chart defines LENGTH or PROPORTION variants (e.g. Petite / Regular / Tall inseam or length, Short/Long, often tied to the shopper's HEIGHT), extract them into "length_options". Convert cm to inches. Capture the height guidance as a numeric range in inches when stated (e.g. "recommended for 5'4\" and under" -> height_max 64, height_min null). These are garment LENGTH choices, NOT per-size body measurements — keep them OUT of "sizeChart". Omit the field (or []) if none.
+5. LENGTH / PROPORTION OPTIONS: If the chart defines LENGTH or PROPORTION variants (e.g. Petite / Regular / Tall inseam or length, Short/Long, often tied to the shopper's HEIGHT), extract them into "length_options" (convert cm to inches). These are garment LENGTH choices, NOT per-size body measurements — keep them OUT of "sizeChart". Omit (or []) if none. HEIGHT RANGE rules:
+   - "recommended for X and under" -> height_max = X (in inches), height_min = null.
+   - "X and over / up / and taller" -> height_min = X, height_max = null.
+   - Order options from SHORTEST length to LONGEST: the shortest inseam/length is for the SHORTEST people (e.g. Petite), the longest is for the TALLEST (e.g. Tall). "Tall" always means the tallest people.
+   - Make the height bands ASCENDING and NON-OVERLAPPING: the shortest option has no lower bound, the tallest has no upper bound, and each option's lower bound = the previous option's upper bound. If the source is sparse or contradictory, INFER sensible contiguous bands from whatever thresholds are given so the set forms a clean ladder short->tall.
 
 6. NOTES / CONTEXT: Extract any FIT GUIDANCE or context printed with the chart into "notes" (a short plain string the AI can use to answer shopper questions): e.g. "Runs small — size up for a relaxed fit.", "Model is 5'9\" wearing size S.", fabric/stretch/care notes, "measurements are body measurements, not garment." Empty string if none.
 
@@ -153,7 +181,8 @@ Strict Sizing Processing Rules:
         if (!jsonAnswer.sizes || !Array.isArray(jsonAnswer.sizes) || !jsonAnswer.poms || !jsonAnswer.sizeChart) {
           throw new Error("Invalid output JSON structure from AI");
         }
-        
+        if (jsonAnswer.length_options) jsonAnswer.length_options = normalizeLengthOptions(jsonAnswer.length_options);
+
         res.status(200).json(jsonAnswer);
     } catch (e) {
         console.error("Failed to parse Gemini response as JSON:", textAnswer, e);

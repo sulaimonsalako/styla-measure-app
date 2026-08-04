@@ -700,6 +700,23 @@ app.post('/api/merchant/charts', async (req, res) => {
       if (existing) await supabase.from('size_charts').update(row).eq('id', existing.id);
       else await supabase.from('size_charts').insert(row);
     }
+
+    // Improvement flywheel: record what the AI parsed vs what the merchant saved.
+    try {
+      const parsed = req.body && req.body.parsed;
+      let edited = null;
+      if (parsed) {
+        edited =
+          JSON.stringify(parsed.length_options || []) !== JSON.stringify(chart_data.length_options || []) ||
+          String(parsed.notes || '').trim() !== String(chart_data.notes || '').trim() ||
+          (parsed.sizes || []).length !== (chart_data.sizes || []).length;
+      }
+      await supabase.from('chart_parse_feedback').insert({
+        brand_id: brandId, shop_domain: s, ai_output: parsed || null,
+        final: chart_data, category: row.category, gender: row.gender, edited,
+      });
+    } catch (e) { /* best-effort — never block a save */ }
+
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
