@@ -849,6 +849,85 @@ app.post('/api/merchant/assign-chart', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ----------------------------------------------------
+// 7. Settings & preferences (lobby card 3)
+// ----------------------------------------------------
+app.get('/api/merchant/settings', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const { data } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+    res.json({ settings: (data && data.settings) || {} });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/merchant/settings', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const incoming = (req.body && req.body.settings) || {};
+    const { data: cur } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+    const merged = Object.assign({}, (cur && cur.settings) || {}, incoming);
+    await supabase.from('shop_settings').upsert({ shop, settings: merged, updated_at: new Date() });
+    res.json({ ok: true, settings: merged });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ----------------------------------------------------
+// 8. Analytics (lobby card 4) — REAL setup/coverage numbers computed from the
+//    store's own charts + synced catalog. (Shopper-facing metrics such as
+//    recommendations served / sizes chosen require event logging, not built yet.)
+// ----------------------------------------------------
+app.get('/api/merchant/analytics', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+
+    const { data: charts } = await supabase.from('size_charts')
+      .select('id, category, chart_data').eq('brand_id', brandId);
+    const { data: products } = await supabase.from('catalog_products')
+      .select('title, product_type, category, size_chart_id').eq('brand_id', brandId);
+
+    const cs = charts || [], ps = products || [];
+    const catsOf = (c) => {
+      const cd = c.chart_data || {};
+      if (Array.isArray(cd.categories) && cd.categories.length) return cd.categories;
+      const one = cd.garment_category || c.category;
+      return one ? [one] : [];
+    };
+    const hasStoreWide = cs.some((c) => (c.chart_data || {}).applies_all);
+    const linkedCats = new Set();
+    cs.forEach((c) => catsOf(c).forEach((x) => linkedCats.add(x)));
+    const linkedCharts = cs.filter((c) => (c.chart_data || {}).applies_all || catsOf(c).length).length;
+
+    // A product is "covered" if it has a per-product chart, or a store-wide chart
+    // exists, or its category has a linked chart.
+    const NON_APPAREL = new Set(['giftcard', 'gift card', 'gift_card', 'gift cards']);
+    const apparel = ps.filter((p) => !NON_APPAREL.has(String(p.product_type || '').toLowerCase()));
+    const covered = [], uncovered = [];
+    apparel.forEach((p) => {
+      const ok = !!p.size_chart_id || hasStoreWide || (p.category && linkedCats.has(p.category));
+      (ok ? covered : uncovered).push(p);
+    });
+    const gaps = {};
+    uncovered.forEach((p) => {
+      const k = p.category || p.product_type || 'Uncategorized';
+      gaps[k] = (gaps[k] || 0) + 1;
+    });
+
+    res.json({
+      charts: cs.length,
+      chartsLinked: linkedCharts,
+      storeWide: hasStoreWide,
+      productsSynced: ps.length,
+      apparelProducts: apparel.length,
+      covered: covered.length,
+      uncovered: uncovered.length,
+      coveragePct: apparel.length ? Math.round((covered.length / apparel.length) * 100) : 0,
+      gaps: Object.keys(gaps).map((k) => ({ group: k, count: gaps[k] })).sort((a, b) => b.count - a.count),
+      note: 'Setup coverage. Shopper metrics (recommendations served, sizes chosen, returns) need fit-event logging — not built yet.',
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Catch-all: any non-API GET renders the app UI (the chart manager). This makes
 // the embedded app load a real page no matter what path Shopify requests.
 app.get(/^(?!\/api\/).*/, serveApp);
