@@ -731,6 +731,28 @@ app.post('/api/merchant/delete-chart', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Step 2 of the app: LINK an existing chart to categories / whole store / gender.
+// Body: { id, categories:[slug], applies_all:bool, gender }
+app.post('/api/merchant/link-chart', async (req, res) => {
+  try {
+    const s = await requireShop(req, res); if (!s) return;
+    const brandId = await ensureBrandForShop(s);
+    const { id, categories, applies_all, gender } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'Missing chart id.' });
+    const { data: chart } = await supabase.from('size_charts')
+      .select('chart_data').eq('id', id).eq('brand_id', brandId).maybeSingle();
+    if (!chart) return res.status(404).json({ error: 'Chart not found.' });
+    const cd = Object.assign({}, chart.chart_data || {});
+    cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
+    cd.applies_all = !!applies_all;
+    if (gender !== undefined) cd.gender = gender || null;
+    const upd = { chart_data: cd, category: cd.categories[0] || null };
+    if (gender !== undefined) upd.gender = gender || null;
+    await supabase.from('size_charts').update(upd).eq('id', id).eq('brand_id', brandId);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ----------------------------------------------------
 // 6. Push the store's catalog into Styla's SEMANTIC product index so the AI can
 //    reason across the whole catalog (smarter answers + the discovery feed).

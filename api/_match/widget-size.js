@@ -135,18 +135,27 @@ export default async function widgetSize(req, res) {
     if (error) throw error;
     if (!charts || !charts.length) return res.status(404).json({ error: 'No size chart found for this brand.' });
 
-    // Resolve the chart: an exact category match wins; otherwise fall back to the
-    // brand's GENERAL (no-category) whole-store chart — never to a different
-    // category's chart. Charts with no category apply to everything.
-    const catOf = (c) => (c.chart_data && c.chart_data.garment_category) || c.category || null;
-    const general = charts.filter(c => !catOf(c));
+    // Resolve the chart from the merchant's EXPLICIT links (step 2 of the app):
+    //   - a chart linked to the product's category wins;
+    //   - else a chart the merchant marked "apply to my whole store" (applies_all);
+    //   - else none (the widget shows "no chart" rather than guessing).
+    // catsOf reads chart_data.categories[] (new), falling back to the legacy single
+    // category so older charts keep working.
+    const catsOf = (c) => {
+      const cd = c.chart_data || {};
+      if (Array.isArray(cd.categories) && cd.categories.length) return cd.categories;
+      const one = cd.garment_category || c.category;
+      return one ? [one] : [];
+    };
+    const general = charts.filter(c => c.chart_data && c.chart_data.applies_all);
     let chosen;
     if (canonCategory) {
-      const exact = charts.filter(c => catOf(c) === canonCategory);
-      chosen = exact.length ? exact : (general.length ? general : charts);
+      const exact = charts.filter(c => catsOf(c).includes(canonCategory));
+      chosen = exact.length ? exact : general;
     } else {
-      chosen = general.length ? general : charts;
+      chosen = general;
     }
+    if (!chosen.length) return res.status(404).json({ error: 'No size chart is linked to this product yet.' });
     if (gender) {
       const byGender = chosen.filter(c => !c.gender || c.gender.toLowerCase() === 'unisex' || c.gender.toLowerCase() === String(gender).toLowerCase());
       if (byGender.length) chosen = byGender;
