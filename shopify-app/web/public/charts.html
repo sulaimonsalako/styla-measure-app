@@ -6,6 +6,8 @@
 <meta name="shopify-api-key" content="ae97233671ed9354af95498cd5c7fc62"/>
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <title>Styla — size &amp; fit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f6f7f9; --surface:#fff; --surface-2:#fafbfc;
@@ -13,6 +15,8 @@
   --ink:#111318; --ink-2:#3d4351; --muted:#6b7280; --faint:#9aa1ad;
   --brand:#e11d48; --brand-2:#ff2a75; --grad:linear-gradient(135deg,#e11d48,#ff2a75);
   --green:#0f7a54; --green-bg:#e8f7f0; --amber:#8a5a00; --amber-bg:#fdf6e7; --red:#c0392b;
+  --ink-dark:#0b0b14; --card-dark:#16162a;
+  --head:'EB Garamond',Georgia,serif; --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --r-sm:8px; --r:12px; --r-lg:16px;
   --sh-1:0 1px 2px rgba(16,24,40,.05);
   --sh-2:0 4px 14px rgba(16,24,40,.07);
@@ -21,24 +25,29 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html{-webkit-text-size-adjust:100%;}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
-  background:var(--bg);color:var(--ink);padding:24px 20px 64px;
+  font-family:var(--body);
+  background:var(--bg);color:var(--ink);padding:0 0 64px;
   -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
 }
-.wrap{max-width:880px;margin:0 auto;}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px;}
 
-/* ---------- typography ---------- */
-h1{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;line-height:1.2;}
-h2{font-size:1.02rem;font-weight:650;letter-spacing:-.01em;}
-h3{font-size:.98rem;font-weight:650;letter-spacing:-.01em;}
+/* ---------- typography (EB Garamond headings, Inter body — styla.ca) ---------- */
+h1{font-family:var(--head);font-size:2rem;font-weight:700;letter-spacing:-.01em;line-height:1.15;}
+h2{font-family:var(--head);font-size:1.25rem;font-weight:700;letter-spacing:0;}
+h3{font-family:var(--head);font-size:1.15rem;font-weight:700;}
 .sub{color:var(--muted);font-size:.9rem;margin-top:4px;}
 .hint{color:var(--muted);font-size:.8rem;line-height:1.5;}
 .faint{color:var(--faint);}
 
-/* ---------- header ---------- */
-.top{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
-.mark{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:.95rem;box-shadow:var(--sh-2);flex:none;}
-.storepill{margin-left:auto;font-size:.76rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:6px 11px;border-radius:100px;box-shadow:var(--sh-1);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* ---------- brand header (dark band, styla.ca identity) ---------- */
+.brandbar{background:var(--ink-dark);color:#fff;padding:18px 0;margin-bottom:26px;}
+.brandbar .wrap{display:flex;align-items:center;gap:12px;}
+.brandmark{display:flex;align-items:center;gap:10px;}
+.brandmark img{height:30px;width:30px;border-radius:50%;display:block;}
+.brandmark .wordmark{font-family:var(--head);font-weight:700;letter-spacing:.18em;font-size:1.15rem;text-transform:uppercase;}
+.brandbar .storepill{margin-left:auto;font-size:.75rem;color:#cbd5e1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);padding:6px 12px;border-radius:100px;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.top{display:flex;align-items:flex-end;gap:12px;margin-bottom:22px;}
 
 /* ---------- cards ---------- */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh-1);}
@@ -178,17 +187,26 @@ details.adv>summary:hover{color:var(--ink-2);}
 </head>
 <body>
 <ui-nav-menu><a href="/charts.html" rel="home">Styla</a></ui-nav-menu>
+
+<div class="brandbar">
+  <div class="wrap">
+    <div class="brandmark">
+      <img src="https://www.styla.ca/logo.png" alt="" onerror="this.style.display='none'"/>
+      <span class="wordmark">Styla</span>
+    </div>
+    <div class="storepill" id="shopline"></div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <!-- ================= LOBBY ================= -->
   <div class="view on" id="v-lobby">
     <div class="top">
-      <div class="mark">S</div>
       <div>
         <h1>Size &amp; fit</h1>
         <div class="sub">Every shopper sees their correct size — automatically.</div>
       </div>
-      <div class="storepill" id="shopline"></div>
     </div>
 
     <div class="setup">
