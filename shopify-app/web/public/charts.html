@@ -192,6 +192,13 @@ details.adv[open]>summary::before{content:'▾  ';}
     </div>
 
     <div class="card">
+      <h2>Your product types</h2>
+      <p class="hint" style="margin-bottom:10px">Your store's own labels, and what Styla matched each to. Correct any that are wrong — charts for that clothing type then apply to those products.</p>
+      <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
+      <div class="msg" id="catMsg"></div>
+    </div>
+
+    <div class="card">
       <h2>By individual product</h2>
       <p class="hint" style="margin-bottom:10px">For a product that needs a different chart than its clothing type. Requires a product sync (Settings).</p>
       <div id="assignHost"><div class="empty">Sync your products in Settings to list them here.</div></div>
@@ -289,6 +296,7 @@ function go(v){
   window.scrollTo(0,0);
   if(v==='analytics') loadAnalytics();
   if(v==='settings') loadSettings();
+  if(v==='assign') loadCategories();
   if(v==='lobby') refreshTiles();
 }
 window.go=go;
@@ -491,6 +499,30 @@ async function assign(body,note){var m=el('assignMsg');m.style.color='';m.textCo
   try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
     m.style.color='var(--green)';m.textContent='✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.';loadProducts();
   }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Failed.';}}
+
+// ---- product type -> Styla category review ----
+async function loadCategories(){
+  var host=el('catHost'); if(!host) return;
+  try{
+    var r=await mfetch('/api/merchant/categories?shop='+encodeURIComponent(SHOP));var d=await r.json();
+    var types=d.types||[];
+    if(!types.length){host.innerHTML='<div class="empty">Sync your products in Settings to see them.</div>';return;}
+    host.innerHTML=types.map(function(t){
+      var opts='<option value="">Not clothing / skip</option>'+TAX.map(function(x){return '<option value="'+x.slug+'"'+((t.alias||t.mapped)===x.slug?' selected':'')+'>'+x.label+'</option>';}).join('');
+      var status=t.alias?'you set this':(t.mapped?'auto-matched':'unmatched');
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f1f2f4">'
+        +'<div style="flex:1"><b style="font-size:.88rem">'+esc(t.type)+'</b> <span class="hint">'+t.count+' products · '+status+'</span></div>'
+        +'<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:210px;font-size:.8rem;padding:6px 8px">'+opts+'</select></div>';
+    }).join('');
+    host.querySelectorAll('.catSel').forEach(function(s){s.addEventListener('change',async function(){
+      var m=el('catMsg');m.style.color='';m.textContent='Saving…';
+      try{var rr=await mfetch('/api/merchant/map-category',{method:'POST',body:JSON.stringify({shop:SHOP,productType:decodeURIComponent(this.getAttribute('data-type')),category:this.value||null})});
+        var dd=await rr.json();if(dd.error)throw new Error(dd.error);
+        m.style.color='var(--green)';m.textContent='✓ Updated.';loadCategories();loadProducts();
+      }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Failed.';}
+    });});
+  }catch(e){host.innerHTML='<div class="empty">Could not load product types.</div>';}
+}
 
 // ---- settings ----
 function updateSyncStatus(){

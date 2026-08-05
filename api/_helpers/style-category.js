@@ -24,13 +24,16 @@ const RULES = [
 ];
 
 /**
- * @param {object} f { category, product_type, title, tags }
+ * @param {object} f { category, product_type, title, tags, collections }
  * @returns {string|null} a Styla category slug, or null if nothing matched.
  */
 export function toStylaCategory(f) {
   f = f || {};
-  const tags = Array.isArray(f.tags) ? f.tags.join(' ') : (f.tags || '');
-  const hay = [f.category, f.product_type, f.title, tags].filter(Boolean).join(' ').toLowerCase();
+  const join = (v) => (Array.isArray(v) ? v.join(' ') : (v || ''));
+  // Priority: Shopify's structured category, then type, then title, then the
+  // merchant's own groupings (collections/tags) as the weakest signal.
+  const hay = [f.category, f.product_type, f.title, join(f.collections), join(f.tags)]
+    .filter(Boolean).join(' ').toLowerCase();
   if (!hay) return null;
   for (const [slug, re] of RULES) if (re.test(hay)) return slug;
   return null;

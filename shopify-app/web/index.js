@@ -32,7 +32,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY || 'mock_key',
   apiSecretKey: process.env.SHOPIFY_API_SECRET || 'mock_secret',
-  scopes: ['read_products'], // only what we use (catalog read + products/* webhooks)
+  // Only what we use: catalog + collections (read_products) and live stock
+  // (read_inventory, for inventory_levels/update).
+  scopes: ['read_products', 'read_inventory'],
   hostName: process.env.HOST ? process.env.HOST.replace(/https:\/\//, '') : 'localhost:8080',
   apiVersion: ApiVersion.April24,
   isEmbeddedApp: true
@@ -63,8 +65,38 @@ const stripHtml = (h) => String(h || '')
 
 // Map a Shopify product (REST list item OR webhook payload — same shape) into
 // the shape Styla's /api/catalog-ingest expects.
-function mapShopifyProduct(shop, p) {
+// Build productId -> [collection titles]. Merchants group by collection, so this
+// is a strong signal for categorising and for merchandising-aware recommendations.
+async function fetchCollectionMap(shop, token) {
+  const map = {};
+  try {
+    const [custom, smart] = await Promise.all([
+      fetchShopifyAPI(shop, token, 'custom_collections.json?limit=250').catch(() => ({})),
+      fetchShopifyAPI(shop, token, 'smart_collections.json?limit=250').catch(() => ({})),
+    ]);
+    const cols = [].concat(custom.custom_collections || [], smart.smart_collections || []);
+    if (!cols.length) return map;
+    // collects.json links products to collections (a few pages is plenty here).
+    for (let page = 1, url = 'collects.json?limit=250'; page <= 4 && url; page++) {
+      const data = await fetchShopifyAPI(shop, token, url).catch(() => null);
+      const rows = (data && data.collects) || [];
+      if (!rows.length) break;
+      const byId = Object.fromEntries(cols.map((c) => [String(c.id), c.title]));
+      rows.forEach((c) => {
+        const title = byId[String(c.collection_id)];
+        if (!title) return;
+        const k = String(c.product_id);
+        (map[k] = map[k] || []).push(title);
+      });
+      url = rows.length === 250 ? `collects.json?limit=250&since_id=${rows[rows.length - 1].id}` : null;
+    }
+  } catch (e) { console.error('collection map failed (non-fatal):', e.message); }
+  return map;
+}
+
+function mapShopifyProduct(shop, p, collections) {
   return {
+    collections: collections || [],
     external_id: String(p.id),
     handle: p.handle,
     url: `https://${shop}/products/${p.handle}`,
@@ -79,7 +111,7 @@ function mapShopifyProduct(shop, p) {
     tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
     price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
     image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
-    variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: variantSellable(v) })),
+    variants: (p.variants || []).map((v) => ({ id: v.id, inventory_item_id: v.inventory_item_id, title: v.title, size: v.option1, price: v.price, available: variantSellable(v) })),
     // NOTE: the Admin REST API does NOT return variant.available (that's the
     // Storefront API). Derive it: untracked inventory or "continue" policy is
     // always sellable, otherwise require stock. Product must also be active.
@@ -162,7 +194,7 @@ app.get('/api/auth/callback', async (req, res) => {
 // Register webhook helper
 async function registerShopifyWebhooks(shop, accessToken) {
   const host = process.env.HOST || `https://${shop}`;
-  const webhooksToRegister = ['app/uninstalled', 'products/create', 'products/update', 'products/delete'];
+  const webhooksToRegister = ['app/uninstalled', 'products/create', 'products/update', 'products/delete', 'inventory_levels/update'];
   
   for (const topic of webhooksToRegister) {
     try {
@@ -270,6 +302,34 @@ app.post('/api/webhooks', async (req, res) => {
       // Remove it from the semantic index too.
       try { await pushToStylaIndex(shop, { remove: [productId] }); }
       catch (e) { console.error('Styla index remove (webhook) failed:', e.message); }
+    } else if (topic === 'inventory_levels/update') {
+      // Stock changed. Resolve inventory_item_id -> the indexed product (we store
+      // it on each variant), then re-fetch that product so `available` stays true
+      // to reality — keeps sold-out items out of recommendations.
+      try {
+        const invId = payload.inventory_item_id;
+        const { data: brand } = await supabase.from('brands').select('id').eq('domain', shop).maybeSingle();
+        if (invId && brand) {
+          const { data: rows } = await supabase.from('catalog_products')
+            .select('external_id').eq('brand_id', brand.id)
+            .filter('variants', 'cs', JSON.stringify([{ inventory_item_id: invId }]));
+          const ext = rows && rows[0] && rows[0].external_id;
+          if (ext) {
+            const { data: sess } = await supabase.from('merchant_sessions')
+              .select('access_token').eq('shop', shop).maybeSingle();
+            if (sess) {
+              const one = await fetchShopifyAPI(shop, sess.access_token, `products/${ext}.json`);
+              if (one && one.product) {
+                const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+                await pushToStylaIndex(shop, {
+                  products: [mapShopifyProduct(shop, one.product)],
+                  shared: ((st && st.settings) || {}).share_catalog !== false,
+                });
+              }
+            }
+          }
+        }
+      } catch (e) { console.error('inventory webhook failed (non-fatal):', e.message); }
     }
   } catch (err) {
     console.error(`Error processing webhook topic ${topic}:`, err);
@@ -781,8 +841,11 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     if (!accessToken) return res.status(401).json({ error: 'Could not authorize with Shopify. Reopen the app from your admin and try again.' });
 
     // Pull the catalog (up to 250 published products) and push to the index.
-    const data = await fetchShopifyAPI(shop, accessToken, 'products.json?limit=250&published_status=published');
-    const products = (data.products || []).map((p) => mapShopifyProduct(shop, p));
+    const [data, colMap] = await Promise.all([
+      fetchShopifyAPI(shop, accessToken, 'products.json?limit=250&published_status=published'),
+      fetchCollectionMap(shop, accessToken),
+    ]);
+    const products = (data.products || []).map((p) => mapShopifyProduct(shop, p, colMap[String(p.id)]));
     if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
 
     // Free tier: share the catalog into Styla discovery unless the merchant opted out.
@@ -864,6 +927,56 @@ app.post('/api/merchant/assign-chart', async (req, res) => {
     }
 
     res.json({ ok: true, updated: targets.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ----------------------------------------------------
+// 6b. Category review — every store labels products differently. Show each of
+//     the store's own product types, what Styla mapped it to, and let the
+//     merchant correct it. The correction is saved as a brand alias AND
+//     backfilled onto the already-indexed products.
+// ----------------------------------------------------
+app.get('/api/merchant/categories', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { data: rows } = await supabase.from('catalog_products')
+      .select('product_type, category').eq('brand_id', brandId);
+    const { data: brand } = await supabase.from('brands').select('category_aliases').eq('id', brandId).maybeSingle();
+    const aliases = (brand && brand.category_aliases) || {};
+
+    const groups = {};
+    (rows || []).forEach((r) => {
+      const t = r.product_type || '(no type)';
+      groups[t] = groups[t] || { type: t, count: 0, mapped: r.category || null };
+      groups[t].count++;
+      if (r.category) groups[t].mapped = r.category;
+    });
+    const list = Object.values(groups).map((g) => ({
+      ...g, alias: aliases[String(g.type).toLowerCase()] || null,
+    })).sort((a, b) => b.count - a.count);
+    res.json({ types: list });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/merchant/map-category', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { productType, category } = req.body || {};
+    if (!productType) return res.status(400).json({ error: 'Missing productType.' });
+
+    const { data: brand } = await supabase.from('brands').select('category_aliases').eq('id', brandId).maybeSingle();
+    const aliases = Object.assign({}, (brand && brand.category_aliases) || {});
+    const key = String(productType).toLowerCase();
+    if (category) aliases[key] = category; else delete aliases[key];
+    await supabase.from('brands').update({ category_aliases: aliases }).eq('id', brandId);
+
+    // Backfill the already-indexed products so the change takes effect now.
+    let q = supabase.from('catalog_products').update({ category: category || null }).eq('brand_id', brandId);
+    q = (productType === '(no type)') ? q.is('product_type', null) : q.eq('product_type', productType);
+    await q;
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

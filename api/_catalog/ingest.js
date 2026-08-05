@@ -24,7 +24,8 @@ import { toStylaCategory } from '../_helpers/style-category.js';
 // then the description. Kept compact on purpose.
 function docText(p) {
   const tags = Array.isArray(p.tags) ? p.tags.join(' ') : (p.tags || '');
-  return [p.title, p.product_type, tags, p.description].filter(Boolean).join('. ').slice(0, 8000);
+  const cols = Array.isArray(p.collections) ? p.collections.join(' ') : (p.collections || '');
+  return [p.title, p.product_type, cols, tags, p.description].filter(Boolean).join('. ').slice(0, 8000);
 }
 const sha1 = (s) => crypto.createHash('sha1').update(s).digest('hex');
 const toTags = (t) => (Array.isArray(t) ? t : (t ? String(t).split(',').map((s) => s.trim()) : [])).filter(Boolean);
@@ -74,7 +75,7 @@ export default async function catalogIngest(req, res) {
     const catFor = (p) => {
       const raw = String(p.category || p.product_type || '').toLowerCase().trim();
       if (raw && aliases[raw]) return aliases[raw];
-      return toStylaCategory({ category: p.category, product_type: p.product_type, title: p.title, tags: p.tags });
+      return toStylaCategory({ category: p.category, product_type: p.product_type, title: p.title, tags: p.tags, collections: p.collections });
     };
 
     // What's already indexed — so we can skip re-embedding unchanged products.
@@ -105,6 +106,7 @@ export default async function catalogIngest(req, res) {
           product_type: p.product_type || null,
           category: catFor(p),
           tags: toTags(p.tags),
+          collections: toTags(p.collections),
           price: p.price != null && p.price !== '' ? Number(p.price) : null,
           currency: p.currency || 'USD',
           image_url: p.image_url || p.image || null,
