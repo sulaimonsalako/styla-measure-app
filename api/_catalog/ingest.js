@@ -33,8 +33,10 @@ export default async function catalogIngest(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { brand, brandId, domain, shop, products, remove } = req.body || {};
+    let { brand, brandId, domain, shop, products, remove, shared } = req.body || {};
     const shopDom = normDom(shop || domain);
+    // Free tier: brands are shared into Styla's cross-brand discovery by default.
+    const isShared = shared !== false;
 
     const hasProducts = Array.isArray(products) && products.length > 0;
     const hasRemove = Array.isArray(remove) && remove.length > 0;
@@ -108,6 +110,7 @@ export default async function catalogIngest(req, res) {
           image_url: p.image_url || p.image || null,
           variants: p.variants || [],
           available: p.available !== false,
+          shared: isShared,
           content_hash: h,
         },
       };

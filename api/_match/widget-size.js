@@ -39,6 +39,17 @@ export default async function widgetSize(req, res) {
     let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId, domain } = req.body || {};
     const normDom = (d) => String(d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
 
+    // The on-site widget is the paid feature. A store can switch it off (e.g. it
+    // only wants free catalog sharing). Fail OPEN when there's no settings row —
+    // non-Shopify stores and the bookmarklet must keep working.
+    if (domain) {
+      const { data: st } = await supabaseAdmin
+        .from('shop_settings').select('settings').eq('shop', normDom(domain)).maybeSingle();
+      if (st && st.settings && st.settings.widget_enabled === false) {
+        return res.status(403).json({ error: 'The Styla size widget is turned off for this store.', widget_disabled: true });
+      }
+    }
+
     // Logged-in shopper: load their saved profile with the service-role client.
     if (accessToken && !profile) {
       const { data, error } = await supabaseAdmin.auth.getUser(accessToken);

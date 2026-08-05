@@ -79,9 +79,20 @@ function mapShopifyProduct(shop, p) {
     tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
     price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
     image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
-    variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: v.available })),
-    available: Array.isArray(p.variants) ? p.variants.some((v) => v.available) : true,
+    variants: (p.variants || []).map((v) => ({ id: v.id, title: v.title, size: v.option1, price: v.price, available: variantSellable(v) })),
+    // NOTE: the Admin REST API does NOT return variant.available (that's the
+    // Storefront API). Derive it: untracked inventory or "continue" policy is
+    // always sellable, otherwise require stock. Product must also be active.
+    available: (p.status ? p.status === 'active' : true)
+      && (Array.isArray(p.variants) && p.variants.length ? p.variants.some(variantSellable) : true),
   };
+}
+
+function variantSellable(v) {
+  if (!v) return false;
+  if (!v.inventory_management) return true;          // inventory not tracked
+  if (v.inventory_policy === 'continue') return true; // oversell allowed
+  return Number(v.inventory_quantity) > 0;
 }
 
 // Push upserts (products) and/or removals (remove: [externalId]) to the index.
@@ -246,8 +257,11 @@ app.post('/api/webhooks', async (req, res) => {
 
       // Keep the semantic index live: upsert this one product (content-hash
       // gate on Styla's side skips re-embedding if nothing meaningful changed).
-      try { await pushToStylaIndex(shop, { products: [mapShopifyProduct(shop, payload)] }); }
-      catch (e) { console.error('Styla index upsert (webhook) failed:', e.message); }
+      try {
+        const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+        const shared = ((st && st.settings) || {}).share_catalog !== false;
+        await pushToStylaIndex(shop, { products: [mapShopifyProduct(shop, payload)], shared });
+      } catch (e) { console.error('Styla index upsert (webhook) failed:', e.message); }
     } else if (topic === 'products/delete') {
       const productId = String(payload.id);
       await supabase.from('product_size_charts').delete().eq('shopify_product_id', productId);
@@ -771,7 +785,11 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     const products = (data.products || []).map((p) => mapShopifyProduct(shop, p));
     if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
 
-    const out = await pushToStylaIndex(shop, { products });
+    // Free tier: share the catalog into Styla discovery unless the merchant opted out.
+    const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+    const shared = ((st && st.settings) || {}).share_catalog !== false;
+
+    const out = await pushToStylaIndex(shop, { products, shared });
     res.json({
       ok: true,
       synced: products.length,

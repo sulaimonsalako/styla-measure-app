@@ -206,6 +206,38 @@ details.adv[open]>summary::before{content:'▾  ';}
     <p class="sub">Store: <span id="shopline2"></span></p>
 
     <div class="card">
+      <h2>What Styla does for your store</h2>
+      <p class="hint" style="margin-bottom:14px">Two separate things — use either or both.</p>
+
+      <div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <b style="font-size:.95rem">Get recommended on Styla</b>
+          <span class="badge" style="background:#e7f8f0;color:var(--green)">Free</span>
+          <label style="margin:0 0 0 auto;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)">
+            <input type="checkbox" id="pf-share" style="width:auto"/> On
+          </label>
+        </div>
+        <p class="hint" style="margin-top:8px">Styla shoppers get matched to clothes that fit them across brands. With this on, your products can be recommended to them — new customers, no cost. Turn it off and your catalog is never shown outside your own store.</p>
+      </div>
+
+      <div style="border:1px solid var(--line);border-radius:12px;padding:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <b style="font-size:.95rem">Size widget on your product pages</b>
+          <span class="badge">Paid</span>
+          <label style="margin:0 0 0 auto;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)">
+            <input type="checkbox" id="pf-widget" style="width:auto"/> On
+          </label>
+        </div>
+        <p class="hint" style="margin-top:8px">Shows every shopper their correct size on your product pages, with the AI fit chat. Turn this off to keep only the free sharing above.</p>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" id="savePlan">Save</button>
+        <span class="msg" id="planMsg" style="margin-top:0"></span>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Product sync</h2>
       <p class="hint" style="margin-bottom:10px">Lets Styla's AI recommend other items that fit each shopper, and lets you assign charts to individual products.</p>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px" id="syncStatus"></div>
@@ -478,8 +510,18 @@ async function loadSettings(){
     el('pf-units').value=s.units||'in';
     el('pf-btn').value=s.button_text||'';
     el('pf-chat').checked=s.ai_chat!==false;
+    el('pf-share').checked=s.share_catalog!==false;   // free tier: on by default
+    el('pf-widget').checked=s.widget_enabled!==false; // paid feature
   }catch(e){}
 }
+el('savePlan').addEventListener('click',async function(){
+  var m=el('planMsg');m.style.color='';m.textContent='Saving…';
+  var settings={share_catalog:el('pf-share').checked,widget_enabled:el('pf-widget').checked};
+  try{var r=await mfetch('/api/merchant/settings',{method:'POST',body:JSON.stringify({shop:SHOP,settings:settings})});var d=await r.json();if(d.error)throw new Error(d.error);
+    m.style.color='var(--green)';
+    m.textContent='✓ Saved.'+(settings.share_catalog?'':' Re-sync products to remove yours from Styla recommendations.');
+  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Save failed.';}
+});
 el('saveSettings').addEventListener('click',async function(){
   var m=el('settingsMsg');m.style.color='';m.textContent='Saving…';
   var settings={units:el('pf-units').value,button_text:(el('pf-btn').value||'').trim(),ai_chat:el('pf-chat').checked};

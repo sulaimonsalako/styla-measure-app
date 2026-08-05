@@ -26,6 +26,11 @@ export async function retrieveCatalog({ query, brandId = null, shop = null, cate
   const embedding = await embedOne(q, 'RETRIEVAL_QUERY');
   if (!embedding) return [];
 
+  // Cross-brand discovery (no store scope) may only surface brands that opted in
+  // to sharing. A search scoped to one store is that store's own catalog shown to
+  // its own shopper, so it is never filtered.
+  const scoped = Boolean(brandId || shop);
+
   const { data, error } = await supabaseAdmin.rpc('match_catalog_products', {
     query_embedding: embedding,
     match_brand_id: brandId || null,
@@ -33,6 +38,7 @@ export async function retrieveCatalog({ query, brandId = null, shop = null, cate
     filter_category: category || null,
     query_text: q,
     match_count: Math.min(Math.max(Number(count) || 12, 1), 50),
+    only_shared: !scoped,
   });
   if (error) throw error;
   return data || [];
