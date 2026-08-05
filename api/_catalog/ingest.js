@@ -69,12 +69,29 @@ export default async function catalogIngest(req, res) {
       if (!hasProducts) return res.status(200).json({ ok: true, removed: remove.length });
     }
 
-    // Category, in priority order: brand alias override on the raw type ->
-    // keyword mapping over Shopify category / type / title / tags -> null.
-    // (Category is the primary match key; per-product override is the fallback.)
+    // Shopify's Standard Product Taxonomy -> Styla categories, mapped once in our
+    // DB so merchants never translate their own labels. PRIORITY wins first (the
+    // broad "…> Clothing" catch-all is the longest string but the weakest signal),
+    // then longer/more-specific patterns.
+    const { data: taxRows } = await supabaseAdmin
+      .from('shopify_category_map').select('pattern, styla_category, priority');
+    const taxMap = (taxRows || []).slice().sort(
+      (a, b) => (b.priority - a.priority) || (b.pattern.length - a.pattern.length)
+    );
+    const fromShopifyTaxonomy = (path) => {
+      const p = String(path || '').toLowerCase();
+      if (!p) return undefined;
+      for (const r of taxMap) if (p.includes(r.pattern)) return r.styla_category; // may be null = not clothing
+      return undefined; // no rule matched -> let the fallbacks decide
+    };
+
+    // Priority: merchant's explicit alias -> Shopify's standard taxonomy ->
+    // keyword inference from type/title/collections/tags -> unmapped.
     const catFor = (p) => {
       const raw = String(p.category || p.product_type || '').toLowerCase().trim();
       if (raw && aliases[raw]) return aliases[raw];
+      const viaTax = fromShopifyTaxonomy(p.category);
+      if (viaTax !== undefined) return viaTax;
       return toStylaCategory({ category: p.category, product_type: p.product_type, title: p.title, tags: p.tags, collections: p.collections });
     };
 
