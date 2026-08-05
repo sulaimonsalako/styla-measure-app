@@ -7,279 +7,389 @@
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <title>Styla — size &amp; fit</title>
 <style>
-:root{--bg:#f6f6f8;--card:#fff;--line:#e3e5ea;--text:#1e2330;--muted:#5f6672;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--green:#0f7a54;}
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;}
-body{background:var(--bg);color:var(--text);padding:22px;}
-.wrap{max-width:820px;margin:0 auto;}
-h1{font-size:1.45rem;margin-bottom:4px;}
-.sub{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
-.card h2{font-size:1.05rem;}
-label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px;font-weight:600;}
-select,input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:.92rem;background:#fff;color:var(--text);font-family:inherit;}
-select:focus,input:focus,textarea:focus{outline:none;border-color:var(--pink);}
-.hint{color:var(--muted);font-size:.78rem;}
-.btn{border:none;border-radius:100px;padding:11px 20px;font-weight:700;font-size:.9rem;cursor:pointer;}
-.btn-primary{background:var(--grad);color:#fff;}
-.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--text);}
-.btn-sm{padding:7px 13px;font-size:.82rem;}
-.linkbtn{background:none;border:none;color:var(--pink);font-weight:700;cursor:pointer;font-size:.9rem;text-decoration:underline;padding:0;}
-.msg{font-size:.85rem;margin-top:10px;min-height:1em;}
-.empty{color:var(--muted);font-size:.88rem;padding:8px 0;}
-.warn{background:#fdf4e3;border:1px solid #f0d9a0;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#8a5a00;margin-top:10px;}
-.ok{color:var(--green);font-weight:700;}
-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.86rem;}
-th{text-align:left;color:var(--muted);font-size:.72rem;text-transform:uppercase;padding:6px 6px;}
-td{padding:3px 4px;}
-td input{padding:7px 8px;}
-.drop{margin-top:14px;border:1.5px dashed var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center;cursor:pointer;background:#fafbfc;}
-.drop:hover{border-color:var(--pink);}
-.prompt{border:1.5px dashed var(--line);border-radius:12px;padding:22px 16px;text-align:center;color:var(--muted);font-size:.9rem;margin-top:12px;line-height:1.5;}
-.badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:100px;background:#eef0f4;color:var(--muted);text-transform:capitalize;}
-.chartrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);}
-details.adv{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;}
-details.adv>summary{cursor:pointer;font-weight:700;font-size:.85rem;color:var(--muted);list-style:none;user-select:none;}
-details.adv>summary::-webkit-details-marker{display:none;}
-details.adv>summary::before{content:'▸  ';}
-details.adv[open]>summary::before{content:'▾  ';}
-.advbody{padding-top:12px;}
-.linkcard{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
-.chip{display:flex;align-items:center;gap:5px;font-size:.82rem;border:1px solid var(--line);border-radius:100px;padding:4px 10px;cursor:pointer;}
-.chip input{width:auto;}
-/* lobby */
-.setup{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
-.setup ol{margin:8px 0 0 18px;font-size:.88rem;color:var(--muted);line-height:1.7;}
-.setup ol b{color:var(--text);}
+:root{
+  --bg:#f6f7f9; --surface:#fff; --surface-2:#fafbfc;
+  --line:#e7e9ee; --line-2:#f0f2f5;
+  --ink:#111318; --ink-2:#3d4351; --muted:#6b7280; --faint:#9aa1ad;
+  --brand:#e11d48; --brand-2:#ff2a75; --grad:linear-gradient(135deg,#e11d48,#ff2a75);
+  --green:#0f7a54; --green-bg:#e8f7f0; --amber:#8a5a00; --amber-bg:#fdf6e7; --red:#c0392b;
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --sh-1:0 1px 2px rgba(16,24,40,.05);
+  --sh-2:0 4px 14px rgba(16,24,40,.07);
+  --sh-3:0 12px 32px rgba(16,24,40,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+  background:var(--bg);color:var(--ink);padding:24px 20px 64px;
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;
+}
+.wrap{max-width:880px;margin:0 auto;}
+
+/* ---------- typography ---------- */
+h1{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;line-height:1.2;}
+h2{font-size:1.02rem;font-weight:650;letter-spacing:-.01em;}
+h3{font-size:.98rem;font-weight:650;letter-spacing:-.01em;}
+.sub{color:var(--muted);font-size:.9rem;margin-top:4px;}
+.hint{color:var(--muted);font-size:.8rem;line-height:1.5;}
+.faint{color:var(--faint);}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:800;font-size:.95rem;box-shadow:var(--sh-2);flex:none;}
+.storepill{margin-left:auto;font-size:.76rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:6px 11px;border-radius:100px;box-shadow:var(--sh-1);max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ---------- cards ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh-1);}
+.card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.card-head .txt{flex:1;min-width:0;}
+.card-head p{margin-top:3px;}
+
+/* ---------- setup strip ---------- */
+.setup{background:linear-gradient(180deg,#fff,#fcfcfd);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:18px;box-shadow:var(--sh-1);}
+.setup-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.crumb{display:flex;align-items:center;gap:9px;font-size:.85rem;color:var(--muted);}
+.crumb .dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:#eef0f4;color:var(--muted);flex:none;}
+.crumb.done .dot{background:var(--green-bg);color:var(--green);}
+.crumb.done{color:var(--ink-2);}
+.crumb .arrow{color:var(--faint);}
+
+/* ---------- lobby tiles ---------- */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-@media(max-width:640px){.grid{grid-template-columns:1fr;}}
-.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .15s,transform .15s;text-align:left;}
-.tile:hover{border-color:var(--pink);transform:translateY(-2px);}
-.tile .ico{font-size:1.5rem;}
-.tile h3{font-size:1rem;margin:8px 0 4px;}
-.tile p{font-size:.83rem;color:var(--muted);line-height:1.45;}
-.tile .stat{margin-top:10px;font-size:.8rem;font-weight:700;color:var(--text);}
-.tile .step{font-size:.7rem;font-weight:800;color:var(--pink);letter-spacing:1px;}
-.back{background:none;border:none;color:var(--muted);font-size:.88rem;cursor:pointer;padding:0;margin-bottom:12px;font-weight:600;}
-.view{display:none;} .view.on{display:block;}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;}
-.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;}
-.kpi .n{font-size:1.5rem;font-weight:800;}
-.kpi .l{font-size:.78rem;color:var(--muted);}
-.bar{height:8px;border-radius:5px;background:#eef0f4;overflow:hidden;margin:6px 0 2px;}
-.bar i{display:block;height:100%;background:var(--grad);}
+@media(max-width:680px){.grid{grid-template-columns:1fr;}}
+.tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;cursor:pointer;font:inherit;color:inherit;box-shadow:var(--sh-1);transition:transform .16s cubic-bezier(.2,.7,.3,1),box-shadow .16s,border-color .16s;}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--sh-3);border-color:#dcdfe6;}
+.tile:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.tile .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#f3f4f7;margin-bottom:12px;}
+.tile.accent .ico{background:linear-gradient(135deg,rgba(225,29,72,.10),rgba(255,42,117,.14));}
+.tile h3{margin-bottom:4px;}
+.tile p{font-size:.83rem;color:var(--muted);line-height:1.5;min-height:2.5em;}
+.tile .stat{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);font-size:.8rem;font-weight:650;color:var(--ink-2);display:flex;align-items:center;gap:6px;}
+.tile .go{position:absolute;top:20px;right:18px;color:var(--faint);transition:transform .16s,color .16s;}
+.tile:hover .go{transform:translateX(3px);color:var(--brand);}
+
+/* ---------- controls ---------- */
+label{display:block;font-size:.8rem;color:var(--ink-2);margin:14px 0 6px;font-weight:600;}
+label:first-child{margin-top:0;}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;font-size:.9rem;font-family:inherit;background:var(--surface);color:var(--ink);transition:border-color .14s,box-shadow .14s;}
+input::placeholder,textarea::placeholder{color:var(--faint);}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(255,42,117,.12);}
+select{appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:560px){.row2{grid-template-columns:1fr;}}
+
+.btn{border:none;border-radius:var(--r-sm);padding:10px 18px;font-weight:650;font-size:.88rem;font-family:inherit;cursor:pointer;transition:transform .12s,box-shadow .14s,background .14s,opacity .14s;display:inline-flex;align-items:center;gap:7px;}
+.btn:active{transform:translateY(1px);}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(225,29,72,.24);}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(225,29,72,.32);}
+.btn-primary:disabled{opacity:.55;cursor:default;box-shadow:none;}
+.btn-ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);box-shadow:var(--sh-1);}
+.btn-ghost:hover{border-color:#d5d8e0;background:var(--surface-2);}
+.btn-sm{padding:7px 12px;font-size:.81rem;}
+.btn-icon{padding:6px 9px;font-size:.8rem;line-height:1;}
+.linkbtn{background:none;border:none;color:var(--brand);font-weight:650;cursor:pointer;font-size:.86rem;font-family:inherit;padding:0;text-decoration:underline;text-underline-offset:2px;}
+
+/* ---------- misc ---------- */
+.msg{font-size:.83rem;min-height:1em;}
+.msg.ok{color:var(--green);} .msg.err{color:var(--red);}
+.badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:100px;background:#eef0f4;color:var(--muted);letter-spacing:.01em;white-space:nowrap;}
+.badge.green{background:var(--green-bg);color:var(--green);}
+.badge.brand{background:rgba(255,42,117,.10);color:var(--brand);}
+.empty{color:var(--muted);font-size:.86rem;padding:18px 0;text-align:center;}
+.warn{background:var(--amber-bg);border:1px solid #f2e2b8;border-radius:var(--r);padding:11px 13px;font-size:.82rem;color:var(--amber);margin-top:12px;}
+.divider{height:1px;background:var(--line-2);margin:18px 0;}
+
+/* dropzone */
+.drop{margin-top:14px;border:1.5px dashed #d9dce3;border-radius:var(--r);padding:20px;display:flex;gap:14px;align-items:center;cursor:pointer;background:var(--surface-2);transition:border-color .14s,background .14s;}
+.drop:hover{border-color:var(--brand-2);background:#fff;}
+.drop .dico{width:40px;height:40px;border-radius:11px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;flex:none;box-shadow:var(--sh-1);}
+.prompt{border:1.5px dashed #e2e5ea;border-radius:var(--r);padding:28px 18px;text-align:center;color:var(--muted);font-size:.88rem;margin-top:14px;line-height:1.6;background:var(--surface-2);}
+
+/* tables */
+.tablewrap{margin-top:16px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;}
+.scrollx{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+thead th{text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:10px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:5px 6px;border-bottom:1px solid var(--line-2);}
+tbody tr:last-child td{border-bottom:none;}
+tbody td input{border-color:transparent;background:transparent;padding:7px 8px;}
+tbody td input:hover{border-color:var(--line);}
+tbody td input:focus{background:#fff;border-color:var(--brand-2);}
+
+/* rows / list items */
+.rowitem{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--line-2);}
+.rowitem:last-child{border-bottom:none;}
+.rowitem .grow{flex:1;min-width:0;}
+.rowitem .name{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* linkcard */
+.linkcard{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;background:var(--surface);transition:border-color .14s,box-shadow .14s;}
+.linkcard:hover{border-color:#dcdfe6;box-shadow:var(--sh-1);}
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;border:1px solid var(--line);border-radius:100px;padding:5px 11px;cursor:pointer;background:var(--surface);transition:border-color .14s,background .14s,color .14s;user-select:none;}
+.chip:hover{border-color:#cfd3dc;}
+.chip input{width:auto;margin:0;accent-color:var(--brand);}
+.chip:has(input:checked){background:rgba(255,42,117,.08);border-color:var(--brand-2);color:var(--brand);font-weight:600;}
+.switch{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.88rem;color:var(--ink);cursor:pointer;}
+.switch input{width:auto;accent-color:var(--brand);width:16px;height:16px;}
+
+/* details / advanced */
+details.adv{margin-top:18px;border-top:1px solid var(--line-2);padding-top:14px;}
+details.adv>summary{cursor:pointer;font-weight:650;font-size:.84rem;color:var(--muted);list-style:none;user-select:none;display:flex;align-items:center;gap:7px;}
+details.adv>summary::-webkit-details-marker{display:none;}
+details.adv>summary::before{content:'';width:0;height:0;border-left:5px solid var(--faint);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .15s;}
+details.adv[open]>summary::before{transform:rotate(90deg);}
+details.adv>summary:hover{color:var(--ink-2);}
+.advbody{padding-top:14px;}
+
+/* views + transitions */
+.view{display:none;} .view.on{display:block;animation:fade .22s ease both;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.back{background:none;border:none;color:var(--muted);font-size:.86rem;font-family:inherit;cursor:pointer;padding:6px 10px 6px 6px;margin-bottom:14px;font-weight:600;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:6px;transition:background .14s,color .14s;}
+.back:hover{background:var(--surface);color:var(--ink);}
+
+/* analytics */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px;}
+.kpi{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);box-shadow:var(--sh-1);}
+.kpi .n{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;}
+.kpi .l{font-size:.78rem;color:var(--muted);margin-top:3px;}
+.bar{height:9px;border-radius:6px;background:#eef0f4;overflow:hidden;margin:10px 0 8px;}
+.bar i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .5s cubic-bezier(.2,.7,.3,1);}
+
+/* plan cards */
+.plan{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;background:var(--surface);}
+.plan.on{border-color:rgba(255,42,117,.35);background:linear-gradient(180deg,rgba(255,42,117,.03),transparent);}
+.plan-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:100px;font-size:.85rem;font-weight:600;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:999;max-width:90vw;}
+#toast.on{opacity:1;transform:translate(-50%,0);}
+#toast.err{background:var(--red);}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,#eef0f4 25%,#f6f7f9 37%,#eef0f4 63%);background-size:400% 100%;animation:sh 1.3s ease infinite;border-radius:6px;height:14px;margin:10px 0;}
+@keyframes sh{from{background-position:100% 50%}to{background-position:0 50%}}
+.thumb{position:relative;display:inline-block;}
+.thumb img{height:52px;width:52px;object-fit:cover;border-radius:9px;border:1px solid var(--line);display:block;}
+.thumb button{position:absolute;top:-6px;right:-6px;background:var(--ink);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;line-height:1;cursor:pointer;display:grid;place-items:center;}
 </style>
 </head>
 <body>
-<ui-nav-menu>
-  <a href="/charts.html" rel="home">Styla</a>
-</ui-nav-menu>
+<ui-nav-menu><a href="/charts.html" rel="home">Styla</a></ui-nav-menu>
 <div class="wrap">
 
-  <!-- ============ LOBBY ============ -->
+  <!-- ================= LOBBY ================= -->
   <div class="view on" id="v-lobby">
-    <h1>Styla — size &amp; fit</h1>
-    <p class="sub" id="shopline"></p>
+    <div class="top">
+      <div class="mark">S</div>
+      <div>
+        <h1>Size &amp; fit</h1>
+        <div class="sub">Every shopper sees their correct size — automatically.</div>
+      </div>
+      <div class="storepill" id="shopline"></div>
+    </div>
 
     <div class="setup">
-      <b style="font-size:.95rem">Set up in 2 steps</b>
-      <ol>
-        <li><b>Create your size charts</b> — paste a screenshot of each size guide; our AI reads it.</li>
-        <li><b>Assign them</b> to clothing types or specific products. That's it — shoppers now get their size on your product pages.</li>
-      </ol>
+      <div class="setup-row">
+        <div class="crumb" id="cr-1"><span class="dot">1</span> Create a size chart</div>
+        <span class="crumb arrow">→</span>
+        <div class="crumb" id="cr-2"><span class="dot">2</span> Assign it</div>
+        <span class="crumb arrow">→</span>
+        <div class="crumb" id="cr-3"><span class="dot">✓</span> Live on your product pages</div>
+      </div>
     </div>
 
     <div class="grid">
-      <button class="tile" onclick="go('charts')">
-        <div class="ico">📐</div><div class="step">STEP 1</div>
+      <button class="tile accent" onclick="go('charts')">
+        <div class="go">→</div>
+        <div class="ico">📐</div>
         <h3>Size charts</h3>
-        <p>Create, edit and delete your size charts.</p>
+        <p>Upload a size guide — our AI reads it. Create, edit and delete charts.</p>
         <div class="stat" id="t-charts">—</div>
       </button>
-      <button class="tile" onclick="go('assign')">
-        <div class="ico">🔗</div><div class="step">STEP 2</div>
+      <button class="tile accent" onclick="go('assign')">
+        <div class="go">→</div>
+        <div class="ico">🔗</div>
         <h3>Assign charts</h3>
         <p>Choose which clothing types or products each chart covers.</p>
         <div class="stat" id="t-assign">—</div>
       </button>
       <button class="tile" onclick="go('settings')">
-        <div class="ico">⚙️</div><div class="step">&nbsp;</div>
-        <h3>Settings &amp; preferences</h3>
-        <p>Units, widget wording, product sync.</p>
+        <div class="go">→</div>
+        <div class="ico">⚙️</div>
+        <h3>Settings</h3>
+        <p>Plan, product sync, units and widget wording.</p>
         <div class="stat" id="t-settings">—</div>
       </button>
       <button class="tile" onclick="go('analytics')">
-        <div class="ico">📊</div><div class="step">&nbsp;</div>
+        <div class="go">→</div>
+        <div class="ico">📊</div>
         <h3>Analytics</h3>
-        <p>Coverage — which products can be sized, and what's missing.</p>
+        <p>How much of your catalog Styla can size, and what's missing.</p>
         <div class="stat" id="t-analytics">—</div>
       </button>
     </div>
   </div>
 
-  <!-- ============ 1. SIZE CHARTS ============ -->
+  <!-- ================= SIZE CHARTS ================= -->
   <div class="view" id="v-charts">
     <button class="back" onclick="go('lobby')">← All cards</button>
-    <h1>Size charts</h1>
-    <p class="sub">Create a chart here, then assign it in <b>Assign charts</b>.</p>
+    <div class="top"><div><h1>Size charts</h1><div class="sub">Create a chart here, then assign it in <b>Assign charts</b>.</div></div></div>
 
     <div class="card">
-      <h2>Add a size chart</h2>
-      <label>Chart name <span class="hint">(optional — helps you tell them apart)</span></label>
-      <input id="name" placeholder='e.g. "Women&apos;s body chart" or "Slim Suits"'/>
+      <div class="card-head"><div class="txt"><h2>Add a size chart</h2><p class="hint">Paste a screenshot of your size guide — our AI reads the measurements for you.</p></div></div>
+
+      <label>Chart name <span class="faint">(optional)</span></label>
+      <input id="name" placeholder='e.g. “Women&apos;s body chart” or “Slim Suits”'/>
 
       <div class="drop" id="drop">
-        <span style="font-size:1.5rem">📷</span>
-        <div style="flex:1"><b>Paste or drop a screenshot of your size guide.</b>
-          <div class="hint">Too wide or long for one screenshot? Add several — we merge them. Centimetres become inches automatically.</div>
-          <div id="shots" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div>
+        <div class="dico">📷</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:.9rem">Paste, drop or click to upload</div>
+          <div class="hint" style="margin-top:2px">Chart too wide or long for one screenshot? Add several — we merge them. Centimetres convert automatically.</div>
+          <div id="shots" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+        </div>
         <input type="file" id="file" accept="image/*,.pdf" multiple style="display:none"/>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
         <button class="btn btn-primary btn-sm" id="parseBtn" style="display:none">Read chart</button>
         <span id="aimsg" class="hint"></span>
       </div>
 
       <div class="prompt" id="chartEmpty">
-        Your sizes will appear here after you add a screenshot above.<br/>
-        <button class="linkbtn" id="enterManual" style="margin-top:6px">Or type them in by hand</button>
+        Your sizes will appear here once you add a screenshot.<br/>
+        <button class="linkbtn" id="enterManual" style="margin-top:8px">Or type them in by hand</button>
       </div>
+
       <div id="chartEditor" style="display:none">
-        <div style="overflow-x:auto"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
-        <button class="btn btn-ghost btn-sm" id="addRow" style="margin-top:8px">+ Add a size row</button>
+        <div class="tablewrap"><div class="scrollx"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div></div>
+        <button class="btn btn-ghost btn-sm" id="addRow" style="margin-top:10px">+ Add a size</button>
       </div>
 
       <details class="adv" id="advChart">
         <summary>Advanced — fit style, lengths, fit notes</summary>
         <div class="advbody">
-          <label>Fit style <span class="hint">(optional — e.g. slim, relaxed, denim)</span></label>
-          <input id="sub" placeholder="e.g. slim"/>
-          <button class="btn btn-ghost btn-sm" id="addCol" style="margin-top:12px">+ Add another measurement column</button>
-          <div style="margin-top:16px">
-            <label style="margin:0 0 4px">Length options <span class="hint">(optional — e.g. Petite / Regular / Tall)</span></label>
-            <div class="hint" style="margin-bottom:6px">For garments with length variants tied to height. Shoppers get a length suggestion from their height.</div>
-            <div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Inseam/Length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead><tbody id="lens"></tbody></table></div>
-            <button class="btn btn-ghost btn-sm" id="addLen" style="margin-top:6px">+ Add length option</button>
-          </div>
-          <div style="margin-top:16px">
-            <label style="margin:0 0 4px">Fit notes the AI can use <span class="hint">(optional)</span></label>
-            <textarea id="notes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 5'9&quot; wearing S." style="resize:vertical"></textarea>
-          </div>
+          <label>Fit style <span class="faint">(optional)</span></label>
+          <input id="sub" placeholder="e.g. slim, relaxed, denim"/>
+          <button class="btn btn-ghost btn-sm" id="addCol" style="margin-top:12px">+ Add a measurement column</button>
+
+          <div class="divider"></div>
+          <label style="margin-top:0">Length options <span class="faint">(optional — Petite / Regular / Tall)</span></label>
+          <div class="hint" style="margin-bottom:4px">For garments with length variants tied to height. Shoppers get a length suggestion from their height.</div>
+          <div class="tablewrap"><div class="scrollx"><table>
+            <thead><tr><th>Name</th><th>Inseam / length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead>
+            <tbody id="lens"></tbody></table></div></div>
+          <button class="btn btn-ghost btn-sm" id="addLen" style="margin-top:10px">+ Add length option</button>
+
+          <div class="divider"></div>
+          <label style="margin-top:0">Fit notes the AI can use <span class="faint">(optional)</span></label>
+          <textarea id="notes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 5'9&quot; wearing S." style="resize:vertical"></textarea>
         </div>
       </details>
 
       <div id="chartWarn" class="warn" style="display:none"></div>
-      <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="save">Save chart</button>
-        <span class="msg" id="saveMsg" style="margin-top:0"></span>
+        <span class="msg" id="saveMsg"></span>
       </div>
     </div>
 
     <div class="card">
-      <h2>Your charts</h2>
-      <div id="list"><div class="empty">Loading…</div></div>
+      <div class="card-head"><div class="txt"><h2>Your charts</h2></div></div>
+      <div id="list"><div class="sk" style="width:70%"></div><div class="sk" style="width:50%"></div></div>
     </div>
   </div>
 
-  <!-- ============ 2. ASSIGN ============ -->
+  <!-- ================= ASSIGN ================= -->
   <div class="view" id="v-assign">
     <button class="back" onclick="go('lobby')">← All cards</button>
-    <h1>Assign charts</h1>
-    <p class="sub">A chart isn't used until you assign it — to your whole store, to clothing types, or to individual products.</p>
+    <div class="top"><div><h1>Assign charts</h1><div class="sub">A chart isn't used until it's assigned — to your whole store, a clothing type, or single products.</div></div></div>
 
     <div class="card">
-      <h2>By clothing type</h2>
-      <div id="chartLinks"><div class="empty">Create a chart first (Size charts card).</div></div>
+      <div class="card-head"><div class="txt"><h2>By clothing type</h2><p class="hint">Tick “whole store” for a single house chart, or pick the types each chart covers.</p></div></div>
+      <div id="chartLinks"><div class="empty">Create a chart first.</div></div>
     </div>
 
     <div class="card">
-      <h2>Product categories <span class="hint" style="font-weight:400">— usually automatic</span></h2>
-      <p class="hint" style="margin-bottom:10px">Styla reads each product's Shopify category and matches it to a clothing type for you. This list is only here for the exceptions — products with no Shopify category, or a match you want to change.</p>
+      <div class="card-head"><div class="txt"><h2>Product categories <span class="faint" style="font-weight:400">— usually automatic</span></h2><p class="hint">Styla reads each product's Shopify category and matches it to a clothing type. This list is only for exceptions.</p></div></div>
       <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
-      <div class="msg" id="catMsg"></div>
+      <div class="msg" id="catMsg" style="margin-top:10px"></div>
     </div>
 
     <div class="card">
-      <h2>By individual product</h2>
-      <p class="hint" style="margin-bottom:10px">For a product that needs a different chart than its clothing type. Requires a product sync (Settings).</p>
+      <div class="card-head"><div class="txt"><h2>By individual product</h2><p class="hint">For a product that needs a different chart than its clothing type.</p></div></div>
       <div id="assignHost"><div class="empty">Sync your products in Settings to list them here.</div></div>
-      <div class="msg" id="assignMsg"></div>
+      <div class="msg" id="assignMsg" style="margin-top:10px"></div>
     </div>
   </div>
 
-  <!-- ============ 3. SETTINGS ============ -->
+  <!-- ================= SETTINGS ================= -->
   <div class="view" id="v-settings">
     <button class="back" onclick="go('lobby')">← All cards</button>
-    <h1>Settings &amp; preferences</h1>
-    <p class="sub">Store: <span id="shopline2"></span></p>
+    <div class="top"><div><h1>Settings</h1><div class="sub">Store: <span id="shopline2"></span></div></div></div>
 
     <div class="card">
-      <h2>What Styla does for your store</h2>
-      <p class="hint" style="margin-bottom:14px">Two separate things — use either or both.</p>
+      <div class="card-head"><div class="txt"><h2>What Styla does for your store</h2><p class="hint">Two separate things — use either or both.</p></div></div>
 
-      <div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <b style="font-size:.95rem">Get recommended on Styla</b>
-          <span class="badge" style="background:#e7f8f0;color:var(--green)">Free</span>
-          <label style="margin:0 0 0 auto;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)">
-            <input type="checkbox" id="pf-share" style="width:auto"/> On
-          </label>
+      <div class="plan" id="plan-share">
+        <div class="plan-head">
+          <b>Get recommended on Styla</b><span class="badge green">Free</span>
+          <label class="switch" style="margin-left:auto"><input type="checkbox" id="pf-share"/> On</label>
         </div>
-        <p class="hint" style="margin-top:8px">Styla shoppers get matched to clothes that fit them across brands. With this on, your products can be recommended to them — new customers, no cost. Turn it off and your catalog is never shown outside your own store.</p>
+        <p class="hint" style="margin-top:8px">Styla matches shoppers to clothes that fit them across brands. With this on, your products can be recommended to them — new customers, no cost. Turn it off and your catalog is never shown outside your own store.</p>
       </div>
 
-      <div style="border:1px solid var(--line);border-radius:12px;padding:14px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <b style="font-size:.95rem">Size widget on your product pages</b>
-          <span class="badge">Paid</span>
-          <label style="margin:0 0 0 auto;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)">
-            <input type="checkbox" id="pf-widget" style="width:auto"/> On
-          </label>
+      <div class="plan" id="plan-widget">
+        <div class="plan-head">
+          <b>Size widget on your product pages</b><span class="badge brand">Paid</span>
+          <label class="switch" style="margin-left:auto"><input type="checkbox" id="pf-widget"/> On</label>
         </div>
-        <p class="hint" style="margin-top:8px">Shows every shopper their correct size on your product pages, with the AI fit chat. Turn this off to keep only the free sharing above.</p>
+        <p class="hint" style="margin-top:8px">Shows every shopper their correct size on your product pages, with the AI fit chat. Turn off to keep only the free sharing above.</p>
       </div>
 
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+      <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="savePlan">Save</button>
-        <span class="msg" id="planMsg" style="margin-top:0"></span>
+        <span class="msg" id="planMsg"></span>
       </div>
     </div>
 
     <div class="card">
-      <h2>Product sync</h2>
-      <p class="hint" style="margin-bottom:10px">Lets Styla's AI recommend other items that fit each shopper, and lets you assign charts to individual products.</p>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px" id="syncStatus"></div>
-      <div style="display:flex;gap:10px;align-items:center">
+      <div class="card-head"><div class="txt"><h2>Product sync</h2><p class="hint">Lets the AI recommend other items that fit each shopper, and lets you assign charts to individual products.</p></div></div>
+      <div id="syncStatus" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:12px;align-items:center">
         <button class="btn btn-ghost" id="syncBtn">Sync products</button>
-        <span class="msg" id="syncMsg" style="margin-top:0"></span>
+        <span class="msg" id="syncMsg"></span>
       </div>
-      <p class="hint" style="margin-top:8px">New and edited products sync automatically after the first run.</p>
+      <p class="hint" style="margin-top:10px">New and edited products sync automatically after the first run.</p>
     </div>
 
     <div class="card">
-      <h2>Preferences</h2>
-      <label>Measurement units shown to shoppers</label>
-      <select id="pf-units"><option value="in">Inches</option><option value="cm">Centimetres</option></select>
-      <label>Widget button text</label>
-      <input id="pf-btn" placeholder="Find my size"/>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;color:var(--text);font-weight:600">
-        <input type="checkbox" id="pf-chat" style="width:auto"/> Show the AI fit chat in the widget
-      </label>
-      <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
-        <button class="btn btn-primary" id="saveSettings">Save preferences</button>
-        <span class="msg" id="settingsMsg" style="margin-top:0"></span>
+      <div class="card-head"><div class="txt"><h2>Preferences</h2></div></div>
+      <div class="row2">
+        <div><label>Units shown to shoppers</label>
+          <select id="pf-units"><option value="in">Inches</option><option value="cm">Centimetres</option></select></div>
+        <div><label>Widget button text</label>
+          <input id="pf-btn" placeholder="Find my size"/></div>
       </div>
-      <p class="hint" style="margin-top:10px">Note: units and button text are stored now; the storefront widget reads them on its next release. The AI chat toggle applies immediately.</p>
+      <label class="switch" style="margin-top:16px"><input type="checkbox" id="pf-chat"/> Show the AI fit chat in the widget</label>
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+        <button class="btn btn-primary" id="saveSettings">Save preferences</button>
+        <span class="msg" id="settingsMsg"></span>
+      </div>
+      <p class="hint" style="margin-top:10px">Units and button text are stored now; the storefront widget picks them up on its next release. The chat toggle applies immediately.</p>
     </div>
   </div>
 
-  <!-- ============ 4. ANALYTICS ============ -->
+  <!-- ================= ANALYTICS ================= -->
   <div class="view" id="v-analytics">
     <button class="back" onclick="go('lobby')">← All cards</button>
-    <h1>Analytics</h1>
-    <p class="sub">How much of your catalog Styla can size right now.</p>
-    <div id="analyticsBody"><div class="empty">Loading…</div></div>
+    <div class="top"><div><h1>Analytics</h1><div class="sub">How much of your catalog Styla can size right now.</div></div></div>
+    <div id="analyticsBody"><div class="sk" style="width:60%"></div><div class="sk" style="width:80%"></div></div>
   </div>
 </div>
+<div id="toast"></div>
 
 <script>
 var STYLA='https://www.styla.ca';
@@ -287,10 +397,13 @@ var SHOP=new URLSearchParams(location.search).get('shop')||'';
 async function idToken(){ try{ if(window.shopify && window.shopify.idToken) return await window.shopify.idToken(); }catch(e){} return null; }
 async function mfetch(url, opts){ opts=opts||{}; opts.headers=Object.assign({'Content-Type':'application/json'}, opts.headers||{}); var t=await idToken(); if(t) opts.headers['Authorization']='Bearer '+t; return fetch(url, opts); }
 function el(id){return document.getElementById(id);}
-el('shopline').textContent = SHOP ? ('Store: '+SHOP) : 'Open this from your Shopify admin (Styla app) so we know your store.';
+el('shopline').textContent = SHOP || 'Open from your Shopify admin';
 el('shopline2').textContent = SHOP || '—';
 
-// ---- view router ----
+var TOASTT;
+function toast(text,isErr){ var t=el('toast'); t.textContent=text; t.className=(isErr?'err ':'')+'on'; clearTimeout(TOASTT); TOASTT=setTimeout(function(){t.className='';},2600); }
+function setMsg(id,text,kind){ var m=el(id); if(!m)return; m.textContent=text||''; m.className='msg'+(kind?(' '+kind):''); }
+
 function go(v){
   ['lobby','charts','assign','settings','analytics'].forEach(function(x){ el('v-'+x).classList.toggle('on', x===v); });
   window.scrollTo(0,0);
@@ -312,24 +425,26 @@ var CONV={sleeve_convention:'auto',shoulder_convention:'auto'};
 var CHARTS=[], PRODUCTS=[];
 
 function fmt(v){return Array.isArray(v)?v.join('-'):(v==null?'':v);}
-function esc(s){return String(s==null?'':s).replace(/"/g,'&quot;');}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function parseVal(s){s=(s||'').toString().trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
 
-// ---- lobby tiles ----
 function refreshTiles(){
   var linked=CHARTS.filter(function(c){var cd=c.chart_data||{};return cd.applies_all||((cd.categories||[]).length);}).length;
   el('t-charts').textContent = CHARTS.length ? (CHARTS.length+' chart'+(CHARTS.length>1?'s':'')) : 'None yet — start here';
   el('t-assign').textContent = CHARTS.length ? (linked+' of '+CHARTS.length+' assigned') : 'Create a chart first';
   el('t-settings').textContent = PRODUCTS.length ? (PRODUCTS.length+' products synced') : 'Products not synced';
   el('t-analytics').textContent = 'View coverage';
+  el('cr-1').classList.toggle('done', CHARTS.length>0);
+  el('cr-2').classList.toggle('done', linked>0);
+  el('cr-3').classList.toggle('done', linked>0);
 }
 
-// ---- chart table ----
-function renderHead(){ el('thead').innerHTML='<tr><th>Size</th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join('')+'<th></th></tr>'; }
+/* ---- chart table ---- */
+function renderHead(){ el('thead').innerHTML='<tr><th>Size</th>'+COLS.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th></th></tr>'; }
 function rowHTML(s){s=s||{};
   return '<td><input value="'+esc(s.name||'')+'" placeholder="M"/></td>'
     +COLS.map(function(c){return '<td><input value="'+esc(fmt(s[c]))+'" placeholder="—"/></td>';}).join('')
-    +'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+    +'<td><button class="btn btn-ghost btn-icon" onclick="this.closest(\'tr\').remove()">✕</button></td>';
 }
 function addRow(s){var tr=document.createElement('tr');tr.innerHTML=rowHTML(s);el('rows').appendChild(tr);}
 function collectRows(){var rows=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var r={name:ins[0].value};COLS.forEach(function(c,i){r[c]=ins[i+1]?ins[i+1].value:'';});rows.push(r);});return rows;}
@@ -343,13 +458,13 @@ el('addCol').addEventListener('click',function(){
   var rows=collectRows(); COLS.push(name); showEditor(rows.length?rows:[{}]);
 });
 
-// ---- screenshots -> parse ----
+/* ---- screenshots ---- */
 var SHOTS=[], LAST_PARSE=null;
 function renderShots(){var host=el('shots');if(!host)return;
-  host.innerHTML=SHOTS.map(function(s,i){return '<span style="position:relative;display:inline-block"><img src="'+s.dataUrl+'" style="height:46px;width:46px;object-fit:cover;border-radius:7px;border:1px solid var(--line)"/><button data-i="'+i+'" class="shotx" style="position:absolute;top:-6px;right:-6px;background:#111;color:#fff;border:none;border-radius:50%;width:17px;height:17px;font-size:10px;line-height:1;cursor:pointer">✕</button></span>';}).join('');
+  host.innerHTML=SHOTS.map(function(s,i){return '<span class="thumb"><img src="'+s.dataUrl+'"/><button data-i="'+i+'" class="shotx">✕</button></span>';}).join('');
   host.querySelectorAll('.shotx').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();SHOTS.splice(+this.getAttribute('data-i'),1);renderShots();updParseBtn();});});
 }
-function updParseBtn(){var b=el('parseBtn');if(!b)return;b.style.display=SHOTS.length?'inline-block':'none';b.textContent='Read chart ('+SHOTS.length+' image'+(SHOTS.length>1?'s':'')+')';}
+function updParseBtn(){var b=el('parseBtn');if(!b)return;b.style.display=SHOTS.length?'inline-flex':'none';b.textContent='Read chart ('+SHOTS.length+' image'+(SHOTS.length>1?'s':'')+')';}
 function addShot(file){if(!file)return;var r=new FileReader();r.onload=function(){SHOTS.push({dataUrl:r.result,mime:file.type||'image/png'});renderShots();updParseBtn();};r.readAsDataURL(file);}
 function applyParsed(j){
   LAST_PARSE=j;
@@ -368,12 +483,13 @@ function applyParsed(j){
   if(j.notes && el('notes') && !el('notes').value) el('notes').value=j.notes;
   if((j.length_options&&j.length_options.length)||j.notes) el('advChart').open=true;
 }
-async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.style.color='';m.textContent='Reading your chart…';
+async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.textContent='Reading your chart…';
   try{var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
     applyParsed(j);
-    m.textContent='✓ Read '+((j.sizes||[]).length)+' sizes — check the table, then Save chart.';
-  }catch(e){m.textContent='Could not read that: '+(e.message||e);}}
+    m.textContent='✓ Read '+((j.sizes||[]).length)+' sizes — check the table, then save.';
+    toast('Chart read — review and save');
+  }catch(e){m.textContent='Could not read that: '+(e.message||e);toast('Could not read that chart',true);}}
 el('drop').addEventListener('click',function(e){var t=e.target;if(t.id!=='file'&&t.tagName!=='IMG'&&t.className!=='shotx')el('file').click();});
 el('file').addEventListener('change',function(){[].forEach.call(this.files||[],addShot);this.value='';});
 el('drop').addEventListener('dragover',function(e){e.preventDefault();});
@@ -381,18 +497,18 @@ el('drop').addEventListener('drop',function(e){e.preventDefault();[].forEach.cal
 document.addEventListener('paste',function(e){var it=(e.clipboardData||{}).items||[];for(var i=0;i<it.length;i++)if(it[i].type.indexOf('image')===0){addShot(it[i].getAsFile());}});
 el('parseBtn').addEventListener('click',parseShots);
 
-// ---- length options ----
+/* ---- length options ---- */
 function lenRowHTML(o){o=o||{};return '<td><input value="'+esc(o.name||'')+'" placeholder="Regular"/></td>'
   +'<td><input value="'+esc(o.inseam==null?'':o.inseam)+'" placeholder="—"/></td>'
   +'<td><input value="'+esc(o.height_min==null?'':o.height_min)+'" placeholder="—"/></td>'
   +'<td><input value="'+esc(o.height_max==null?'':o.height_max)+'" placeholder="—"/></td>'
-  +'<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';}
+  +'<td><button class="btn btn-ghost btn-icon" onclick="this.closest(\'tr\').remove()">✕</button></td>';}
 function addLen(o){var tr=document.createElement('tr');tr.innerHTML=lenRowHTML(o);el('lens').appendChild(tr);}
 function renderLens(list){el('lens').innerHTML='';(list&&list.length?list:[]).forEach(addLen);}
 function collectLens(){var out=[];el('lens').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var o={name:name};var a=parseFloat(ins[1].value);if(!isNaN(a))o.inseam=a;var b=parseFloat(ins[2].value);if(!isNaN(b))o.height_min=b;var c=parseFloat(ins[3].value);if(!isNaN(c))o.height_max=c;out.push(o);});return out;}
 el('addLen').addEventListener('click',function(){addLen();});
 
-// ---- save chart ----
+/* ---- save chart ---- */
 function collectSizes(){var sizes=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var name=(ins[0].value||'').trim();if(!name)return;var row={name:name};COLS.forEach(function(c,i){var v=parseVal(ins[i+1]?ins[i+1].value:'');if(v!==undefined)row[c]=v;});sizes.push(row);});return sizes;}
 function num(x){return Array.isArray(x)?(x[0]+x[1])/2:x;}
 function colVal(s,names){for(var i=0;i<names.length;i++){var k=Object.keys(s).filter(function(kk){return kk.toLowerCase()===names[i];})[0];if(k)return s[k];}return null;}
@@ -403,48 +519,49 @@ function validate(sizes){var w=[];
 function resetForm(){ el('name').value=''; el('sub').value=''; el('notes').value=''; el('lens').innerHTML=''; SHOTS=[]; renderShots(); updParseBtn(); LAST_PARSE=null; COLS=['Chest','Waist','Hips']; el('chartEditor').style.display='none'; el('chartEmpty').style.display='block'; el('aimsg').textContent=''; }
 var pending=false;
 el('save').addEventListener('click',async function(){
-  var msg=el('saveMsg');var sizes=collectSizes();
-  if(!sizes.length){msg.style.color='#c0392b';msg.textContent='Add at least one size first.';return;}
+  var sizes=collectSizes();
+  if(!sizes.length){setMsg('saveMsg','Add at least one size first.','err');return;}
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
   var chart_data={name:(el('name').value||'').trim()||null,subcategory:(el('sub').value||'').trim().toLowerCase()||null,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes,categories:[],applies_all:false};
-  msg.style.color='';msg.textContent='Saving…';
+  setMsg('saveMsg','Saving…');
   try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:null,subcategory:chart_data.subcategory,gender:null,chart_data:chart_data,parsed:LAST_PARSE})});
     var d=await r.json();if(d.error)throw new Error(d.error);
-    msg.style.color='var(--green)';msg.textContent='✓ Saved! Next: assign it in the Assign charts card.';resetForm();loadCharts();
-  }catch(e){msg.style.color='#c0392b';msg.textContent=e.message||'Save failed.';}
+    setMsg('saveMsg','✓ Saved — now assign it.','ok');toast('Chart saved');resetForm();loadCharts();
+  }catch(e){setMsg('saveMsg',e.message||'Save failed.','err');toast('Save failed',true);}
 });
 
-// ---- charts list ----
+/* ---- charts list ---- */
 async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
-    if(d.error){box.innerHTML='<div class="empty">'+d.error+'</div>';renderChartLinks();return;}
+    if(d.error){box.innerHTML='<div class="empty">'+esc(d.error)+'</div>';renderChartLinks();return;}
     CHARTS=d.charts||[];renderChartLinks();renderAssign();refreshTiles();
     if(!CHARTS.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
-      var scope=cd.applies_all?'whole store':((cd.categories||[]).length?(cd.categories||[]).join(', '):'not assigned yet');
-      return '<div class="chartrow">'+(nm?'<b style="margin-right:4px">'+esc(nm)+'</b>':'')
-        +'<span class="badge">'+scope+'</span>'+(cd.gender?'<span class="badge">'+cd.gender+'</span>':'')
-        +'<span class="hint" style="flex:1">'+n+' sizes</span>'
-        +'<button class="btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
+      var all=cd.applies_all, cats=(cd.categories||[]);
+      var scope=all?'<span class="badge green">whole store</span>':(cats.length?cats.map(function(x){return '<span class="badge">'+esc(x)+'</span>';}).join(' '):'<span class="badge">not assigned</span>');
+      return '<div class="rowitem"><div class="grow"><div class="name">'+esc(nm||'Untitled chart')+'</div>'
+        +'<div class="hint" style="margin-top:3px">'+n+' sizes'+(cd.gender?(' · '+esc(cd.gender)):'')+'</div></div>'
+        +'<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:45%">'+scope+'</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
-window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});loadCharts();};
+window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});toast('Chart deleted');loadCharts();};
 
-// ---- assign by clothing type ----
+/* ---- assign by clothing type ---- */
 function renderChartLinks(){
   var host=el('chartLinks'); if(!host) return;
-  if(!CHARTS.length){host.innerHTML='<div class="empty">Create a chart first (Size charts card).</div>';return;}
-  host.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var cats=cd.categories||[];var all=!!cd.applies_all;var g=cd.gender||'';var nm=cd.name||'Chart';var n=(cd.sizes||[]).length;
-    return '<div class="linkcard" data-id="'+c.id+'">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b>'+esc(nm)+'</b><span class="hint">'+n+' sizes</span></div>'
-      +'<label style="display:flex;align-items:center;gap:8px;font-weight:600;color:var(--text)"><input type="checkbox" class="lk-all" style="width:auto"'+(all?' checked':'')+'/> Apply to my whole store</label>'
-      +'<div class="lk-cats" style="'+(all?'opacity:.4;pointer-events:none;':'')+'margin-top:10px">'
-        +'<div class="hint" style="margin-bottom:6px">…or only these clothing types:</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px">'+TAX.map(function(t){return '<label class="chip"><input type="checkbox" class="lk-cat" value="'+t.slug+'"'+(cats.indexOf(t.slug)>-1?' checked':'')+'/> '+t.label+'</label>';}).join('')+'</div>'
+  if(!CHARTS.length){host.innerHTML='<div class="empty">Create a chart first.</div>';return;}
+  host.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var cats=cd.categories||[];var all=!!cd.applies_all;var g=cd.gender||'';var nm=cd.name||'Untitled chart';var n=(cd.sizes||[]).length;
+    return '<div class="linkcard'+(all||cats.length?' on':'')+'" data-id="'+c.id+'">'
+      +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><b style="font-size:.92rem">'+esc(nm)+'</b><span class="hint">'+n+' sizes</span></div>'
+      +'<label class="switch"><input type="checkbox" class="lk-all"'+(all?' checked':'')+'/> Apply to my whole store</label>'
+      +'<div class="lk-cats" style="'+(all?'opacity:.35;pointer-events:none;':'')+'margin-top:12px">'
+        +'<div class="hint" style="margin-bottom:8px">…or only these clothing types</div>'
+        +'<div class="chips">'+TAX.map(function(t){return '<label class="chip"><input type="checkbox" class="lk-cat" value="'+t.slug+'"'+(cats.indexOf(t.slug)>-1?' checked':'')+'/>'+t.label+'</label>';}).join('')+'</div>'
       +'</div>'
-      +'<div style="margin-top:12px;display:flex;align-items:center;gap:8px"><span class="hint">Who wears it?</span>'
-        +'<select class="lk-gender" style="width:auto;font-size:.82rem;padding:6px 8px"><option value="">Everyone</option><option value="women"'+(g==='women'?' selected':'')+'>Women</option><option value="men"'+(g==='men'?' selected':'')+'>Men</option><option value="unisex"'+(g==='unisex'?' selected':'')+'>Unisex</option></select>'
+      +'<div style="margin-top:14px;display:flex;align-items:center;gap:10px"><span class="hint">Who wears it?</span>'
+        +'<select class="lk-gender" style="width:auto;font-size:.82rem;padding:7px 30px 7px 10px"><option value="">Everyone</option><option value="women"'+(g==='women'?' selected':'')+'>Women</option><option value="men"'+(g==='men'?' selected':'')+'>Men</option><option value="unisex"'+(g==='unisex'?' selected':'')+'>Unisex</option></select>'
         +'<span class="lk-msg hint" style="margin-left:auto"></span></div>'
       +'</div>';
   }).join('');
@@ -453,7 +570,8 @@ function renderChartLinks(){
       var all=card.querySelector('.lk-all').checked;
       var cats=[].map.call(card.querySelectorAll('.lk-cat:checked'),function(x){return x.value;});
       var gender=card.querySelector('.lk-gender').value;
-      var box=card.querySelector('.lk-cats'); box.style.opacity=all?'.4':''; box.style.pointerEvents=all?'none':'';
+      var box=card.querySelector('.lk-cats'); box.style.opacity=all?'.35':''; box.style.pointerEvents=all?'none':'';
+      card.classList.toggle('on', all||cats.length>0);
       linkChart(card.getAttribute('data-id'),{applies_all:all,categories:cats,gender:gender},card.querySelector('.lk-msg'));
     }
     card.querySelector('.lk-all').addEventListener('change',save);
@@ -461,46 +579,15 @@ function renderChartLinks(){
     card.querySelector('.lk-gender').addEventListener('change',save);
   });
 }
-async function linkChart(id,body,msgEl){ if(msgEl){msgEl.style.color='';msgEl.textContent='Saving…';}
+async function linkChart(id,body,msgEl){ if(msgEl){msgEl.textContent='Saving…';}
   try{var r=await mfetch('/api/merchant/link-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP,id:id},body))});var d=await r.json();if(d.error)throw new Error(d.error);
-    if(msgEl){msgEl.style.color='var(--green)';msgEl.textContent='✓ Assigned';}
+    if(msgEl){msgEl.textContent='✓ Assigned';}
     CHARTS.forEach(function(c){if(c.id===id){c.chart_data=Object.assign({},c.chart_data,{categories:body.categories,applies_all:body.applies_all,gender:body.gender||null});}});
     refreshTiles();
-  }catch(e){ if(msgEl){msgEl.style.color='#c0392b';msgEl.textContent=e.message||'Failed';} }
+  }catch(e){ if(msgEl){msgEl.textContent=e.message||'Failed';} toast('Could not assign',true); }
 }
 
-// ---- assign by product ----
-var NON_APPAREL={'giftcard':1,'gift card':1,'gift_card':1,'gift cards':1};
-function apparel(){ return PRODUCTS.filter(function(p){ return !NON_APPAREL[String(p.product_type||'').toLowerCase()]; }); }
-function chartOptions(sel,includeAuto){
-  var opts=includeAuto?'<option value="">Auto (use the assigned chart)</option>':'';
-  return opts+CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
-    var lbl=nm?(nm+' ('+n+')'):((cd.categories&&cd.categories.length?cd.categories.join('/'):'chart')+' ('+n+')');
-    return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+lbl+'</option>';}).join('');
-}
-function renderAssign(){
-  var host=el('assignHost'); if(!host) return;
-  var list=apparel();
-  if(!list.length){host.innerHTML='<div class="empty">'+(PRODUCTS.length?'No clothing products to assign.':'Sync your products in Settings to list them here.')+'</div>';return;}
-  var groups={};list.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
-  host.innerHTML=Object.keys(groups).map(function(type){var items=groups[type];
-    return '<div style="margin-bottom:16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><b style="font-size:.92rem">'+type+'</b><span class="hint">'+items.length+' products</span>'
-        +'<select data-type="'+encodeURIComponent(type)+'" class="bulkSel" style="width:auto;margin-left:auto;font-size:.8rem;padding:6px 8px"><option value="">Set all to…</option><option value="__auto">Auto (assigned chart)</option>'+chartOptions('',false)+'</select></div>'
-      +items.map(function(p){return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #f1f2f4"><span style="flex:1;font-size:.86rem">'+(p.title||'')+'</span>'
-        +'<select data-ext="'+p.external_id+'" class="prodSel" style="width:250px;font-size:.8rem;padding:6px 8px">'+chartOptions(p.size_chart_id||'',true)+'</select></div>';}).join('')
-      +'</div>';
-  }).join('');
-  host.querySelectorAll('.prodSel').forEach(function(s){s.addEventListener('change',function(){assign({externalId:this.getAttribute('data-ext'),chartId:this.value||null});});});
-  host.querySelectorAll('.bulkSel').forEach(function(s){s.addEventListener('change',function(){var v=this.value;if(v==='')return;var t=decodeURIComponent(this.getAttribute('data-type'));assign({productType:t,chartId:v==='__auto'?null:v},'all “'+t+'”');});});
-}
-async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];updateSyncStatus();renderAssign();refreshTiles();}catch(e){}}
-async function assign(body,note){var m=el('assignMsg');m.style.color='';m.textContent='Saving…';
-  try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
-    m.style.color='var(--green)';m.textContent='✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.';loadProducts();
-  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Failed.';}}
-
-// ---- product type -> Styla category review ----
+/* ---- categories ---- */
 async function loadCategories(){
   var host=el('catHost'); if(!host) return;
   try{
@@ -509,44 +596,70 @@ async function loadCategories(){
     if(!types.length){host.innerHTML='<div class="empty">Sync your products in Settings to see them.</div>';return;}
     var VALID=TAX.map(function(x){return x.slug;});
     host.innerHTML=types.map(function(t){
-      // Only a value in OUR taxonomy counts as matched. Anything else (e.g. the
-      // raw Shopify type "snowboard") is not clothing we can size.
       var cur=(t.alias||t.mapped); if(VALID.indexOf(cur)<0) cur='';
       var noType=(t.type==='(no type)');
       var status = cur ? (t.alias?'you set this':'matched automatically')
-                       : (noType?'no label — matched by product name instead':'not clothing');
-      // Products with no label can't be grouped (they could be suits AND jeans),
-      // so we don't offer a bulk mapping — Styla reads their names instead.
+                       : (noType?'no label — matched by product name':'not clothing');
       var control = noType
-        ? '<span class="hint" style="width:210px;text-align:right">Set these one by one below</span>'
-        : '<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:210px;font-size:.8rem;padding:6px 8px">'
+        ? '<span class="hint" style="width:200px;text-align:right">Set individually below</span>'
+        : '<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:200px;font-size:.82rem">'
           +'<option value="">Not clothing / skip</option>'
           +TAX.map(function(x){return '<option value="'+x.slug+'"'+(cur===x.slug?' selected':'')+'>'+x.label+'</option>';}).join('')
           +'</select>';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f1f2f4">'
-        +'<div style="flex:1"><b style="font-size:.88rem">'+esc(t.type)+'</b> <span class="hint">'+t.count+' products · '+status+'</span></div>'
-        +control+'</div>';
+      return '<div class="rowitem"><div class="grow"><div class="name">'+esc(t.type)+'</div>'
+        +'<div class="hint" style="margin-top:2px">'+t.count+' products · '+status+'</div></div>'+control+'</div>';
     }).join('');
     host.querySelectorAll('.catSel').forEach(function(s){s.addEventListener('change',async function(){
-      var m=el('catMsg');m.style.color='';m.textContent='Saving…';
+      setMsg('catMsg','Saving…');
       try{var rr=await mfetch('/api/merchant/map-category',{method:'POST',body:JSON.stringify({shop:SHOP,productType:decodeURIComponent(this.getAttribute('data-type')),category:this.value||null})});
         var dd=await rr.json();if(dd.error)throw new Error(dd.error);
-        m.style.color='var(--green)';m.textContent='✓ Updated.';loadCategories();loadProducts();
-      }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Failed.';}
+        setMsg('catMsg','✓ Updated.','ok');toast('Category updated');loadCategories();loadProducts();
+      }catch(e){setMsg('catMsg',e.message||'Failed.','err');}
     });});
   }catch(e){host.innerHTML='<div class="empty">Could not load product types.</div>';}
 }
 
-// ---- settings ----
+/* ---- assign by product ---- */
+var NON_APPAREL={'giftcard':1,'gift card':1,'gift_card':1,'gift cards':1};
+function apparel(){ return PRODUCTS.filter(function(p){ return !NON_APPAREL[String(p.product_type||'').toLowerCase()]; }); }
+function chartOptions(sel,includeAuto){
+  var opts=includeAuto?'<option value="">Auto (assigned chart)</option>':'';
+  return opts+CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
+    var lbl=nm?(nm+' ('+n+')'):((cd.categories&&cd.categories.length?cd.categories.join('/'):'chart')+' ('+n+')');
+    return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(lbl)+'</option>';}).join('');
+}
+function renderAssign(){
+  var host=el('assignHost'); if(!host) return;
+  var list=apparel();
+  if(!list.length){host.innerHTML='<div class="empty">'+(PRODUCTS.length?'No clothing products to assign.':'Sync your products in Settings to list them here.')+'</div>';return;}
+  var groups={};list.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
+  host.innerHTML=Object.keys(groups).map(function(type){var items=groups[type];
+    return '<div style="margin-bottom:20px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:.88rem">'+esc(type)+'</b><span class="hint">'+items.length+' products</span>'
+        +'<select data-type="'+encodeURIComponent(type)+'" class="bulkSel" style="width:auto;margin-left:auto;font-size:.8rem;padding:6px 28px 6px 10px"><option value="">Set all to…</option><option value="__auto">Auto (assigned chart)</option>'+chartOptions('',false)+'</select></div>'
+      +items.map(function(p){return '<div class="rowitem"><span class="grow name" style="font-weight:500">'+esc(p.title||'')+'</span>'
+        +'<select data-ext="'+p.external_id+'" class="prodSel" style="width:230px;font-size:.8rem">'+chartOptions(p.size_chart_id||'',true)+'</select></div>';}).join('')
+      +'</div>';
+  }).join('');
+  host.querySelectorAll('.prodSel').forEach(function(s){s.addEventListener('change',function(){assign({externalId:this.getAttribute('data-ext'),chartId:this.value||null});});});
+  host.querySelectorAll('.bulkSel').forEach(function(s){s.addEventListener('change',function(){var v=this.value;if(v==='')return;var t=decodeURIComponent(this.getAttribute('data-type'));assign({productType:t,chartId:v==='__auto'?null:v},'all “'+t+'”');});});
+}
+async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];updateSyncStatus();renderAssign();refreshTiles();}catch(e){}}
+async function assign(body,note){setMsg('assignMsg','Saving…');
+  try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
+    setMsg('assignMsg','✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.','ok');toast('Updated');loadProducts();
+  }catch(e){setMsg('assignMsg',e.message||'Failed.','err');}}
+
+/* ---- settings ---- */
 function updateSyncStatus(){
   var s=el('syncStatus'); if(!s) return; var n=PRODUCTS.length;
-  s.innerHTML = n ? ('<span class="ok">✓ '+n+' products synced.</span>') : '<span class="hint">Not synced yet.</span>';
+  s.innerHTML = n ? ('<span class="badge green">✓ '+n+' products synced</span>') : '<span class="badge">Not synced yet</span>';
   el('syncBtn').textContent = n ? 'Re-sync products' : 'Sync products';
 }
-el('syncBtn').addEventListener('click',async function(){var m=el('syncMsg');this.disabled=true;m.style.color='';m.textContent='Reading your products and teaching the AI… this can take a moment.';
+el('syncBtn').addEventListener('click',async function(){this.disabled=true;setMsg('syncMsg','Reading your products…');
   try{var r=await mfetch('/api/merchant/sync-catalog',{method:'POST',body:JSON.stringify({shop:SHOP})});var d=await r.json();if(d.error)throw new Error(d.error);
-    m.style.color='var(--green)';m.textContent='✓ '+(d.message||('Synced '+(d.synced||0)+' products.'));loadProducts();
-  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Sync failed.';}this.disabled=false;});
+    setMsg('syncMsg','✓ '+(d.message||('Synced '+(d.synced||0)+' products.')),'ok');toast('Products synced');loadProducts();
+  }catch(e){setMsg('syncMsg',e.message||'Sync failed.','err');toast('Sync failed',true);}this.disabled=false;});
 
 var SETTINGS_LOADED=false;
 async function loadSettings(){
@@ -555,33 +668,39 @@ async function loadSettings(){
     el('pf-units').value=s.units||'in';
     el('pf-btn').value=s.button_text||'';
     el('pf-chat').checked=s.ai_chat!==false;
-    el('pf-share').checked=s.share_catalog!==false;   // free tier: on by default
-    el('pf-widget').checked=s.widget_enabled!==false; // paid feature
+    el('pf-share').checked=s.share_catalog!==false;
+    el('pf-widget').checked=s.widget_enabled!==false;
+    paintPlans();
   }catch(e){}
 }
+function paintPlans(){
+  el('plan-share').classList.toggle('on', el('pf-share').checked);
+  el('plan-widget').classList.toggle('on', el('pf-widget').checked);
+}
+el('pf-share').addEventListener('change',paintPlans);
+el('pf-widget').addEventListener('change',paintPlans);
 el('savePlan').addEventListener('click',async function(){
-  var m=el('planMsg');m.style.color='';m.textContent='Saving…';
+  setMsg('planMsg','Saving…');
   var settings={share_catalog:el('pf-share').checked,widget_enabled:el('pf-widget').checked};
   try{var r=await mfetch('/api/merchant/settings',{method:'POST',body:JSON.stringify({shop:SHOP,settings:settings})});var d=await r.json();if(d.error)throw new Error(d.error);
-    m.style.color='var(--green)';
-    m.textContent='✓ Saved.'+(settings.share_catalog?'':' Re-sync products to remove yours from Styla recommendations.');
-  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Save failed.';}
+    setMsg('planMsg','✓ Saved.'+(settings.share_catalog?'':' Re-sync to remove yours from Styla recommendations.'),'ok');toast('Saved');
+  }catch(e){setMsg('planMsg',e.message||'Save failed.','err');}
 });
 el('saveSettings').addEventListener('click',async function(){
-  var m=el('settingsMsg');m.style.color='';m.textContent='Saving…';
+  setMsg('settingsMsg','Saving…');
   var settings={units:el('pf-units').value,button_text:(el('pf-btn').value||'').trim(),ai_chat:el('pf-chat').checked};
   try{var r=await mfetch('/api/merchant/settings',{method:'POST',body:JSON.stringify({shop:SHOP,settings:settings})});var d=await r.json();if(d.error)throw new Error(d.error);
-    m.style.color='var(--green)';m.textContent='✓ Saved.';
-  }catch(e){m.style.color='#c0392b';m.textContent=e.message||'Save failed.';}
+    setMsg('settingsMsg','✓ Saved.','ok');toast('Preferences saved');
+  }catch(e){setMsg('settingsMsg',e.message||'Save failed.','err');}
 });
 
-// ---- analytics ----
+/* ---- analytics ---- */
 async function loadAnalytics(){
-  var box=el('analyticsBody');box.innerHTML='<div class="empty">Loading…</div>';
+  var box=el('analyticsBody');box.innerHTML='<div class="sk" style="width:60%"></div><div class="sk" style="width:80%"></div>';
   try{
     var r=await mfetch('/api/merchant/analytics?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error)throw new Error(d.error);
-    var gaps=(d.gaps||[]).map(function(g){return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #f1f2f4;font-size:.86rem"><span>'+esc(g.group)+'</span><span class="hint">'+g.count+' without a chart</span></div>';}).join('');
+    var gaps=(d.gaps||[]).map(function(g){return '<div class="rowitem"><span class="grow name" style="font-weight:500">'+esc(g.group)+'</span><span class="badge">'+g.count+' without a chart</span></div>';}).join('');
     box.innerHTML=
       '<div class="kpis">'
       +'<div class="kpi"><div class="n">'+d.charts+'</div><div class="l">size charts</div></div>'
@@ -589,13 +708,13 @@ async function loadAnalytics(){
       +'<div class="kpi"><div class="n">'+d.productsSynced+'</div><div class="l">products synced</div></div>'
       +'<div class="kpi"><div class="n">'+d.coveragePct+'%</div><div class="l">clothing Styla can size</div></div>'
       +'</div>'
-      +'<div class="card"><h2>Coverage</h2>'
+      +'<div class="card"><div class="card-head"><div class="txt"><h2>Coverage</h2></div></div>'
         +'<div class="bar"><i style="width:'+d.coveragePct+'%"></i></div>'
-        +'<div class="hint">'+d.covered+' of '+d.apparelProducts+' clothing products can be sized'+(d.storeWide?' (a whole-store chart is assigned)':'')+'.</div>'
-        +(d.uncovered?('<div style="margin-top:14px"><b style="font-size:.9rem">Needs a chart</b>'+gaps+'<div class="hint" style="margin-top:8px">Assign a chart to these clothing types in <b>Assign charts</b>.</div></div>'):'<div class="hint" style="margin-top:10px">✓ Everything is covered.</div>')
+        +'<div class="hint">'+d.covered+' of '+d.apparelProducts+' clothing products can be sized'+(d.storeWide?' · a whole-store chart is assigned':'')+'.</div>'
+        +(d.uncovered?('<div class="divider"></div><b style="font-size:.88rem">Needs a chart</b>'+gaps+'<div class="hint" style="margin-top:10px">Assign a chart to these in <b>Assign charts</b>.</div>'):'<div class="hint" style="margin-top:12px;color:var(--green);font-weight:600">✓ Everything is covered.</div>')
       +'</div>'
-      +'<div class="card"><h2>Shopper metrics</h2><p class="hint">'+esc(d.note||'')+'</p></div>';
-  }catch(e){box.innerHTML='<div class="empty">Could not load analytics: '+(e.message||e)+'</div>';}
+      +'<div class="card"><div class="card-head"><div class="txt"><h2>Shopper metrics</h2><p class="hint">'+esc(d.note||'')+'</p></div></div></div>';
+  }catch(e){box.innerHTML='<div class="empty">Could not load analytics: '+esc(e.message||e)+'</div>';}
 }
 
 loadCharts();
