@@ -192,8 +192,8 @@ details.adv[open]>summary::before{content:'▾  ';}
     </div>
 
     <div class="card">
-      <h2>Your product types</h2>
-      <p class="hint" style="margin-bottom:10px">Your store's own labels, and what Styla matched each to. Correct any that are wrong — charts for that clothing type then apply to those products.</p>
+      <h2>What your product labels mean</h2>
+      <p class="hint" style="margin-bottom:10px">Your store labels products in its own words (e.g. “Sport Coat”). Tell Styla which kind of clothing each label is, and your charts for that clothing type apply to those products automatically. Anything that isn't clothing can be skipped.</p>
       <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
       <div class="msg" id="catMsg"></div>
     </div>
@@ -507,12 +507,25 @@ async function loadCategories(){
     var r=await mfetch('/api/merchant/categories?shop='+encodeURIComponent(SHOP));var d=await r.json();
     var types=d.types||[];
     if(!types.length){host.innerHTML='<div class="empty">Sync your products in Settings to see them.</div>';return;}
+    var VALID=TAX.map(function(x){return x.slug;});
     host.innerHTML=types.map(function(t){
-      var opts='<option value="">Not clothing / skip</option>'+TAX.map(function(x){return '<option value="'+x.slug+'"'+((t.alias||t.mapped)===x.slug?' selected':'')+'>'+x.label+'</option>';}).join('');
-      var status=t.alias?'you set this':(t.mapped?'auto-matched':'unmatched');
+      // Only a value in OUR taxonomy counts as matched. Anything else (e.g. the
+      // raw Shopify type "snowboard") is not clothing we can size.
+      var cur=(t.alias||t.mapped); if(VALID.indexOf(cur)<0) cur='';
+      var noType=(t.type==='(no type)');
+      var status = cur ? (t.alias?'you set this':'matched automatically')
+                       : (noType?'no label — matched by product name instead':'not clothing');
+      // Products with no label can't be grouped (they could be suits AND jeans),
+      // so we don't offer a bulk mapping — Styla reads their names instead.
+      var control = noType
+        ? '<span class="hint" style="width:210px;text-align:right">Set these one by one below</span>'
+        : '<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:210px;font-size:.8rem;padding:6px 8px">'
+          +'<option value="">Not clothing / skip</option>'
+          +TAX.map(function(x){return '<option value="'+x.slug+'"'+(cur===x.slug?' selected':'')+'>'+x.label+'</option>';}).join('')
+          +'</select>';
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f1f2f4">'
         +'<div style="flex:1"><b style="font-size:.88rem">'+esc(t.type)+'</b> <span class="hint">'+t.count+' products · '+status+'</span></div>'
-        +'<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:210px;font-size:.8rem;padding:6px 8px">'+opts+'</select></div>';
+        +control+'</div>';
     }).join('');
     host.querySelectorAll('.catSel').forEach(function(s){s.addEventListener('change',async function(){
       var m=el('catMsg');m.style.color='';m.textContent='Saving…';
