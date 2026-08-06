@@ -347,10 +347,18 @@ details.adv>summary:hover{color:var(--ink-2);}
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Product categories <span class="faint" style="font-weight:400">— usually automatic</span></h2><p class="hint">Styla reads each product's Shopify category and matches it to a clothing type. This list is only for exceptions.</p></div></div>
-      <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
-      <div class="msg" id="catMsg" style="margin-top:10px"></div>
+      <div class="card-head"><div class="txt"><h2>Styla clothing types</h2><p class="hint">Separate from the rules above. Tell Styla what kind of garment each chart is for — this powers correct sizing maths and lets Styla recommend your products to shoppers across brands.</p></div></div>
+      <div id="stylaCats"><div class="empty">Create a chart first.</div></div>
     </div>
+
+    <details class="adv" style="border:none;padding:0;margin:0 0 16px">
+      <summary style="padding:0 4px 10px">Advanced — how your product labels were classified</summary>
+      <div class="advbody card" style="margin:0">
+        <p class="hint" style="margin-bottom:10px">Styla reads each product's Shopify category automatically. This is only for exceptions.</p>
+        <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
+        <div class="msg" id="catMsg" style="margin-top:10px"></div>
+      </div>
+    </details>
 
     <div class="card">
       <div class="card-head"><div class="txt"><h2>By individual product</h2><p class="hint">For a product that needs a different chart than its clothing type.</p></div></div>
@@ -444,7 +452,7 @@ function go(v){
   window.scrollTo(0,0);
   if(v==='analytics') loadAnalytics();
   if(v==='settings') loadSettings();
-  if(v==='assign'){ loadCategories(); loadMatchOptions().then(renderChartLinks); }
+  if(v==='assign'){ loadCategories(); renderStylaCats(); loadMatchOptions().then(renderChartLinks); }
   if(v==='lobby') refreshTiles();
 }
 window.go=go;
@@ -682,6 +690,26 @@ function renderChartLinks(){
     wire(); preview();
   });
 }
+/* ---- map charts to Styla clothing types (separate from product rules) ---- */
+function renderStylaCats(){
+  var host=el('stylaCats'); if(!host) return;
+  if(!CHARTS.length){host.innerHTML='<div class="empty">Create a chart first.</div>';return;}
+  host.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var cats=cd.categories||[];var nm=cd.name||'Untitled chart';
+    return '<div class="linkcard'+(cats.length?' on':'')+'" data-id="'+c.id+'">'
+      +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><b style="font-size:.92rem">'+esc(nm)+'</b>'
+        +'<span class="sc-msg hint" style="margin-left:auto"></span></div>'
+      +'<div class="chips">'+TAX.map(function(t){return '<label class="chip"><input type="checkbox" class="sc-cat" value="'+t.slug+'"'+(cats.indexOf(t.slug)>-1?' checked':'')+'/>'+t.label+'</label>';}).join('')+'</div>'
+      +'</div>';
+  }).join('');
+  host.querySelectorAll('.linkcard').forEach(function(card){
+    card.querySelectorAll('.sc-cat').forEach(function(x){x.addEventListener('change',function(){
+      var cats=[].map.call(card.querySelectorAll('.sc-cat:checked'),function(y){return y.value;});
+      card.classList.toggle('on',cats.length>0);
+      linkChart(card.getAttribute('data-id'),{categories:cats},card.querySelector('.sc-msg'));
+    });});
+  });
+}
+
 function showMatched(products,count){
   var m=el('matchModal');
   m.innerHTML='<div class="sheet"><div class="sheet-head"><b>Matched with '+count+' product'+(count>1?'s':'')+'</b><button class="btn btn-ghost btn-icon" onclick="el(\'matchModal\').classList.remove(\'on\')">✕</button></div>'
@@ -696,7 +724,12 @@ function showMatched(products,count){
 async function linkChart(id,body,msgEl){
   try{var r=await mfetch('/api/merchant/link-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP,id:id},body))});var d=await r.json();if(d.error)throw new Error(d.error);
     if(msgEl){msgEl.textContent='✓ Saved';}
-    CHARTS.forEach(function(c){if(c.id===id){c.chart_data=Object.assign({},c.chart_data,{rules:body.rules,gender:body.gender||null});}});
+    CHARTS.forEach(function(c){if(c.id===id){
+      var patch={}; if(body.rules!==undefined)patch.rules=body.rules;
+      if(body.categories!==undefined)patch.categories=body.categories;
+      if(body.gender!==undefined)patch.gender=body.gender||null;
+      c.chart_data=Object.assign({},c.chart_data,patch);
+    }});
     refreshTiles();
   }catch(e){ if(msgEl){msgEl.textContent=e.message||'Failed';} toast('Could not save',true); }
 }

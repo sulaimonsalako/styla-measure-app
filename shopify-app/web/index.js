@@ -750,11 +750,46 @@ app.get('/api/merchant/charts', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Map a brand's own column labels onto the canonical measurement keys the engine
+// and the Styla admin dashboard both read. Without this, a chart saved as
+// "CHEST"/"SLEEVE LENGTH"/"胸围" renders blank in the admin, which is exactly the
+// mismatch this fixes. The brand's original table is preserved for the AI.
+const CHART_KEY_MAP = {
+  chest:'chest', bust:'chest', 'chest width':'chest', 'bust width':'chest', 'chest/bust':'chest', 胸围:'chest',
+  waist:'waist', 'waist width':'waist', 腰围:'waist',
+  belly:'belly', abdomen:'belly', tummy:'belly',
+  hip:'hips', hips:'hips', seat:'hips', hem:'hips', 'hem width':'hips', 摆围:'hips',
+  shoulder:'shoulder', shoulders:'shoulder', 'shoulder width':'shoulder', 肩宽:'shoulder',
+  sleeve:'sleeve', 'sleeve length':'sleeve', 袖长:'sleeve', 'short sleeve length':'sleeve', 短袖长:'sleeve',
+  inseam:'inseam', 'inside leg':'inseam',
+  thigh:'thigh', neck:'neck', collar:'neck', 领围:'neck',
+  length:'length', 'clothing length':'length', 'back length':'length', 'body length':'length', 衣长:'length',
+  height:'height',
+};
+function canonicalizeChart(cd) {
+  const out = Object.assign({}, cd);
+  const rows = Array.isArray(cd.sizes) ? cd.sizes : [];
+  out.display_columns = cd.columns || null;          // keep the brand's own headers
+  out.display_sizes = rows;                          // keep the table exactly as entered (for the AI)
+  out.sizes = rows.map((r) => {
+    const o = { name: r.name };
+    Object.keys(r).forEach((k) => {
+      if (k === 'name') return;
+      const key = CHART_KEY_MAP[String(k).trim().toLowerCase()];
+      if (!key) return;                              // unknown column: kept in display_sizes only
+      if (o[key] == null) o[key] = r[k];             // first mapped column wins
+    });
+    return o;
+  });
+  return out;
+}
+
 app.post('/api/merchant/charts', async (req, res) => {
   try {
     const s = await requireShop(req, res); if (!s) return;
-    const { id, category, subcategory, gender, chart_data, is_default } = req.body || {};
+    let { id, category, subcategory, gender, chart_data, is_default } = req.body || {};
     if (!chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Add at least one size.' });
+    chart_data = canonicalizeChart(chart_data);
     const brandId = await ensureBrandForShop(s);
     // category/gender are OPTIONAL now: null = a store-default chart that applies
     // to every product; a category/gender narrows it to specific items.
