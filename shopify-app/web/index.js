@@ -811,14 +811,15 @@ app.post('/api/merchant/link-chart', async (req, res) => {
   try {
     const s = await requireShop(req, res); if (!s) return;
     const brandId = await ensureBrandForShop(s);
-    const { id, categories, applies_all, gender } = req.body || {};
+    const { id, categories, applies_all, gender, rules } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Missing chart id.' });
     const { data: chart } = await supabase.from('size_charts')
       .select('chart_data').eq('id', id).eq('brand_id', brandId).maybeSingle();
     if (!chart) return res.status(404).json({ error: 'Chart not found.' });
     const cd = Object.assign({}, chart.chart_data || {});
-    cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
-    cd.applies_all = !!applies_all;
+    if (rules !== undefined) cd.rules = rules || null;   // rule-based matching
+    if (categories !== undefined) cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
+    if (applies_all !== undefined) cd.applies_all = !!applies_all;
     if (gender !== undefined) cd.gender = gender || null;
     const upd = { chart_data: cd, category: cd.categories[0] || null };
     if (gender !== undefined) upd.gender = gender || null;
@@ -927,6 +928,77 @@ app.post('/api/merchant/assign-chart', async (req, res) => {
     }
 
     res.json({ ok: true, updated: targets.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ----------------------------------------------------
+// 6a. Rule-based chart matching (like Kiwi): match on the store's OWN
+//     attributes — collections, tags, product types, vendors, specific products
+//     — with ANY/ALL logic and a live match preview.
+// ----------------------------------------------------
+const norm_ = (v) => String(v == null ? '' : v).trim().toLowerCase();
+const arr_ = (v) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v])).map(norm_).filter(Boolean);
+function fieldValues_(p, field) {
+  p = p || {};
+  switch (field) {
+    case 'collection':   return arr_(p.collections);
+    case 'tag':          return arr_(p.tags);
+    case 'product_type': return arr_(p.product_type);
+    case 'vendor':       return arr_(p.vendor);
+    case 'category':     return arr_(p.category);
+    case 'product':      return arr_([p.external_id, p.handle, p.title, p.url]);
+    default:             return [];
+  }
+}
+function condMatches_(p, c) {
+  if (!c || !c.field) return false;
+  if (c.field === 'all') return true;
+  const want = norm_(c.value); if (!want) return false;
+  const have = fieldValues_(p, c.field);
+  const hit = (c.op === 'contains') ? have.some((v) => v.includes(want)) : have.some((v) => v === want);
+  return c.op === 'is_not' ? !hit : hit;
+}
+function matchesRules_(p, rules) {
+  if (!rules || !Array.isArray(rules.conditions) || !rules.conditions.length) return false;
+  const r = rules.conditions.map((c) => condMatches_(p, c));
+  return rules.match === 'all' ? r.every(Boolean) : r.some(Boolean);
+}
+
+// What the merchant can match on — pulled from their actual synced catalog.
+app.get('/api/merchant/match-options', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { data: rows } = await supabase.from('catalog_products')
+      .select('external_id, title, product_type, vendor, tags, collections').eq('brand_id', brandId);
+    const uniq = (list) => [...new Set(list.filter(Boolean))].sort();
+    const ps = rows || [];
+    res.json({
+      collections:   uniq(ps.flatMap((p) => p.collections || [])),
+      tags:          uniq(ps.flatMap((p) => p.tags || [])),
+      product_types: uniq(ps.map((p) => p.product_type)),
+      vendors:       uniq(ps.map((p) => p.vendor)),
+      products:      ps.map((p) => ({ id: p.external_id, title: p.title })).slice(0, 500),
+      total:         ps.length,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Live "Matched with N products" preview for a rule set.
+app.post('/api/merchant/match-preview', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const rules = (req.body && req.body.rules) || {};
+    const { data: rows } = await supabase.from('catalog_products')
+      .select('external_id, handle, title, url, image_url, product_type, vendor, tags, collections, category')
+      .eq('brand_id', brandId);
+    const matched = (rows || []).filter((p) => matchesRules_(p, rules));
+    res.json({
+      count: matched.length,
+      total: (rows || []).length,
+      products: matched.slice(0, 60).map((p) => ({ id: p.external_id, title: p.title, image: p.image_url, url: p.url })),
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

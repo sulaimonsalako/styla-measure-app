@@ -10,6 +10,7 @@ import { supabaseAdmin } from '../_helpers/supabase-admin.js';
 import { runSizingEngine } from '../_helpers/sizing-engine.js';
 import { normalizeChart } from '../_helpers/normalize-chart.js';
 import { toStylaCategory } from '../_helpers/style-category.js';
+import { productMatchesRules, hasRules } from '../_helpers/chart-rules.js';
 
 // Pick a garment length/proportion variant (Petite/Regular/Tall…) from the
 // shopper's height (inches). Prefer an option whose height range contains the
@@ -145,6 +146,30 @@ export default async function widgetSize(req, res) {
     const { data: charts, error } = await query;
     if (error) throw error;
     if (!charts || !charts.length) return res.status(404).json({ error: 'No size chart found for this brand.' });
+
+    // RULE-BASED MATCHING (preferred): if the merchant built match rules
+    // (collection is X, tag is Y, …), evaluate them against this product's real
+    // attributes from the synced catalog. Same evaluator the app's live preview
+    // uses, so what they saw is what shoppers get.
+    {
+      const ruleCharts = charts.filter((c) => hasRules(c.chart_data));
+      if (ruleCharts.length) {
+        let prod = null;
+        if (productUrl) {
+          const { data } = await supabaseAdmin.from('catalog_products')
+            .select('external_id, handle, title, url, product_type, vendor, tags, collections, category')
+            .eq('url', productUrl).maybeSingle();
+          prod = data || null;
+        }
+        // Fall back to whatever the widget told us about the page.
+        if (!prod) prod = { product_type: category || null, category: canonCategory || null, url: productUrl || null };
+        const hit = ruleCharts.find((c) => productMatchesRules(prod, c.chart_data.rules));
+        if (hit) {
+          const out = resultFor(hit.chart_data, 'rules');
+          if (out) return res.status(200).json(out);
+        }
+      }
+    }
 
     // Resolve the chart from the merchant's EXPLICIT links (step 2 of the app):
     //   - a chart linked to the product's category wins;
