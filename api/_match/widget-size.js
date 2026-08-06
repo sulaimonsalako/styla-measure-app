@@ -78,6 +78,32 @@ export default async function widgetSize(req, res) {
       height: profile.height,
     };
 
+    // Live stock for THIS product, per size label — lets the widget say "your size
+    // is in stock" and lets the AI answer it truthfully instead of guessing.
+    let stockBySize = null, catalogProduct = null;
+    if (productUrl) {
+      const { data: cp } = await supabaseAdmin.from('catalog_products')
+        .select('external_id, handle, title, url, product_type, vendor, tags, collections, category, variants, available')
+        .eq('url', productUrl).maybeSingle();
+      if (cp) {
+        catalogProduct = cp;
+        const vs = Array.isArray(cp.variants) ? cp.variants : [];
+        if (vs.length) {
+          stockBySize = {};
+          vs.forEach((v) => {
+            const label = String(v.size || v.title || '').trim();
+            if (label) stockBySize[label] = v.available !== false;
+          });
+        }
+      }
+    }
+    const stockFor = (sizeName) => {
+      if (!stockBySize || sizeName == null) return null;
+      const want = String(sizeName).trim().toLowerCase();
+      const key = Object.keys(stockBySize).find((k) => k.toLowerCase() === want);
+      return key ? stockBySize[key] : null;
+    };
+
     // Helper: normalize a chart row + run the engine, returning the API payload.
     function resultFor(cd, resolvedBy) {
       const norm = normalizeChart(cd || {}, { flatMeasures: (cd && cd.flat_measures) || [] });
@@ -98,6 +124,8 @@ export default async function widgetSize(req, res) {
         recommendedLength: pickLength(user.height, cd && cd.length_options),
         lengthOptions: (cd && cd.length_options) || null,
         notes: (cd && cd.notes) || null,
+        stock: stockBySize,                       // { "M": true, "L": false }
+        inStock: stockFor(r.recommended_size),    // stock for THEIR size (null = unknown)
         measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
       };
     }
@@ -220,6 +248,8 @@ export default async function widgetSize(req, res) {
       recommendedLength: pickLength(user.height, cd.length_options),
       lengthOptions: cd.length_options || null,
       notes: cd.notes || null,
+      stock: stockBySize,
+      inStock: stockFor(r.recommended_size),
       measurements: { chest: user.chest, waist: user.waist, hips: user.hips, belly: user.belly },
     });
   } catch (e) {

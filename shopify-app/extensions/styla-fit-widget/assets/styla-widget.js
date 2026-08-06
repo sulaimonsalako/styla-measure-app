@@ -257,11 +257,41 @@
           : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
         var rl = STATE.result.recommendedLength;
         var lenTxt = (rl && rl.name) ? ' · Suggested length: ' + rl.name : '';
-        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.') + lenTxt;
+        // Live stock for the size currently being viewed (null = unknown, stay silent).
+        var st = STATE.result.stock, stockTxt = '';
+        if (st) {
+          var k = Object.keys(st).find(function (x) { return x.toLowerCase() === String(sizeName).trim().toLowerCase(); });
+          if (k) stockTxt = st[k] ? ' · In stock' : ' · Sold out in this size';
+        }
+        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.') + lenTxt + stockTxt;
+        ensureAskChips();
         sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
           b.classList.toggle('active', b.getAttribute('data-size') === sizeName);
         });
         maybeShowSave();
+      }
+
+      // Progressive disclosure: once they have a size, surface follow-ups the AI
+      // can actually answer from data we hold (fit, stock, this store's catalog).
+      // Deliberately no shipping/returns prompts — we don't hold that.
+      function ensureAskChips() {
+        if (!detailsBody || detailsBody.querySelector('.styla-askchips')) return;
+        var qs = ['Does it run small?', 'What if I size up?'];
+        if (STATE.result && STATE.result.stock) qs.unshift('Is my size in stock?');
+        if (product.domain) qs.push('What else here would fit me?');
+        var box = document.createElement('div');
+        box.className = 'styla-askchips';
+        box.innerHTML = '<div class="styla-askchips-lbl">Ask the AI tailor</div>' +
+          qs.map(function (q) { return '<button type="button" class="styla-askchip">' + q + '</button>'; }).join('');
+        detailsBody.appendChild(box);
+        box.querySelectorAll('.styla-askchip').forEach(function (b) {
+          b.addEventListener('click', function () {
+            // switch to the "Ask AI Tailor" tab (data-tab="styla-tab-chat-<blockId>")
+            var tabBtn = modal.querySelector('.styla-tab-btn[data-tab*="chat"]');
+            if (tabBtn) tabBtn.click();
+            if (chatInput) { chatInput.value = b.textContent; sendChat(); }
+          });
+        });
       }
 
       // Guests: after they see their size, offer to save it as a free Styla account
@@ -351,6 +381,7 @@
           domain: product.domain, shop: product.domain, category: mapType(product.type),
           // Full brand chart (every column) so the AI can answer questions about any measurement.
           sizeChart: STATE.result ? (STATE.result.chart || { sizes: (STATE.result.candidates || []) }) : null,
+          stock: STATE.result ? STATE.result.stock : null,   // live per-size availability
           history: CHAT
         };
         if (token) payload.accessToken = token;

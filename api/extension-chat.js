@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    let { accessToken, chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart } = req.body;
+    let { accessToken, chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart, stock } = req.body;
 
     // Logged-in shopper: load saved measurements server-side (bookmarklet/widget).
     if (accessToken && (!chest || !waist || !hips)) {
@@ -177,6 +177,12 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
    - Identify whether the brand's sleeve length in the chart represents:
      a) Center Back to Wrist (Neck-to-Wrist): Usually > 28" for adults. Compare directly to the user's Neck-to-Wrist Sleeve Length.
      b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).
+
+${stock && Object.keys(stock).length ? `\nLIVE STOCK for this product (size -> in stock): ${JSON.stringify(stock)}\nIf asked about availability, answer from THIS data only — say plainly whether their size is in stock, and suggest an alternative size that fits AND is in stock if theirs is sold out.\n` : ''}
+GROUNDING — what you may and may not answer:
+- You may answer from: the shopper's measurements, this product's page details, the brand's size chart and fit notes, the live stock data above, and the other in-store products listed above.
+- You must NOT invent or guess shipping times, delivery dates, prices not shown, discount codes, return/exchange policies, order status, or stock you were not given. If asked, say you don't have that information and suggest they check the store's own page or contact the store. Never state a policy as fact.
+- If the size chart lacks a measurement needed to answer, say so honestly rather than estimating.
 
 CRITICAL RULES:
 1. Always be extremely polite, helpful, and professional.

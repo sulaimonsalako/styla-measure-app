@@ -299,8 +299,11 @@
       CHAT = [];
       var pct=res.score!=null?res.score+'% fit':'';
       var spec = '<div id="specHost"></div>';
-      var chips = ['Does it run small?',"I'm between sizes",'How does the fabric fit?']
-        .map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
+      // Only offer questions the AI can answer from data we actually hold.
+      var qs = ['Does it run small?',"I'm between sizes",'How does the fabric fit?'];
+      if(res.stock) qs.unshift('Is my size in stock?');
+      if(DOMAIN) qs.push('What else here would fit me?');
+      var chips = qs.map(function(q){return '<span class="chip" onclick="askChat(this.textContent)">'+q+'</span>';}).join('');
       var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
         +'<div class="chatlog" id="chatlog"></div>'
         +'<div class="chatin"><input id="chatin" placeholder="Ask about the fit…" onkeydown="if(event.key===&quot;Enter&quot;)sendChat()" /><button onclick="sendChat()">Ask</button></div></div>';
@@ -414,6 +417,7 @@
         pageTitle: ctx.pageTitle || PRODUCT || BRAND || '',
         pageText: ctx.pageText || '', tableHtml: ctx.tableHtml || '',
         sizeChart: RES ? (RES.chart || { sizes:(RES.candidates||[]) }) : null,
+        stock: RES ? RES.stock : null,
         history: CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
       var token = x.accessToken || await currentToken();
       if(token) payload.accessToken=token;
