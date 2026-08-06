@@ -74,6 +74,17 @@
     return 'Good';
   }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // Explicit measurement vocabulary — shoppers and brands must know WHICH sleeve
+  // and WHICH shoulder we're comparing. Canonical: sleeve = shoulder seam → wrist,
+  // shoulder = full cross-back (seam to seam). Charts measured centre-back → wrist
+  // or half-shoulder are converted to these before comparison.
+  var DIM_LABELS = {
+    sleeve: 'Sleeve (shoulder → wrist)',
+    shoulder: 'Shoulder (cross-back)',
+    chest: 'Chest', waist: 'Waist', hips: 'Hips', belly: 'Belly',
+    inseam: 'Inseam', neck: 'Neck', thigh: 'Thigh', length: 'Length', height: 'Height',
+  };
+  function dimLabel(k) { return DIM_LABELS[k] || cap(k); }
 
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.styla-widget-container').forEach(function (container) {
@@ -256,7 +267,7 @@
         var keys = Object.keys(bk);
         listEl.innerHTML = keys.length ? keys.map(function (k) {
           var txt = bk[k];
-          return '<li class="styla-text-fit-item"><span class="styla-item-label">' + cap(k) +
+          return '<li class="styla-text-fit-item"><span class="styla-item-label">' + dimLabel(k) +
             '</span><span class="styla-item-badge ' + statusFor(txt) + '">' + badgeFor(txt) +
             '</span><span class="styla-item-ease">' + txt + '</span></li>';
         }).join('') : '<li class="styla-text-fit-item"><span class="styla-item-ease">No overlapping measurements to compare on this chart.</span></li>';

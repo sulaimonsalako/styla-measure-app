@@ -310,6 +310,29 @@ details.adv>summary:hover{color:var(--ink-2);}
           <button class="btn btn-ghost btn-sm" id="addCol" style="margin-top:12px">+ Add a measurement column</button>
 
           <div class="divider"></div>
+          <label style="margin-top:0">How are these measured? <span class="faint">(only matters if your chart has sleeve or shoulder columns)</span></label>
+          <div class="hint" style="margin-bottom:8px">Brands measure sleeves two different ways. Telling us which prevents a size being read as ~10″ too long or short.</div>
+          <div class="row2">
+            <div>
+              <label style="margin-top:0">Sleeve length is measured</label>
+              <select id="convSleeve">
+                <option value="auto">Auto-detect from the numbers</option>
+                <option value="shoulder-to-wrist">From the shoulder seam → wrist (~24″)</option>
+                <option value="center-back">From centre-back neck → wrist (~34″, includes half the back)</option>
+              </select>
+            </div>
+            <div>
+              <label style="margin-top:0">Shoulder is measured</label>
+              <select id="convShoulder">
+                <option value="auto">Auto-detect from the numbers</option>
+                <option value="full">Full cross-back, seam to seam (~17″)</option>
+                <option value="half">Half — centre-back to one seam (~8″)</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint" id="convGuess" style="margin-top:6px"></div>
+
+          <div class="divider"></div>
           <label style="margin-top:0">Length options <span class="faint">(optional — Petite / Regular / Tall)</span></label>
           <div class="hint" style="margin-bottom:4px">For garments with length variants tied to height. Shoppers get a length suggestion from their height.</div>
           <div class="tablewrap"><div class="scrollx"><table>
@@ -522,10 +545,32 @@ function applyParsed(j){
       row[c]=(v==null?'':v);});
     return row;});
   showEditor(rows);
+  el('convSleeve').value=CONV.sleeve_convention||'auto';
+  el('convShoulder').value=CONV.shoulder_convention||'auto';
+  showConvGuess();
   if(Array.isArray(j.length_options)) renderLens(j.length_options);
   if(j.notes && el('notes') && !el('notes').value) el('notes').value=j.notes;
-  if((j.length_options&&j.length_options.length)||j.notes) el('advChart').open=true;
+  // If the chart has sleeve/shoulder columns, open Advanced so the merchant sees
+  // (and can correct) how we interpreted them.
+  var hasSleeveish=COLS.some(function(c){return /sleeve|shoulder/i.test(c);});
+  if((j.length_options&&j.length_options.length)||j.notes||hasSleeveish) el('advChart').open=true;
 }
+// Show what the numbers themselves imply, so "auto" isn't a black box.
+function showConvGuess(){
+  var out=el('convGuess'); if(!out) return;
+  var rows=collectRows(); var msgs=[];
+  function avgCol(re){
+    var vals=[]; COLS.forEach(function(c,i){ if(!re.test(c)) return;
+      rows.forEach(function(r){ var v=parseVal(r[c]); if(v!==undefined) vals.push(Array.isArray(v)?(v[0]+v[1])/2:v); }); });
+    return vals.length? vals.reduce(function(a,b){return a+b;},0)/vals.length : null;
+  }
+  var sl=avgCol(/sleeve/i), sh=avgCol(/shoulder/i);
+  if(sl!=null) msgs.push('Sleeve values average '+sl.toFixed(1)+'″ → looks like '+(sl>=26.5?'centre-back → wrist':'shoulder → wrist')+'.');
+  if(sh!=null) msgs.push('Shoulder values average '+sh.toFixed(1)+'″ → looks like '+(sh<11?'half shoulder':'full cross-back')+'.');
+  out.textContent=msgs.join(' ');
+}
+el('convSleeve').addEventListener('change',function(){CONV.sleeve_convention=this.value;});
+el('convShoulder').addEventListener('change',function(){CONV.shoulder_convention=this.value;});
 async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.textContent='Reading your chart…';
   try{var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
@@ -559,7 +604,7 @@ function validate(sizes){var w=[];
   if(!sizes.some(function(s){return Object.keys(s).some(function(k){return k!=='name'&&s[k]!=null;});}))w.push('No measurements found — add at least one measurement column with values.');
   sizes.forEach(function(s){var ch=colVal(s,['chest','bust']),wa=colVal(s,['waist']);if(ch!=null&&wa!=null&&num(ch)<num(wa))w.push('Size “'+s.name+'”: chest/bust is smaller than waist — check the values.');});
   return w;}
-function resetForm(){ el('name').value=''; el('sub').value=''; el('notes').value=''; el('lens').innerHTML=''; SHOTS=[]; renderShots(); updParseBtn(); LAST_PARSE=null; COLS=['Chest','Waist','Hips']; el('chartEditor').style.display='none'; el('chartEmpty').style.display='block'; el('aimsg').textContent=''; }
+function resetForm(){ el('name').value=''; el('sub').value=''; el('notes').value=''; el('lens').innerHTML=''; SHOTS=[]; renderShots(); updParseBtn(); LAST_PARSE=null; COLS=['Chest','Waist','Hips']; CONV={sleeve_convention:'auto',shoulder_convention:'auto'}; el('convSleeve').value='auto'; el('convShoulder').value='auto'; el('convGuess').textContent=''; el('chartEditor').style.display='none'; el('chartEmpty').style.display='block'; el('aimsg').textContent=''; }
 var pending=false;
 el('save').addEventListener('click',async function(){
   var sizes=collectSizes();

@@ -204,10 +204,15 @@
       if(note) h+='<div class="spectrum" style="font-size:.78rem;color:var(--dim)">'+note+'</div>';
       return h;
     }
+    // Canonical measurement vocabulary: sleeve = shoulder seam → wrist,
+    // shoulder = full cross-back. Charts using centre-back → wrist or half
+    // shoulder are converted before comparison, so labels must be explicit.
+    var DIM_LABELS={sleeve:'Sleeve (shoulder → wrist)',shoulder:'Shoulder (cross-back)',chest:'Chest',waist:'Waist',hips:'Hips',belly:'Belly',inseam:'Inseam',neck:'Neck',thigh:'Thigh',length:'Length',height:'Height'};
+    function dimLabel(k){ return DIM_LABELS[k]||k; }
     function bkHTML(c){
       if(!c||!c.breakdown) return '';
       var bk=c.breakdown, keys=Object.keys(bk); if(!keys.length) return '';
-      return '<div class="bkbox">'+keys.map(function(k){return '<div class="bkrow"><span>'+k+'</span><span>'+bk[k]+'</span></div>';}).join('')+'</div>';
+      return '<div class="bkbox">'+keys.map(function(k){return '<div class="bkrow"><span>'+dimLabel(k)+'</span><span>'+bk[k]+'</span></div>';}).join('')+'</div>';
     }
     function candsOf(){ return (RES&&RES.candidates&&RES.candidates.length)?RES.candidates:(RES?[{name:RES.size,spectrum:RES.spectrum,breakdown:RES.breakdown,fits:RES.fits}]:[]); }
     function renderSizeOpts(){
