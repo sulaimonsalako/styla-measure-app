@@ -749,3 +749,15 @@
 .styla-askchips-lbl{width:100%;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8a90a0;margin-bottom:2px;}
 .styla-askchip{background:#fff;border:1px solid #e3e5ea;border-radius:100px;padding:7px 13px;font-size:.78rem;color:#3d4351;cursor:pointer;font-family:inherit;transition:border-color .14s,color .14s,background .14s;}
 .styla-askchip:hover{border-color:#ff2a75;color:#e11d48;background:rgba(255,42,117,.05);}
+
+/* Questionnaire (default guest flow — no tape measure) */
+.styla-q{margin-bottom:14px;}
+.styla-q label{display:block;font-size:.78rem;font-weight:600;color:#5f6672;margin-bottom:6px;}
+.styla-qval{float:right;font-weight:500;color:#8a90a0;}
+.styla-q input[type=range]{width:100%;accent-color:#ff2a75;padding:0;}
+.styla-seg{display:flex;gap:6px;}
+.styla-seg button{flex:1;background:#fff;border:1px solid #e3e5ea;color:#5f6672;border-radius:9px;padding:9px 6px;font-size:.8rem;cursor:pointer;font-family:inherit;transition:.14s;}
+.styla-seg button:hover{border-color:#cfd3dc;}
+.styla-seg button.on{border-color:#ff2a75;color:#e11d48;background:rgba(255,42,117,.07);font-weight:650;}
+.styla-switchmode{background:none;border:none;color:#e11d48;font-weight:650;font-size:.78rem;cursor:pointer;padding:4px 0;font-family:inherit;text-decoration:underline;}
+.styla-opt{font-weight:400;color:#a8aeb9;font-size:.72rem;}

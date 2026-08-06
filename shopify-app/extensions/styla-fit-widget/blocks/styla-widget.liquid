@@ -106,20 +106,94 @@
 
             <!-- Manual Specs Input Form (Hidden by default) -->
             <div class="styla-specs-form styla-hidden" id="styla-form-{{ block.id }}">
-              <span class="styla-form-title">Enter your body measurements:</span>
-              <div class="styla-form-grid">
-                <div class="styla-form-group">
-                  <label for="styla-in-shoulders-{{ block.id }}">Shoulder Width (in)</label>
-                  <input type="number" id="styla-in-shoulders-{{ block.id }}" value="17.0" step="0.1" min="10" max="30">
+              <span class="styla-form-title" id="styla-form-title-{{ block.id }}">A few quick questions — no tape measure needed.</span>
+
+              <!-- QUESTIONNAIRE (default) -->
+              <div id="styla-quiz-{{ block.id }}">
+                <div class="styla-q">
+                  <label>You're shopping for</label>
+                  <div class="styla-seg" id="styla-q-gender-{{ block.id }}">
+                    <button type="button" data-g="women" class="on">Women's</button>
+                    <button type="button" data-g="men">Men's</button>
+                  </div>
                 </div>
-                <div class="styla-form-group">
-                  <label for="styla-in-chest-{{ block.id }}">Chest Circumference (in)</label>
-                  <input type="number" id="styla-in-chest-{{ block.id }}" value="36.0" step="0.5" min="20" max="60">
+                <div class="styla-q">
+                  <label>Height <span class="styla-qval" id="styla-q-hlbl-{{ block.id }}">5'6"</span></label>
+                  <input type="range" id="styla-q-height-{{ block.id }}" min="54" max="82" value="66">
                 </div>
-                <div class="styla-form-group">
-                  <label for="styla-in-waist-{{ block.id }}">Waist Circumference (in)</label>
-                  <input type="number" id="styla-in-waist-{{ block.id }}" value="31.0" step="0.5" min="20" max="60">
+                <div class="styla-q">
+                  <label>Weight <span class="styla-qval" id="styla-q-wlbl-{{ block.id }}">150 lb</span></label>
+                  <input type="range" id="styla-q-weight-{{ block.id }}" min="90" max="330" value="150">
                 </div>
+
+                <div id="styla-q-women-{{ block.id }}">
+                  <div class="styla-form-grid">
+                    <div class="styla-form-group">
+                      <label>Bra band</label>
+                      <select id="styla-q-band-{{ block.id }}"><option>30</option><option>32</option><option selected>34</option><option>36</option><option>38</option><option>40</option><option>42</option></select>
+                    </div>
+                    <div class="styla-form-group">
+                      <label>Cup</label>
+                      <select id="styla-q-cup-{{ block.id }}"><option>A</option><option selected>B</option><option>C</option><option>D</option><option>DD</option><option>F</option></select>
+                    </div>
+                  </div>
+                  <div class="styla-q">
+                    <label>Usual waist size (in) <span class="styla-qval" id="styla-q-wwlbl-{{ block.id }}">28 in</span></label>
+                    <input type="range" id="styla-q-ww-{{ block.id }}" min="22" max="48" value="28">
+                  </div>
+                </div>
+
+                <div id="styla-q-men-{{ block.id }}" style="display:none">
+                  <div class="styla-form-group">
+                    <label>Usual shirt size</label>
+                    <select id="styla-q-shirt-{{ block.id }}"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+                  </div>
+                  <div class="styla-q">
+                    <label>Usual waist size (in) <span class="styla-qval" id="styla-q-wmlbl-{{ block.id }}">32 in</span></label>
+                    <input type="range" id="styla-q-wm-{{ block.id }}" min="26" max="54" value="32">
+                  </div>
+                </div>
+
+                <div class="styla-q">
+                  <label>How do you like things to fit?</label>
+                  <div class="styla-seg" id="styla-q-fit-{{ block.id }}">
+                    <button type="button" data-f="snug">Fitted</button>
+                    <button type="button" data-f="regular" class="on">Regular</button>
+                    <button type="button" data-f="loose">Relaxed</button>
+                  </div>
+                </div>
+                <button type="button" class="styla-switchmode" id="styla-to-manual-{{ block.id }}">I know my measurements →</button>
+              </div>
+
+              <!-- EXACT MEASUREMENTS (optional) -->
+              <div id="styla-manual-{{ block.id }}" style="display:none">
+                <div class="styla-form-grid">
+                  <div class="styla-form-group">
+                    <label for="styla-in-chest-{{ block.id }}">Chest / bust (in)</label>
+                    <input type="number" id="styla-in-chest-{{ block.id }}" placeholder="38" step="0.5" min="20" max="70">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-in-waist-{{ block.id }}">Waist (in)</label>
+                    <input type="number" id="styla-in-waist-{{ block.id }}" placeholder="32" step="0.5" min="20" max="70">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-in-hips-{{ block.id }}">Hips (in)</label>
+                    <input type="number" id="styla-in-hips-{{ block.id }}" placeholder="40" step="0.5" min="20" max="80">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-in-height-{{ block.id }}">Height (in) <span class="styla-opt">optional</span></label>
+                    <input type="number" id="styla-in-height-{{ block.id }}" placeholder="66" step="0.5" min="48" max="84">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-in-shoulders-{{ block.id }}">Shoulder (in) <span class="styla-opt">optional</span></label>
+                    <input type="number" id="styla-in-shoulders-{{ block.id }}" placeholder="17" step="0.1" min="10" max="30">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-in-inseam-{{ block.id }}">Inseam (in) <span class="styla-opt">optional</span></label>
+                    <input type="number" id="styla-in-inseam-{{ block.id }}" placeholder="30" step="0.5" min="20" max="40">
+                  </div>
+                </div>
+                <button type="button" class="styla-switchmode" id="styla-to-quiz-{{ block.id }}">← Answer a few questions instead</button>
               </div>
               <div class="styla-form-actions">
                 <button type="button" class="styla-form-btn cancel" id="styla-cancel-specs-{{ block.id }}">Cancel</button>

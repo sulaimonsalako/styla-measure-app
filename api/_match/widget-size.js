@@ -65,6 +65,13 @@ export default async function widgetSize(req, res) {
     }
     if (!profile) return res.status(400).json({ error: 'No profile or valid session provided.' });
 
+    // Signed in but the profile has no body data yet (account created, quiz not
+    // taken). This is NOT a missing-size-chart problem — tell the caller so the
+    // widget can ask for measurements instead of blaming the brand.
+    if (!profile.chest && !profile.waist && !profile.hips) {
+      return res.status(200).json({ needs_profile: true, message: 'No measurements saved yet.' });
+    }
+
     const user = {
       chest: profile.chest,
       waist: profile.waist,

@@ -132,6 +132,14 @@
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
           });
           var data = await r.json();
+          // Signed in, but no measurements saved yet (account created, quiz never
+          // taken) -> ask the questions instead of claiming the brand has no chart.
+          if (data && data.needs_profile) {
+            showForm(true);
+            var ft = el('styla-form-title');
+            if (ft) ft.textContent = "You're signed in — a few quick questions and we'll have your size.";
+            return;
+          }
           // No size, or a chart that shares no comparable measurement with the shopper,
           // must NOT show a confident size — show the honest "can't size this" state.
           var noOverlap = data && data.candidates && data.candidates.every(function(c){ return !c.breakdown || !Object.keys(c.breakdown).length; });
@@ -347,12 +355,91 @@
       function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
       if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
       if (cancelBtn) cancelBtn.addEventListener('click', hideForm);
+      // ---------- questionnaire (default) vs exact measurements ----------
+      var QZ = { gender: 'women', fit: 'regular' };
+      function qEl(id) { return el(id); }
+      function setSeg(host, attr, val, key) {
+        if (!host) return;
+        host.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.getAttribute(attr) === val); });
+        QZ[key] = val;
+      }
+      var segG = el('styla-q-gender'), segF = el('styla-q-fit');
+      if (segG) segG.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        setSeg(segG, 'data-g', b.getAttribute('data-g'), 'gender');
+        var w = el('styla-q-women'), m = el('styla-q-men');
+        if (w) w.style.display = QZ.gender === 'women' ? '' : 'none';
+        if (m) m.style.display = QZ.gender === 'men' ? '' : 'none';
+      });
+      if (segF) segF.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        setSeg(segF, 'data-f', b.getAttribute('data-f'), 'fit');
+      });
+      function bindRange(id, lbl, fmt) {
+        var r = el(id), l = el(lbl); if (!r || !l) return;
+        var upd = function () { l.textContent = fmt(+r.value); };
+        r.addEventListener('input', upd); upd();
+      }
+      bindRange('styla-q-height', 'styla-q-hlbl', function (v) { return Math.floor(v / 12) + "'" + (v % 12) + '"'; });
+      bindRange('styla-q-weight', 'styla-q-wlbl', function (v) { return v + ' lb'; });
+      bindRange('styla-q-ww', 'styla-q-wwlbl', function (v) { return v + ' in'; });
+      bindRange('styla-q-wm', 'styla-q-wmlbl', function (v) { return v + ' in'; });
+
+      var toManual = el('styla-to-manual'), toQuiz = el('styla-to-quiz');
+      function mode(manual) {
+        var q = el('styla-quiz'), m = el('styla-manual'), t = el('styla-form-title');
+        if (q) q.style.display = manual ? 'none' : '';
+        if (m) m.style.display = manual ? '' : 'none';
+        if (t) t.textContent = manual ? 'Enter your measurements (inches).' : 'A few quick questions — no tape measure needed.';
+      }
+      if (toManual) toManual.addEventListener('click', function () { mode(true); });
+      if (toQuiz) toQuiz.addEventListener('click', function () { mode(false); });
+
+      // Same estimation model as the Styla questionnaire on styla.ca.
+      function profileFromQuiz() {
+        var h = +(el('styla-q-height') || {}).value || 66;
+        var w = +(el('styla-q-weight') || {}).value || 150;
+        var bmi = (w / (h * h)) * 703;
+        var p = { height: h };
+        if (QZ.gender === 'women') {
+          var band = parseFloat((el('styla-q-band') || {}).value) || 34;
+          var cup = (el('styla-q-cup') || {}).value || 'B';
+          var cupMod = ({ A: 1, B: 2, C: 3, D: 4, DD: 5, F: 6 })[cup] || 2;
+          p.chest = band + cupMod;
+          p.waist = +(el('styla-q-ww') || {}).value || 28;
+          var drop = QZ.fit === 'loose' ? 6 : QZ.fit === 'snug' ? 1 : 3.5;
+          p.hips = Math.round((p.waist + drop + 2 + bmi * 0.2) * 10) / 10;
+          p.inseam = Math.round(h * 0.45);
+        } else {
+          p.waist = +(el('styla-q-wm') || {}).value || 32;
+          var shirt = (el('styla-q-shirt') || {}).value || 'M';
+          var chest = ({ XS: 35, S: 37, M: 40, L: 43, XL: 46, XXL: 49 })[shirt] || (p.waist + 6);
+          if (QZ.fit === 'loose') chest += 1.5;
+          if (QZ.fit === 'snug') chest -= 1.5;
+          p.chest = chest;
+          p.neck = Math.round((12.5 + (chest - 38) * 0.15) * 10) / 10;
+          p.hips = Math.round((p.waist + 2 + bmi * 0.15) * 10) / 10;
+          p.inseam = Math.round(h * 0.44);
+        }
+        p.belly = p.waist;
+        return p;
+      }
+      function profileFromManual() {
+        var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : v; };
+        var chest = num('styla-in-chest'), waist = num('styla-in-waist');
+        if (!chest || !waist) return null;
+        var hips = num('styla-in-hips');
+        return {
+          chest: chest, waist: waist, belly: waist,
+          hips: hips || (waist + 4),
+          height: num('styla-in-height'), shoulder: num('styla-in-shoulders'), inseam: num('styla-in-inseam'),
+        };
+      }
       if (saveBtn) saveBtn.addEventListener('click', function () {
-        var chest = parseFloat((el('styla-in-chest') || {}).value);
-        var waist = parseFloat((el('styla-in-waist') || {}).value);
-        var shoulder = parseFloat((el('styla-in-shoulders') || {}).value);
-        if (!chest || !waist) return;
-        setProfile({ chest: chest, waist: waist, belly: waist, hips: waist + 4, shoulder: shoulder || undefined });
+        var manual = el('styla-manual') && el('styla-manual').style.display !== 'none';
+        var p = manual ? profileFromManual() : profileFromQuiz();
+        if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Enter at least chest and waist.'; return; }
+        setProfile(p);
         hideForm();
         STATE.result = null; loadFit();
       });

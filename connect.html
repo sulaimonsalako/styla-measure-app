@@ -151,7 +151,25 @@ document.getElementById('btnLogin').addEventListener('click', async function(){
   if(!email||!password){ msg.textContent='Enter your email and password.'; return; }
   this.disabled=true; msg.style.color='var(--muted)'; msg.textContent='Signing in…';
   var r=await sb.auth.signInWithPassword({ email:email, password:password });
-  if(r.error){ this.disabled=false; msg.style.color='#ff9db5'; msg.textContent=r.error.message||'Login failed.'; return; }
+  if(r.error){
+    this.disabled=false;
+    var em=(r.error.message||'').toLowerCase();
+    // Signed up but never clicked the confirmation link — explain it and offer a resend
+    // instead of dumping a raw auth error on the shopper.
+    if(em.indexOf('not confirmed')>-1 || em.indexOf('confirm')>-1){
+      msg.style.color='var(--muted)';
+      msg.innerHTML='Please confirm your email first — check your inbox for the link. <button type="button" id="btnResend" class="link">Resend it</button>';
+      var rb=document.getElementById('btnResend');
+      if(rb) rb.addEventListener('click', async function(){
+        msg.textContent='Sending…';
+        var out=await sb.auth.resend({ type:'signup', email:email });
+        msg.style.color = out.error ? '#ff9db5' : 'var(--green)';
+        msg.textContent = out.error ? (out.error.message||'Could not resend.') : ('Sent — check '+email+'.');
+      });
+      return;
+    }
+    msg.style.color='#ff9db5'; msg.textContent=r.error.message||'Login failed.'; return;
+  }
   grant(r.data.session);
 });
 document.getElementById('btnCreate').addEventListener('click', function(){
