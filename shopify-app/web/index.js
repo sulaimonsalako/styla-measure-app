@@ -771,7 +771,7 @@ app.get('/api/merchant/charts', async (req, res) => {
     const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
     const { data: charts } = await supabase.from('size_charts')
-      .select('id, category, subcategory, gender, chart_data, verified, is_default, created_at')
+      .select('id, category, subcategory, gender, chart_data, verified, is_default, source, created_at')
       .eq('brand_id', brandId).order('created_at', { ascending: false });
     res.json({ shop, brandId, charts: charts || [] });
   } catch (e) { res.status(500).json({ error: e.message }); }

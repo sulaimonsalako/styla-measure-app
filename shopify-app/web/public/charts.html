@@ -354,7 +354,8 @@ details.adv>summary:hover{color:var(--ink-2);}
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Your charts</h2></div></div>
+      <div class="card-head"><div class="txt"><h2>Your charts</h2><p class="hint">Charts Styla already holds for your brand appear here too — no need to re-add them.</p></div></div>
+      <div id="stylaHave" class="warn" style="display:none;background:var(--green-bg);border-color:#bfe6d3;color:var(--green)"></div>
       <div id="list"><div class="sk" style="width:70%"></div><div class="sk" style="width:50%"></div></div>
     </div>
   </div>
@@ -615,6 +616,14 @@ el('save').addEventListener('click',async function(){
     el('name').focus(); return;
   }
   var warns=validate(sizes);var wbox=el('chartWarn');
+  // Duplicate guard: if Styla already holds a chart with the same name for this
+  // brand, say so rather than silently creating a near-identical second one.
+  var nm=(el('name').value||'').trim().toLowerCase();
+  var dupe=CHARTS.filter(function(c){return String(((c.chart_data||{}).name)||'').trim().toLowerCase()===nm;})[0];
+  if(dupe&&!pending){
+    var who=(dupe.source==='admin')?'Styla already added':'You already have';
+    warns.unshift(who+' a chart called “'+((dupe.chart_data||{}).name)+'”. Saving will update it rather than create a duplicate.');
+  }
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
   var chart_data={name:(el('name').value||'').trim()||null,subcategory:(el('sub').value||'').trim().toLowerCase()||null,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes,categories:[],applies_all:false};
@@ -630,6 +639,15 @@ async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+esc(d.error)+'</div>';renderChartLinks();return;}
     CHARTS=d.charts||[];renderChartLinks();renderAssign();refreshTiles();
+    // Tell the merchant up front if Styla already has charts for their brand.
+    var pre=CHARTS.filter(function(c){return c.source==='admin'||c.verified;});
+    var banner=el('stylaHave');
+    if(pre.length){
+      banner.style.display='block';
+      banner.innerHTML='✓ Styla already has <b>'+pre.length+' chart'+(pre.length>1?'s':'')+'</b> for your brand'
+        +(pre.some(function(c){return c.verified;})?' (verified)':'')+'. '
+        +'They\'re already working on your product pages — only add a chart below if something is missing or has changed.';
+    } else { banner.style.display='none'; }
     if(!CHARTS.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
       var R=(cd.rules&&Array.isArray(cd.rules.conditions))?cd.rules.conditions:null;
@@ -641,8 +659,14 @@ async function loadCharts(){var box=el('list');
       } else if(cd.applies_all){ scope='<span class="badge green">whole store</span>'; }
       else if((cd.categories||[]).length){ scope=cd.categories.map(function(x){return '<span class="badge">'+esc(x)+'</span>';}).join(' '); }
       else { scope='<span class="badge">not assigned</span>'; }
+      // Where did this chart come from? Prevents merchants re-uploading a chart
+      // Styla already curated for their brand.
+      var origin = (c.source==='admin')
+        ? '<span class="badge green">Added by Styla</span>'
+        : (c.source==='parsed' ? '<span class="badge">Auto-read</span>' : '<span class="badge">Yours</span>');
+      if (c.verified) origin += ' <span class="badge green">✓ Verified</span>';
       return '<div class="rowitem"><div class="grow"><div class="name">'+esc(nm||'Untitled chart')+'</div>'
-        +'<div class="hint" style="margin-top:3px">'+n+' sizes'+(cd.gender?(' · '+esc(cd.gender)):'')+'</div></div>'
+        +'<div class="hint" style="margin-top:3px">'+n+' sizes'+(cd.gender?(' · '+esc(cd.gender)):'')+' · '+origin+'</div></div>'
         +'<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:45%">'+scope+'</div>'
         +'<button class="btn btn-ghost btn-sm" onclick="renameChart(\''+c.id+'\')">Rename</button>'
         +'<button class="btn btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
