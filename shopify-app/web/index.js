@@ -691,17 +691,44 @@ async function requireShop(req, res) {
 }
 // A connected shop maps to a Styla brand keyed by its domain, so widget-size
 // resolves this store's charts by domain with no extra config.
+// Resolve the ONE brand row for this store. A store has two identities: the
+// myshopify domain the app talks to, and the public storefront domain the Styla
+// admin curates against. We match on either so a Shopify install attaches to the
+// brand Styla already knows — otherwise the dashboard and the widget would read
+// different charts for the same brand.
 async function ensureBrandForShop(shop) {
-  const domain = String(shop || '').toLowerCase();
-  if (!domain) return null;
-  let { data: brand } = await supabase.from('brands').select('id').eq('domain', domain).maybeSingle();
-  if (!brand) {
-    const name = domain.replace('.myshopify.com', '');
-    const { data: created, error } = await supabase.from('brands').insert({ name, domain }).select('id').single();
-    if (error) throw error;
-    brand = created;
+  const myshopify = String(shop || '').toLowerCase();
+  if (!myshopify) return null;
+
+  // 1) already linked by myshopify domain?
+  let { data: brand } = await supabase.from('brands').select('id').eq('shopify_domain', myshopify).maybeSingle();
+  if (brand) return brand.id;
+
+  // 2) look up the store's PUBLIC domain and match an existing Styla brand on it.
+  let primary = null, shopName = null;
+  try {
+    const { data: sess } = await supabase.from('merchant_sessions').select('access_token').eq('shop', myshopify).maybeSingle();
+    if (sess) {
+      const info = await fetchShopifyAPI(myshopify, sess.access_token, 'shop.json');
+      primary = info && info.shop && String(info.shop.domain || '').toLowerCase().replace(/^www\./, '');
+      shopName = info && info.shop && info.shop.name;
+    }
+  } catch (e) { /* fall through to myshopify-only identity */ }
+
+  const candidates = [myshopify, primary].filter(Boolean);
+  const { data: found } = await supabase.from('brands').select('id, domain').in('domain', candidates);
+  if (found && found.length) {
+    brand = found[0];
+    await supabase.from('brands').update({ shopify_domain: myshopify }).eq('id', brand.id); // link for next time
+    return brand.id;
   }
-  return brand ? brand.id : null;
+
+  // 3) genuinely new brand
+  const { data: created, error } = await supabase.from('brands')
+    .insert({ name: shopName || myshopify.replace('.myshopify.com', ''), domain: primary || myshopify, shopify_domain: myshopify })
+    .select('id').single();
+  if (error) throw error;
+  return created ? created.id : null;
 }
 
 // Get an Admin API access token for this shop. Modern Shopify installs are
@@ -766,8 +793,11 @@ const CHART_KEY_MAP = {
   length:'length', 'clothing length':'length', 'back length':'length', 'body length':'length', 衣长:'length',
   height:'height',
 };
-function canonicalizeChart(cd) {
+function canonicalizeChart(cd, category) {
   const out = Object.assign({}, cd);
+  // Same shape the Styla admin writes, so both sources are interchangeable.
+  if (!out.garment_category) out.garment_category = category || (out.categories || [])[0] || null;
+  if (!out.chart_type) out.chart_type = 'body';
   const rows = Array.isArray(cd.sizes) ? cd.sizes : [];
   out.display_columns = cd.columns || null;          // keep the brand's own headers
   out.display_sizes = rows;                          // keep the table exactly as entered (for the AI)
@@ -789,7 +819,7 @@ app.post('/api/merchant/charts', async (req, res) => {
     const s = await requireShop(req, res); if (!s) return;
     let { id, category, subcategory, gender, chart_data, is_default } = req.body || {};
     if (!chart_data || !(chart_data.sizes || []).length) return res.status(400).json({ error: 'Add at least one size.' });
-    chart_data = canonicalizeChart(chart_data);
+    chart_data = canonicalizeChart(chart_data, category);
     const brandId = await ensureBrandForShop(s);
     // category/gender are OPTIONAL now: null = a store-default chart that applies
     // to every product; a category/gender narrows it to specific items.
@@ -854,7 +884,13 @@ app.post('/api/merchant/link-chart', async (req, res) => {
     const cd = Object.assign({}, chart.chart_data || {});
     if (name !== undefined && String(name).trim()) cd.name = String(name).trim(); // renameable
     if (rules !== undefined) cd.rules = rules || null;   // rule-based matching
-    if (categories !== undefined) cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
+    if (categories !== undefined) {
+      cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
+      // The engine reads garment_category for its per-garment ease rules (a suit
+      // is not eased like a t-shirt). Keep it in step with the linked category,
+      // exactly as the Styla admin writes it — same field, same meaning.
+      cd.garment_category = cd.categories[0] || null;
+    }
     if (applies_all !== undefined) cd.applies_all = !!applies_all;
     if (gender !== undefined) cd.gender = gender || null;
     const upd = { chart_data: cd, category: cd.categories[0] || null };
