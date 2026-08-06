@@ -147,6 +147,10 @@
       <div class="msg" id="chartMsg"></div>
       <div class="card" style="margin-top:1rem;">
         <h2 style="margin-top:0" id="chartTitle">Size chart</h2>
+        <div style="margin-bottom:.8rem">
+          <label>Chart name <span class="hint">— how you'll refer to this chart when assigning it</span></label>
+          <input id="chName" placeholder='e.g. "RW&amp;Co slim suits" or "Womens body chart"'/>
+        </div>
         <div class="row3">
           <div><label>Category <span class="hint">(the body area we measure)</span></label>
             <select id="chCat" onchange="fillSubList()"></select>
@@ -346,7 +350,9 @@
       el('chartsList').innerHTML=state.charts.map(function(c){
         var n=(c.chart_data&&c.chart_data.sizes)?c.chart_data.sizes.length:0;
         var srcLbl = c.source==='brand' ? 'from brand' : c.source==='parsed' ? 'auto-parsed' : 'by Styla';
+        var nm=(c.chart_data&&c.chart_data.name)||'';
         return '<div class="chart-item"><div class="chart-head">'+
+          (nm?'<b style="margin-right:6px">'+nm+'</b>':'')+
           '<span class="badge">'+(c.category||'—')+'</span>'+
           ((c.subcategory||(c.chart_data&&c.chart_data.subcategory))?'<span class="badge" style="background:var(--pinkdim);color:var(--pink2)">'+(c.subcategory||c.chart_data.subcategory)+'</span>':'')+
           '<span class="badge">'+(c.gender||'—')+'</span>'+
@@ -383,6 +389,7 @@
       el('chartTitle').textContent=c?'Edit size chart':'New size chart';
       el('chCat').value=c?(c.category||'tops'):'tops';
       fillSubList();
+      el('chName').value=(c&&c.chart_data&&c.chart_data.name)||'';
       el('chSub').value=(c&&(c.subcategory||(c.chart_data&&c.chart_data.subcategory)))||'';
       el('chGender').value=c?(c.gender||'women'):'women';
       el('chType').value=(c&&c.chart_data&&c.chart_data.chart_type)||'body';
@@ -465,7 +472,7 @@
         this.textContent='Save anyway'; _pendingSave=true; return;
       }
       this.textContent='Save chart'; _pendingSave=false;
-      var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_type:type,sizes:sizes,
+      var chart_data={name:(el('chName').value||'').trim()||null,garment_category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_type:type,sizes:sizes,
         sleeve_convention:el('chSleeveConv').value,shoulder_convention:el('chShoulderConv').value,
         length_options:collectLens(),notes:(el('chNotes').value||'').trim()};
       if(flat.length) chart_data.flat_measures=flat; // only the measures that are actually half-width

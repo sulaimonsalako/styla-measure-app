@@ -275,7 +275,7 @@ details.adv>summary:hover{color:var(--ink-2);}
     <div class="card">
       <div class="card-head"><div class="txt"><h2>Add a size chart</h2><p class="hint">Paste a screenshot of your size guide — our AI reads the measurements for you.</p></div></div>
 
-      <label>Chart name <span class="faint">(optional)</span></label>
+      <label>Chart name <span class="faint">— you'll use this to assign it to products</span></label>
       <input id="name" placeholder='e.g. “Women&apos;s body chart” or “Slim Suits”'/>
 
       <div class="drop" id="drop">
@@ -609,6 +609,11 @@ var pending=false;
 el('save').addEventListener('click',async function(){
   var sizes=collectSizes();
   if(!sizes.length){setMsg('saveMsg','Add at least one size first.','err');return;}
+  // A chart must be nameable — it's how you refer to it when assigning to products.
+  if(!(el('name').value||'').trim()){
+    setMsg('saveMsg','Give this chart a name so you can assign it later.','err');
+    el('name').focus(); return;
+  }
   var warns=validate(sizes);var wbox=el('chartWarn');
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
@@ -639,8 +644,20 @@ async function loadCharts(){var box=el('list');
       return '<div class="rowitem"><div class="grow"><div class="name">'+esc(nm||'Untitled chart')+'</div>'
         +'<div class="hint" style="margin-top:3px">'+n+' sizes'+(cd.gender?(' · '+esc(cd.gender)):'')+'</div></div>'
         +'<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:45%">'+scope+'</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="renameChart(\''+c.id+'\')">Rename</button>'
         +'<button class="btn btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
+window.renameChart=async function(id){
+  var c=CHARTS.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var cur=(c.chart_data||{}).name||'';
+  var next=prompt('Chart name — used when assigning it to products:',cur);
+  if(next===null) return;
+  next=next.trim(); if(!next){toast('A chart needs a name',true);return;}
+  try{var r=await mfetch('/api/merchant/link-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id,name:next})});
+    var d=await r.json(); if(d.error) throw new Error(d.error);
+    toast('Renamed'); loadCharts();
+  }catch(e){toast(e.message||'Rename failed',true);}
+};
 window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});toast('Chart deleted');loadCharts();};
 
 /* ---- rule-based "Apply to products" (match on the store's own attributes) ---- */

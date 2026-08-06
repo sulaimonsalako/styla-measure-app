@@ -846,12 +846,13 @@ app.post('/api/merchant/link-chart', async (req, res) => {
   try {
     const s = await requireShop(req, res); if (!s) return;
     const brandId = await ensureBrandForShop(s);
-    const { id, categories, applies_all, gender, rules } = req.body || {};
+    const { id, categories, applies_all, gender, rules, name } = req.body || {};
     if (!id) return res.status(400).json({ error: 'Missing chart id.' });
     const { data: chart } = await supabase.from('size_charts')
       .select('chart_data').eq('id', id).eq('brand_id', brandId).maybeSingle();
     if (!chart) return res.status(404).json({ error: 'Chart not found.' });
     const cd = Object.assign({}, chart.chart_data || {});
+    if (name !== undefined && String(name).trim()) cd.name = String(name).trim(); // renameable
     if (rules !== undefined) cd.rules = rules || null;   // rule-based matching
     if (categories !== undefined) cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
     if (applies_all !== undefined) cd.applies_all = !!applies_all;
