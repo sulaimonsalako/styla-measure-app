@@ -33,6 +33,33 @@ function pickLength(height, options) {
   return best ? { name: best.name, inseam: best.inseam != null ? best.inseam : null } : null;
 }
 
+// Suits/blazers/trousers often encode the length variant IN the size label
+// (38S / 38R / 38L, "40 Long"). The engine sizes on girth, which can't tell those
+// apart — so once we know the shopper's height we filter the candidates down to
+// the right length family before choosing.
+const LENGTH_ALIASES = {
+  s: 'short', short: 'short', p: 'petite', petite: 'petite',
+  r: 'regular', reg: 'regular', regular: 'regular', m: 'regular',
+  l: 'long', long: 'long', t: 'tall', tall: 'tall', x: 'xlong', xl: 'xlong',
+};
+function variantOfSize(name) {
+  const s = String(name || '').trim().toLowerCase();
+  // "40 long", "40-long", "40 r"
+  const words = s.split(/[\s\-_/]+/).filter(Boolean);
+  if (words.length > 1) {
+    const last = LENGTH_ALIASES[words[words.length - 1]];
+    if (last) return last;
+  }
+  // "38S", "40R" — digits followed by a single letter
+  const m = s.match(/^\d+\s*([a-z]{1,2})$/);
+  if (m && LENGTH_ALIASES[m[1]]) return LENGTH_ALIASES[m[1]];
+  return null;
+}
+function normVariant(name) {
+  const v = String(name || '').trim().toLowerCase();
+  return LENGTH_ALIASES[v] || v || null;
+}
+
 export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -113,8 +140,31 @@ export default async function widgetSize(req, res) {
 
     // Helper: normalize a chart row + run the engine, returning the API payload.
     function resultFor(cd, resolvedBy) {
-      const norm = normalizeChart(cd || {}, { flatMeasures: (cd && cd.flat_measures) || [] });
+      let norm = normalizeChart(cd || {}, { flatMeasures: (cd && cd.flat_measures) || [] });
       if (!norm.sizes.length) return null;
+
+      // If sizes carry a length variant (38S/38R/38L) and we know the shopper's
+      // height, keep only the matching family so we don't hand a 6'2" shopper a
+      // Short jacket that happens to score well on chest.
+      let lengthNote = null;
+      const variants = cd && (cd.length_variants || cd.length_options);
+      if (user.height && Array.isArray(variants) && variants.length) {
+        const tagged = norm.sizes.filter((s) => variantOfSize(s.name));
+        if (tagged.length) {
+          const pick = pickLength(user.height, variants);
+          const want = pick && normVariant(pick.name);
+          if (want) {
+            const keep = norm.sizes.filter((s) => {
+              const v = variantOfSize(s.name);
+              return !v || v === want;                 // untagged sizes stay eligible
+            });
+            if (keep.length) {
+              norm = Object.assign({}, norm, { sizes: keep });
+              lengthNote = pick.name;
+            }
+          }
+        }
+      }
       const r = runSizingEngine(user, norm);
       return {
         size: r.recommended_size,
@@ -128,8 +178,8 @@ export default async function widgetSize(req, res) {
         breakdown: r.fit_breakdown,
         candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
         chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
-        recommendedLength: pickLength(user.height, cd && cd.length_options),
-        lengthOptions: (cd && cd.length_options) || null,
+        recommendedLength: pickLength(user.height, (cd && (cd.length_options || cd.length_variants))) || (lengthNote ? { name: lengthNote } : null),
+        lengthOptions: (cd && (cd.length_options || cd.length_variants)) || null,
         notes: (cd && cd.notes) || null,
         stock: stockBySize,                       // { "M": true, "L": false }
         inStock: stockFor(r.recommended_size),    // stock for THEIR size (null = unknown)

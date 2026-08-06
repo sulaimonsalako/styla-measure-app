@@ -166,6 +166,18 @@
             <select id="chShoulderConv"><option value="auto">Auto-detect</option><option value="full">Full cross-back (~17″)</option><option value="half">Half shoulder (~8″)</option></select></div>
         </div>
         <div id="convHint" class="hint" style="margin-top:6px;line-height:1.5"></div>
+
+        <div style="margin-top:1rem">
+          <label>Length options <span class="hint">(Short / Regular / Long · Petite / Tall — tied to height)</span></label>
+          <div class="hint" style="margin-bottom:6px">For suits and dresses where the brand says “order Short if under 5'8″”. Sizes like 38S/38R/38L are recognised automatically — record the height bands here.</div>
+          <table style="width:100%"><thead><tr><th>Name</th><th>Inseam/length (in)</th><th>Height min (in)</th><th>Height max (in)</th><th></th></tr></thead><tbody id="chLens"></tbody></table>
+          <button type="button" class="btn" id="chAddLen" style="margin-top:6px">+ Add length option</button>
+        </div>
+
+        <div style="margin-top:1rem">
+          <label>Fit notes the AI can use <span class="hint">(optional)</span></label>
+          <textarea id="chNotes" rows="2" placeholder="e.g. Runs small — size up for a relaxed fit. Model is 6'1&quot; wearing 40R." style="width:100%"></textarea>
+        </div>
         <div class="row3" style="margin-top:.8rem">
           <div><label>Source</label><select id="chSource"><option value="admin">Entered by Styla (me)</option><option value="brand">Provided by the brand</option><option value="parsed">Auto-parsed</option></select></div>
           <div><label>Category / product page URL <span class="hint">(shop link)</span></label><input id="chCatUrl" placeholder="https://brand.com/collections/dresses"/></div>
@@ -182,7 +194,9 @@
             <div class="hint">AI reads the chart and fills the table below — review it, then save. Centimeters convert to inches automatically. PDFs work too.</div>
           </div>
           <span id="aiMsg" class="hint"></span>
-          <input type="file" id="aiFile" accept="image/*,.pdf" style="display:none"/>
+          <input type="file" id="aiFile" accept="image/*,.pdf" multiple style="display:none"/>
+          <div id="aiShots" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+          <button type="button" id="aiParseBtn" class="btn" style="display:none;margin-top:8px">Read chart</button>
         </div>
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
         <table class="sizes">
@@ -452,7 +466,8 @@
       }
       this.textContent='Save chart'; _pendingSave=false;
       var chart_data={garment_category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_type:type,sizes:sizes,
-        sleeve_convention:el('chSleeveConv').value,shoulder_convention:el('chShoulderConv').value};
+        sleeve_convention:el('chSleeveConv').value,shoulder_convention:el('chShoulderConv').value,
+        length_options:collectLens(),notes:(el('chNotes').value||'').trim()};
       if(flat.length) chart_data.flat_measures=flat; // only the measures that are actually half-width
       var payload={brand_id:state.brand.id,category:el('chCat').value.trim().toLowerCase()||null,subcategory:sub,gender:el('chGender').value,chart_data:chart_data,is_default:el('chDefault').checked,
         source:el('chSource').value,verified:el('chVerified').checked,category_url:el('chCatUrl').value.trim()||null};
@@ -512,13 +527,50 @@
     el('sizeRows').addEventListener('input', function(){ updateConvHint(); if(_pendingSave){ _pendingSave=false; el('saveChartBtn').textContent='Save chart'; } });
     el('chSleeveConv').addEventListener('change', updateConvHint);
     el('chShoulderConv').addEventListener('change', updateConvHint);
-    async function parseChartFile(file){
-      if(!file) return;
+    // ---- length options (Short/Regular/Long, Petite/Tall) ----
+    function lenRow(o){ o=o||{};
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><input value="'+(o.name||'')+'" placeholder="Regular"/></td>'
+        +'<td><input value="'+(o.inseam==null?'':o.inseam)+'" placeholder="—"/></td>'
+        +'<td><input value="'+(o.height_min==null?'':o.height_min)+'" placeholder="—"/></td>'
+        +'<td><input value="'+(o.height_max==null?'':o.height_max)+'" placeholder="—"/></td>'
+        +'<td><button type="button" class="btn" onclick="this.closest(\'tr\').remove()">✕</button></td>';
+      el('chLens').appendChild(tr);
+    }
+    function renderLens(list){ el('chLens').innerHTML=''; (list||[]).forEach(lenRow); }
+    function collectLens(){ var out=[];
+      el('chLens').querySelectorAll('tr').forEach(function(tr){ var i=tr.querySelectorAll('input');
+        var n=(i[0].value||'').trim(); if(!n) return; var o={name:n};
+        var a=parseFloat(i[1].value); if(!isNaN(a)) o.inseam=a;
+        var b=parseFloat(i[2].value); if(!isNaN(b)) o.height_min=b;
+        var c=parseFloat(i[3].value); if(!isNaN(c)) o.height_max=c;
+        out.push(o); });
+      return out; }
+    el('chAddLen').addEventListener('click', function(){ lenRow(); });
+
+    // ---- multi-screenshot capture (a chart too wide/long for one shot) ----
+    var CH_SHOTS=[];
+    function renderChShots(){
+      el('aiShots').innerHTML=CH_SHOTS.map(function(s,i){
+        return '<span style="position:relative;display:inline-block"><img src="'+s.dataUrl+'" style="height:46px;width:46px;object-fit:cover;border-radius:7px;border:1px solid var(--line)"/>'
+          +'<button type="button" data-i="'+i+'" class="chShotX" style="position:absolute;top:-6px;right:-6px;background:#111;color:#fff;border:none;border-radius:50%;width:17px;height:17px;font-size:10px;line-height:1;cursor:pointer">✕</button></span>';
+      }).join('');
+      el('aiShots').querySelectorAll('.chShotX').forEach(function(b){ b.addEventListener('click',function(e){ e.stopPropagation(); CH_SHOTS.splice(+this.getAttribute('data-i'),1); renderChShots(); }); });
+      var btn=el('aiParseBtn');
+      btn.style.display = CH_SHOTS.length ? 'inline-block' : 'none';
+      btn.textContent = 'Read chart ('+CH_SHOTS.length+' image'+(CH_SHOTS.length>1?'s':'')+')';
+    }
+    function addChShot(file){ if(!file) return; var r=new FileReader();
+      r.onload=function(){ CH_SHOTS.push({dataUrl:r.result,mime:file.type||'image/png'}); renderChShots(); };
+      r.readAsDataURL(file); }
+    el('aiParseBtn').addEventListener('click', function(){ parseChartFiles(); });
+
+    async function parseChartFiles(){
+      if(!CH_SHOTS.length) return;
       aiSay('Reading the chart with AI…');
       try {
-        var dataUrl = await new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = rej; r.readAsDataURL(file); });
         var resp = await fetch('/api/parse-size-chart', { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ fileData: dataUrl, mimeType: file.type || 'image/png' }) });
+          body: JSON.stringify({ files: CH_SHOTS.map(function(s){ return { fileData:s.dataUrl, mimeType:s.mime }; }) }) });
         var d = await resp.json();
         if(d.error) throw new Error(d.error);
         el('sizeRows').innerHTML = '';
@@ -534,6 +586,10 @@
         });
         if(d.sleeve_convention && d.sleeve_convention!=='unknown') el('chSleeveConv').value = d.sleeve_convention;
         if(d.shoulder_convention && d.shoulder_convention!=='unknown') el('chShoulderConv').value = d.shoulder_convention;
+        // length variants: Petite/Regular/Tall AND suit-style 38S/38R/38L bands
+        var lens = d.length_options || d.length_variants;
+        if(Array.isArray(lens) && lens.length) renderLens(lens);
+        if(d.notes && el('chNotes') && !el('chNotes').value) el('chNotes').value = d.notes;
         updateConvHint();
         el('chSource').value = 'parsed';
         el('chVerified').checked = false; // parsed charts start unverified — review, then tick
@@ -545,15 +601,15 @@
         }
       } catch(e){ aiSay('Could not parse: '+(e.message||e)); }
     }
-    el('aiZone').addEventListener('click', function(e){ if(e.target.id !== 'aiFile') el('aiFile').click(); });
-    el('aiFile').addEventListener('change', function(){ parseChartFile(this.files[0]); this.value=''; });
+    el('aiZone').addEventListener('click', function(e){ var t=e.target; if(t.id!=='aiFile' && t.tagName!=='IMG' && t.className!=='chShotX' && t.id!=='aiParseBtn') el('aiFile').click(); });
+    el('aiFile').addEventListener('change', function(){ [].forEach.call(this.files||[], addChShot); this.value=''; });
     el('aiZone').addEventListener('dragover', function(e){ e.preventDefault(); });
-    el('aiZone').addEventListener('drop', function(e){ e.preventDefault(); parseChartFile((e.dataTransfer.files||[])[0]); });
+    el('aiZone').addEventListener('drop', function(e){ e.preventDefault(); [].forEach.call((e.dataTransfer.files||[]), addChShot); });
     document.addEventListener('paste', function(e){
       if(el('chartView').classList.contains('hide')) return; // only in the chart editor
       var items = (e.clipboardData || {}).items || [];
       for(var i = 0; i < items.length; i++){
-        if(items[i].type.indexOf('image') === 0){ parseChartFile(items[i].getAsFile()); break; }
+        if(items[i].type.indexOf('image') === 0){ addChShot(items[i].getAsFile()); }
       }
     });
 

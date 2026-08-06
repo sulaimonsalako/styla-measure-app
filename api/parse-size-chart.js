@@ -114,6 +114,11 @@ Strict Sizing Processing Rules:
    - Order options from SHORTEST length to LONGEST: the shortest inseam/length is for the SHORTEST people (e.g. Petite), the longest is for the TALLEST (e.g. Tall). "Tall" always means the tallest people.
    - Make the height bands ASCENDING and NON-OVERLAPPING: the shortest option has no lower bound, the tallest has no upper bound, and each option's lower bound = the previous option's upper bound. If the source is sparse or contradictory, INFER sensible contiguous bands from whatever thresholds are given so the set forms a clean ladder short->tall.
 
+5b. LENGTH BUILT INTO THE SIZE NAME (suits, blazers, trousers): many charts encode the length variant IN the size label — "38S / 38R / 38L", "40 Short / 40 Regular / 40 Long", "R", "S", "L" suffixes — where S=Short, R=Regular, L=Long (careful: here L means LONG, not Large). When you see this:
+   - Keep the FULL label as the size name (e.g. "38S"), so it matches what the shopper selects on the product page.
+   - ALSO return "length_variants": the distinct variants found, with the height guidance the chart gives for each, e.g. [{"name":"Short","height_max":68},{"name":"Regular","height_min":68,"height_max":74},{"name":"Long","height_min":74}]. Convert cm to inches. Typical menswear guidance if the chart states it in words ("Short: under 5'8\"", "Long: 6'1\" and above") must be converted to inches.
+   - Do NOT invent height bands that the chart does not state — omit the field instead.
+
 6. NOTES / CONTEXT: Extract any FIT GUIDANCE or context printed with the chart into "notes" (a short plain string the AI can use to answer shopper questions): e.g. "Runs small — size up for a relaxed fit.", "Model is 5'9\" wearing size S.", fabric/stretch/care notes, "measurements are body measurements, not garment." Empty string if none.
 
 7. OUTPUT FORMAT:
