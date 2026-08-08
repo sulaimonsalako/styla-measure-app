@@ -639,8 +639,25 @@ function fmt(v){return Array.isArray(v)?v.join('-'):(v==null?'':v);}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function parseVal(s){s=(s||'').toString().trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return[p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
 
+// A chart counts as assigned if ANY of the four routes is in play:
+//   rules (group/legacy) · whole store · Styla categories · picked products
+// This is the single definition — the lobby tile and the chart list both read
+// it, so they can never disagree about what "assigned" means.
+function chartScope(c){
+  var cd=(c&&c.chart_data)||{};
+  var conds=[];
+  if(cd.rules){
+    if(Array.isArray(cd.rules.groups)) cd.rules.groups.forEach(function(g){ conds=conds.concat((g&&g.conditions)||[]); });
+    else if(Array.isArray(cd.rules.conditions)) conds=cd.rules.conditions.slice();
+  }
+  var products=PRODUCTS.filter(function(p){return p.size_chart_id===c.id;}).length;
+  var cats=(cd.categories||[]).length;
+  return { conds:conds, products:products, cats:cats, all:!!cd.applies_all,
+           assigned: !!(conds.length || cd.applies_all || cats || products) };
+}
+
 function refreshTiles(){
-  var linked=CHARTS.filter(function(c){var cd=c.chart_data||{};return cd.applies_all||((cd.categories||[]).length);}).length;
+  var linked=CHARTS.filter(function(c){return chartScope(c).assigned;}).length;
   el('t-charts').textContent = CHARTS.length ? (CHARTS.length+' chart'+(CHARTS.length>1?'s':'')) : 'None yet — start here';
   el('t-assign').textContent = CHARTS.length ? (linked+' of '+CHARTS.length+' assigned') : 'Create a chart first';
   el('t-settings').textContent = PRODUCTS.length ? (PRODUCTS.length+' products synced') : 'Products not synced';
@@ -842,16 +859,18 @@ async function loadCharts(){var box=el('list');
     } else { banner.style.display='none'; }
     if(!CHARTS.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
-      var R=(cd.rules&&Array.isArray(cd.rules.conditions))?cd.rules.conditions:null;
-      var assigned=!!((R&&R.length)||cd.applies_all||((cd.categories||[]).length));
-      var scope;
-      if(R&&R.length){
-        scope = R.some(function(x){return x.field==='all';})
-          ? '<span class="badge green">all products</span>'
-          : R.slice(0,3).map(function(x){return '<span class="badge">'+esc(x.value||x.field)+'</span>';}).join(' ')+(R.length>3?' <span class="badge">+'+(R.length-3)+'</span>':'');
-      } else if(cd.applies_all){ scope='<span class="badge green">whole store</span>'; }
-      else if((cd.categories||[]).length){ scope=cd.categories.map(function(x){return '<span class="badge">'+esc(x)+'</span>';}).join(' '); }
-      else { scope='<span class="badge">not assigned</span>'; }
+      var sc=chartScope(c), R=sc.conds, parts=[];
+      if(sc.all){ parts.push('<span class="badge green">whole store</span>'); }
+      if(R.length){
+        parts = parts.concat(R.some(function(x){return x.field==='all';})
+          ? ['<span class="badge green">all products</span>']
+          : R.slice(0,3).map(function(x){return '<span class="badge">'+esc(x.value||x.field)+'</span>';})
+              .concat(R.length>3?['<span class="badge">+'+(R.length-3)+'</span>']:[]));
+      }
+      if(sc.cats) parts=parts.concat(cd.categories.map(function(x){return '<span class="badge">'+esc(x)+'</span>';}));
+      if(sc.products) parts.push('<span class="badge">'+sc.products+' product'+(sc.products>1?'s':'')+'</span>');
+      var assigned=sc.assigned;
+      var scope = parts.length ? parts.join(' ') : '<span class="badge">not assigned</span>';
       // Where did this chart come from? Prevents merchants re-uploading a chart
       // Styla already curated for their brand.
       var origin = (c.source==='admin')
