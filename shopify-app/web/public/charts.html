@@ -416,7 +416,7 @@ details.adv>summary:hover{color:var(--ink-2);}
     <div class="top"><div><h1>Assign charts</h1><div class="sub">A chart isn't used until it's assigned — to your whole store, a clothing type, or single products.</div></div></div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Pick the products</h2><p class="hint">Filter your catalog, tick the products, assign a chart. What you see is what gets assigned.</p></div></div>
+      <div class="card-head"><div class="txt"><h2>Pick the products</h2><p class="hint">The filters only narrow the list. The chart is always assigned to the products you tick — nothing else.</p></div></div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <span class="hint">Assign</span>
@@ -440,6 +440,8 @@ details.adv>summary:hover{color:var(--ink-2);}
         <div></div>
       </div>
 
+      <div id="pkChips" style="display:none;gap:6px;flex-wrap:wrap;margin-top:12px"></div>
+
       <div style="display:flex;align-items:center;gap:12px;margin:14px 0 10px;flex-wrap:wrap">
         <span class="hint" id="pkCount">—</span>
         <button class="btn btn-ghost btn-sm" id="pkAll">Select all shown</button>
@@ -452,8 +454,8 @@ details.adv>summary:hover{color:var(--ink-2);}
       <div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2);flex-wrap:wrap">
         <button class="btn btn-primary" id="pkAssign" disabled>Assign</button>
         <button class="btn btn-ghost" id="pkUnassign" disabled>Remove chart</button>
-        <label class="switch" style="font-weight:400;font-size:.82rem;color:var(--muted)">
-          <input type="checkbox" id="pkFuture" checked/> Also apply to future products matching these filters
+        <label class="switch" id="pkFutureWrap" style="font-weight:400;font-size:.82rem;color:var(--muted)">
+          <input type="checkbox" id="pkFuture" checked/> <span id="pkFutureDesc">Also apply to future products</span>
         </label>
         <span class="msg" id="pkMsg"></span>
       </div>
@@ -1072,6 +1074,26 @@ function fillSel(id,label,vals,cur){
   el(id).innerHTML='<option value="">'+label+'</option>'+vals.map(function(v){
     return '<option value="'+esc(v)+'"'+(cur===v?' selected':'')+'>'+esc(v)+'</option>';}).join('');
 }
+// The filters do TWO different jobs, and they must be told apart:
+//   * narrowing the grid  -> all active filters are ANDed, purely visual
+//   * the "future" rule   -> only collection / type / tag / search become a
+//                            saved condition. Chart-status is a view filter and
+//                            never becomes a rule.
+// futureConditions() is the single definition of that second job, used both for
+// the live label and for what actually gets saved, so they can never disagree.
+function futureConditions(f){
+  var c=[];
+  if(f.collection) c.push({field:'collection',op:'is',value:f.collection});
+  if(f.type)       c.push({field:'product_type',op:'is',value:f.type});
+  if(f.tag)        c.push({field:'tag',op:'is',value:f.tag});
+  if(f.q)          c.push({field:'product',op:'contains',value:f.q});
+  return c;
+}
+var COND_LABEL={collection:'in collection',product_type:'of type',tag:'tagged',product:'with a name containing'};
+function describeConds(conds){
+  return conds.map(function(c){return COND_LABEL[c.field]+' \u201c'+c.value+'\u201d';}).join(' and ');
+}
+
 function pickerFilters(){
   return { q:(el('pkSearch').value||'').trim().toLowerCase(),
     collection:el('pkCollection').value, type:el('pkType').value, tag:el('pkTag').value,
@@ -1138,13 +1160,53 @@ function renderPicker(){
   });
   updatePickBar();
 }
+function renderPickChips(){
+  var f=pickerFilters(), host=el('pkChips'), bits=[];
+  if(f.collection) bits.push(['pkCollection','Collection: '+f.collection]);
+  if(f.type)       bits.push(['pkType','Type: '+f.type]);
+  if(f.tag)        bits.push(['pkTag','Tag: '+f.tag]);
+  if(f.q)          bits.push(['pkSearch','Search: '+f.q]);
+  if(f.assigned)   bits.push(['pkAssigned', f.assigned==='__none' ? 'Not assigned yet'
+                     : 'Using: '+(((CHARTS.filter(function(c){return c.id===f.assigned;})[0]||{}).chart_data||{}).name||'chart')]);
+  host.style.display = bits.length ? 'flex' : 'none';
+  host.innerHTML = bits.length
+    ? '<span class="hint" style="align-self:center">Showing only products </span>'
+      + bits.map(function(b){return '<button class="chip" data-clear="'+b[0]+'" title="Remove this filter">'+esc(b[1])+' \u00d7</button>';}).join('')
+      + '<button class="btn btn-ghost btn-sm" data-clear="__all">Clear filters</button>'
+    : '';
+}
+
+// Keep the "future" checkbox honest: it names the exact rule it will save, and
+// switches off when there is no rule to save.
+function updateFutureLabel(){
+  var conds=futureConditions(pickerFilters()), box=el('pkFuture');
+  if(!conds.length){
+    box.checked=false; box.disabled=true;
+    el('pkFutureDesc').textContent='Also apply to future products — pick a collection, type, tag or search first';
+    el('pkFutureWrap').style.opacity='.55';
+  }else{
+    box.disabled=false;
+    el('pkFutureDesc').textContent='Also apply to new products '+describeConds(conds);
+    el('pkFutureWrap').style.opacity='1';
+  }
+}
+
 function updatePickBar(){
   var n=Object.keys(PICKED).length;
   el('pkSel').textContent=n?(n+' selected'):'';
   el('pkAssign').disabled=!n||!CHARTS.length;
   el('pkAssign').textContent=n?('Assign '+n+' product'+(n===1?'':'s')):'Assign';
   el('pkUnassign').disabled=!n;
+  renderPickChips(); updateFutureLabel();
 }
+el('pkChips').addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-clear]'); if(!b) return;
+  var t=b.getAttribute('data-clear');
+  if(t==='__all'){ ['pkSearch','pkCollection','pkType','pkTag','pkAssigned'].forEach(function(i){el(i).value='';}); }
+  else el(t).value='';
+  renderPicker();
+});
+
 ['pkSearch','pkCollection','pkType','pkTag','pkAssigned'].forEach(function(id){
   el(id).addEventListener(id==='pkSearch'?'input':'change',renderPicker);
 });
@@ -1176,15 +1238,11 @@ el('pkAssign').addEventListener('click',async function(){
     // Optionally persist the CURRENT FILTERS as a rule so future products match too.
     var note='';
     if(el('pkFuture').checked){
-      var f=pickerFilters(), conds=[];
-      if(f.collection) conds.push({field:'collection',op:'is',value:f.collection});
-      if(f.type) conds.push({field:'product_type',op:'is',value:f.type});
-      if(f.tag) conds.push({field:'tag',op:'is',value:f.tag});
-      if(f.q) conds.push({field:'product',op:'contains',value:f.q});
+      var conds=futureConditions(pickerFilters());
       if(conds.length){
         await mfetch('/api/merchant/link-chart',{method:'POST',
           body:JSON.stringify({shop:SHOP,id:chartId,rules:{match:conds.length>1?'all':'any',conditions:conds}})});
-        note=' Future matches will use it too.';
+        note=' New products '+describeConds(conds)+' will use it automatically.';
       }
     }
     setMsg('pkMsg','✓ Assigned '+ids.length+' product'+(ids.length===1?'':'s')+'.'+note,'ok');
