@@ -452,21 +452,15 @@ details.adv>summary:hover{color:var(--ink-2);}
     </div>
 
     <details class="adv" style="border:none;padding:0;margin:0 0 16px">
-      <summary style="padding:0 4px 10px">Advanced — how your product labels were classified</summary>
+      <summary style="padding:0 4px 10px">Product labels Styla couldn’t place</summary>
       <div class="advbody card" style="margin:0">
-        <p class="hint" style="margin-bottom:10px">Styla reads each product's Shopify category automatically. This is only for exceptions.</p>
+        <p class="hint" style="margin-bottom:10px">Styla reads each product's Shopify category automatically. Only labels it couldn't place as clothing appear here — set one if it should be sized.</p>
         <div id="catHost"><div class="empty">Sync your products in Settings to see them.</div></div>
         <div class="msg" id="catMsg" style="margin-top:10px"></div>
       </div>
     </details>
 
-    <details class="adv" style="border:none;padding:0;margin:0">
-      <summary style="padding:0 4px 10px">Advanced — rule builder (conditions, ANY/ALL)</summary>
-      <div class="advbody card" style="margin:0">
-        <p class="hint" style="margin-bottom:10px">Only needed for compound logic, e.g. “Collection is Men AND tag is Premium”. Assignments made above appear here as rules.</p>
-        <div id="chartLinks"><div class="empty">Create a chart first.</div></div>
-      </div>
-    </details>
+
   </div>
 
   <!-- ================= SETTINGS ================= -->
@@ -611,7 +605,7 @@ function go(v){
   if(v==='analytics') loadAnalytics();
   if(v==='settings') loadSettings();
   if(v==='discover') loadDiscover();
-  if(v==='assign'){ renderPicker(); loadCategories(); loadMatchOptions().then(renderChartLinks); }
+  if(v==='assign'){ renderPicker(); loadCategories(); }
   if(v==='lobby') refreshTiles();
 }
 window.go=go;
@@ -824,8 +818,8 @@ el('save').addEventListener('click',async function(){
 /* ---- charts list ---- */
 async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
-    if(d.error){box.innerHTML='<div class="empty">'+esc(d.error)+'</div>';renderChartLinks();return;}
-    CHARTS=d.charts||[];renderChartLinks();renderPicker();refreshTiles();
+    if(d.error){box.innerHTML='<div class="empty">'+esc(d.error)+'</div>';return;}
+    CHARTS=d.charts||[];renderPicker();refreshTiles();
     // Tell the merchant up front if Styla already has charts for their brand.
     var pre=CHARTS.filter(function(c){return c.source==='admin'||c.verified;});
     var banner=el('stylaHave');
@@ -933,98 +927,6 @@ window.renameChart=async function(id){
 };
 window.delChart=async function(id){if(!confirm('Delete this chart?'))return;await mfetch('/api/merchant/delete-chart',{method:'POST',body:JSON.stringify({shop:SHOP,id:id})});toast('Chart deleted');loadCharts();};
 
-/* ---- rule-based "Apply to products" (match on the store's own attributes) ---- */
-var MATCH_OPTS=null;
-var FIELDS=[['collection','Collection'],['tag','Tag'],['product_type','Product type'],['vendor','Vendor'],['product','Product'],['all','All products']];
-async function loadMatchOptions(){
-  if(MATCH_OPTS) return MATCH_OPTS;
-  try{var r=await mfetch('/api/merchant/match-options?shop='+encodeURIComponent(SHOP));MATCH_OPTS=await r.json();}catch(e){MATCH_OPTS={};}
-  return MATCH_OPTS;
-}
-function valuesFor(field){
-  var o=MATCH_OPTS||{};
-  if(field==='collection')return o.collections||[];
-  if(field==='tag')return o.tags||[];
-  if(field==='product_type')return o.product_types||[];
-  if(field==='vendor')return o.vendors||[];
-  if(field==='product')return (o.products||[]).map(function(p){return p.title;});
-  return [];
-}
-function rulesOf(c){var cd=c.chart_data||{};var r=cd.rules;
-  if(r&&Array.isArray(r.conditions))return {match:r.match||'any',conditions:r.conditions.slice()};
-  // migrate legacy: whole-store / category links become equivalent conditions
-  if(cd.applies_all)return {match:'any',conditions:[{field:'all',op:'is',value:''}]};
-  if((cd.categories||[]).length)return {match:'any',conditions:cd.categories.map(function(x){return {field:'category',op:'is',value:x};})};
-  return {match:'any',conditions:[]};
-}
-function condRowHTML(c,i){
-  var vals=valuesFor(c.field);
-  var isAll=(c.field==='all');
-  var valueCtl = isAll ? '<span class="hint" style="flex:1">every product in your store</span>'
-    : (vals.length
-      ? '<select class="c-val" data-i="'+i+'" style="flex:1;min-width:120px">'+['<option value="">Choose…</option>'].concat(vals.map(function(v){return '<option value="'+esc(v)+'"'+(String(c.value||'').toLowerCase()===String(v).toLowerCase()?' selected':'')+'>'+esc(v)+'</option>';})).join('')+'</select>'
-      : '<input class="c-val" data-i="'+i+'" value="'+esc(c.value||'')+'" placeholder="value" style="flex:1;min-width:120px"/>');
-  return '<div class="cond" data-i="'+i+'">'
-    +'<select class="c-field" data-i="'+i+'" style="width:auto">'+FIELDS.map(function(f){return '<option value="'+f[0]+'"'+(c.field===f[0]?' selected':'')+'>'+f[1]+'</option>';}).join('')+'</select>'
-    +(isAll?'':'<select class="c-op" data-i="'+i+'" style="width:auto"><option value="is"'+(c.op==='is'?' selected':'')+'>is</option><option value="is_not"'+(c.op==='is_not'?' selected':'')+'>is not</option><option value="contains"'+(c.op==='contains'?' selected':'')+'>contains</option></select>')
-    +valueCtl
-    +'<button class="btn btn-ghost btn-icon c-del" data-i="'+i+'">✕</button></div>';
-}
-function renderChartLinks(){
-  var host=el('chartLinks'); if(!host) return;
-  if(!CHARTS.length){host.innerHTML='<div class="empty">Create a chart first.</div>';return;}
-  host.innerHTML=CHARTS.map(function(c){
-    var cd=c.chart_data||{};var nm=cd.name||'Untitled chart';var n=(cd.sizes||[]).length;var g=cd.gender||'';
-    var R=rulesOf(c);
-    return '<div class="linkcard'+(R.conditions.length?' on':'')+'" data-id="'+c.id+'">'
-      +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><b style="font-size:.92rem">'+esc(nm)+'</b><span class="hint">'+n+' sizes</span>'
-        +'<span class="lk-msg hint" style="margin-left:auto"></span></div>'
-      +'<div class="radios">'
-        +'<label class="rad"><input type="radio" name="m-'+c.id+'" class="c-match" value="any"'+(R.match!=='all'?' checked':'')+'/> Products matching ANY condition</label>'
-        +'<label class="rad"><input type="radio" name="m-'+c.id+'" class="c-match" value="all"'+(R.match==='all'?' checked':'')+'/> Matching ALL conditions</label>'
-      +'</div>'
-      +'<div class="conds">'+R.conditions.map(condRowHTML).join('')+'</div>'
-      +'<div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap">'
-        +'<button class="btn btn-ghost btn-sm c-add">+ Add condition</button>'
-        +'<span class="matchcount hint"></span>'
-        +'<select class="lk-gender" style="width:auto;margin-left:auto;font-size:.82rem;padding:7px 30px 7px 10px"><option value="">Everyone</option><option value="women"'+(g==='women'?' selected':'')+'>Women</option><option value="men"'+(g==='men'?' selected':'')+'>Men</option><option value="unisex"'+(g==='unisex'?' selected':'')+'>Unisex</option></select>'
-      +'</div></div>';
-  }).join('');
-
-  host.querySelectorAll('.linkcard').forEach(function(card){
-    var id=card.getAttribute('data-id');
-    var chart=CHARTS.filter(function(c){return c.id===id;})[0];
-    var R=rulesOf(chart);
-    function repaint(){ card.querySelector('.conds').innerHTML=R.conditions.map(condRowHTML).join(''); wire(); preview(); }
-    function save(){
-      card.classList.toggle('on', R.conditions.length>0);
-      var msgEl=card.querySelector('.lk-msg'); msgEl.textContent='Saving…';
-      linkChart(id,{rules:R,gender:card.querySelector('.lk-gender').value},msgEl);
-    }
-    async function preview(){
-      var out=card.querySelector('.matchcount');
-      if(!R.conditions.length){out.textContent='No products yet — add a condition.';return;}
-      out.textContent='Checking…';
-      try{var r=await mfetch('/api/merchant/match-preview',{method:'POST',body:JSON.stringify({shop:SHOP,rules:R})});var d=await r.json();
-        out.innerHTML = d.count
-          ? '<a href="#" class="seematch" style="color:var(--brand);font-weight:650;text-decoration:underline">Matched with '+d.count+' product'+(d.count>1?'s':'')+'</a>'
-          : 'No products match yet';
-        var link=out.querySelector('.seematch');
-        if(link) link.addEventListener('click',function(e){e.preventDefault();showMatched(d.products||[],d.count);});
-      }catch(e){out.textContent='';}
-    }
-    function wire(){
-      card.querySelectorAll('.c-field').forEach(function(s){s.addEventListener('change',function(){var i=+this.getAttribute('data-i');R.conditions[i].field=this.value;R.conditions[i].value='';repaint();save();});});
-      card.querySelectorAll('.c-op').forEach(function(s){s.addEventListener('change',function(){R.conditions[+this.getAttribute('data-i')].op=this.value;preview();save();});});
-      card.querySelectorAll('.c-val').forEach(function(s){s.addEventListener('change',function(){R.conditions[+this.getAttribute('data-i')].value=this.value;preview();save();});});
-      card.querySelectorAll('.c-del').forEach(function(b){b.addEventListener('click',function(){R.conditions.splice(+this.getAttribute('data-i'),1);repaint();save();});});
-    }
-    card.querySelector('.c-add').addEventListener('click',async function(){ await loadMatchOptions(); R.conditions.push({field:'collection',op:'is',value:''}); repaint(); });
-    card.querySelectorAll('.c-match').forEach(function(r){r.addEventListener('change',function(){R.match=this.value;preview();save();});});
-    card.querySelector('.lk-gender').addEventListener('change',save);
-    wire(); preview();
-  });
-}
 /* ---- Card 5: get discovered on Styla (one chart per Styla category) ---- */
 var DISCOVER=null;
 // Brands drafted for a specific body — the right answer for shoppers whose
@@ -1111,17 +1013,6 @@ el('dsSaveBrand').addEventListener('click',async function(){
   }catch(e){ setMsg('dsBrandMsg',e.message||'Save failed.','err'); }
 });
 
-function showMatched(products,count){
-  var m=el('matchModal');
-  m.innerHTML='<div class="sheet"><div class="sheet-head"><b>Matched with '+count+' product'+(count>1?'s':'')+'</b><button class="btn btn-ghost btn-icon" onclick="el(\'matchModal\').classList.remove(\'on\')">✕</button></div>'
-    +'<div class="sheet-body">'+(products.length?products.map(function(p){
-      return '<div class="rowitem">'+(p.image?'<img src="'+esc(p.image)+'" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"/>':'<div style="width:44px;height:44px;border-radius:8px;background:#f1f2f5"></div>')
-        +'<span class="grow name" style="font-weight:500">'+esc(p.title||'')+'</span>'
-        +(p.url?'<a href="'+esc(p.url)+'" target="_blank" style="color:var(--brand);font-weight:650;font-size:.82rem">View</a>':'')+'</div>';
-    }).join(''):'<div class="empty">None</div>')+(count>products.length?'<div class="hint" style="padding:10px 0">…and '+(count-products.length)+' more</div>':'')+'</div></div>';
-  m.classList.add('on');
-  m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('on'); });
-}
 async function linkChart(id,body,msgEl){
   try{var r=await mfetch('/api/merchant/link-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP,id:id},body))});var d=await r.json();if(d.error)throw new Error(d.error);
     if(msgEl){msgEl.textContent='✓ Saved';}
