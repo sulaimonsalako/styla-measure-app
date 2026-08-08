@@ -472,7 +472,11 @@ details.adv>summary:hover{color:var(--ink-2);}
 
       <label style="margin-top:18px">Where do you ship?</label>
       <div class="hint" style="margin-bottom:8px">Styla won't show your products to shoppers you can't deliver to — and won't hide you from the ones you can reach.</div>
-      <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="dsWorldwide"/> We ship worldwide</label>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <label class="switch"><input type="checkbox" id="dsWorldwide"/> We ship worldwide</label>
+        <button class="btn btn-ghost btn-sm" id="dsShipSync" style="margin-left:auto">Read from my Shopify shipping zones</button>
+      </div>
+      <div class="msg" id="dsShipMsg" style="margin-bottom:8px"></div>
       <div class="chips" id="dsShip"></div>
       <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="dsSaveBrand">Save</button>
@@ -907,6 +911,17 @@ function paintShip(){
   box.style.opacity=ww?'.35':''; box.style.pointerEvents=ww?'none':'';
 }
 el('dsWorldwide').addEventListener('change',paintShip);
+// Read the store's REAL shipping zones rather than trusting ticked boxes.
+el('dsShipSync').addEventListener('click',async function(){
+  this.disabled=true; setMsg('dsShipMsg','Reading your Shopify shipping zones…');
+  try{
+    var r=await mfetch('/api/merchant/sync-shipping',{method:'POST',body:JSON.stringify({shop:SHOP})});
+    var d=await r.json(); if(d.error) throw new Error(d.error);
+    setMsg('dsShipMsg','✓ '+(d.message||'Updated.'),'ok'); toast('Shipping updated');
+    loadDiscover();
+  }catch(e){ setMsg('dsShipMsg',e.message||'Could not read shipping zones.','err'); }
+  this.disabled=false;
+});
 el('dsSaveBrand').addEventListener('click',async function(){
   setMsg('dsBrandMsg','Saving…');
   var specs=[].map.call(document.querySelectorAll('.dsSpec:checked'),function(x){return x.value;});

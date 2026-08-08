@@ -32,9 +32,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY || 'mock_key',
   apiSecretKey: process.env.SHOPIFY_API_SECRET || 'mock_secret',
-  // Only what we use: catalog + collections (read_products) and live stock
-  // (read_inventory, for inventory_levels/update).
-  scopes: ['read_products', 'read_inventory'],
+  // Only what we use: catalog + collections (read_products), live stock
+  // (read_inventory), and real shipping destinations (read_shipping) so Styla
+  // never recommends a brand that can't deliver to the shopper.
+  scopes: ['read_products', 'read_inventory', 'read_shipping'],
   hostName: process.env.HOST ? process.env.HOST.replace(/https:\/\//, '') : 'localhost:8080',
   apiVersion: ApiVersion.April24,
   isEmbeddedApp: true
@@ -925,6 +926,10 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
     const shared = ((st && st.settings) || {}).share_catalog !== false;
 
+    // Keep shipping destinations fresh off the store's real zones (best-effort).
+    try { await syncShippingForShop(shop, await ensureBrandForShop(shop)); }
+    catch (e) { console.error('shipping sync skipped:', e.message); }
+
     const out = await pushToStylaIndex(shop, { products, shared });
     res.json({
       ok: true,
@@ -1122,6 +1127,70 @@ app.post('/api/merchant/map-category', async (req, res) => {
     await q;
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ----------------------------------------------------
+// 6b2. Real shipping destinations, read from the store's own Shopify shipping
+//      zones — more trustworthy than a merchant ticking boxes from memory.
+//      Maps onto the SAME structure api/_helpers/shipping.js reads:
+//      brands.ships_worldwide + brands.ships_to (region keys AND raw ISO codes,
+//      both of which shipsTo() understands).
+// ----------------------------------------------------
+const EU_CODES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV',
+  'LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+const SINGLE_REGION = { US:'us', CA:'ca', GB:'uk', AU:'au', NZ:'nz' };
+
+async function readShippingZones(shop, token) {
+  const data = await fetchShopifyAPI(shop, token, 'shipping_zones.json');
+  const zones = (data && data.shipping_zones) || [];
+  const codes = new Set();
+  let worldwide = false;
+  zones.forEach((z) => {
+    (z.countries || []).forEach((c) => {
+      const code = String(c.code || '').toUpperCase();
+      if (!code) return;
+      if (code === '*') worldwide = true;   // Shopify's "Rest of world" zone
+      else codes.add(code);
+    });
+  });
+
+  // Region keys where the whole region is covered (so the merchant's chips tick),
+  // plus every raw country code for precision. shipsTo() accepts both.
+  const regions = new Set();
+  codes.forEach((c) => { if (SINGLE_REGION[c]) regions.add(SINGLE_REGION[c]); });
+  if (EU_CODES.every((c) => codes.has(c))) regions.add('eu');
+
+  const ships_to = [...new Set([...regions, ...[...codes].map((c) => c.toLowerCase())])];
+  return { worldwide, ships_to, countryCount: codes.size };
+}
+
+async function syncShippingForShop(shop, brandId) {
+  const { data: sess } = await supabase.from('merchant_sessions')
+    .select('access_token').eq('shop', shop).maybeSingle();
+  if (!sess) return null;
+  const z = await readShippingZones(shop, sess.access_token);
+  await supabase.from('brands')
+    .update({ ships_worldwide: z.worldwide, ships_to: z.ships_to }).eq('id', brandId);
+  return z;
+}
+
+app.post('/api/merchant/sync-shipping', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const z = await syncShippingForShop(shop, brandId);
+    if (!z) return res.status(404).json({ error: 'Merchant session not found.' });
+    res.json({
+      ok: true, ships_worldwide: z.worldwide, ships_to: z.ships_to, countries: z.countryCount,
+      message: z.worldwide
+        ? 'Reads as worldwide shipping.'
+        : (z.countryCount ? ('Found ' + z.countryCount + ' destination countries in your Shopify shipping zones.')
+                          : 'No shipping zones found — set them in Shopify Settings → Shipping.'),
+    });
+  } catch (e) {
+    // read_shipping may not be granted yet on an older install
+    res.status(500).json({ error: /403|scope/i.test(e.message || '') ? 'Reinstall the app to grant shipping access.' : e.message });
+  }
 });
 
 // ----------------------------------------------------
