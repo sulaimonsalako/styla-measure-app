@@ -1134,7 +1134,7 @@ app.get('/api/merchant/styla-index', async (req, res) => {
     const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
     const { data: brand } = await supabase.from('brands')
-      .select('name, about, small_business, specialties').eq('id', brandId).maybeSingle();
+      .select('name, about, small_business, specialties, ships_worldwide, ships_to').eq('id', brandId).maybeSingle();
     const { data: charts } = await supabase.from('size_charts')
       .select('id, chart_data, source, verified').eq('brand_id', brandId);
 
@@ -1160,13 +1160,15 @@ app.post('/api/merchant/styla-index', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
-    const { category, chartId, small_business, about, specialties } = req.body || {};
+    const { category, chartId, small_business, about, specialties, ships_worldwide, ships_to } = req.body || {};
 
     // brand-level discovery flags
     const patch = {};
     if (small_business !== undefined) patch.small_business = !!small_business;
     if (about !== undefined) patch.about = String(about || '').slice(0, 500);
     if (specialties !== undefined) patch.specialties = Array.isArray(specialties) ? specialties.filter(Boolean) : [];
+    if (ships_worldwide !== undefined) patch.ships_worldwide = !!ships_worldwide;
+    if (ships_to !== undefined) patch.ships_to = Array.isArray(ships_to) ? ships_to.filter(Boolean) : [];
     if (Object.keys(patch).length) await supabase.from('brands').update(patch).eq('id', brandId);
 
     // one chart per Styla category: clear the category off every other chart first

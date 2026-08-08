@@ -469,6 +469,11 @@ details.adv>summary:hover{color:var(--ink-2);}
       <label style="margin-top:18px">Who do you cut for? <span class="faint">(optional)</span></label>
       <div class="hint" style="margin-bottom:8px">Shoppers at the edge of standard sizing are actively looking for brands drafted for their proportions — not just scaled-up sizes. Tick any that apply and Styla will route them to you.</div>
       <div class="chips" id="dsSpecs"></div>
+
+      <label style="margin-top:18px">Where do you ship?</label>
+      <div class="hint" style="margin-bottom:8px">Styla won't show your products to shoppers you can't deliver to — and won't hide you from the ones you can reach.</div>
+      <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="dsWorldwide"/> We ship worldwide</label>
+      <div class="chips" id="dsShip"></div>
       <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="dsSaveBrand">Save</button>
         <span class="msg" id="dsBrandMsg"></span>
@@ -840,6 +845,12 @@ function renderChartLinks(){
 var DISCOVER=null;
 // Brands drafted for a specific body — the right answer for shoppers whose
 // measurements sit outside standard grading.
+// Mirrors api/_helpers/shipping.js SHIP_REGIONS.
+var SHIP_REGIONS=[
+  {key:'us',label:'United States'},{key:'ca',label:'Canada'},{key:'uk',label:'United Kingdom'},
+  {key:'eu',label:'European Union'},{key:'au',label:'Australia'},{key:'nz',label:'New Zealand'},
+  {key:'intl',label:'Rest of world'},
+];
 var SPECIALTIES=[
   {key:'big-and-tall',label:'Big & tall'},{key:'plus-size',label:'Plus size'},
   {key:'petite',label:'Petite'},{key:'tall',label:'Tall'},
@@ -857,6 +868,13 @@ async function loadDiscover(){
     el('dsSpecs').innerHTML=SPECIALTIES.map(function(s){
       return '<label class="chip"><input type="checkbox" class="dsSpec" value="'+s.key+'"'+(have.indexOf(s.key)>-1?' checked':'')+'/>'+s.label+'</label>';
     }).join('');
+    var ships=(DISCOVER.brand&&DISCOVER.brand.ships_to)||[];
+    var ww=!!(DISCOVER.brand&&DISCOVER.brand.ships_worldwide);
+    el('dsWorldwide').checked=ww;
+    el('dsShip').innerHTML=SHIP_REGIONS.map(function(s){
+      return '<label class="chip"><input type="checkbox" class="dsShipR" value="'+s.key+'"'+(ships.indexOf(s.key)>-1?' checked':'')+'/>'+s.label+'</label>';
+    }).join('');
+    paintShip();
     el('discoverOff').style.display = DISCOVER.sharing ? 'none' : 'block';
 
     var charts=DISCOVER.charts||[];
@@ -883,10 +901,17 @@ async function loadDiscover(){
     refreshTiles();
   }catch(e){ host.innerHTML='<div class="empty">Could not load: '+esc(e.message||e)+'</div>'; }
 }
+// Worldwide makes the per-region picks redundant — dim them.
+function paintShip(){
+  var ww=el('dsWorldwide').checked, box=el('dsShip');
+  box.style.opacity=ww?'.35':''; box.style.pointerEvents=ww?'none':'';
+}
+el('dsWorldwide').addEventListener('change',paintShip);
 el('dsSaveBrand').addEventListener('click',async function(){
   setMsg('dsBrandMsg','Saving…');
   var specs=[].map.call(document.querySelectorAll('.dsSpec:checked'),function(x){return x.value;});
-  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked,specialties:specs})});
+  var ships=[].map.call(document.querySelectorAll('.dsShipR:checked'),function(x){return x.value;});
+  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked,specialties:specs,ships_worldwide:el('dsWorldwide').checked,ships_to:ships})});
     var d=await r.json(); if(d.error) throw new Error(d.error);
     setMsg('dsBrandMsg','✓ Saved.','ok'); toast('Brand profile saved');
   }catch(e){ setMsg('dsBrandMsg',e.message||'Save failed.','err'); }

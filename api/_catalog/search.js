@@ -15,6 +15,7 @@ import { supabaseAdmin } from '../_helpers/supabase-admin.js';
 import { runSizingEngine } from '../_helpers/sizing-engine.js';
 import { normalizeChart } from '../_helpers/normalize-chart.js';
 import { retrieveCatalog, normDom } from './retrieve.js';
+import { shipsTo } from '../_helpers/shipping.js';
 
 export default async function catalogSearch(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -48,15 +49,19 @@ export default async function catalogSearch(req, res) {
       const ids = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
       if (ids.length) {
         const { data: bs } = await supabaseAdmin.from('brands')
-          .select('id, name, domain, small_business, about, specialties').in('id', ids);
+          .select('id, name, domain, small_business, about, specialties, ships_worldwide, ships_to').in('id', ids);
         const byId = Object.fromEntries((bs || []).map((b) => [b.id, b]));
         products = products.map((p) => {
           const b = byId[p.brand_id];
           return b ? { ...p, brand: {
             name: b.name, domain: b.domain, small_business: !!b.small_business,
             about: b.about || null, specialties: b.specialties || [],
+            ships_worldwide: !!b.ships_worldwide, ships_to: b.ships_to || [],
           } } : p;
         });
+        // Don't recommend what can't reach the shopper.
+        const country = req.body && (req.body.shipTo || req.body.country);
+        if (country) products = products.filter((p) => shipsTo(p.brand, country));
       }
       // Optional filter: only small businesses.
       if (req.body && req.body.smallBusinessOnly) {
