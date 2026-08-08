@@ -452,7 +452,8 @@ details.adv>summary:hover{color:var(--ink-2);}
       <div id="pkGrid"><div class="empty">Sync your products in Settings to see them here.</div></div>
 
       <div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2);flex-wrap:wrap">
-        <button class="btn btn-primary" id="pkAssign" disabled>Assign</button>
+        <button class="btn btn-primary" id="pkApplyAll" disabled>Apply to the whole group</button>
+        <button class="btn btn-ghost" id="pkAssign" disabled>Assign ticked only</button>
         <button class="btn btn-ghost" id="pkUnassign" disabled>Remove chart</button>
         <label class="switch" id="pkFutureWrap" style="font-weight:400;font-size:.82rem;color:var(--muted)">
           <input type="checkbox" id="pkFuture" checked/> <span id="pkFutureDesc">Also apply to future products</span>
@@ -1197,7 +1198,22 @@ function updatePickBar(){
   el('pkAssign').disabled=!n||!CHARTS.length;
   el('pkAssign').textContent=n?('Assign '+n+' product'+(n===1?'':'s')):'Assign';
   el('pkUnassign').disabled=!n;
-  renderPickChips(); updateFutureLabel();
+  renderPickChips(); updateFutureLabel(); updateApplyAll();
+}
+
+// One-click "everything in this collection / type / tag, now and in future".
+// Uses futureConditions() so the group it names is exactly the group it saves.
+function updateApplyAll(){
+  var conds=futureConditions(pickerFilters()), btn=el('pkApplyAll');
+  var shown=filteredProducts().length;
+  var ok=!!conds.length && !!CHARTS.length && shown>0;
+  btn.disabled=!ok;
+  btn.textContent = conds.length
+    ? ('Apply to all '+shown+' shown \u2014 '+describeConds(conds))
+    : 'Apply to the whole group';
+  btn.title = conds.length
+    ? 'Assigns every product shown AND keeps applying to new ones that match'
+    : 'Pick a collection, type or tag first';
 }
 el('pkChips').addEventListener('click',function(ev){
   var b=ev.target.closest('[data-clear]'); if(!b) return;
@@ -1224,6 +1240,28 @@ el('pkUnassign').addEventListener('click',async function(){
     toast('Chart removed'); PICKED={}; loadProducts();
   }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
   this.disabled=false;
+});
+
+el('pkApplyAll').addEventListener('click',async function(){
+  var chartId=el('pkChart').value; if(!chartId) return;
+  var conds=futureConditions(pickerFilters()); if(!conds.length) return;
+  var ids=filteredProducts().map(function(p){return p.external_id;});
+  this.disabled=true; setMsg('pkMsg','Applying to the whole group\u2026');
+  try{
+    if(ids.length){
+      var r=await mfetch('/api/merchant/assign-chart',{method:'POST',
+        body:JSON.stringify({shop:SHOP,externalIds:ids,chartId:chartId})});
+      var d=await r.json(); if(d.error) throw new Error(d.error);
+    }
+    // Same call the "future" checkbox makes — the rule is what makes this a
+    // GROUP assignment rather than a one-off batch.
+    var r2=await mfetch('/api/merchant/link-chart',{method:'POST',
+      body:JSON.stringify({shop:SHOP,id:chartId,rules:{match:conds.length>1?'all':'any',conditions:conds}})});
+    var d2=await r2.json(); if(d2.error) throw new Error(d2.error);
+    setMsg('pkMsg','\u2713 Applied to '+ids.length+' product'+(ids.length===1?'':'s')+'. Anything new '+describeConds(conds)+' gets it automatically.','ok');
+    toast('Applied to group'); PICKED={}; loadProducts(); loadCharts();
+  }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
+  updateApplyAll();
 });
 
 el('pkAssign').addEventListener('click',async function(){
