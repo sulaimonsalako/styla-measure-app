@@ -215,10 +215,13 @@
         </div>
         <label style="margin-top:1rem">Sizes <span class="hint">(a value can be a single number like <b>38</b> or a range like <b>38-40</b>)</span></label>
         <table class="sizes">
-          <thead><tr><th>Size</th><th>Chest/Bust</th><th>Waist</th><th>Hips</th><th>Shoulder</th><th>Inseam</th><th>Sleeve</th><th>Length</th><th>Neck</th><th></th></tr></thead>
+          <thead id="szHead"></thead>
           <tbody id="sizeRows"></tbody>
         </table>
-        <button class="btn btn-ghost btn-sm" id="addRowBtn" style="margin-top:.6rem">+ Add size</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
+          <button class="btn btn-ghost btn-sm" id="addRowBtn">+ Add size</button>
+          <button class="btn btn-ghost btn-sm" id="addColBtn">+ Add measurement</button>
+        </div>
 
         <div style="margin-top:1.2rem"><button class="btn btn-primary btn-sm" id="saveChartBtn">Save chart</button></div>
       </div>
@@ -402,7 +405,19 @@
     window.editChart=function(id){openChart(state.charts.find(function(c){return c.id===id;}));};
     window.delChart=async function(id){ if(!confirm('Delete this chart?'))return; var res=await api('delete-chart',{id:id}); if(res.error){alert(res.error);return;} openBrand(state.brand.id); };
 
-    var MCOLS=['chest','waist','hips','shoulder','inseam','sleeve','length','neck'];
+    // Columns are DYNAMIC — we keep the brand's own table as entered/parsed.
+    // brand-admin.js maps them onto the engine's canonical keys on save and keeps
+    // the original as display_columns/display_sizes for the AI.
+    var DEFAULT_COLS=['Chest','Waist','Hips','Shoulder','Inseam','Sleeve','Length','Neck'];
+    var COLS=DEFAULT_COLS.slice();
+    function renderSizeHead(){
+      el('szHead').innerHTML='<tr><th>Size</th>'+COLS.map(function(c){return '<th>'+c+'</th>';}).join('')+'<th></th></tr>';
+    }
+    function colsFromSizes(sizes){
+      var seen=[];
+      (sizes||[]).forEach(function(s){ Object.keys(s).forEach(function(k){ if(k!=='name'&&seen.indexOf(k)<0) seen.push(k); }); });
+      return seen.length?seen:DEFAULT_COLS.slice();
+    }
 
     // Build the category dropdown from the shared taxonomy.
     var FIT_TAGS=['slim','regular','athletic','relaxed','tall','petite','plus','curve'];
@@ -433,7 +448,10 @@
       el('chVerified').checked=c?!!c.verified:false;
       el('chCatUrl').value=(c&&c.category_url)||'';
       el('sizeRows').innerHTML='';
-      var sizes=(c&&c.chart_data&&c.chart_data.sizes)||[{name:''}];
+      var cd=(c&&c.chart_data)||{};
+      var sizes=(cd.display_sizes&&cd.display_sizes.length)?cd.display_sizes:(cd.sizes||[{name:''}]);
+      COLS=(cd.display_columns&&cd.display_columns.length)?cd.display_columns.slice():colsFromSizes(cd.sizes||sizes);
+      renderSizeHead();
       sizes.forEach(addSizeRow);
       el('chartMsg').textContent='';
       _pendingSave=false; el('saveChartBtn').textContent='Save chart';
@@ -445,11 +463,19 @@
       s=s||{};
       var tr=document.createElement('tr');
       tr.innerHTML='<td><input value="'+(s.name||'')+'" placeholder="M"/></td>'+
-        MCOLS.map(function(k){return '<td><input value="'+fmt(s[k])+'" placeholder="—"/></td>';}).join('')+
+        COLS.map(function(k){return '<td><input value="'+fmt(s[k])+'" placeholder="—"/></td>';}).join('')+
         '<td><button class="btn-danger" onclick="this.closest(\'tr\').remove()">✕</button></td>';
       el('sizeRows').appendChild(tr);
     }
     el('addRowBtn').addEventListener('click',function(){addSizeRow();});
+    el('addColBtn').addEventListener('click',function(){
+      var n=prompt('Measurement name (e.g. Hem, Thigh, Bicep, Clothing length):'); if(!n)return;
+      n=n.trim(); if(!n||COLS.indexOf(n)>-1)return;
+      var rows=[]; el('sizeRows').querySelectorAll('tr').forEach(function(tr){
+        var ins=tr.querySelectorAll('input'); var r={name:ins[0].value};
+        COLS.forEach(function(c,i){ r[c]=ins[i+1]?ins[i+1].value:''; }); rows.push(r); });
+      COLS.push(n); renderSizeHead(); el('sizeRows').innerHTML=''; rows.forEach(addSizeRow);
+    });
     el('chartBackBtn').addEventListener('click',function(){openBrand(state.brand.id);});
 
     function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return [p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
@@ -490,7 +516,7 @@
       var sizes=[];
       el('sizeRows').querySelectorAll('tr').forEach(function(tr){
         var ins=tr.querySelectorAll('input');var name=ins[0].value.trim();if(!name)return;
-        var row={name:name};MCOLS.forEach(function(k,i){var v=parseVal(ins[i+1].value);if(v!==undefined)row[k]=v;});
+        var row={name:name};COLS.forEach(function(k,i){var v=parseVal(ins[i+1].value);if(v!==undefined)row[k]=v;});
         sizes.push(row);
       });
       if(!sizes.length){msg.style.color='#fca5a5';msg.textContent='Add at least one size.';return;}
@@ -539,7 +565,8 @@
     // Live convention readout: tells the admin what their entered sleeve/shoulder
     // numbers look like, so they know which measuring convention they're using.
     function colAvg(colKey){
-      var idx = MCOLS.indexOf(colKey); if(idx<0) return null;
+      var re = new RegExp(colKey,'i');
+      var idx = COLS.findIndex(function(c){ return re.test(c); }); if(idx<0) return null;
       var vals=[];
       el('sizeRows').querySelectorAll('tr').forEach(function(tr){
         var v = parseVal(tr.querySelectorAll('input')[idx+1].value);
@@ -615,12 +642,17 @@
         if(d.error) throw new Error(d.error);
         el('sizeRows').innerHTML = '';
         var totalVals = 0, colsSeen = {};
+        var poms = (d.poms && d.poms.length) ? d.poms.slice() : [];
+        if(!poms.length){ var f0=(d.sizes||[])[0]; if(f0 && d.sizeChart && d.sizeChart[f0]) poms = Object.keys(d.sizeChart[f0]); }
+        if(poms.length){ COLS = poms; }
+        renderSizeHead();
         (d.sizes || []).forEach(function(name){
           var src = (d.sizeChart || {})[name] || {};
           var row = { name: String(name) };
-          Object.keys(src).forEach(function(pom){
-            var k = mapPom(pom);
-            if(k && src[pom] != null && src[pom] !== ''){ row[k] = src[pom]; totalVals++; colsSeen[k]=1; }
+          COLS.forEach(function(c){
+            var v = src[c];
+            if(v == null){ var kk = Object.keys(src).filter(function(x){return x.toLowerCase()===String(c).toLowerCase();})[0]; if(kk) v = src[kk]; }
+            if(v != null && v !== ''){ row[c] = v; totalVals++; colsSeen[c]=1; }
           });
           addSizeRow(row);
         });
