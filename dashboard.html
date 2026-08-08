@@ -8,7 +8,7 @@
 <meta name="description" content="Your Styla fit dashboard — brand matches, fit profile, and sharing." />
 <link rel="icon" type="image/png" href="logo.png" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/assets/taxonomy.js"></script>
+<script src="/shared/taxonomy.js"></script>
 <script src="https://js.stripe.com/v3"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
@@ -560,8 +560,8 @@
   }
   // Category-first: pick a category, see brands ranked by fit for THAT category.
   // Category labels + "what's included" come from the shared taxonomy.
-  var CAT_LABEL = window.STYLA_CAT_LABEL || {};
-  var CAT_INCLUDES = window.STYLA_CAT_INCLUDES || {};
+  var CAT_LABEL = (window.STYLA_TAX && STYLA_TAX.CAT_LABEL) || {};
+  var CAT_INCLUDES = (window.STYLA_TAX && STYLA_TAX.CAT_INCLUDES) || {};
   function catLabel(c){ return CAT_LABEL[c] || (c ? c.charAt(0).toUpperCase()+c.slice(1) : 'Other'); }
 
   function matchRow(m){

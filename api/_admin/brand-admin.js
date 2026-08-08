@@ -24,37 +24,8 @@ async function getAdmin(req) {
 }
 
 
-// Charts may be entered with the BRAND'S own column labels ("CHEST", "Hem",
-// "胸围"). Map them onto the canonical keys the engine and the Styla admin read,
-// while preserving the original table for the AI. Same contract as the Shopify app.
-const CHART_KEY_MAP = {
-  chest:'chest', bust:'chest', 'chest width':'chest', 'bust width':'chest', 'chest/bust':'chest', '\u80f8\u56f4':'chest',
-  waist:'waist', 'waist width':'waist', '\u8170\u56f4':'waist',
-  belly:'belly', abdomen:'belly', tummy:'belly',
-  hip:'hips', hips:'hips', seat:'hips', hem:'hips', 'hem width':'hips', '\u6446\u56f4':'hips',
-  shoulder:'shoulder', shoulders:'shoulder', 'shoulder width':'shoulder', '\u80a9\u5bbd':'shoulder',
-  sleeve:'sleeve', 'sleeve length':'sleeve', '\u8896\u957f':'sleeve', 'short sleeve length':'sleeve',
-  inseam:'inseam', 'inside leg':'inseam',
-  thigh:'thigh', neck:'neck', collar:'neck', '\u9886\u56f4':'neck',
-  length:'length', 'clothing length':'length', 'back length':'length', 'body length':'length', '\u8863\u957f':'length',
-  height:'height',
-};
-function canonicalizeChart(cd) {
-  if (!cd || !Array.isArray(cd.sizes)) return cd;
-  const out = Object.assign({}, cd);
-  out.display_columns = cd.columns || cd.display_columns || null;
-  out.display_sizes = cd.sizes;
-  out.sizes = cd.sizes.map((r) => {
-    const o = { name: r.name };
-    Object.keys(r).forEach((k) => {
-      if (k === 'name') return;
-      const key = CHART_KEY_MAP[String(k).trim().toLowerCase()];
-      if (key && o[key] == null) o[key] = r[k];
-    });
-    return o;
-  });
-  return out;
-}
+import chartKeys from '../../shared/chart-keys.js';
+const canonicalizeChart = chartKeys.canonicalizeChart;
 
 export default async function brandAdmin(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });

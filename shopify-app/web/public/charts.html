@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="shopify-api-key" content="ae97233671ed9354af95498cd5c7fc62"/>
 <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script src="/shared/taxonomy.js"></script>
+<script src="/shared/brand-attrs.js"></script>
 <title>Styla — size &amp; fit</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet">
@@ -614,24 +616,7 @@ function go(v){
 }
 window.go=go;
 
-// Mirrors styla.ca/assets/taxonomy.js — keep the two in step.
-// Grouped by audience; shared slugs (tops/pants/outerwear/shorts/swimwear) appear
-// under both men's and women's and are disambiguated by the chart's gender.
-var TAX_GROUPS=[
- {key:'men',label:"Men's fashion",items:[
-   {slug:'tops',label:'Tops'},{slug:'pants',label:'Bottoms'},{slug:'suits',label:'Suits & Blazers'},
-   {slug:'dress-shirts',label:'Dress shirts'},{slug:'shorts',label:'Shorts'},{slug:'underwear',label:'Underwear'},
-   {slug:'outerwear',label:'Coats & Jackets'},{slug:'swimwear',label:'Swimwear'}]},
- {key:'women',label:"Women's fashion",items:[
-   {slug:'tops',label:'Tops'},{slug:'pants',label:'Bottoms'},{slug:'dresses',label:'Dresses'},
-   {slug:'skirts',label:'Skirts'},{slug:'outerwear',label:'Coats & Jackets'},{slug:'bras',label:'Bras'},
-   {slug:'panties',label:'Panties'},{slug:'swimwear',label:'Swimwear'},{slug:'leggings',label:'Leggings'},
-   {slug:'jumpsuits',label:'Jumpsuits'},{slug:'shapewear',label:'Shapewear'},
-   {slug:'bridal',label:'Bridal'},{slug:'bridesmaid',label:'Bridesmaid'}]},
- {key:'kids',label:'Kids',items:[
-   {slug:'infants',label:'Infants'},{slug:'boys-tops',label:"Boys' tops"},{slug:'boys-bottoms',label:"Boys' bottoms"},
-   {slug:'girls-tops',label:"Girls' tops"},{slug:'girls-bottoms',label:"Girls' bottoms"}]}
-];
+var TAX_GROUPS=STYLA_TAX.GROUPED.map(function(g){return {key:g.key,label:g.label,items:g.items.map(function(i){return {slug:i.slug,label:i.label};})};});
 // Flat, de-duplicated list (a slug can sit in two audiences).
 var TAX=(function(){var seen={},out=[];TAX_GROUPS.forEach(function(g){g.items.forEach(function(i){if(!seen[i.slug]){seen[i.slug]=1;out.push(i);}});});return out;})();
 // <optgroup> markup for any category picker.
@@ -1044,18 +1029,9 @@ function renderChartLinks(){
 var DISCOVER=null;
 // Brands drafted for a specific body — the right answer for shoppers whose
 // measurements sit outside standard grading.
-// Mirrors api/_helpers/shipping.js SHIP_REGIONS.
-var SHIP_REGIONS=[
-  {key:'us',label:'United States'},{key:'ca',label:'Canada'},{key:'uk',label:'United Kingdom'},
-  {key:'eu',label:'European Union'},{key:'au',label:'Australia'},{key:'nz',label:'New Zealand'},
-  {key:'intl',label:'Rest of world'},
-];
-var ORIGINS=[['','—'],['CA','Canada'],['US','United States'],['GB','United Kingdom'],['IE','Ireland'],['FR','France'],['IT','Italy'],['ES','Spain'],['PT','Portugal'],['DE','Germany'],['NL','Netherlands'],['SE','Sweden'],['DK','Denmark'],['AU','Australia'],['NZ','New Zealand'],['JP','Japan'],['KR','South Korea'],['CN','China'],['IN','India'],['TR','Turkey'],['BR','Brazil'],['MX','Mexico'],['ZA','South Africa'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya']];
-var SPECIALTIES=[
-  {key:'big-and-tall',label:'Big & tall'},{key:'plus-size',label:'Plus size'},
-  {key:'petite',label:'Petite'},{key:'tall',label:'Tall'},
-  {key:'maternity',label:'Maternity'},{key:'adaptive',label:'Adaptive'},
-];
+var SHIP_REGIONS=STYLA_BRAND.SHIP_REGIONS.map(function(r){return {key:r.key,label:r.label};});
+var ORIGINS=STYLA_BRAND.ORIGINS.map(function(o){return [o.code,o.name];});
+var SPECIALTIES=STYLA_BRAND.SPECIALTIES.map(function(x){return {key:x.key,label:x.label};});
 async function loadDiscover(){
   var host=el('dsCats'); if(!host) return;
   try{

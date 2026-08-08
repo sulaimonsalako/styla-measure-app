@@ -10,6 +10,9 @@ require('dotenv').config();
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
 const { createClient } = require('@supabase/supabase-js');
 const { shopifyApi, ApiVersion, RequestedTokenType } = require('@shopify/shopify-api');
+// Shared definitions — one copy, used by the Styla admin and APIs too.
+const SHARED_CHART = require('../../shared/chart-keys.js');
+const SHARED_BRAND = require('../../shared/brand-attrs.js');
 
 // Express App Initialization
 const app = express();
@@ -655,6 +658,9 @@ const path = require('path');
 // at "/" — that file is a stale prebuilt React mock. "/" (and any app path) is
 // handled by serveApp -> charts.html, the real, no-build merchant tool.
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+// Serve the repo's shared modules so charts.html uses the SAME definitions as
+// the Styla admin and the APIs — no duplicated taxonomy/attribute lists.
+app.use('/shared', express.static(path.join(__dirname, '..', '..', 'shared')));
 // App home (embedded) = the size-chart manager. Serve it at / and /charts so the
 // app loads a real page instead of "Invalid path" when Shopify opens it.
 function serveApp(req, res) { res.sendFile(path.join(__dirname, 'public', 'charts.html')); }
@@ -778,42 +784,7 @@ app.get('/api/merchant/charts', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Map a brand's own column labels onto the canonical measurement keys the engine
-// and the Styla admin dashboard both read. Without this, a chart saved as
-// "CHEST"/"SLEEVE LENGTH"/"胸围" renders blank in the admin, which is exactly the
-// mismatch this fixes. The brand's original table is preserved for the AI.
-const CHART_KEY_MAP = {
-  chest:'chest', bust:'chest', 'chest width':'chest', 'bust width':'chest', 'chest/bust':'chest', 胸围:'chest',
-  waist:'waist', 'waist width':'waist', 腰围:'waist',
-  belly:'belly', abdomen:'belly', tummy:'belly',
-  hip:'hips', hips:'hips', seat:'hips', hem:'hips', 'hem width':'hips', 摆围:'hips',
-  shoulder:'shoulder', shoulders:'shoulder', 'shoulder width':'shoulder', 肩宽:'shoulder',
-  sleeve:'sleeve', 'sleeve length':'sleeve', 袖长:'sleeve', 'short sleeve length':'sleeve', 短袖长:'sleeve',
-  inseam:'inseam', 'inside leg':'inseam',
-  thigh:'thigh', neck:'neck', collar:'neck', 领围:'neck',
-  length:'length', 'clothing length':'length', 'back length':'length', 'body length':'length', 衣长:'length',
-  height:'height',
-};
-function canonicalizeChart(cd, category) {
-  const out = Object.assign({}, cd);
-  // Same shape the Styla admin writes, so both sources are interchangeable.
-  if (!out.garment_category) out.garment_category = category || (out.categories || [])[0] || null;
-  if (!out.chart_type) out.chart_type = 'body';
-  const rows = Array.isArray(cd.sizes) ? cd.sizes : [];
-  out.display_columns = cd.columns || null;          // keep the brand's own headers
-  out.display_sizes = rows;                          // keep the table exactly as entered (for the AI)
-  out.sizes = rows.map((r) => {
-    const o = { name: r.name };
-    Object.keys(r).forEach((k) => {
-      if (k === 'name') return;
-      const key = CHART_KEY_MAP[String(k).trim().toLowerCase()];
-      if (!key) return;                              // unknown column: kept in display_sizes only
-      if (o[key] == null) o[key] = r[k];             // first mapped column wins
-    });
-    return o;
-  });
-  return out;
-}
+const canonicalizeChart = SHARED_CHART.canonicalizeChart;
 
 app.post('/api/merchant/charts', async (req, res) => {
   try {
@@ -1159,32 +1130,9 @@ app.post('/api/merchant/map-category', async (req, res) => {
 //      brands.ships_worldwide + brands.ships_to (region keys AND raw ISO codes,
 //      both of which shipsTo() understands).
 // ----------------------------------------------------
-const EU_CODES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV',
-  'LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
-const SINGLE_REGION = { US:'us', CA:'ca', GB:'uk', AU:'au', NZ:'nz' };
-
 async function readShippingZones(shop, token) {
   const data = await fetchShopifyAPI(shop, token, 'shipping_zones.json');
-  const zones = (data && data.shipping_zones) || [];
-  const codes = new Set();
-  let worldwide = false;
-  zones.forEach((z) => {
-    (z.countries || []).forEach((c) => {
-      const code = String(c.code || '').toUpperCase();
-      if (!code) return;
-      if (code === '*') worldwide = true;   // Shopify's "Rest of world" zone
-      else codes.add(code);
-    });
-  });
-
-  // Region keys where the whole region is covered (so the merchant's chips tick),
-  // plus every raw country code for precision. shipsTo() accepts both.
-  const regions = new Set();
-  codes.forEach((c) => { if (SINGLE_REGION[c]) regions.add(SINGLE_REGION[c]); });
-  if (EU_CODES.every((c) => codes.has(c))) regions.add('eu');
-
-  const ships_to = [...new Set([...regions, ...[...codes].map((c) => c.toLowerCase())])];
-  return { worldwide, ships_to, countryCount: codes.size };
+  return SHARED_BRAND.mapShopifyZones((data && data.shipping_zones) || []);
 }
 
 async function syncShippingForShop(shop, brandId) {

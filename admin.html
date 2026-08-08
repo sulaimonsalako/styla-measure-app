@@ -8,7 +8,8 @@
   <link rel="icon" type="image/png" href="logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/assets/taxonomy.js"></script>
+  <script src="/shared/taxonomy.js"></script>
+  <script src="/shared/brand-attrs.js"></script>
   <style>
     :root{--bg:#0b0b14;--bg2:#121222;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--green:#34d399;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -369,9 +370,9 @@
     });
 
     // ---- Brand discovery attributes ----
-    var SPECIALTIES=[['big-and-tall','Big & tall'],['plus-size','Plus size'],['petite','Petite'],['tall','Tall'],['maternity','Maternity'],['adaptive','Adaptive']];
-    var SHIP_REGIONS=[['us','United States'],['ca','Canada'],['uk','United Kingdom'],['eu','European Union'],['au','Australia'],['nz','New Zealand'],['intl','Rest of world']];
-    var ORIGINS=[['','—'],['CA','Canada'],['US','United States'],['GB','United Kingdom'],['IE','Ireland'],['FR','France'],['IT','Italy'],['ES','Spain'],['PT','Portugal'],['DE','Germany'],['NL','Netherlands'],['SE','Sweden'],['DK','Denmark'],['AU','Australia'],['NZ','New Zealand'],['JP','Japan'],['KR','South Korea'],['CN','China'],['IN','India'],['TR','Turkey'],['BR','Brazil'],['MX','Mexico'],['ZA','South Africa'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya']];
+    var SPECIALTIES=STYLA_BRAND.SPECIALTIES.map(function(x){return [x.key,x.label];});
+    var SHIP_REGIONS=STYLA_BRAND.SHIP_REGIONS.map(function(r){return [r.key,r.label];});
+    var ORIGINS=STYLA_BRAND.ORIGINS.map(function(o){return [o.code,o.name];});
     function chipBox(hostId,items,selected,cls){
       el(hostId).innerHTML=items.map(function(it){
         var k=it[0],lab=it[1];
@@ -422,11 +423,11 @@
     // Build the category dropdown from the shared taxonomy.
     var FIT_TAGS=['slim','regular','athletic','relaxed','tall','petite','plus','curve'];
     (function(){
-      var sel=el('chCat'); if(!sel||!window.STYLA_TAXONOMY) return;
-      sel.innerHTML=window.STYLA_TAXONOMY.map(function(c){return '<option value="'+c.slug+'">'+c.label+' — '+c.measures+'</option>';}).join('');
+      var sel=el('chCat'); if(!sel||!STYLA_TAX.TAXONOMY) return;
+      sel.innerHTML=STYLA_TAX.TAXONOMY.map(function(c){return '<option value="'+c.slug+'">'+c.label+' — '+c.measures+'</option>';}).join('');
     })();
     function fillSubList(){
-      var cat=el('chCat').value, def=(window.STYLA_TAXONOMY||[]).filter(function(c){return c.slug===cat;})[0];
+      var cat=el('chCat').value, def=(STYLA_TAX.TAXONOMY||[]).filter(function(c){return c.slug===cat;})[0];
       var inc=def?def.includes:[];
       el('chCatIncludes').textContent = inc.length ? ('Includes: '+inc.join(', ')) : '';
       var tags=inc.map(function(s){return s.toLowerCase();}).concat(FIT_TAGS);
