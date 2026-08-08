@@ -169,8 +169,13 @@ same index that will power the discovery feed).
     a demo profile) and renders real results incl. product images + click-through;
     falls back to the built-in mock when the index has no matches. Set `SHOP` var
     to scope to one store.
-- **NOT yet done:** catalog sync is single-page (250 products) — add pagination if
-  a store exceeds that. All new JS is syntax-checked only — NOT run live (sandbox
+- **Sync is now AUTHORITATIVE + paginated (2026-08-08).** Sync only ever added, so
+  products deleted/unpublished in Shopify kept being recommended (webhooks only catch
+  deletes while the app is up). `fetchShopifyAllPages` follows the Link cursor; a full
+  sync posts `authoritative:true` and ingest deletes that shop's rows not in the pull.
+  Prune is fenced: explicit full sync only, all pages read, non-empty result, no batch
+  truncation, non-empty keep-list, scoped to shop_domain. Webhook upserts never prune.
+  Search RPC already filters `p.available`. All new JS is syntax-checked only — NOT run live (sandbox
   has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
 
 ## Shopify app served frontend — IMPORTANT (2026-08-03)
