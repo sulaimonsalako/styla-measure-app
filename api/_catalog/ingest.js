@@ -34,7 +34,7 @@ export default async function catalogIngest(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { brand, brandId, domain, shop, products, remove, shared } = req.body || {};
+    let { brand, brandId, domain, shop, products, remove, shared, authoritative } = req.body || {};
     const shopDom = normDom(shop || domain);
     // Free tier: brands are shared into Styla's cross-brand discovery by default.
     const isShared = shared !== false;
@@ -44,7 +44,11 @@ export default async function catalogIngest(req, res) {
     if (!hasProducts && !hasRemove) {
       return res.status(400).json({ error: 'Provide products to ingest or remove.' });
     }
-    if (hasProducts && products.length > 500) products = products.slice(0, 500); // protect the function
+    // A truncated batch must never be treated as the complete catalog, or the
+    // slice we dropped would be deleted as "missing".
+    let truncated = false;
+    if (hasProducts && products.length > 500) { products = products.slice(0, 500); truncated = true; }
+    const isAuthoritative = authoritative === true && hasProducts && !truncated;
 
     // Resolve (or create) the brand this catalog belongs to.
     let bId = brandId || null;
@@ -160,6 +164,29 @@ export default async function catalogIngest(req, res) {
       if (error) throw error;
     }
 
+    // Reconcile: a full sync is the source of truth, so anything still indexed
+    // for this shop that wasn't in the pull no longer exists (deleted, archived
+    // or unpublished) and must stop being recommended. Webhooks handle live
+    // deletes; this catches everything missed while the app was uninstalled,
+    // the server was down, or a webhook simply failed.
+    //
+    // Scoped to shop_domain when we have one so a brand selling through more
+    // than one storefront can't have one shop's sync delete another's rows.
+    let removedStale = 0;
+    const keep = rows.map((r) => r.ext);
+    // rows can be empty even when products isn't (every item missing an id).
+    // An empty keep-list would build `not in ()` — invalid SQL at best, a
+    // full wipe at worst — so require something to keep before deleting.
+    if (isAuthoritative && keep.length) {
+      let q = supabaseAdmin.from('catalog_products').delete().eq('brand_id', bId);
+      if (shopDom) q = q.eq('shop_domain', shopDom);
+      const { data: gone, error: delErr } = await q
+        .not('external_id', 'in', `(${keep.map((id) => `"${id}"`).join(',')})`)
+        .select('external_id');
+      if (delErr) console.error('catalog-ingest prune failed:', delErr.message);
+      else removedStale = (gone || []).length;
+    }
+
     return res.status(200).json({
       ok: true,
       brandId: bId,
@@ -167,6 +194,9 @@ export default async function catalogIngest(req, res) {
       indexed: rows.length,
       embedded: changed.length,
       skipped: rows.length - changed.length,
+      removed: (hasRemove ? remove.length : 0) + removedStale,
+      pruned: removedStale,
+      authoritative: isAuthoritative,
     });
   } catch (e) {
     console.error('catalog-ingest error:', e);

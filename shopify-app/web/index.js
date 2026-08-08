@@ -46,9 +46,10 @@ const shopify = shopifyApi({
 
 // Helper: Fetch Shopify API wrapper
 async function fetchShopifyAPI(shop, accessToken, endpoint, options = {}) {
+  const { _raw, ...opts } = options;
   const url = `https://${shop}/admin/api/2024-04/${endpoint}`;
   const response = await fetch(url, {
-    ...options,
+    ...opts,
     headers: {
       'X-Shopify-Access-Token': accessToken,
       'Content-Type': 'application/json',
@@ -58,7 +59,31 @@ async function fetchShopifyAPI(shop, accessToken, endpoint, options = {}) {
   if (!response.ok) {
     throw new Error(`Shopify API error for ${endpoint}: ${response.statusText}`);
   }
+  if (_raw) return { body: await response.json(), headers: response.headers };
   return response.json();
+}
+
+// Shopify pages with a cursor in the Link header. Without following it we only
+// ever saw the first 250 products — harmless when sync was additive, but fatal
+// once sync can DELETE what it doesn't see. `complete` tells the caller whether
+// the whole catalog was actually retrieved; it is the guard on pruning.
+async function fetchShopifyAllPages(shop, accessToken, path, key, maxPages = 40) {
+  const items = [];
+  let endpoint = path;
+  let pages = 0;
+  while (endpoint && pages < maxPages) {
+    const { body, headers } = await fetchShopifyAPI(shop, accessToken, endpoint, { _raw: true });
+    items.push(...(body[key] || []));
+    pages += 1;
+    const link = headers.get('link') || headers.get('Link') || '';
+    const next = /<[^>]*[?&]page_info=([^>&]+)[^>]*>;\s*rel="next"/.exec(link);
+    if (!next) { endpoint = null; break; }
+    const base = path.split('?')[0];
+    const limit = /[?&]limit=(\d+)/.exec(path);
+    endpoint = `${base}?limit=${limit ? limit[1] : 250}&page_info=${next[1]}`;
+  }
+  // Ran out of page budget while a cursor was still pending => truncated.
+  return { items, complete: !endpoint };
 }
 
 // --- Styla semantic index helpers -----------------------------------------
@@ -927,13 +952,18 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     const accessToken = await getOfflineToken(req);
     if (!accessToken) return res.status(401).json({ error: 'Could not authorize with Shopify. Reopen the app from your admin and try again.' });
 
-    // Pull the catalog (up to 250 published products) and push to the index.
-    const [data, colMap] = await Promise.all([
-      fetchShopifyAPI(shop, accessToken, 'products.json?limit=250&published_status=published'),
+    // Pull the WHOLE published catalog (all pages) and push to the index.
+    const [pulled, colMap] = await Promise.all([
+      fetchShopifyAllPages(shop, accessToken, 'products.json?limit=250&published_status=published', 'products'),
       fetchCollectionMap(shop, accessToken),
     ]);
-    const products = (data.products || []).map((p) => mapShopifyProduct(shop, p, colMap[String(p.id)]));
-    if (!products.length) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
+    const products = pulled.items.map((p) => mapShopifyProduct(shop, p, colMap[String(p.id)]));
+    if (!products.length) {
+      // Deliberately NOT authoritative: an empty result is far more likely to be
+      // a scope/permission problem than a genuinely empty store, and treating it
+      // as truth would wipe the merchant's whole index.
+      return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
+    }
 
     // Free tier: share the catalog into Styla discovery unless the merchant opted out.
     const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
@@ -943,13 +973,22 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     try { await syncShippingForShop(shop, await ensureBrandForShop(shop)); }
     catch (e) { console.error('shipping sync skipped:', e.message); }
 
-    const out = await pushToStylaIndex(shop, { products, shared });
+    // A full sync is the source of truth: anything in the index that is NOT in
+    // this pull has been deleted or unpublished in Shopify, so it must go. Only
+    // claim authority when every page came back — a truncated pull would
+    // otherwise delete the tail of the catalog.
+    const out = await pushToStylaIndex(shop, { products, shared, authoritative: pulled.complete });
+    const removed = out.removed || 0;
     res.json({
       ok: true,
       synced: products.length,
       embedded: out.embedded,
       skipped: out.skipped,
-      message: `Synced ${products.length} products to Styla AI (${out.embedded ?? 0} newly indexed, ${out.skipped ?? 0} unchanged).`,
+      removed,
+      partial: !pulled.complete,
+      message: `Synced ${products.length} products to Styla AI (${out.embedded ?? 0} newly indexed, ${out.skipped ?? 0} unchanged`
+        + (removed ? `, ${removed} removed` : '') + ').'
+        + (pulled.complete ? '' : ' Catalog was too large to read in one pass — stale products were left in place.'),
     });
   } catch (e) {
     console.error('sync-catalog error:', e);
