@@ -38,9 +38,28 @@ export default async function catalogSearch(req, res) {
       ? (aliases[String(category).toLowerCase()] || String(category).toLowerCase())
       : null;
 
-    const products = await retrieveCatalog({
+    let products = await retrieveCatalog({
       query, brandId: bId, shop: shopDom || null, category: canonCat, count,
     });
+
+    // Attach brand info so the shopper sees who makes it — and can choose to
+    // support small businesses.
+    if (products.length) {
+      const ids = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
+      if (ids.length) {
+        const { data: bs } = await supabaseAdmin.from('brands')
+          .select('id, name, domain, small_business, about').in('id', ids);
+        const byId = Object.fromEntries((bs || []).map((b) => [b.id, b]));
+        products = products.map((p) => {
+          const b = byId[p.brand_id];
+          return b ? { ...p, brand: { name: b.name, domain: b.domain, small_business: !!b.small_business, about: b.about || null } } : p;
+        });
+      }
+      // Optional filter: only small businesses.
+      if (req.body && req.body.smallBusinessOnly) {
+        products = products.filter((p) => p.brand && p.brand.small_business);
+      }
+    }
 
     if (!fitsMe || !products.length) {
       return res.status(200).json({ products });

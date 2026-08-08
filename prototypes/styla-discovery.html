@@ -39,7 +39,8 @@ header{position:sticky;top:0;z-index:20;background:rgba(11,11,20,.9);backdrop-fi
 .pimg .badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);border-radius:100px;padding:6px 12px;font-size:.72rem;font-weight:700;}
 .pimg .badge.top{color:var(--green);} .pimg .badge.mid{color:#fff;}
 .pinfo{padding:13px 15px;}
-.pinfo .b{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+.pinfo .b{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sbtag{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.3);border-radius:100px;padding:2px 7px;font-size:.62rem;font-weight:700;letter-spacing:.02em;text-transform:none;}
 .pinfo .n{font-weight:600;font-size:1rem;margin:2px 0 6px;}
 .pinfo .row{display:flex;align-items:center;justify-content:space-between;}
 .pinfo .price{font-weight:700;}
@@ -66,6 +67,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(11,11,20,.9);backdrop-fi
     <div class="profilebar">
       <span class="fitpill">👤 Your fit: bust 37 · waist 30 · hip 40 — usually a <b>M / 10</b></span>
       <span class="chip on" id="fitToggle" onclick="toggleFit()">✓ Only show my size</span>
+      <span class="chip" id="smallBizToggle" onclick="toggleSmallBiz()">🌱 Small businesses</span>
       <span class="chip" id="styleToggle" onclick="toggleStyle()">Feed: Vertical</span>
     </div>
     <div class="searchrow">
@@ -120,7 +122,8 @@ var LIVE=null;                      // last live results (normalized) or null ->
 var CAT_EMOJI={dresses:'👗',dress:'👗',tops:'👚',top:'👚',pants:'👖',jeans:'👖',skirts:'👗',skirt:'👗',shorts:'🩳',outerwear:'🧥',blazer:'🧥',coat:'🧥',suits:'🤵',swimwear:'👙',bridal:'👰',bridesmaid:'👗'};
 function normLive(p,idx){
   return {
-    b:(p.category||'Styla').toString(),
+    smallBiz:!!(p.brand&&p.brand.small_business),
+    b:((p.brand&&p.brand.name)||p.category||'Styla').toString(),
     n:p.title||'Untitled',
     cat:p.category||'',
     price:(p.price!=null?p.price:''),
@@ -135,7 +138,7 @@ function normLive(p,idx){
 }
 async function fetchLive(query){
   try{
-    var body={query:query,count:24,fitsMe:FIT_ON,profile:DEMO_PROFILE};
+    var body={query:query,count:24,fitsMe:FIT_ON,profile:DEMO_PROFILE,smallBusinessOnly:SMALLBIZ_ON};
     if(SHOP)body.shop=SHOP;
     var r=await fetch(API+'/api/catalog-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok)return null;
@@ -145,7 +148,7 @@ async function fetchLive(query){
   }catch(e){ return null; }
 }
 
-var FIT_ON=true, HORIZONTAL=false, liked={}, activeQuery='', refineTags=[];
+var FIT_ON=true, HORIZONTAL=false, SMALLBIZ_ON=false, liked={}, activeQuery='', refineTags=[];
 var EX=['flowy dress for a summer wedding under $120','something black and elegant for a date','wide-leg work trousers','casual weekend outfit','warm coat for winter'];
 function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(function(){e.classList.remove('on');},1400);}
 
@@ -206,7 +209,7 @@ function pcard(p,horizontal){
   return '<div class="pcard'+(horizontal?' hcard':'')+'" onclick="openP(\''+p.n.replace(/'/g,'')+'\')">'
     +'<div class="pimg" style="background:'+bg+'">'+(p.img?'':p.e)+badge
     +'<button class="love '+loved+'" onclick="event.stopPropagation();love(\''+p.n.replace(/'/g,'')+'\')">'+(loved?'♥':'♡')+'</button></div>'
-    +'<div class="pinfo"><div class="b">'+p.b+'</div><div class="n">'+p.n+'</div>'
+    +'<div class="pinfo"><div class="b">'+p.b+(p.smallBiz?'<span class="sbtag">🌱 Small business</span>':'')+'</div><div class="n">'+p.n+'</div>'
     +'<div class="row"><span class="price">$'+p.price+'</span>'+fitline+'</div></div></div>';
 }
 
@@ -241,6 +244,13 @@ async function search(){
 }
 function toggleRefine(t){ var i=refineTags.indexOf(t); if(i>-1)refineTags.splice(i,1); else refineTags.push(t); aiRespond(); render(); }
 function toggleFit(){ FIT_ON=!FIT_ON; document.getElementById('fitToggle').classList.toggle('on',FIT_ON); document.getElementById('fitToggle').textContent=(FIT_ON?'✓ ':'')+'Only show my size'; aiRespond(); render(); }
+async function toggleSmallBiz(){
+  SMALLBIZ_ON=!SMALLBIZ_ON;
+  document.getElementById('smallBizToggle').classList.toggle('on',SMALLBIZ_ON);
+  document.getElementById('smallBizToggle').textContent=(SMALLBIZ_ON?'✓ ':'')+'🌱 Small businesses';
+  if(activeQuery){ LIVE=await fetchLive(activeQuery); }
+  aiRespond(); render();
+}
 function toggleStyle(){ HORIZONTAL=!HORIZONTAL; document.getElementById('styleToggle').textContent='Feed: '+(HORIZONTAL?'Horizontal':'Vertical'); render(); if(HORIZONTAL)toast('Notice: harder to focus & tap 👀'); }
 function love(name){ liked[name]=!liked[name]; toast(liked[name]?'❤️ More like this — feed will favor it':'Removed'); render(); }
 function openP(name){ var all=(LIVE||P); var m=all.filter(function(p){return p.n.replace(/'/g,'')===name;})[0]; if(m&&m.url){ window.open(m.url,'_blank'); } else { toast('→ Opening '+name+' on the brand’s site'); } }
