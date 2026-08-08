@@ -730,7 +730,7 @@ function validate(sizes){var w=[];
   if(!sizes.some(function(s){return Object.keys(s).some(function(k){return k!=='name'&&s[k]!=null;});}))w.push('No measurements found — add at least one measurement column with values.');
   sizes.forEach(function(s){var ch=colVal(s,['chest','bust']),wa=colVal(s,['waist']);if(ch!=null&&wa!=null&&num(ch)<num(wa))w.push('Size “'+s.name+'”: chest/bust is smaller than waist — check the values.');});
   return w;}
-function resetForm(){ el('name').value=''; el('notes').value=''; el('lens').innerHTML=''; SHOTS=[]; renderShots(); updParseBtn(); LAST_PARSE=null; COLS=['Chest','Waist','Hips']; CONV={sleeve_convention:'auto',shoulder_convention:'auto'}; el('convSleeve').value='auto'; el('convShoulder').value='auto'; el('convGuess').textContent=''; el('chartEditor').style.display='none'; el('chartEmpty').style.display='block'; el('aimsg').textContent=''; }
+function resetForm(){ EDITING_ID=null; el('save').textContent='Save chart'; el('name').value=''; el('notes').value=''; el('lens').innerHTML=''; SHOTS=[]; renderShots(); updParseBtn(); LAST_PARSE=null; COLS=['Chest','Waist','Hips']; CONV={sleeve_convention:'auto',shoulder_convention:'auto'}; el('convSleeve').value='auto'; el('convShoulder').value='auto'; el('convGuess').textContent=''; el('chartEditor').style.display='none'; el('chartEmpty').style.display='block'; el('aimsg').textContent=''; }
 var pending=false;
 el('save').addEventListener('click',async function(){
   var sizes=collectSizes();
@@ -753,9 +753,9 @@ el('save').addEventListener('click',async function(){
   wbox.style.display='none';this.textContent='Save chart';pending=false;
   var chart_data={name:(el('name').value||'').trim()||null,subcategory:null,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes,categories:[],applies_all:false};
   setMsg('saveMsg','Saving…');
-  try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,category:null,subcategory:chart_data.subcategory,gender:null,chart_data:chart_data,parsed:LAST_PARSE})});
+  try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,id:EDITING_ID||undefined,category:null,subcategory:chart_data.subcategory,gender:null,chart_data:chart_data,parsed:LAST_PARSE})});
     var d=await r.json();if(d.error)throw new Error(d.error);
-    setMsg('saveMsg','✓ Saved — now assign it.','ok');toast('Chart saved');resetForm();loadCharts();
+    setMsg('saveMsg',EDITING_ID?'✓ Updated.':'✓ Saved — now assign it.','ok');toast(EDITING_ID?'Chart updated':'Chart saved');resetForm();loadCharts();
   }catch(e){setMsg('saveMsg',e.message||'Save failed.','err');toast('Save failed',true);}
 });
 
@@ -776,6 +776,7 @@ async function loadCharts(){var box=el('list');
     if(!CHARTS.length){box.innerHTML='<div class="empty">No charts yet — add your first one above.</div>';return;}
     box.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var n=(cd.sizes||[]).length;var nm=cd.name;
       var R=(cd.rules&&Array.isArray(cd.rules.conditions))?cd.rules.conditions:null;
+      var assigned=!!((R&&R.length)||cd.applies_all||((cd.categories||[]).length));
       var scope;
       if(R&&R.length){
         scope = R.some(function(x){return x.field==='all';})
@@ -793,9 +794,70 @@ async function loadCharts(){var box=el('list');
       return '<div class="rowitem"><div class="grow"><div class="name">'+esc(nm||'Untitled chart')+'</div>'
         +'<div class="hint" style="margin-top:3px">'+n+' sizes'+(cd.gender?(' · '+esc(cd.gender)):'')+' · '+origin+'</div></div>'
         +'<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:45%">'+scope+'</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="renameChart(\''+c.id+'\')">Rename</button>'
+        +(assigned?'':'<button class="btn btn-primary btn-sm" onclick="go(\'assign\')">Assign now</button>')
+        +'<button class="btn btn-ghost btn-sm" onclick="viewChart(\''+c.id+'\')">View</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="editChart(\''+c.id+'\')">Edit</button>'
         +'<button class="btn btn-ghost btn-sm" onclick="delChart(\''+c.id+'\')">Delete</button></div>';}).join('');
   }catch(e){box.innerHTML='<div class="empty">Could not load charts.</div>';}}
+/* ---- view a saved chart exactly as shoppers would see it, + embed code ---- */
+window.viewChart=function(id){
+  var c=CHARTS.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var cd=c.chart_data||{};
+  var rows=(cd.display_sizes&&cd.display_sizes.length)?cd.display_sizes:(cd.sizes||[]);
+  var cols=(cd.display_columns&&cd.display_columns.length)?cd.display_columns:
+    [...new Set(rows.reduce(function(a,s){return a.concat(Object.keys(s).filter(function(k){return k!=='name';}));},[]))];
+  var val=function(s,k){var v=s[k];if(v==null){var kk=Object.keys(s).filter(function(x){return x.toLowerCase()===String(k).toLowerCase();})[0];if(kk)v=s[kk];}
+    return v==null?'—':(Array.isArray(v)?v.join('–'):v);};
+  var snippet='<div data-styla-chart="'+id+'"></div>\n<script src="https://www.styla.ca/chart-embed.js" async><\/script>';
+  var m=el('matchModal');
+  m.innerHTML='<div class="sheet"><div class="sheet-head"><b>'+esc(cd.name||'Size chart')+'</b>'
+    +'<button class="btn btn-ghost btn-icon" onclick="el(\'matchModal\').classList.remove(\'on\')">✕</button></div>'
+    +'<div class="sheet-body">'
+      +'<div class="tablewrap"><div class="scrollx"><table><thead><tr><th>Size</th>'
+      +cols.map(function(k){return '<th>'+esc(k)+'</th>';}).join('')+'</tr></thead><tbody>'
+      +rows.map(function(s){return '<tr><td style="padding:9px 10px;font-weight:600">'+esc(s.name)+'</td>'
+        +cols.map(function(k){return '<td style="padding:9px 10px">'+esc(val(s,k))+'</td>';}).join('')+'</tr>';}).join('')
+      +'</tbody></table></div></div>'
+      +((cd.length_options&&cd.length_options.length)?('<p class="hint" style="margin-top:10px"><b>Lengths:</b> '+cd.length_options.map(function(o){return esc(o.name);}).join(' · ')+'</p>'):'')
+      +(cd.notes?('<p class="hint" style="margin-top:8px">'+esc(cd.notes)+'</p>'):'')
+      +'<div class="divider"></div>'
+      +'<b style="font-size:.88rem">Show this chart on your store</b>'
+      +'<p class="hint" style="margin:4px 0 8px">Paste this where you want the table to appear — it renders clean and stays in sync when you edit the chart here.</p>'
+      +'<textarea readonly rows="3" id="embedCode" style="font-family:ui-monospace,Menlo,monospace;font-size:.76rem">'+esc(snippet)+'</textarea>'
+      +'<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="copyEmbed()">Copy code</button>'
+    +'</div></div>';
+  m.classList.add('on');
+  m.onclick=function(e){ if(e.target===m) m.classList.remove('on'); };
+};
+window.copyEmbed=function(){
+  var t=el('embedCode'); if(!t) return;
+  t.select(); try{ document.execCommand('copy'); toast('Embed code copied'); }catch(e){ toast('Select and copy the code',true); }
+};
+
+/* ---- load a saved chart back into the editor ---- */
+var EDITING_ID=null;
+window.editChart=function(id){
+  var c=CHARTS.filter(function(x){return x.id===id;})[0]; if(!c) return;
+  var cd=c.chart_data||{};
+  EDITING_ID=id;
+  el('name').value=cd.name||'';
+  el('notes').value=cd.notes||'';
+  CONV.sleeve_convention=cd.sleeve_convention||'auto';
+  CONV.shoulder_convention=cd.shoulder_convention||'auto';
+  el('convSleeve').value=CONV.sleeve_convention; el('convShoulder').value=CONV.shoulder_convention;
+  renderLens(cd.length_options||[]);
+  var rows=(cd.display_sizes&&cd.display_sizes.length)?cd.display_sizes:(cd.sizes||[]);
+  COLS=(cd.display_columns&&cd.display_columns.length)?cd.display_columns.slice():
+    [...new Set(rows.reduce(function(a,s){return a.concat(Object.keys(s).filter(function(k){return k!=='name';}));},[]))];
+  if(!COLS.length) COLS=['Chest','Waist','Hips'];
+  UNIT='in'; document.querySelectorAll('.unit-btn').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-unit')==='in');});
+  showEditor(rows.length?rows:[{}]);
+  el('save').textContent='Update chart';
+  setMsg('saveMsg','Editing “'+(cd.name||'chart')+'” — change anything, then Update.','ok');
+  if((cd.length_options||[]).length||cd.notes) el('advChart').open=true;
+  go('charts'); window.scrollTo(0,0);
+};
+
 window.renameChart=async function(id){
   var c=CHARTS.filter(function(x){return x.id===id;})[0]; if(!c) return;
   var cur=(c.chart_data||{}).name||'';

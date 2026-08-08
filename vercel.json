@@ -54,6 +54,10 @@
       "destination": "/api/store-api?route=catalog-search"
     },
     {
+      "source": "/api/size-chart",
+      "destination": "/api/store-api?route=size-chart"
+    },
+    {
       "source": "/api/store-auth",
       "destination": "/api/store-api?route=store-auth"
     },

@@ -12,6 +12,7 @@ import subscribeHandler from './_subscribe/subscribe.js';
 import notificationsHandler from './_notifications/notifications.js';
 import catalogIngestHandler from './_catalog/ingest.js';
 import catalogSearchHandler from './_catalog/search.js';
+import sizeChartPublicHandler from './_store/size-chart-public.js';
 
 export const config = {
   api: {
@@ -83,6 +84,8 @@ export default async function handler(req, res) {
     return catalogIngestHandler(req, res);
   } else if (route === 'catalog-search' || pathname.includes('/catalog-search')) {
     return catalogSearchHandler(req, res);
+  } else if (route === 'size-chart' || pathname.includes('/size-chart')) {
+    return sizeChartPublicHandler(req, res);
   } else {
     return res.status(404).json({ error: `Store API endpoint not found: ${pathname} (route parameter: ${route})` });
   }

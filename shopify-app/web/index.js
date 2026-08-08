@@ -832,6 +832,22 @@ app.post('/api/merchant/charts', async (req, res) => {
     // so a rejected insert (e.g. a NOT NULL column) still reported "Saved".
     let werr = null;
     if (id) {
+      // Editing the MEASUREMENTS must not silently drop the chart's assignment
+      // (rules / categories / gender) — the editor doesn't send those.
+      const { data: prev } = await supabase.from('size_charts')
+        .select('chart_data, category, gender').eq('id', id).eq('brand_id', brandId).maybeSingle();
+      if (prev) {
+        const pd = prev.chart_data || {};
+        row.chart_data = Object.assign({}, row.chart_data, {
+          rules: pd.rules || row.chart_data.rules || null,
+          categories: (pd.categories && pd.categories.length) ? pd.categories : (row.chart_data.categories || []),
+          applies_all: pd.applies_all !== undefined ? pd.applies_all : !!row.chart_data.applies_all,
+          garment_category: pd.garment_category || row.chart_data.garment_category || null,
+          gender: pd.gender !== undefined ? pd.gender : (row.chart_data.gender || null),
+        });
+        row.category = prev.category ?? row.category;
+        row.gender = prev.gender ?? row.gender;
+      }
       ({ error: werr } = await supabase.from('size_charts').update(row).eq('id', id).eq('brand_id', brandId));
     } else {
       // A chart is identified by its NAME within a brand (categories are assigned
