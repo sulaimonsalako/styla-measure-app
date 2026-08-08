@@ -512,12 +512,33 @@ function go(v){
 }
 window.go=go;
 
-var TAX=[
- {slug:'tops',label:'Tops'},{slug:'outerwear',label:'Outerwear'},{slug:'suits',label:'Suits'},{slug:'pants',label:'Pants'},
- {slug:'skirts',label:'Skirts'},{slug:'shorts',label:'Shorts'},{slug:'leggings',label:'Leggings'},{slug:'dresses',label:'Dresses'},
- {slug:'jumpsuits',label:'Jumpsuits'},{slug:'bridal',label:'Bridal'},{slug:'bridesmaid',label:'Bridesmaid'},{slug:'bras',label:'Bras'},
- {slug:'shapewear',label:'Shapewear'},{slug:'swimwear',label:'Swimwear'}
+// Mirrors styla.ca/assets/taxonomy.js — keep the two in step.
+// Grouped by audience; shared slugs (tops/pants/outerwear/shorts/swimwear) appear
+// under both men's and women's and are disambiguated by the chart's gender.
+var TAX_GROUPS=[
+ {key:'men',label:"Men's fashion",items:[
+   {slug:'tops',label:'Tops'},{slug:'pants',label:'Bottoms'},{slug:'suits',label:'Suits & Blazers'},
+   {slug:'dress-shirts',label:'Dress shirts'},{slug:'shorts',label:'Shorts'},{slug:'underwear',label:'Underwear'},
+   {slug:'outerwear',label:'Coats & Jackets'},{slug:'swimwear',label:'Swimwear'}]},
+ {key:'women',label:"Women's fashion",items:[
+   {slug:'tops',label:'Tops'},{slug:'pants',label:'Bottoms'},{slug:'dresses',label:'Dresses'},
+   {slug:'skirts',label:'Skirts'},{slug:'outerwear',label:'Coats & Jackets'},{slug:'bras',label:'Bras'},
+   {slug:'panties',label:'Panties'},{slug:'swimwear',label:'Swimwear'},{slug:'leggings',label:'Leggings'},
+   {slug:'jumpsuits',label:'Jumpsuits'},{slug:'shapewear',label:'Shapewear'},
+   {slug:'bridal',label:'Bridal'},{slug:'bridesmaid',label:'Bridesmaid'}]},
+ {key:'kids',label:'Kids',items:[
+   {slug:'infants',label:'Infants'},{slug:'boys-tops',label:"Boys' tops"},{slug:'boys-bottoms',label:"Boys' bottoms"},
+   {slug:'girls-tops',label:"Girls' tops"},{slug:'girls-bottoms',label:"Girls' bottoms"}]}
 ];
+// Flat, de-duplicated list (a slug can sit in two audiences).
+var TAX=(function(){var seen={},out=[];TAX_GROUPS.forEach(function(g){g.items.forEach(function(i){if(!seen[i.slug]){seen[i.slug]=1;out.push(i);}});});return out;})();
+// <optgroup> markup for any category picker.
+function taxOptions(sel){
+  return TAX_GROUPS.map(function(g){
+    return '<optgroup label="'+g.label+'">'+g.items.map(function(i){
+      return '<option value="'+i.slug+'"'+(sel===i.slug?' selected':'')+'>'+i.label+'</option>';}).join('')+'</optgroup>';
+  }).join('');
+}
 var COLS=['Chest','Waist','Hips'];
 var CONV={sleeve_convention:'auto',shoulder_convention:'auto'};
 var CHARTS=[], PRODUCTS=[];
@@ -826,12 +847,16 @@ async function loadDiscover(){
     var charts=DISCOVER.charts||[];
     if(!charts.length){ host.innerHTML='<div class="empty">Create a size chart first, then link it here.</div>'; refreshTiles(); return; }
     var map=DISCOVER.mapping||{};
-    host.innerHTML=TAX.map(function(t){
-      var sel=map[t.slug]||'';
-      var opts='<option value="">Don’t sell this</option>'+charts.map(function(c){
-        return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(c.name)+' ('+c.sizes+')'+(c.verified?' ✓':'')+'</option>';}).join('');
-      return '<div class="rowitem"><span class="grow name" style="font-weight:'+(sel?'600':'500')+'">'+t.label+'</span>'
-        +'<select data-cat="'+t.slug+'" class="dsSel" style="width:250px;font-size:.82rem">'+opts+'</select></div>';
+    var done={};
+    host.innerHTML=TAX_GROUPS.map(function(g){
+      var rows=g.items.filter(function(t){ if(done[t.slug]) return false; done[t.slug]=1; return true; }).map(function(t){
+        var sel=map[t.slug]||'';
+        var opts='<option value="">Don’t sell this</option>'+charts.map(function(c){
+          return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(c.name)+' ('+c.sizes+')'+(c.verified?' ✓':'')+'</option>';}).join('');
+        return '<div class="rowitem"><span class="grow name" style="font-weight:'+(sel?'600':'500')+'">'+t.label+'</span>'
+          +'<select data-cat="'+t.slug+'" class="dsSel" style="width:250px;font-size:.82rem">'+opts+'</select></div>';
+      }).join('');
+      return rows ? ('<div style="margin-bottom:18px"><div class="hint" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">'+g.label+'</div>'+rows+'</div>') : '';
     }).join('');
     host.querySelectorAll('.dsSel').forEach(function(s){s.addEventListener('change',async function(){
       setMsg('dsMsg','Saving…');
@@ -891,8 +916,7 @@ async function loadCategories(){
       var control = noType
         ? '<span class="hint" style="width:200px;text-align:right">Set individually below</span>'
         : '<select data-type="'+encodeURIComponent(t.type)+'" class="catSel" style="width:200px;font-size:.82rem">'
-          +'<option value="">Not clothing / skip</option>'
-          +TAX.map(function(x){return '<option value="'+x.slug+'"'+(cur===x.slug?' selected':'')+'>'+x.label+'</option>';}).join('')
+          +'<option value="">Not clothing / skip</option>'+taxOptions(cur)
           +'</select>';
       return '<div class="rowitem"><div class="grow"><div class="name">'+esc(t.type)+'</div>'
         +'<div class="hint" style="margin-top:2px">'+t.count+' products · '+status+'</div></div>'+control+'</div>';
