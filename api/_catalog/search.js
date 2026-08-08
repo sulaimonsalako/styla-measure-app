@@ -49,7 +49,7 @@ export default async function catalogSearch(req, res) {
       const ids = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
       if (ids.length) {
         const { data: bs } = await supabaseAdmin.from('brands')
-          .select('id, name, domain, small_business, about, specialties, ships_worldwide, ships_to').in('id', ids);
+          .select('id, name, domain, small_business, about, specialties, ships_worldwide, ships_to, origin_country, made_in').in('id', ids);
         const byId = Object.fromEntries((bs || []).map((b) => [b.id, b]));
         products = products.map((p) => {
           const b = byId[p.brand_id];
@@ -57,6 +57,7 @@ export default async function catalogSearch(req, res) {
             name: b.name, domain: b.domain, small_business: !!b.small_business,
             about: b.about || null, specialties: b.specialties || [],
             ships_worldwide: !!b.ships_worldwide, ships_to: b.ships_to || [],
+            origin: b.origin_country || null, made_in: b.made_in || null,
           } } : p;
         });
         // Don't recommend what can't reach the shopper.

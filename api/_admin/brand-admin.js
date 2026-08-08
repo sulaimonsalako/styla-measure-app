@@ -36,7 +36,7 @@ export default async function brandAdmin(req, res) {
     // ---- BRANDS ----
     if (action === 'list-brands') {
       const { data: brands } = await supabaseAdmin
-        .from('brands').select('id, name, domain, logo_url, category_aliases').order('name');
+        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about').order('name');
       const { data: charts } = await supabaseAdmin
         .from('size_charts').select('id, brand_id');
       const counts = {};
@@ -48,7 +48,7 @@ export default async function brandAdmin(req, res) {
 
     if (action === 'get-brand') {
       const { data: brand } = await supabaseAdmin
-        .from('brands').select('id, name, domain, logo_url, category_aliases').eq('id', b.id).maybeSingle();
+        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about').eq('id', b.id).maybeSingle();
       if (!brand) return res.status(404).json({ error: 'Brand not found.' });
       const { data: charts } = await supabaseAdmin
         .from('size_charts').select('id, category, subcategory, gender, chart_data, is_default, raw_source_url, source, verified, category_url, created_at')
@@ -60,6 +60,7 @@ export default async function brandAdmin(req, res) {
       if (!b.name) return res.status(400).json({ error: 'Brand name is required.' });
       const { data, error } = await supabaseAdmin.from('brands')
         .insert({ name: b.name, domain: b.domain || null, logo_url: b.logo_url || null,
+                  origin_country: b.origin_country || null, made_in: b.made_in || null,
                   category_aliases: b.category_aliases || {} })
         .select('id').single();
       if (error) throw error;
@@ -69,7 +70,11 @@ export default async function brandAdmin(req, res) {
     if (action === 'update-brand') {
       if (!b.id) return res.status(400).json({ error: 'Brand id required.' });
       const patch = {};
-      ['name', 'domain', 'logo_url'].forEach(k => { if (b[k] !== undefined) patch[k] = b[k]; });
+      ['name', 'domain', 'logo_url', 'origin_country', 'made_in', 'about'].forEach(k => { if (b[k] !== undefined) patch[k] = b[k]; });
+      if (b.small_business !== undefined) patch.small_business = !!b.small_business;
+      if (b.specialties !== undefined) patch.specialties = Array.isArray(b.specialties) ? b.specialties.filter(Boolean) : [];
+      if (b.ships_worldwide !== undefined) patch.ships_worldwide = !!b.ships_worldwide;
+      if (b.ships_to !== undefined) patch.ships_to = Array.isArray(b.ships_to) ? b.ships_to.filter(Boolean) : [];
       if (b.category_aliases !== undefined) patch.category_aliases = b.category_aliases || {};
       const { error } = await supabaseAdmin.from('brands').update(patch).eq('id', b.id);
       if (error) throw error;

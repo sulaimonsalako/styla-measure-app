@@ -539,6 +539,13 @@ details.adv>summary:hover{color:var(--ink-2);}
       <label>About <i class="i" title="One or two lines shown alongside your products on Styla.">i</i></label>
       <textarea id="dsAbout" rows="2" placeholder="Family-run tailoring since 1998. Made in Montreal." style="resize:vertical"></textarea>
 
+      <div class="row2" style="margin-top:14px">
+        <div><label style="margin-top:0">Origin <i class="i" title="Where your brand is from. Shoppers can look for local and regional brands.">i</i></label>
+          <select id="dsOrigin"></select></div>
+        <div><label style="margin-top:0">Made in <span class="faint">(optional)</span></label>
+          <input id="dsMadeIn" placeholder="Made in Portugal"/></div>
+      </div>
+
       <label class="switch" style="margin-top:16px">
         <input type="checkbox" id="dsSmall"/> Small business
         <i class="i" title="Adds a badge to your products and lets shoppers filter for small businesses to support.">i</i>
@@ -1043,6 +1050,7 @@ var SHIP_REGIONS=[
   {key:'eu',label:'European Union'},{key:'au',label:'Australia'},{key:'nz',label:'New Zealand'},
   {key:'intl',label:'Rest of world'},
 ];
+var ORIGINS=[['','—'],['CA','Canada'],['US','United States'],['GB','United Kingdom'],['IE','Ireland'],['FR','France'],['IT','Italy'],['ES','Spain'],['PT','Portugal'],['DE','Germany'],['NL','Netherlands'],['SE','Sweden'],['DK','Denmark'],['AU','Australia'],['NZ','New Zealand'],['JP','Japan'],['KR','South Korea'],['CN','China'],['IN','India'],['TR','Turkey'],['BR','Brazil'],['MX','Mexico'],['ZA','South Africa'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya']];
 var SPECIALTIES=[
   {key:'big-and-tall',label:'Big & tall'},{key:'plus-size',label:'Plus size'},
   {key:'petite',label:'Petite'},{key:'tall',label:'Tall'},
@@ -1056,6 +1064,8 @@ async function loadDiscover(){
     if(DISCOVER.error) throw new Error(DISCOVER.error);
     el('dsAbout').value=(DISCOVER.brand&&DISCOVER.brand.about)||'';
     el('dsSmall').checked=!!(DISCOVER.brand&&DISCOVER.brand.small_business);
+    el('dsOrigin').innerHTML=ORIGINS.map(function(o){return '<option value="'+o[0]+'"'+(((DISCOVER.brand&&DISCOVER.brand.origin_country)||'')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
+    el('dsMadeIn').value=(DISCOVER.brand&&DISCOVER.brand.made_in)||'';
     var have=(DISCOVER.brand&&DISCOVER.brand.specialties)||[];
     el('dsSpecs').innerHTML=SPECIALTIES.map(function(s){
       return '<label class="chip"><input type="checkbox" class="dsSpec" value="'+s.key+'"'+(have.indexOf(s.key)>-1?' checked':'')+'/>'+s.label+'</label>';
@@ -1119,7 +1129,7 @@ el('dsSaveBrand').addEventListener('click',async function(){
   setMsg('dsBrandMsg','Saving…');
   var specs=[].map.call(document.querySelectorAll('.dsSpec:checked'),function(x){return x.value;});
   var ships=[].map.call(document.querySelectorAll('.dsShipR:checked'),function(x){return x.value;});
-  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked,specialties:specs,ships_worldwide:el('dsWorldwide').checked,ships_to:ships})});
+  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked,specialties:specs,ships_worldwide:el('dsWorldwide').checked,ships_to:ships,origin_country:el('dsOrigin').value||null,made_in:el('dsMadeIn').value})});
     var d=await r.json(); if(d.error) throw new Error(d.error);
     setMsg('dsBrandMsg','✓ Saved.','ok'); toast('Brand profile saved');
   }catch(e){ setMsg('dsBrandMsg',e.message||'Save failed.','err'); }

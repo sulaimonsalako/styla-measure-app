@@ -114,6 +114,17 @@
           <div><label>Name</label><input id="edName"/></div>
           <div><label>Domain</label><input id="edDomain"/></div>
           <div><label>Logo URL</label><input id="edLogo"/></div>
+          <div><label>Origin <span class="hint">(where the brand is from)</span></label><select id="edOrigin"></select></div>
+          <div><label>Made in <span class="hint">(optional)</span></label><input id="edMadeIn" placeholder="Made in Portugal"/></div>
+          <div style="grid-column:1/-1"><label>About <span class="hint">(shown on Styla)</span></label><input id="edAbout" placeholder="Family-run tailoring since 1998."/></div>
+          <div style="grid-column:1/-1">
+            <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="edSmall" style="width:auto"/> Small business</label>
+          </div>
+          <div style="grid-column:1/-1"><label>Cuts for <span class="hint">(only if patterns are drafted for these, not scaled)</span></label>
+            <div id="edSpecs" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
+          <div style="grid-column:1/-1"><label>Ships to</label>
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input type="checkbox" id="edWorldwide" style="width:auto"/> Worldwide</label>
+            <div id="edShip" style="display:flex;flex-wrap:wrap;gap:8px"></div></div>
         </div>
         <label style="margin-top:1rem">Category aliases <span class="hint">(platform category → Styla category, e.g. "maxi dress" → "dresses")</span></label>
         <div id="aliasRows"></div>
@@ -302,6 +313,11 @@
       if(res.error){alert(res.error);return;}
       state.brand=res.brand;state.charts=res.charts||[];
       el('edName').value=res.brand.name||'';el('edDomain').value=res.brand.domain||'';el('edLogo').value=res.brand.logo_url||'';
+      el('edOrigin').innerHTML=ORIGINS.map(function(o){return '<option value="'+o[0]+'"'+((res.brand.origin_country||'')===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
+      el('edMadeIn').value=res.brand.made_in||''; el('edAbout').value=res.brand.about||'';
+      el('edSmall').checked=!!res.brand.small_business; el('edWorldwide').checked=!!res.brand.ships_worldwide;
+      chipBox('edSpecs',SPECIALTIES,res.brand.specialties||[],'edSpec');
+      chipBox('edShip',SHIP_REGIONS,res.brand.ships_to||[],'edShipR');
       el('syncDomain').value=res.brand.domain||'';el('syncMsg').textContent='';
       renderAliases(res.brand.category_aliases||{});
       renderCharts();
@@ -327,7 +343,11 @@
     }
     el('saveBrandBtn').addEventListener('click',async function(){
       var msg=el('detailMsg');msg.style.color='var(--muted)';msg.textContent='Saving…';
-      var res=await api('update-brand',{id:state.brand.id,name:el('edName').value.trim(),domain:el('edDomain').value.trim(),logo_url:el('edLogo').value.trim(),category_aliases:collectAliases()});
+      var res=await api('update-brand',{id:state.brand.id,name:el('edName').value.trim(),domain:el('edDomain').value.trim(),logo_url:el('edLogo').value.trim(),
+        origin_country:el('edOrigin').value||null,made_in:el('edMadeIn').value.trim()||null,about:el('edAbout').value.trim()||null,
+        small_business:el('edSmall').checked,specialties:collectChips('edSpec'),
+        ships_worldwide:el('edWorldwide').checked,ships_to:collectChips('edShipR'),
+        category_aliases:collectAliases()});
       if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
       msg.style.color='var(--green)';msg.textContent='Saved.';
     });
@@ -344,6 +364,19 @@
       if(res.error){msg.style.color='#fca5a5';msg.textContent=res.error;return;}
       msg.style.color='var(--green)';msg.textContent='Synced '+res.synced+' products.';
     });
+
+    // ---- Brand discovery attributes ----
+    var SPECIALTIES=[['big-and-tall','Big & tall'],['plus-size','Plus size'],['petite','Petite'],['tall','Tall'],['maternity','Maternity'],['adaptive','Adaptive']];
+    var SHIP_REGIONS=[['us','United States'],['ca','Canada'],['uk','United Kingdom'],['eu','European Union'],['au','Australia'],['nz','New Zealand'],['intl','Rest of world']];
+    var ORIGINS=[['','—'],['CA','Canada'],['US','United States'],['GB','United Kingdom'],['IE','Ireland'],['FR','France'],['IT','Italy'],['ES','Spain'],['PT','Portugal'],['DE','Germany'],['NL','Netherlands'],['SE','Sweden'],['DK','Denmark'],['AU','Australia'],['NZ','New Zealand'],['JP','Japan'],['KR','South Korea'],['CN','China'],['IN','India'],['TR','Turkey'],['BR','Brazil'],['MX','Mexico'],['ZA','South Africa'],['NG','Nigeria'],['GH','Ghana'],['KE','Kenya']];
+    function chipBox(hostId,items,selected,cls){
+      el(hostId).innerHTML=items.map(function(it){
+        var k=it[0],lab=it[1];
+        return '<label style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:100px;padding:5px 11px;font-size:.82rem;cursor:pointer">'
+          +'<input type="checkbox" class="'+cls+'" value="'+k+'" style="width:auto"'+((selected||[]).indexOf(k)>-1?' checked':'')+'/>'+lab+'</label>';
+      }).join('');
+    }
+    function collectChips(cls){ return [].map.call(document.querySelectorAll('.'+cls+':checked'),function(x){return x.value;}); }
 
     // ---- Charts ----
     function renderCharts(){
