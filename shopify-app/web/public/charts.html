@@ -172,6 +172,23 @@ details.adv>summary:hover{color:var(--ink-2);}
 .plan.on{border-color:rgba(255,42,117,.35);background:linear-gradient(180deg,rgba(255,42,117,.03),transparent);}
 .plan-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
+/* info tooltip — replaces paragraphs of hint text */
+.i{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line);
+   color:var(--faint);font-size:9px;font-style:normal;font-weight:700;cursor:help;vertical-align:1px;margin-left:5px;user-select:none;}
+.i:hover{border-color:var(--brand-2);color:var(--brand);}
+.fieldrow{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;}
+
+/* Styla category tiles — show the merchant's OWN products, not stock art */
+.grouphd{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:10px;}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.cattile{border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);transition:border-color .14s,box-shadow .14s;}
+.cattile.on{border-color:var(--brand-2);box-shadow:0 0 0 2px rgba(255,42,117,.12);}
+.cattile img,.catph{width:100%;height:96px;object-fit:cover;border-radius:8px;display:block;background:var(--surface-2);}
+.catph{display:grid;place-items:center;color:var(--faint);font-size:1.4rem;font-family:var(--head);}
+.catlabel{font-size:.82rem;font-weight:600;margin:8px 2px 6px;display:flex;align-items:center;gap:6px;}
+.catdot{width:6px;height:6px;border-radius:50%;background:var(--brand);}
+.cattile select{font-size:.76rem;padding:6px 24px 6px 8px;}
+
 /* visual product picker */
 .pkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;}
 .pkcard{position:relative;display:block;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);cursor:pointer;transition:border-color .14s,box-shadow .14s;}
@@ -517,32 +534,40 @@ details.adv>summary:hover{color:var(--ink-2);}
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Your brand on Styla</h2><p class="hint">How shoppers see you when your products come up.</p></div></div>
-      <label>About your brand <span class="faint">(optional — one or two lines)</span></label>
-      <textarea id="dsAbout" rows="2" placeholder="e.g. Family-run tailoring since 1998. Made in Montreal." style="resize:vertical"></textarea>
-      <label class="switch" style="margin-top:16px"><input type="checkbox" id="dsSmall"/> We're a small business</label>
-      <p class="hint" style="margin-top:6px">Shoppers can filter for small businesses they'd like to support — this adds a badge to your products on Styla.</p>
+      <div class="card-head"><div class="txt"><h2>Your brand</h2></div></div>
 
-      <label style="margin-top:18px">Who do you cut for? <span class="faint">(optional)</span></label>
-      <div class="hint" style="margin-bottom:8px">Shoppers at the edge of standard sizing are actively looking for brands drafted for their proportions — not just scaled-up sizes. Tick any that apply and Styla will route them to you.</div>
-      <div class="chips" id="dsSpecs"></div>
+      <label>About <i class="i" title="One or two lines shown alongside your products on Styla.">i</i></label>
+      <textarea id="dsAbout" rows="2" placeholder="Family-run tailoring since 1998. Made in Montreal." style="resize:vertical"></textarea>
 
-      <label style="margin-top:18px">Where do you ship?</label>
-      <div class="hint" style="margin-bottom:8px">Styla won't show your products to shoppers you can't deliver to — and won't hide you from the ones you can reach.</div>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-        <label class="switch"><input type="checkbox" id="dsWorldwide"/> We ship worldwide</label>
-        <button class="btn btn-ghost btn-sm" id="dsShipSync" style="margin-left:auto">Read from my Shopify shipping zones</button>
+      <label class="switch" style="margin-top:16px">
+        <input type="checkbox" id="dsSmall"/> Small business
+        <i class="i" title="Adds a badge to your products and lets shoppers filter for small businesses to support.">i</i>
+      </label>
+
+      <div class="fieldrow" style="margin-top:18px">
+        <label style="margin:0">Ships to <i class="i" title="Styla won’t show your products to shoppers you can’t deliver to.">i</i></label>
+        <button class="btn btn-ghost btn-sm" id="dsShipSync">Read from Shopify</button>
       </div>
-      <div class="msg" id="dsShipMsg" style="margin-bottom:8px"></div>
+      <label class="switch" style="margin:10px 0"><input type="checkbox" id="dsWorldwide"/> Worldwide</label>
       <div class="chips" id="dsShip"></div>
-      <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
+      <div class="msg" id="dsShipMsg" style="margin-top:8px"></div>
+
+      <details class="adv" style="margin-top:16px">
+        <summary>We cut for a specific body <span class="faint" style="font-weight:400">— petite, big &amp; tall, plus…</span></summary>
+        <div class="advbody">
+          <p class="hint" style="margin-bottom:10px">Only if your patterns are drafted for these proportions, rather than scaled from standard sizes.</p>
+          <div class="chips" id="dsSpecs"></div>
+        </div>
+      </details>
+
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="dsSaveBrand">Save</button>
         <span class="msg" id="dsBrandMsg"></span>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Link a chart to each Styla category</h2><p class="hint">Pick which of your charts represents each type of clothing you sell. Leave the rest as “Don't sell this”. One chart per category.</p></div></div>
+      <div class="card-head"><div class="txt"><h2>What you sell <i class="i" title="Pick which of your charts represents each type of clothing. One chart per category.">i</i></h2></div></div>
       <div id="dsCats"><div class="sk" style="width:60%"></div><div class="sk" style="width:45%"></div></div>
       <div class="msg" id="dsMsg" style="margin-top:10px"></div>
     </div>
@@ -1047,16 +1072,21 @@ async function loadDiscover(){
     var charts=DISCOVER.charts||[];
     if(!charts.length){ host.innerHTML='<div class="empty">Create a size chart first, then link it here.</div>'; refreshTiles(); return; }
     var map=DISCOVER.mapping||{};
+    var imgs=DISCOVER.catImage||{};
     var done={};
     host.innerHTML=TAX_GROUPS.map(function(g){
-      var rows=g.items.filter(function(t){ if(done[t.slug]) return false; done[t.slug]=1; return true; }).map(function(t){
+      var tiles=g.items.filter(function(t){ if(done[t.slug]) return false; done[t.slug]=1; return true; }).map(function(t){
         var sel=map[t.slug]||'';
-        var opts='<option value="">Don’t sell this</option>'+charts.map(function(c){
-          return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(c.name)+' ('+c.sizes+')'+(c.verified?' ✓':'')+'</option>';}).join('');
-        return '<div class="rowitem"><span class="grow name" style="font-weight:'+(sel?'600':'500')+'">'+t.label+'</span>'
-          +'<select data-cat="'+t.slug+'" class="dsSel" style="width:250px;font-size:.82rem">'+opts+'</select></div>';
+        var opts='<option value="">Not sold</option>'+charts.map(function(c){
+          return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(c.name)+(c.verified?' ✓':'')+'</option>';}).join('');
+        var img=imgs[t.slug]
+          ? '<img src="'+esc(imgs[t.slug])+'" alt="" loading="lazy"/>'
+          : '<div class="catph">'+esc(t.label.charAt(0))+'</div>';
+        return '<div class="cattile'+(sel?' on':'')+'">'+img
+          +'<div class="catlabel">'+esc(t.label)+(sel?'<span class="catdot"></span>':'')+'</div>'
+          +'<select data-cat="'+t.slug+'" class="dsSel">'+opts+'</select></div>';
       }).join('');
-      return rows ? ('<div style="margin-bottom:18px"><div class="hint" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">'+g.label+'</div>'+rows+'</div>') : '';
+      return tiles ? ('<div style="margin-bottom:20px"><div class="grouphd">'+g.label+'</div><div class="catgrid">'+tiles+'</div></div>') : '';
     }).join('');
     host.querySelectorAll('.dsSel').forEach(function(s){s.addEventListener('change',async function(){
       setMsg('dsMsg','Saving…');

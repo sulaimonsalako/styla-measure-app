@@ -1235,10 +1235,18 @@ app.get('/api/merchant/styla-index', async (req, res) => {
     (charts || []).forEach((c) => {
       ((c.chart_data || {}).categories || []).forEach((cat) => { if (!mapping[cat]) mapping[cat] = c.id; });
     });
+    // A sample image per Styla category, taken from the merchant's OWN catalog —
+    // so the category tiles show their clothes, not stock art.
+    const { data: prods } = await supabase.from('catalog_products')
+      .select('category, image_url').eq('brand_id', brandId).not('image_url', 'is', null);
+    const catImage = {};
+    (prods || []).forEach((p) => { if (p.category && !catImage[p.category]) catImage[p.category] = p.image_url; });
+
     const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
     res.json({
       brand: brand || {},
       mapping,
+      catImage,
       sharing: (((st && st.settings) || {}).share_catalog !== false),
       charts: (charts || []).map((c) => ({
         id: c.id, name: (c.chart_data || {}).name || 'Untitled chart',
