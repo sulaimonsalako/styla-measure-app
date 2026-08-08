@@ -175,7 +175,12 @@ same index that will power the discovery feed).
   sync posts `authoritative:true` and ingest deletes that shop's rows not in the pull.
   Prune is fenced: explicit full sync only, all pages read, non-empty result, no batch
   truncation, non-empty keep-list, scoped to shop_domain. Webhook upserts never prune.
-  Search RPC already filters `p.available`. All new JS is syntax-checked only — NOT run live (sandbox
+  Search RPC already filters `p.available`.
+- **Self-healing (2026-08-08).** `runFullSync` is shared by the Sync button and
+  `maybeAutoReconcile`, which fires background from `/api/merchant/products` when
+  `shop_settings.settings.last_full_sync` is >24h old (timestamp written before the
+  work + in-process Set = no stampede). Covers webhook misses. Residual gap: needs
+  someone to open the app; a cron would close it but costs a Vercel function. All new JS is syntax-checked only — NOT run live (sandbox
   has no Supabase DNS / GOOGLE_API_KEY), so first real test is on deploy.
 
 ## Shopify app served frontend — IMPORTANT (2026-08-03)
