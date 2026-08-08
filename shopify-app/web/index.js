@@ -828,18 +828,25 @@ app.post('/api/merchant/charts', async (req, res) => {
       brand_id: brandId, category: category || null, subcategory: subcategory || null, gender: gender || null,
       chart_data, is_default: is_default !== false, source: 'brand', verified: false,
     };
+    // NOTE: every write below is error-checked. These used to be fire-and-forget,
+    // so a rejected insert (e.g. a NOT NULL column) still reported "Saved".
+    let werr = null;
     if (id) {
-      await supabase.from('size_charts').update(row).eq('id', id).eq('brand_id', brandId);
+      ({ error: werr } = await supabase.from('size_charts').update(row).eq('id', id).eq('brand_id', brandId));
     } else {
-      // manual upsert on (brand, category, gender, subcategory) — .is() for nulls
-      let q = supabase.from('size_charts').select('id').eq('brand_id', brandId);
-      q = row.category ? q.eq('category', row.category) : q.is('category', null);
-      q = row.gender ? q.eq('gender', row.gender) : q.is('gender', null);
-      q = row.subcategory ? q.eq('subcategory', row.subcategory) : q.is('subcategory', null);
-      const { data: existing } = await q.maybeSingle();
-      if (existing) await supabase.from('size_charts').update(row).eq('id', existing.id);
-      else await supabase.from('size_charts').insert(row);
+      // A chart is identified by its NAME within a brand (categories are assigned
+      // later and may be null, so they can't be the key).
+      const nm = (chart_data.name || '').trim();
+      let existing = null;
+      if (nm) {
+        const { data } = await supabase.from('size_charts')
+          .select('id, chart_data').eq('brand_id', brandId);
+        existing = (data || []).find((c) => String(((c.chart_data || {}).name) || '').trim().toLowerCase() === nm.toLowerCase()) || null;
+      }
+      if (existing) ({ error: werr } = await supabase.from('size_charts').update(row).eq('id', existing.id));
+      else ({ error: werr } = await supabase.from('size_charts').insert(row));
     }
+    if (werr) return res.status(500).json({ error: 'Could not save the chart: ' + werr.message });
 
     // Improvement flywheel: record what the AI parsed vs what the merchant saved.
     try {
