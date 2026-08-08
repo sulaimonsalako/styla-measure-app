@@ -172,6 +172,18 @@ details.adv>summary:hover{color:var(--ink-2);}
 .plan.on{border-color:rgba(255,42,117,.35);background:linear-gradient(180deg,rgba(255,42,117,.03),transparent);}
 .plan-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
+/* visual product picker */
+.pkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;}
+.pkcard{position:relative;display:block;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);cursor:pointer;transition:border-color .14s,box-shadow .14s;}
+.pkcard:hover{border-color:#cfd3dc;box-shadow:var(--sh-1);}
+.pkcard.on{border-color:var(--brand-2);box-shadow:0 0 0 2px rgba(255,42,117,.14);}
+.pkcard img,.pknoimg{width:100%;height:112px;object-fit:cover;border-radius:8px;display:block;background:var(--surface-2);}
+.pknoimg{display:grid;place-items:center;color:var(--faint);font-size:.8rem;}
+.pkcb{position:absolute;top:14px;left:14px;width:18px;height:18px;accent-color:var(--brand);z-index:1;cursor:pointer;}
+.pktitle{font-size:.78rem;line-height:1.35;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pkcur{font-size:.68rem;color:var(--green);font-weight:650;margin-top:4px;}
+.pkcur.none{color:var(--faint);font-weight:400;}
+
 /* unit switch */
 .unit-sw{display:inline-flex;border:1px solid var(--line);border-radius:100px;overflow:hidden;background:var(--surface-2);}
 .unit-btn{border:none;background:transparent;padding:5px 12px;font-size:.78rem;font-weight:650;color:var(--muted);cursor:pointer;font-family:inherit;}
@@ -385,8 +397,39 @@ details.adv>summary:hover{color:var(--ink-2);}
     <div class="top"><div><h1>Assign charts</h1><div class="sub">A chart isn't used until it's assigned — to your whole store, a clothing type, or single products.</div></div></div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Apply to products</h2><p class="hint">Choose which products show each chart, using your own collections, tags, types and vendors. You'll see the match count live.</p></div></div>
-      <div id="chartLinks"><div class="empty">Create a chart first.</div></div>
+      <div class="card-head"><div class="txt"><h2>Pick the products</h2><p class="hint">Filter your catalog, tick the products, assign a chart. What you see is what gets assigned.</p></div></div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <span class="hint">Assign</span>
+        <select id="pkChart" style="width:auto;min-width:200px"></select>
+        <span class="hint">to the products I tick below</span>
+      </div>
+
+      <div class="row2" style="gap:10px">
+        <input id="pkSearch" placeholder="Search products — e.g. slim fit, denim, oxford"/>
+        <select id="pkCollection"></select>
+      </div>
+      <div class="row2" style="gap:10px;margin-top:10px">
+        <select id="pkType"></select>
+        <select id="pkTag"></select>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:14px 0 10px;flex-wrap:wrap">
+        <span class="hint" id="pkCount">—</span>
+        <button class="btn btn-ghost btn-sm" id="pkAll">Select all shown</button>
+        <button class="btn btn-ghost btn-sm" id="pkNone">Clear</button>
+        <span class="hint" id="pkSel" style="margin-left:auto"></span>
+      </div>
+
+      <div id="pkGrid"><div class="empty">Sync your products in Settings to see them here.</div></div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2);flex-wrap:wrap">
+        <button class="btn btn-primary" id="pkAssign" disabled>Assign</button>
+        <label class="switch" style="font-weight:400;font-size:.82rem;color:var(--muted)">
+          <input type="checkbox" id="pkFuture" checked/> Also apply to future products matching these filters
+        </label>
+        <span class="msg" id="pkMsg"></span>
+      </div>
     </div>
 
     <details class="adv" style="border:none;padding:0;margin:0 0 16px">
@@ -398,11 +441,13 @@ details.adv>summary:hover{color:var(--ink-2);}
       </div>
     </details>
 
-    <div class="card">
-      <div class="card-head"><div class="txt"><h2>By individual product</h2><p class="hint">For a product that needs a different chart than its clothing type.</p></div></div>
-      <div id="assignHost"><div class="empty">Sync your products in Settings to list them here.</div></div>
-      <div class="msg" id="assignMsg" style="margin-top:10px"></div>
-    </div>
+    <details class="adv" style="border:none;padding:0;margin:0">
+      <summary style="padding:0 4px 10px">Advanced — rule builder (conditions, ANY/ALL)</summary>
+      <div class="advbody card" style="margin:0">
+        <p class="hint" style="margin-bottom:10px">Only needed for compound logic, e.g. “Collection is Men AND tag is Premium”. Assignments made above appear here as rules.</p>
+        <div id="chartLinks"><div class="empty">Create a chart first.</div></div>
+      </div>
+    </details>
   </div>
 
   <!-- ================= SETTINGS ================= -->
@@ -532,7 +577,7 @@ function go(v){
   if(v==='analytics') loadAnalytics();
   if(v==='settings') loadSettings();
   if(v==='discover') loadDiscover();
-  if(v==='assign'){ loadCategories(); loadMatchOptions().then(renderChartLinks); }
+  if(v==='assign'){ renderPicker(); loadCategories(); loadMatchOptions().then(renderChartLinks); }
   if(v==='lobby') refreshTiles();
 }
 window.go=go;
@@ -763,7 +808,7 @@ el('save').addEventListener('click',async function(){
 async function loadCharts(){var box=el('list');
   try{var r=await mfetch('/api/merchant/charts?shop='+encodeURIComponent(SHOP));var d=await r.json();
     if(d.error){box.innerHTML='<div class="empty">'+esc(d.error)+'</div>';renderChartLinks();return;}
-    CHARTS=d.charts||[];renderChartLinks();renderAssign();refreshTiles();
+    CHARTS=d.charts||[];renderChartLinks();renderPicker();refreshTiles();
     // Tell the merchant up front if Styla already has charts for their brand.
     var pre=CHARTS.filter(function(c){return c.source==='admin'||c.verified;});
     var banner=el('stylaHave');
@@ -1105,6 +1150,113 @@ async function loadCategories(){
   }catch(e){host.innerHTML='<div class="empty">Could not load product types.</div>';}
 }
 
+/* ---- visual product picker: filter → tick → assign ---- */
+var PICKED={};
+function uniq(list){ return [...new Set(list.filter(Boolean))].sort(); }
+function fillSel(id,label,vals,cur){
+  el(id).innerHTML='<option value="">'+label+'</option>'+vals.map(function(v){
+    return '<option value="'+esc(v)+'"'+(cur===v?' selected':'')+'>'+esc(v)+'</option>';}).join('');
+}
+function pickerFilters(){
+  return { q:(el('pkSearch').value||'').trim().toLowerCase(),
+    collection:el('pkCollection').value, type:el('pkType').value, tag:el('pkTag').value };
+}
+function filteredProducts(){
+  var f=pickerFilters();
+  return apparel().filter(function(p){
+    if(f.collection && !(p.collections||[]).some(function(c){return c===f.collection;})) return false;
+    if(f.type && (p.product_type||'')!==f.type) return false;
+    if(f.tag && !(p.tags||[]).some(function(t){return t===f.tag;})) return false;
+    if(f.q){
+      var hay=[p.title,p.product_type,p.vendor,(p.tags||[]).join(' '),(p.collections||[]).join(' ')].join(' ').toLowerCase();
+      if(hay.indexOf(f.q)<0) return false;
+    }
+    return true;
+  });
+}
+function chartNameById(id){
+  var c=CHARTS.filter(function(x){return x.id===id;})[0];
+  return c?(((c.chart_data||{}).name)||'chart'):null;
+}
+function renderPicker(){
+  var host=el('pkGrid'); if(!host) return;
+  // chart dropdown
+  if(el('pkChart').options.length!==CHARTS.length||!el('pkChart').options.length){
+    el('pkChart').innerHTML=CHARTS.length
+      ? CHARTS.map(function(c){var cd=c.chart_data||{};return '<option value="'+c.id+'">'+esc(cd.name||'Untitled chart')+' ('+((cd.sizes||[]).length)+' sizes)</option>';}).join('')
+      : '<option value="">Create a chart first</option>';
+  }
+  var all=apparel();
+  if(!PRODUCTS.length){ host.innerHTML='<div class="empty">Sync your products in Settings to see them here.</div>'; return; }
+  fillSel('pkCollection','All collections',uniq(all.reduce(function(a,p){return a.concat(p.collections||[]);},[])),el('pkCollection').value);
+  fillSel('pkType','All product types',uniq(all.map(function(p){return p.product_type;})),el('pkType').value);
+  fillSel('pkTag','All tags',uniq(all.reduce(function(a,p){return a.concat(p.tags||[]);},[])),el('pkTag').value);
+
+  var list=filteredProducts();
+  el('pkCount').textContent=list.length+' product'+(list.length===1?'':'s')+' shown';
+  host.innerHTML=list.length? ('<div class="pkgrid">'+list.map(function(p){
+    var on=!!PICKED[p.external_id];
+    var cur=p.size_chart_id?chartNameById(p.size_chart_id):null;
+    var img=p.image_url?('<img src="'+esc(p.image_url)+'" alt="" loading="lazy"/>'):'<div class="pknoimg">—</div>';
+    return '<label class="pkcard'+(on?' on':'')+'" data-ext="'+esc(p.external_id)+'">'
+      +'<input type="checkbox" class="pkcb" '+(on?'checked':'')+'/>'
+      +img
+      +'<div class="pktitle">'+esc(p.title||'')+'</div>'
+      +(cur?('<div class="pkcur">'+esc(cur)+'</div>'):'<div class="pkcur none">no chart</div>')
+      +'</label>';
+  }).join('')+'</div>') : '<div class="empty">No products match these filters.</div>';
+
+  host.querySelectorAll('.pkcard').forEach(function(card){
+    card.querySelector('.pkcb').addEventListener('change',function(){
+      var id=card.getAttribute('data-ext');
+      if(this.checked) PICKED[id]=1; else delete PICKED[id];
+      card.classList.toggle('on',this.checked);
+      updatePickBar();
+    });
+  });
+  updatePickBar();
+}
+function updatePickBar(){
+  var n=Object.keys(PICKED).length;
+  el('pkSel').textContent=n?(n+' selected'):'';
+  el('pkAssign').disabled=!n||!CHARTS.length;
+  el('pkAssign').textContent=n?('Assign '+n+' product'+(n===1?'':'s')):'Assign';
+}
+['pkSearch','pkCollection','pkType','pkTag'].forEach(function(id){
+  el(id).addEventListener(id==='pkSearch'?'input':'change',renderPicker);
+});
+el('pkAll').addEventListener('click',function(){ filteredProducts().forEach(function(p){PICKED[p.external_id]=1;}); renderPicker(); });
+el('pkNone').addEventListener('click',function(){ PICKED={}; renderPicker(); });
+
+el('pkAssign').addEventListener('click',async function(){
+  var chartId=el('pkChart').value; if(!chartId) return;
+  var ids=Object.keys(PICKED); if(!ids.length) return;
+  this.disabled=true; setMsg('pkMsg','Assigning…');
+  try{
+    var r=await mfetch('/api/merchant/assign-chart',{method:'POST',
+      body:JSON.stringify({shop:SHOP,externalIds:ids,chartId:chartId})});
+    var d=await r.json(); if(d.error) throw new Error(d.error);
+
+    // Optionally persist the CURRENT FILTERS as a rule so future products match too.
+    var note='';
+    if(el('pkFuture').checked){
+      var f=pickerFilters(), conds=[];
+      if(f.collection) conds.push({field:'collection',op:'is',value:f.collection});
+      if(f.type) conds.push({field:'product_type',op:'is',value:f.type});
+      if(f.tag) conds.push({field:'tag',op:'is',value:f.tag});
+      if(f.q) conds.push({field:'product',op:'contains',value:f.q});
+      if(conds.length){
+        await mfetch('/api/merchant/link-chart',{method:'POST',
+          body:JSON.stringify({shop:SHOP,id:chartId,rules:{match:conds.length>1?'all':'any',conditions:conds}})});
+        note=' Future matches will use it too.';
+      }
+    }
+    setMsg('pkMsg','✓ Assigned '+ids.length+' product'+(ids.length===1?'':'s')+'.'+note,'ok');
+    toast('Chart assigned'); PICKED={}; loadProducts(); loadCharts();
+  }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
+  this.disabled=false;
+});
+
 /* ---- assign by product ---- */
 var NON_APPAREL={'giftcard':1,'gift card':1,'gift_card':1,'gift cards':1};
 function apparel(){ return PRODUCTS.filter(function(p){ return !NON_APPAREL[String(p.product_type||'').toLowerCase()]; }); }
@@ -1114,23 +1266,7 @@ function chartOptions(sel,includeAuto){
     var lbl=nm?(nm+' ('+n+')'):((cd.categories&&cd.categories.length?cd.categories.join('/'):'chart')+' ('+n+')');
     return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(lbl)+'</option>';}).join('');
 }
-function renderAssign(){
-  var host=el('assignHost'); if(!host) return;
-  var list=apparel();
-  if(!list.length){host.innerHTML='<div class="empty">'+(PRODUCTS.length?'No clothing products to assign.':'Sync your products in Settings to list them here.')+'</div>';return;}
-  var groups={};list.forEach(function(p){var t=p.product_type||'Uncategorized';(groups[t]=groups[t]||[]).push(p);});
-  host.innerHTML=Object.keys(groups).map(function(type){var items=groups[type];
-    return '<div style="margin-bottom:20px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><b style="font-size:.88rem">'+esc(type)+'</b><span class="hint">'+items.length+' products</span>'
-        +'<select data-type="'+encodeURIComponent(type)+'" class="bulkSel" style="width:auto;margin-left:auto;font-size:.8rem;padding:6px 28px 6px 10px"><option value="">Set all to…</option><option value="__auto">Auto (assigned chart)</option>'+chartOptions('',false)+'</select></div>'
-      +items.map(function(p){return '<div class="rowitem"><span class="grow name" style="font-weight:500">'+esc(p.title||'')+'</span>'
-        +'<select data-ext="'+p.external_id+'" class="prodSel" style="width:230px;font-size:.8rem">'+chartOptions(p.size_chart_id||'',true)+'</select></div>';}).join('')
-      +'</div>';
-  }).join('');
-  host.querySelectorAll('.prodSel').forEach(function(s){s.addEventListener('change',function(){assign({externalId:this.getAttribute('data-ext'),chartId:this.value||null});});});
-  host.querySelectorAll('.bulkSel').forEach(function(s){s.addEventListener('change',function(){var v=this.value;if(v==='')return;var t=decodeURIComponent(this.getAttribute('data-type'));assign({productType:t,chartId:v==='__auto'?null:v},'all “'+t+'”');});});
-}
-async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];updateSyncStatus();renderAssign();refreshTiles();}catch(e){}}
+async function loadProducts(){try{var r=await mfetch('/api/merchant/products?shop='+encodeURIComponent(SHOP));var d=await r.json();PRODUCTS=d.products||[];updateSyncStatus();renderPicker();refreshTiles();}catch(e){}}
 async function assign(body,note){setMsg('assignMsg','Saving…');
   try{var r=await mfetch('/api/merchant/assign-chart',{method:'POST',body:JSON.stringify(Object.assign({shop:SHOP},body))});var d=await r.json();if(d.error)throw new Error(d.error);
     setMsg('assignMsg','✓ Updated '+(note||((d.updated||0)+' product(s)'))+'.','ok');toast('Updated');loadProducts();

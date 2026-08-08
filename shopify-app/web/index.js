@@ -978,7 +978,7 @@ app.get('/api/merchant/products', async (req, res) => {
     const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
     const { data: products } = await supabase.from('catalog_products')
-      .select('id, external_id, title, product_type, category, url, image_url, size_chart_id')
+      .select('id, external_id, title, product_type, category, vendor, tags, collections, url, image_url, size_chart_id')
       .eq('brand_id', brandId)
       .order('product_type', { ascending: true, nullsFirst: false })
       .order('title', { ascending: true });
