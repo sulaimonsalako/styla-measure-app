@@ -46,7 +46,22 @@ function conditionMatches(product, cond) {
  * @returns {boolean}
  */
 export function productMatchesRules(product, rules) {
-  if (!rules || !Array.isArray(rules.conditions) || !rules.conditions.length) return false;
+  if (!rules) return false;
+
+  // Preferred shape: GROUPS. Each group is one saved assignment (e.g. "collection
+  // is Men AND tag is Premium"); a product matches if it satisfies ANY group.
+  // This is what lets the same chart be assigned from several different filter
+  // sets without each one overwriting the last.
+  if (Array.isArray(rules.groups) && rules.groups.length) {
+    return rules.groups.some((g) => {
+      if (!g || !Array.isArray(g.conditions) || !g.conditions.length) return false;
+      const res = g.conditions.map((c) => conditionMatches(product, c));
+      return g.match === 'any' ? res.some(Boolean) : res.every(Boolean);
+    });
+  }
+
+  // Legacy shape: a single flat condition list.
+  if (!Array.isArray(rules.conditions) || !rules.conditions.length) return false;
   const results = rules.conditions.map((c) => conditionMatches(product, c));
   return rules.match === 'all' ? results.every(Boolean) : results.some(Boolean);
 }
@@ -54,7 +69,9 @@ export function productMatchesRules(product, rules) {
 /** True when a chart has usable rules (so we know to prefer them over legacy fields). */
 export function hasRules(chartData) {
   const r = chartData && chartData.rules;
-  return !!(r && Array.isArray(r.conditions) && r.conditions.length);
+  if (!r) return false;
+  if (Array.isArray(r.groups) && r.groups.some((g) => g && (g.conditions || []).length)) return true;
+  return Array.isArray(r.conditions) && r.conditions.length > 0;
 }
 
 export default productMatchesRules;

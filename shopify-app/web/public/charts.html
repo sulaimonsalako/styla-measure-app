@@ -432,6 +432,13 @@ details.adv>summary:hover{color:var(--ink-2);}
         <select id="pkType"></select>
         <select id="pkTag"></select>
       </div>
+      <div class="row2" style="gap:10px;margin-top:10px">
+        <select id="pkAssigned">
+          <option value="">Any chart status</option>
+          <option value="__none">Not assigned yet</option>
+        </select>
+        <div></div>
+      </div>
 
       <div style="display:flex;align-items:center;gap:12px;margin:14px 0 10px;flex-wrap:wrap">
         <span class="hint" id="pkCount">—</span>
@@ -444,6 +451,7 @@ details.adv>summary:hover{color:var(--ink-2);}
 
       <div style="display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-2);flex-wrap:wrap">
         <button class="btn btn-primary" id="pkAssign" disabled>Assign</button>
+        <button class="btn btn-ghost" id="pkUnassign" disabled>Remove chart</button>
         <label class="switch" style="font-weight:400;font-size:.82rem;color:var(--muted)">
           <input type="checkbox" id="pkFuture" checked/> Also apply to future products matching these filters
         </label>
@@ -1066,7 +1074,8 @@ function fillSel(id,label,vals,cur){
 }
 function pickerFilters(){
   return { q:(el('pkSearch').value||'').trim().toLowerCase(),
-    collection:el('pkCollection').value, type:el('pkType').value, tag:el('pkTag').value };
+    collection:el('pkCollection').value, type:el('pkType').value, tag:el('pkTag').value,
+    assigned:el('pkAssigned').value };
 }
 function filteredProducts(){
   var f=pickerFilters();
@@ -1074,6 +1083,8 @@ function filteredProducts(){
     if(f.collection && !(p.collections||[]).some(function(c){return c===f.collection;})) return false;
     if(f.type && (p.product_type||'')!==f.type) return false;
     if(f.tag && !(p.tags||[]).some(function(t){return t===f.tag;})) return false;
+    if(f.assigned==='__none' && p.size_chart_id) return false;
+    if(f.assigned && f.assigned!=='__none' && p.size_chart_id!==f.assigned) return false;
     if(f.q){
       var hay=[p.title,p.product_type,p.vendor,(p.tags||[]).join(' '),(p.collections||[]).join(' ')].join(' ').toLowerCase();
       if(hay.indexOf(f.q)<0) return false;
@@ -1095,6 +1106,10 @@ function renderPicker(){
   }
   var all=apparel();
   if(!PRODUCTS.length){ host.innerHTML='<div class="empty">Sync your products in Settings to see them here.</div>'; return; }
+  var curAssigned=el('pkAssigned').value;
+  el('pkAssigned').innerHTML='<option value="">Any chart status</option><option value="__none"'+(curAssigned==='__none'?' selected':'')+'>Not assigned yet</option>'
+    +CHARTS.map(function(c){var n=all.filter(function(p){return p.size_chart_id===c.id;}).length;
+      return '<option value="'+c.id+'"'+(curAssigned===c.id?' selected':'')+'>Using: '+esc(((c.chart_data||{}).name)||'chart')+' ('+n+')</option>';}).join('');
   fillSel('pkCollection','All collections',uniq(all.reduce(function(a,p){return a.concat(p.collections||[]);},[])),el('pkCollection').value);
   fillSel('pkType','All product types',uniq(all.map(function(p){return p.product_type;})),el('pkType').value);
   fillSel('pkTag','All tags',uniq(all.reduce(function(a,p){return a.concat(p.tags||[]);},[])),el('pkTag').value);
@@ -1128,12 +1143,26 @@ function updatePickBar(){
   el('pkSel').textContent=n?(n+' selected'):'';
   el('pkAssign').disabled=!n||!CHARTS.length;
   el('pkAssign').textContent=n?('Assign '+n+' product'+(n===1?'':'s')):'Assign';
+  el('pkUnassign').disabled=!n;
 }
-['pkSearch','pkCollection','pkType','pkTag'].forEach(function(id){
+['pkSearch','pkCollection','pkType','pkTag','pkAssigned'].forEach(function(id){
   el(id).addEventListener(id==='pkSearch'?'input':'change',renderPicker);
 });
 el('pkAll').addEventListener('click',function(){ filteredProducts().forEach(function(p){PICKED[p.external_id]=1;}); renderPicker(); });
 el('pkNone').addEventListener('click',function(){ PICKED={}; renderPicker(); });
+
+el('pkUnassign').addEventListener('click',async function(){
+  var ids=Object.keys(PICKED); if(!ids.length) return;
+  this.disabled=true; setMsg('pkMsg','Removing…');
+  try{
+    var r=await mfetch('/api/merchant/assign-chart',{method:'POST',
+      body:JSON.stringify({shop:SHOP,externalIds:ids,chartId:null})});
+    var d=await r.json(); if(d.error) throw new Error(d.error);
+    setMsg('pkMsg','✓ Removed the chart from '+ids.length+' product'+(ids.length===1?'':'s')+'. They fall back to their category chart.','ok');
+    toast('Chart removed'); PICKED={}; loadProducts();
+  }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
+  this.disabled=false;
+});
 
 el('pkAssign').addEventListener('click',async function(){
   var chartId=el('pkChart').value; if(!chartId) return;

@@ -878,7 +878,26 @@ app.post('/api/merchant/link-chart', async (req, res) => {
     if (!chart) return res.status(404).json({ error: 'Chart not found.' });
     const cd = Object.assign({}, chart.chart_data || {});
     if (name !== undefined && String(name).trim()) cd.name = String(name).trim(); // renameable
-    if (rules !== undefined) cd.rules = rules || null;   // rule-based matching
+    // Rules ACCUMULATE. Each assignment made in the picker adds a group, so
+    // assigning the same chart from two different filter sets keeps both —
+    // previously the second one silently replaced the first.
+    if (rules !== undefined) {
+      if (!rules) { cd.rules = null; }
+      else {
+        const incoming = Array.isArray(rules.groups)
+          ? rules.groups
+          : [{ match: rules.match || 'all', conditions: rules.conditions || [] }];
+        const existing = (cd.rules && Array.isArray(cd.rules.groups)) ? cd.rules.groups
+          : (cd.rules && Array.isArray(cd.rules.conditions) && cd.rules.conditions.length
+              ? [{ match: cd.rules.match || 'all', conditions: cd.rules.conditions }]
+              : []);
+        const key = (g) => JSON.stringify([g.match || 'all',
+          (g.conditions || []).map((c) => [c.field, c.op, String(c.value || '').toLowerCase()]).sort()]);
+        const seen = new Set(existing.map(key));
+        incoming.forEach((g) => { if ((g.conditions || []).length && !seen.has(key(g))) { existing.push(g); seen.add(key(g)); } });
+        cd.rules = existing.length ? { match: 'any', groups: existing } : null;
+      }
+    }
     if (categories !== undefined) {
       cd.categories = Array.isArray(categories) ? categories.filter(Boolean) : [];
       // The engine reads garment_category for its per-garment ease rules (a suit
