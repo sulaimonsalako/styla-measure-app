@@ -945,6 +945,84 @@ app.post('/api/merchant/link-chart', async (req, res) => {
 //    Keyed by shop domain -> the same Styla brand the size charts use, so an
 //    ingested product lines up with this store's charts automatically.
 // ----------------------------------------------------
+// The full catalog sync, shared by the manual button and the automatic
+// reconcile below. One implementation so the two can never drift.
+async function runFullSync(shop, accessToken) {
+  const [pulled, colMap] = await Promise.all([
+    fetchShopifyAllPages(shop, accessToken, 'products.json?limit=250&published_status=published', 'products'),
+    fetchCollectionMap(shop, accessToken),
+  ]);
+  const products = pulled.items.map((p) => mapShopifyProduct(shop, p, colMap[String(p.id)]));
+  if (!products.length) {
+    // Deliberately NOT authoritative: an empty result is far more likely to be
+    // a scope/permission problem than a genuinely empty store, and treating it
+    // as truth would wipe the merchant's whole index.
+    return { synced: 0, removed: 0, partial: false, empty: true };
+  }
+
+  // Free tier: share the catalog into Styla discovery unless the merchant opted out.
+  const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+  const shared = ((st && st.settings) || {}).share_catalog !== false;
+
+  // Keep shipping destinations fresh off the store's real zones (best-effort).
+  try { await syncShippingForShop(shop, await ensureBrandForShop(shop)); }
+  catch (e) { console.error('shipping sync skipped:', e.message); }
+
+  // A full sync is the source of truth: anything in the index that is NOT in
+  // this pull has been deleted or unpublished in Shopify, so it must go. Only
+  // claim authority when every page came back.
+  const out = await pushToStylaIndex(shop, { products, shared, authoritative: pulled.complete });
+  await markSynced(shop);
+  return {
+    synced: products.length,
+    embedded: out.embedded || 0,
+    skipped: out.skipped || 0,
+    removed: out.removed || 0,
+    partial: !pulled.complete,
+    empty: false,
+  };
+}
+
+async function markSynced(shop) {
+  const { data: row } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+  const settings = Object.assign({}, (row && row.settings) || {}, { last_full_sync: new Date().toISOString() });
+  await supabase.from('shop_settings').upsert({ shop, settings });
+}
+
+// Self-healing reconcile.
+//
+// Webhooks keep the index live, but only while the app is reachable. A delete
+// that lands during a deploy, a dropped dev tunnel, or an exhausted Shopify
+// retry is lost permanently -- nothing would ever notice it. This closes that
+// hole: whenever the merchant opens the app, if the last full sync is over a
+// day old we quietly re-reconcile in the background.
+//
+// Cheap by design: the content_hash gate means unchanged products are not
+// re-embedded, so a repeat sync costs a catalog read and no AI spend.
+const RECONCILE_AFTER_MS = 24 * 60 * 60 * 1000;
+const reconciling = new Set();
+
+async function maybeAutoReconcile(shop, accessToken) {
+  if (!shop || !accessToken || reconciling.has(shop)) return;
+  try {
+    const { data: row } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+    const last = ((row && row.settings) || {}).last_full_sync;
+    if (last && (Date.now() - new Date(last).getTime()) < RECONCILE_AFTER_MS) return;
+
+    // Claim the slot BEFORE the await so two tabs opening at once can't both run it.
+    reconciling.add(shop);
+    await markSynced(shop);
+
+    runFullSync(shop, accessToken)
+      .then((r) => console.log(`Auto-reconcile ${shop}: ${r.synced} synced, ${r.removed} removed`))
+      .catch((e) => console.error('Auto-reconcile failed for', shop, '-', e.message))
+      .finally(() => reconciling.delete(shop));
+  } catch (e) {
+    reconciling.delete(shop);
+    console.error('Auto-reconcile check failed:', e.message);
+  }
+}
+
 app.post('/api/merchant/sync-catalog', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
@@ -952,43 +1030,15 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
     const accessToken = await getOfflineToken(req);
     if (!accessToken) return res.status(401).json({ error: 'Could not authorize with Shopify. Reopen the app from your admin and try again.' });
 
-    // Pull the WHOLE published catalog (all pages) and push to the index.
-    const [pulled, colMap] = await Promise.all([
-      fetchShopifyAllPages(shop, accessToken, 'products.json?limit=250&published_status=published', 'products'),
-      fetchCollectionMap(shop, accessToken),
-    ]);
-    const products = pulled.items.map((p) => mapShopifyProduct(shop, p, colMap[String(p.id)]));
-    if (!products.length) {
-      // Deliberately NOT authoritative: an empty result is far more likely to be
-      // a scope/permission problem than a genuinely empty store, and treating it
-      // as truth would wipe the merchant's whole index.
-      return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
-    }
+    const r = await runFullSync(shop, accessToken);
+    if (r.empty) return res.json({ ok: true, synced: 0, message: 'No published products found to sync.' });
 
-    // Free tier: share the catalog into Styla discovery unless the merchant opted out.
-    const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
-    const shared = ((st && st.settings) || {}).share_catalog !== false;
-
-    // Keep shipping destinations fresh off the store's real zones (best-effort).
-    try { await syncShippingForShop(shop, await ensureBrandForShop(shop)); }
-    catch (e) { console.error('shipping sync skipped:', e.message); }
-
-    // A full sync is the source of truth: anything in the index that is NOT in
-    // this pull has been deleted or unpublished in Shopify, so it must go. Only
-    // claim authority when every page came back — a truncated pull would
-    // otherwise delete the tail of the catalog.
-    const out = await pushToStylaIndex(shop, { products, shared, authoritative: pulled.complete });
-    const removed = out.removed || 0;
     res.json({
-      ok: true,
-      synced: products.length,
-      embedded: out.embedded,
-      skipped: out.skipped,
-      removed,
-      partial: !pulled.complete,
-      message: `Synced ${products.length} products to Styla AI (${out.embedded ?? 0} newly indexed, ${out.skipped ?? 0} unchanged`
-        + (removed ? `, ${removed} removed` : '') + ').'
-        + (pulled.complete ? '' : ' Catalog was too large to read in one pass — stale products were left in place.'),
+      ok: true, synced: r.synced, embedded: r.embedded, skipped: r.skipped,
+      removed: r.removed, partial: r.partial,
+      message: `Synced ${r.synced} products to Styla AI (${r.embedded} newly indexed, ${r.skipped} unchanged`
+        + (r.removed ? `, ${r.removed} removed` : '') + ').'
+        + (r.partial ? ' Catalog was too large to read in one pass \u2014 stale products were left in place.' : ''),
     });
   } catch (e) {
     console.error('sync-catalog error:', e);
@@ -1006,6 +1056,10 @@ app.get('/api/merchant/products', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;
     const brandId = await ensureBrandForShop(shop);
+
+    // Opening the app is the natural moment to self-heal: fire-and-forget, so
+    // the merchant never waits on it and a failure can't break the page.
+    getOfflineToken(req).then((t) => maybeAutoReconcile(shop, t)).catch(() => {});
     const { data: products } = await supabase.from('catalog_products')
       .select('id, external_id, title, product_type, category, vendor, tags, collections, url, image_url, size_chart_id')
       .eq('brand_id', brandId)
