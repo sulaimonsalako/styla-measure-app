@@ -264,6 +264,13 @@ details.adv>summary:hover{color:var(--ink-2);}
         <p>How much of your catalog Styla can size, and what's missing.</p>
         <div class="stat" id="t-analytics">—</div>
       </button>
+      <button class="tile accent" onclick="go('discover')" style="grid-column:1/-1">
+        <div class="go">→</div>
+        <div class="ico">✨</div>
+        <h3>Get discovered on Styla</h3>
+        <p>Index your charts against Styla's categories so shoppers browsing for clothes that fit them are matched to your brand — free.</p>
+        <div class="stat" id="t-discover">—</div>
+      </button>
     </div>
   </div>
 
@@ -370,11 +377,6 @@ details.adv>summary:hover{color:var(--ink-2);}
       <div id="chartLinks"><div class="empty">Create a chart first.</div></div>
     </div>
 
-    <div class="card">
-      <div class="card-head"><div class="txt"><h2>Styla clothing types</h2><p class="hint">Separate from the rules above. Tell Styla what kind of garment each chart is for — this powers correct sizing maths and lets Styla recommend your products to shoppers across brands.</p></div></div>
-      <div id="stylaCats"><div class="empty">Create a chart first.</div></div>
-    </div>
-
     <details class="adv" style="border:none;padding:0;margin:0 0 16px">
       <summary style="padding:0 4px 10px">Advanced — how your product labels were classified</summary>
       <div class="advbody card" style="margin:0">
@@ -448,6 +450,34 @@ details.adv>summary:hover{color:var(--ink-2);}
     </div>
   </div>
 
+  <!-- ================= GET DISCOVERED ================= -->
+  <div class="view" id="v-discover">
+    <button class="back" onclick="go('lobby')">← All cards</button>
+    <div class="top"><div><h1>Get discovered on Styla</h1><div class="sub">Free. Shoppers on Styla search for clothes that actually fit them — indexing your charts puts your brand in those results.</div></div></div>
+
+    <div class="card" id="discoverOff" style="display:none">
+      <div class="warn" style="margin:0">Sharing is currently turned off, so your brand won't appear on Styla. Turn on “Get recommended on Styla” in <b>Settings</b> to be discoverable.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="txt"><h2>Your brand on Styla</h2><p class="hint">How shoppers see you when your products come up.</p></div></div>
+      <label>About your brand <span class="faint">(optional — one or two lines)</span></label>
+      <textarea id="dsAbout" rows="2" placeholder="e.g. Family-run tailoring since 1998. Made in Montreal." style="resize:vertical"></textarea>
+      <label class="switch" style="margin-top:16px"><input type="checkbox" id="dsSmall"/> We're a small business</label>
+      <p class="hint" style="margin-top:6px">Shoppers can filter for small businesses they'd like to support — this adds a badge to your products on Styla.</p>
+      <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
+        <button class="btn btn-primary" id="dsSaveBrand">Save</button>
+        <span class="msg" id="dsBrandMsg"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="txt"><h2>Link a chart to each Styla category</h2><p class="hint">Pick which of your charts represents each type of clothing you sell. Leave the rest as “Don't sell this”. One chart per category.</p></div></div>
+      <div id="dsCats"><div class="sk" style="width:60%"></div><div class="sk" style="width:45%"></div></div>
+      <div class="msg" id="dsMsg" style="margin-top:10px"></div>
+    </div>
+  </div>
+
   <!-- ================= ANALYTICS ================= -->
   <div class="view" id="v-analytics">
     <button class="back" onclick="go('lobby')">← All cards</button>
@@ -472,11 +502,12 @@ function toast(text,isErr){ var t=el('toast'); t.textContent=text; t.className=(
 function setMsg(id,text,kind){ var m=el(id); if(!m)return; m.textContent=text||''; m.className='msg'+(kind?(' '+kind):''); }
 
 function go(v){
-  ['lobby','charts','assign','settings','analytics'].forEach(function(x){ el('v-'+x).classList.toggle('on', x===v); });
+  ['lobby','charts','assign','settings','analytics','discover'].forEach(function(x){ el('v-'+x).classList.toggle('on', x===v); });
   window.scrollTo(0,0);
   if(v==='analytics') loadAnalytics();
   if(v==='settings') loadSettings();
-  if(v==='assign'){ loadCategories(); renderStylaCats(); loadMatchOptions().then(renderChartLinks); }
+  if(v==='discover') loadDiscover();
+  if(v==='assign'){ loadCategories(); loadMatchOptions().then(renderChartLinks); }
   if(v==='lobby') refreshTiles();
 }
 window.go=go;
@@ -501,6 +532,10 @@ function refreshTiles(){
   el('t-assign').textContent = CHARTS.length ? (linked+' of '+CHARTS.length+' assigned') : 'Create a chart first';
   el('t-settings').textContent = PRODUCTS.length ? (PRODUCTS.length+' products synced') : 'Products not synced';
   el('t-analytics').textContent = 'View coverage';
+  var indexed = DISCOVER && DISCOVER.mapping ? Object.keys(DISCOVER.mapping).length : 0;
+  el('t-discover').textContent = indexed
+    ? (indexed + ' categor' + (indexed>1?'ies':'y') + ' indexed on Styla')
+    : (CHARTS.length ? 'Not indexed yet — free' : 'Create a chart first');
   el('cr-1').classList.toggle('done', CHARTS.length>0);
   el('cr-2').classList.toggle('done', linked>0);
   el('cr-3').classList.toggle('done', linked>0);
@@ -776,25 +811,45 @@ function renderChartLinks(){
     wire(); preview();
   });
 }
-/* ---- map charts to Styla clothing types (separate from product rules) ---- */
-function renderStylaCats(){
-  var host=el('stylaCats'); if(!host) return;
-  if(!CHARTS.length){host.innerHTML='<div class="empty">Create a chart first.</div>';return;}
-  host.innerHTML=CHARTS.map(function(c){var cd=c.chart_data||{};var cats=cd.categories||[];var nm=cd.name||'Untitled chart';
-    return '<div class="linkcard'+(cats.length?' on':'')+'" data-id="'+c.id+'">'
-      +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><b style="font-size:.92rem">'+esc(nm)+'</b>'
-        +'<span class="sc-msg hint" style="margin-left:auto"></span></div>'
-      +'<div class="chips">'+TAX.map(function(t){return '<label class="chip"><input type="checkbox" class="sc-cat" value="'+t.slug+'"'+(cats.indexOf(t.slug)>-1?' checked':'')+'/>'+t.label+'</label>';}).join('')+'</div>'
-      +'</div>';
-  }).join('');
-  host.querySelectorAll('.linkcard').forEach(function(card){
-    card.querySelectorAll('.sc-cat').forEach(function(x){x.addEventListener('change',function(){
-      var cats=[].map.call(card.querySelectorAll('.sc-cat:checked'),function(y){return y.value;});
-      card.classList.toggle('on',cats.length>0);
-      linkChart(card.getAttribute('data-id'),{categories:cats},card.querySelector('.sc-msg'));
+/* ---- Card 5: get discovered on Styla (one chart per Styla category) ---- */
+var DISCOVER=null;
+async function loadDiscover(){
+  var host=el('dsCats'); if(!host) return;
+  try{
+    var r=await mfetch('/api/merchant/styla-index?shop='+encodeURIComponent(SHOP));
+    DISCOVER=await r.json();
+    if(DISCOVER.error) throw new Error(DISCOVER.error);
+    el('dsAbout').value=(DISCOVER.brand&&DISCOVER.brand.about)||'';
+    el('dsSmall').checked=!!(DISCOVER.brand&&DISCOVER.brand.small_business);
+    el('discoverOff').style.display = DISCOVER.sharing ? 'none' : 'block';
+
+    var charts=DISCOVER.charts||[];
+    if(!charts.length){ host.innerHTML='<div class="empty">Create a size chart first, then link it here.</div>'; refreshTiles(); return; }
+    var map=DISCOVER.mapping||{};
+    host.innerHTML=TAX.map(function(t){
+      var sel=map[t.slug]||'';
+      var opts='<option value="">Don’t sell this</option>'+charts.map(function(c){
+        return '<option value="'+c.id+'"'+(sel===c.id?' selected':'')+'>'+esc(c.name)+' ('+c.sizes+')'+(c.verified?' ✓':'')+'</option>';}).join('');
+      return '<div class="rowitem"><span class="grow name" style="font-weight:'+(sel?'600':'500')+'">'+t.label+'</span>'
+        +'<select data-cat="'+t.slug+'" class="dsSel" style="width:250px;font-size:.82rem">'+opts+'</select></div>';
+    }).join('');
+    host.querySelectorAll('.dsSel').forEach(function(s){s.addEventListener('change',async function(){
+      setMsg('dsMsg','Saving…');
+      try{var rr=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,category:this.getAttribute('data-cat'),chartId:this.value||null})});
+        var dd=await rr.json(); if(dd.error) throw new Error(dd.error);
+        setMsg('dsMsg','✓ Saved.','ok'); toast('Indexed on Styla'); loadCharts(); loadDiscover();
+      }catch(e){ setMsg('dsMsg',e.message||'Failed.','err'); }
     });});
-  });
+    refreshTiles();
+  }catch(e){ host.innerHTML='<div class="empty">Could not load: '+esc(e.message||e)+'</div>'; }
 }
+el('dsSaveBrand').addEventListener('click',async function(){
+  setMsg('dsBrandMsg','Saving…');
+  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked})});
+    var d=await r.json(); if(d.error) throw new Error(d.error);
+    setMsg('dsBrandMsg','✓ Saved.','ok'); toast('Brand profile saved');
+  }catch(e){ setMsg('dsBrandMsg',e.message||'Save failed.','err'); }
+});
 
 function showMatched(products,count){
   var m=el('matchModal');

@@ -1125,6 +1125,72 @@ app.post('/api/merchant/map-category', async (req, res) => {
 });
 
 // ----------------------------------------------------
+// 6c. Get discovered on Styla — the brand links ONE chart per Styla category so
+//     shoppers browsing Styla ("show me dresses that fit me") can be matched to
+//     this brand. Separate from product-page assignment.
+// ----------------------------------------------------
+app.get('/api/merchant/styla-index', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { data: brand } = await supabase.from('brands')
+      .select('name, about, small_business').eq('id', brandId).maybeSingle();
+    const { data: charts } = await supabase.from('size_charts')
+      .select('id, chart_data, source, verified').eq('brand_id', brandId);
+
+    // category -> chart id (first chart claiming it wins; UI enforces one each)
+    const mapping = {};
+    (charts || []).forEach((c) => {
+      ((c.chart_data || {}).categories || []).forEach((cat) => { if (!mapping[cat]) mapping[cat] = c.id; });
+    });
+    const { data: st } = await supabase.from('shop_settings').select('settings').eq('shop', shop).maybeSingle();
+    res.json({
+      brand: brand || {},
+      mapping,
+      sharing: (((st && st.settings) || {}).share_catalog !== false),
+      charts: (charts || []).map((c) => ({
+        id: c.id, name: (c.chart_data || {}).name || 'Untitled chart',
+        sizes: ((c.chart_data || {}).sizes || []).length, source: c.source, verified: c.verified,
+      })),
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/merchant/styla-index', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const brandId = await ensureBrandForShop(shop);
+    const { category, chartId, small_business, about } = req.body || {};
+
+    // brand-level discovery flags
+    const patch = {};
+    if (small_business !== undefined) patch.small_business = !!small_business;
+    if (about !== undefined) patch.about = String(about || '').slice(0, 500);
+    if (Object.keys(patch).length) await supabase.from('brands').update(patch).eq('id', brandId);
+
+    // one chart per Styla category: clear the category off every other chart first
+    if (category) {
+      const { data: charts } = await supabase.from('size_charts')
+        .select('id, chart_data').eq('brand_id', brandId);
+      for (const c of (charts || [])) {
+        const cd = Object.assign({}, c.chart_data || {});
+        const cats = new Set(cd.categories || []);
+        const shouldHave = (c.id === chartId);
+        if (shouldHave) cats.add(category); else cats.delete(category);
+        const next = [...cats];
+        if (JSON.stringify(next) !== JSON.stringify(cd.categories || [])) {
+          cd.categories = next;
+          cd.garment_category = next[0] || null;   // keep the engine's ease rules in step
+          await supabase.from('size_charts')
+            .update({ chart_data: cd, category: next[0] || null }).eq('id', c.id);
+        }
+      }
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ----------------------------------------------------
 // 7. Settings & preferences (lobby card 3)
 // ----------------------------------------------------
 app.get('/api/merchant/settings', async (req, res) => {
