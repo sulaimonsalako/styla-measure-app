@@ -465,6 +465,10 @@ details.adv>summary:hover{color:var(--ink-2);}
       <textarea id="dsAbout" rows="2" placeholder="e.g. Family-run tailoring since 1998. Made in Montreal." style="resize:vertical"></textarea>
       <label class="switch" style="margin-top:16px"><input type="checkbox" id="dsSmall"/> We're a small business</label>
       <p class="hint" style="margin-top:6px">Shoppers can filter for small businesses they'd like to support — this adds a badge to your products on Styla.</p>
+
+      <label style="margin-top:18px">Who do you cut for? <span class="faint">(optional)</span></label>
+      <div class="hint" style="margin-bottom:8px">Shoppers at the edge of standard sizing are actively looking for brands drafted for their proportions — not just scaled-up sizes. Tick any that apply and Styla will route them to you.</div>
+      <div class="chips" id="dsSpecs"></div>
       <div style="margin-top:16px;display:flex;gap:12px;align-items:center">
         <button class="btn btn-primary" id="dsSaveBrand">Save</button>
         <span class="msg" id="dsBrandMsg"></span>
@@ -834,6 +838,13 @@ function renderChartLinks(){
 }
 /* ---- Card 5: get discovered on Styla (one chart per Styla category) ---- */
 var DISCOVER=null;
+// Brands drafted for a specific body — the right answer for shoppers whose
+// measurements sit outside standard grading.
+var SPECIALTIES=[
+  {key:'big-and-tall',label:'Big & tall'},{key:'plus-size',label:'Plus size'},
+  {key:'petite',label:'Petite'},{key:'tall',label:'Tall'},
+  {key:'maternity',label:'Maternity'},{key:'adaptive',label:'Adaptive'},
+];
 async function loadDiscover(){
   var host=el('dsCats'); if(!host) return;
   try{
@@ -842,6 +853,10 @@ async function loadDiscover(){
     if(DISCOVER.error) throw new Error(DISCOVER.error);
     el('dsAbout').value=(DISCOVER.brand&&DISCOVER.brand.about)||'';
     el('dsSmall').checked=!!(DISCOVER.brand&&DISCOVER.brand.small_business);
+    var have=(DISCOVER.brand&&DISCOVER.brand.specialties)||[];
+    el('dsSpecs').innerHTML=SPECIALTIES.map(function(s){
+      return '<label class="chip"><input type="checkbox" class="dsSpec" value="'+s.key+'"'+(have.indexOf(s.key)>-1?' checked':'')+'/>'+s.label+'</label>';
+    }).join('');
     el('discoverOff').style.display = DISCOVER.sharing ? 'none' : 'block';
 
     var charts=DISCOVER.charts||[];
@@ -870,7 +885,8 @@ async function loadDiscover(){
 }
 el('dsSaveBrand').addEventListener('click',async function(){
   setMsg('dsBrandMsg','Saving…');
-  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked})});
+  var specs=[].map.call(document.querySelectorAll('.dsSpec:checked'),function(x){return x.value;});
+  try{var r=await mfetch('/api/merchant/styla-index',{method:'POST',body:JSON.stringify({shop:SHOP,about:el('dsAbout').value,small_business:el('dsSmall').checked,specialties:specs})});
     var d=await r.json(); if(d.error) throw new Error(d.error);
     setMsg('dsBrandMsg','✓ Saved.','ok'); toast('Brand profile saved');
   }catch(e){ setMsg('dsBrandMsg',e.message||'Save failed.','err'); }

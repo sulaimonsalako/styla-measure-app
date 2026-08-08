@@ -48,16 +48,24 @@ export default async function catalogSearch(req, res) {
       const ids = [...new Set(products.map((p) => p.brand_id).filter(Boolean))];
       if (ids.length) {
         const { data: bs } = await supabaseAdmin.from('brands')
-          .select('id, name, domain, small_business, about').in('id', ids);
+          .select('id, name, domain, small_business, about, specialties').in('id', ids);
         const byId = Object.fromEntries((bs || []).map((b) => [b.id, b]));
         products = products.map((p) => {
           const b = byId[p.brand_id];
-          return b ? { ...p, brand: { name: b.name, domain: b.domain, small_business: !!b.small_business, about: b.about || null } } : p;
+          return b ? { ...p, brand: {
+            name: b.name, domain: b.domain, small_business: !!b.small_business,
+            about: b.about || null, specialties: b.specialties || [],
+          } } : p;
         });
       }
       // Optional filter: only small businesses.
       if (req.body && req.body.smallBusinessOnly) {
         products = products.filter((p) => p.brand && p.brand.small_business);
+      }
+      // Optional filter: brands drafted for a specific body (big & tall, petite…).
+      const want = req.body && req.body.specialty;
+      if (want) {
+        products = products.filter((p) => p.brand && (p.brand.specialties || []).includes(want));
       }
     }
 

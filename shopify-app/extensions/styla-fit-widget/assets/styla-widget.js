@@ -435,21 +435,25 @@
         p.belly = p.waist;
         return p;
       }
+      // Height IS a body measurement — and it's the one that decides Short/Regular/
+      // Long on suits, jackets and dresses. Required here, same as the quiz.
+      // (Weight isn't asked: it's only used to *estimate* girths in the quiz, and
+      // here the shopper is giving us the real ones.)
       function profileFromManual() {
         var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : v; };
-        var chest = num('styla-in-chest'), waist = num('styla-in-waist');
-        if (!chest || !waist) return null;
+        var chest = num('styla-in-chest'), waist = num('styla-in-waist'), height = num('styla-in-height');
+        if (!chest || !waist || !height) return null;
         var hips = num('styla-in-hips');
         return {
           chest: chest, waist: waist, belly: waist,
           hips: hips || (waist + 4),
-          height: num('styla-in-height'), shoulder: num('styla-in-shoulders'), inseam: num('styla-in-inseam'),
+          height: height, shoulder: num('styla-in-shoulders'), inseam: num('styla-in-inseam'),
         };
       }
       if (saveBtn) saveBtn.addEventListener('click', function () {
         var manual = el('styla-manual') && el('styla-manual').style.display !== 'none';
         var p = manual ? profileFromManual() : profileFromQuiz();
-        if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Enter at least chest and waist.'; return; }
+        if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Chest, waist and height are needed — height decides Short/Regular/Long.'; return; }
         setProfile(p);
         hideForm();
         STATE.result = null; loadFit();

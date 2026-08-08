@@ -15,13 +15,33 @@ import { productMatchesRules, hasRules } from '../_helpers/chart-rules.js';
 // Pick a garment length/proportion variant (Petite/Regular/Tall…) from the
 // shopper's height (inches). Prefer an option whose height range contains the
 // shopper; else the nearest by range midpoint.
-function pickLength(height, options) {
+// Length bands are published against total height, but a garment's length is
+// really about PROPORTION: two people of the same height can need different
+// lengths if one is long in the leg and short in the torso. When we know the
+// shopper's inseam we compute their leg-to-height ratio (population average is
+// ~0.46) and shift the effective height used for the lookup, so a long-torso
+// shopper isn't handed a hem that sits short on them.
+const AVG_LEG_RATIO = 0.46;
+function proportionAdjust(height, inseam) {
+  if (!height || !inseam) return { effective: height, note: null };
+  const ratio = inseam / height;
+  const delta = (ratio - AVG_LEG_RATIO) * height; // inches of leg above/below average
+  if (Math.abs(delta) < 1) return { effective: height, note: null };
+  // Long legs read "taller" for hems/inseams; a long torso reads "shorter".
+  return {
+    effective: height + delta,
+    note: delta > 0 ? 'longer legs than average for your height' : 'longer torso than average for your height',
+  };
+}
+
+function pickLength(height, options, inseam) {
   if (!height || !Array.isArray(options) || !options.length) return null;
-  const h = Number(height);
+  const adj = proportionAdjust(Number(height), inseam ? Number(inseam) : null);
+  const h = adj.effective;
   for (const o of options) {
     const lo = o.height_min != null ? o.height_min : -Infinity;
     const hi = o.height_max != null ? o.height_max : Infinity;
-    if (h >= lo && h <= hi) return { name: o.name, inseam: o.inseam != null ? o.inseam : null };
+    if (h >= lo && h <= hi) return { name: o.name, inseam: o.inseam != null ? o.inseam : null, reason: adj.note };
   }
   let best = null, bd = Infinity;
   for (const o of options) {
@@ -151,7 +171,7 @@ export default async function widgetSize(req, res) {
       if (user.height && Array.isArray(variants) && variants.length) {
         const tagged = norm.sizes.filter((s) => variantOfSize(s.name));
         if (tagged.length) {
-          const pick = pickLength(user.height, variants);
+          const pick = pickLength(user.height, variants, user.inseam);
           const want = pick && normVariant(pick.name);
           if (want) {
             const keep = norm.sizes.filter((s) => {
@@ -178,7 +198,7 @@ export default async function widgetSize(req, res) {
         breakdown: r.fit_breakdown,
         candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
         chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
-        recommendedLength: pickLength(user.height, (cd && (cd.length_options || cd.length_variants))) || (lengthNote ? { name: lengthNote } : null),
+        recommendedLength: pickLength(user.height, (cd && (cd.length_options || cd.length_variants)), user.inseam) || (lengthNote ? { name: lengthNote } : null),
         lengthOptions: (cd && (cd.length_options || cd.length_variants)) || null,
         notes: (cd && cd.notes) || null,
         stock: stockBySize,                       // { "M": true, "L": false }
@@ -302,7 +322,7 @@ export default async function widgetSize(req, res) {
       breakdown: r.fit_breakdown,
       candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
       chart: cd.sizes ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
-      recommendedLength: pickLength(user.height, cd.length_options),
+      recommendedLength: pickLength(user.height, cd.length_options, user.inseam),
       lengthOptions: cd.length_options || null,
       notes: cd.notes || null,
       stock: stockBySize,
