@@ -416,7 +416,7 @@ details.adv>summary:hover{color:var(--ink-2);}
     <div class="top"><div><h1>Assign charts</h1><div class="sub">A chart isn't used until it's assigned — to your whole store, a clothing type, or single products.</div></div></div>
 
     <div class="card">
-      <div class="card-head"><div class="txt"><h2>Pick the products</h2><p class="hint">The filters only narrow the list. The chart is always assigned to the products you tick — nothing else.</p></div></div>
+      <div class="card-head"><div class="txt"><h2>Pick the products</h2><p class="hint">Filters only narrow the list. Assign the whole filtered group, or tick individual products — a chart can be reused as many times as you like.</p></div></div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
         <span class="hint">Assign</span>
@@ -1141,11 +1141,16 @@ function chartNameById(id){
 function renderPicker(){
   var host=el('pkGrid'); if(!host) return;
   // chart dropdown
-  if(el('pkChart').options.length!==CHARTS.length||!el('pkChart').options.length){
-    el('pkChart').innerHTML=CHARTS.length
-      ? CHARTS.map(function(c){var cd=c.chart_data||{};return '<option value="'+c.id+'">'+esc(cd.name||'Untitled chart')+' ('+((cd.sizes||[]).length)+' sizes)</option>';}).join('')
-      : '<option value="">Create a chart first</option>';
-  }
+  // Always rebuild and re-apply the selection. (Comparing option count to
+  // CHARTS.length used to "optimise" this away — but with exactly one chart the
+  // placeholder option made the counts equal, so the dropdown stayed stuck on
+  // "Create a chart first" and every assign action was dead.)
+  var keep=el('pkChart').value;
+  el('pkChart').innerHTML=CHARTS.length
+    ? CHARTS.map(function(c){var cd=c.chart_data||{};
+        return '<option value="'+c.id+'">'+esc(cd.name||'Untitled chart')+' ('+((cd.sizes||[]).length)+' sizes)</option>';}).join('')
+    : '<option value="">Create a chart first</option>';
+  if(keep && CHARTS.some(function(c){return c.id===keep;})) el('pkChart').value=keep;
   var all=apparel();
   if(!PRODUCTS.length){ host.innerHTML='<div class="empty">Sync your products in Settings to see them here.</div>'; return; }
   var curAssigned=el('pkAssigned').value;
