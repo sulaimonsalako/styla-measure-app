@@ -40,6 +40,10 @@ export function runSizingEngine(user, chart) {
   let userInseam = parseFloat(user.inseam || (user.twin && user.twin.inseam));
   let userThigh = parseFloat(user.thigh || (user.twin && user.twin.thigh));
   let userNeck = parseFloat(user.neck || (user.twin && user.twin.neck));
+  // Torso length (neck point to waist) and rise. Only used when we actually have
+  // them — we never invent a body measurement to make a chart column scoreable.
+  let userTorso = parseFloat(user.torso || (user.twin && user.twin.torso));
+  let userRise  = parseFloat(user.rise || (user.twin && user.twin.rise));
 
   if (activeScan) {
     userChest = parseFloat(activeScan.volume_params.chest) || userChest;
@@ -53,6 +57,10 @@ export function runSizingEngine(user, chart) {
     userInseam = parseFloat(activeScan.front_params.inseam_from_crotch_to_floor) || parseFloat(activeScan.front_params.inseam) || userInseam;
     userThigh = parseFloat(activeScan.volume_params.thigh) || userThigh;
     userNeck = parseFloat(activeScan.volume_params.neck) || userNeck;
+    userTorso = parseFloat(activeScan.front_params.back_neck_point_to_waist) ||
+                parseFloat(activeScan.front_params.neck_to_waist) || userTorso;
+    userRise  = parseFloat(activeScan.front_params.rise) ||
+                parseFloat(activeScan.front_params.crotch_height) || userRise;
   }
 
   if (user.measurement_overrides) {
@@ -65,6 +73,8 @@ export function runSizingEngine(user, chart) {
     if (overrides.inseam) userInseam = parseFloat(overrides.inseam);
     if (overrides.thigh) userThigh = parseFloat(overrides.thigh);
     if (overrides.neck) userNeck = parseFloat(overrides.neck);
+    if (overrides.torso) userTorso = parseFloat(overrides.torso);
+    if (overrides.rise) userRise = parseFloat(overrides.rise);
   }
 
   const candidateScores = [];
@@ -84,7 +94,11 @@ export function runSizingEngine(user, chart) {
     let chartChest = getVal('chest');
     let chartWaist = getVal('waist');
     let chartHips = getVal('hips');
-    let chartBelly = getVal('belly') || (category !== 'bottoms' ? chartWaist : null);
+    // Only score the belly when the chart genuinely publishes one. This used to
+    // fall back to the waist column, so on an ordinary chest/waist/hips chart the
+    // waist was scored TWICE (once as waist, once as belly) and midsection
+    // deviation was penalised roughly double.
+    let chartBelly = getVal('belly') || getVal('abdomen') || getVal('stomach');
     let chartShoulder = getVal('shoulder') || getVal('shoulder_width') || getVal('shoulders');
     let chartSleeve = getVal('sleeve') || getVal('sleeve_length');
     // Measurement-convention normalization for RAW charts (normalized charts are
@@ -98,15 +112,29 @@ export function runSizingEngine(user, chart) {
     }
     let chartInseam = getVal('inseam');
     let chartThigh = getVal('thigh');
+    // Garment length, rise and leg opening. `length` is the 4th most common
+    // column merchants publish and was being dropped entirely.
+    let chartLength = getVal('length') || getVal('body_length') || getVal('garment_length') || getVal('total_length');
+    let chartRise   = getVal('rise') || getVal('rising_length') || getVal('front_rise');
+    let chartLegOpen= getVal('leg_opening') || getVal('bottom_width') || getVal('hem');
     let chartNeck = getVal('neck') || getVal('collar') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
 
     let score = 100;
     const breakdown = {};
+    const scored = new Set();   // dimensions genuinely compared, for confidence
     let fits = true;
     let localSpectrum = 'ideal';
 
     const scoreDimension = (userVal, chartVal, label, critical = false) => {
       if (!chartVal || !userVal) return;
+
+      // HARD vs ADJUSTABLE. A trouser waist that doesn't close is a returned
+      // parcel; a thigh an inch off is a preference. `critical` was previously
+      // accepted and then ignored, so every dimension carried equal weight —
+      // this applies it to every deduction in this function.
+      const W = critical ? 1.75 : 1;
+      const pen = (amt) => { score -= amt * W; };
+      scored.add(label);
       
       // Sleeve/shoulder are already reconciled to canonical (shoulder-to-wrist,
       // full cross-back) above, so compare user and chart directly here.
@@ -127,7 +155,8 @@ export function runSizingEngine(user, chart) {
           brandEase = (category === 'bottoms') ? 1.5 : 4.0;
         } else if (label === 'hips') {
           brandEase = (category === 'bottoms') ? 3.5 : 4.0;
-        } else if (label === 'shoulder' || label === 'sleeve' || label === 'inseam' || label === 'thigh') {
+        } else if (label === 'shoulder' || label === 'sleeve' || label === 'inseam' || label === 'thigh'
+                   || label === 'length' || label === 'rise') {
           brandEase = 0.8;
         }
         physicalEase = brandEase + (chartVal - targetUserVal);
@@ -148,12 +177,12 @@ export function runSizingEngine(user, chart) {
 
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 12;
+          pen(Math.abs(physicalEase + stretchAllowance) * 12);
           localSpectrum = 'slim';
           breakdown[label] = `Too tight (${Math.abs(physicalEase).toFixed(1)}" tighter than you need here)`;
         } else {
           const dev = physicalEase - ideal;
-          score -= Math.abs(dev) * (dev < 0 ? 5 : 2); // tighter-than-ideal penalized harder than looser
+          pen(Math.abs(dev) * (dev < 0 ? 5 : 2)); // tighter-than-ideal penalized harder than looser
           if (dev < -1.0) localSpectrum = 'slim';
           else if (dev <= 1.5) localSpectrum = 'ideal';
           else if (dev <= 4.0) localSpectrum = 'relaxed';
@@ -164,87 +193,112 @@ export function runSizingEngine(user, chart) {
         // Waist on bottoms (pants)
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 10;
+          pen(Math.abs(physicalEase + stretchAllowance) * 10);
           breakdown[label] = `Too tight (Garment waist is ${Math.abs(physicalEase).toFixed(1)}" smaller than your waist)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 6;
+          pen(Math.abs(physicalEase) * 6);
           localSpectrum = 'slim';
           breakdown[label] = `Snug fit (${Math.abs(physicalEase).toFixed(1)}" under waist size)`;
         } else if (physicalEase <= 1.5) { // e.g. 0" to 1.5" ease
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect fit (${physicalEase.toFixed(1)}" ease)`;
         } else if (physicalEase <= 3.0) { // e.g. 1.5" to 3.0" ease
-          score -= (physicalEase - 1.5) * 4;
+          pen((physicalEase - 1.5) * 4);
           localSpectrum = 'relaxed';
           breakdown[label] = `Loose waist (${physicalEase.toFixed(1)}" ease)`;
         } else { // e.g. > 3.0" ease
           fits = false; // falls off
-          score -= (physicalEase - 3.0) * 8;
+          pen((physicalEase - 3.0) * 8);
           breakdown[label] = `Too loose (Garment is ${physicalEase.toFixed(1)}" larger than your waist)`;
         }
       } else if (label === 'sleeve') {
         // Sleeve length (adjusted for standard bent-elbow / mobility wearing ease of 0.5" to 3.0")
         if (physicalEase < 0) {
           fits = false;
-          score -= Math.abs(physicalEase) * 8;
+          pen(Math.abs(physicalEase) * 8);
           breakdown[label] = `Sleeves too short (Garment sleeve is ${Math.abs(physicalEase).toFixed(1)}" shorter than your arm)`;
         } else if (physicalEase < 0.5) {
-          score -= (0.5 - physicalEase) * 4;
+          pen((0.5 - physicalEase) * 4);
           breakdown[label] = `Sleeves snug (Garment sleeve is ${physicalEase.toFixed(1)}" over arm length)`;
         } else if (physicalEase <= 3.0) { // 0.5" to 3.0" ease is ideal for movement/wearing ease
           localSpectrum = 'ideal';
           breakdown[label] = `Sleeves perfect (${physicalEase.toFixed(1)}" mobility allowance)`;
         } else if (physicalEase <= 4.5) { // 3.0" to 4.5" is relaxed
-          score -= (physicalEase - 3.0) * 2;
+          pen((physicalEase - 3.0) * 2);
           localSpectrum = 'relaxed';
           breakdown[label] = `Sleeves long (${physicalEase.toFixed(1)}" ease)`;
         } else { // 4.5"+ is oversized
-          score -= (physicalEase - 4.5) * 5;
+          pen((physicalEase - 4.5) * 5);
           localSpectrum = 'oversized';
           breakdown[label] = `Sleeves very long (${physicalEase.toFixed(1)}" ease)`;
         }
       } else if (label === 'neck') {
         // Neck/Collar (tightness can be worn open/unbuttoned, so fits remains true)
         if (physicalEase < 0.2) { // less than 0.2" ease is too tight to button comfortably
-          score -= Math.abs(physicalEase - 0.2) * 5; // modest penalty
+          pen(Math.abs(physicalEase - 0.2) * 5); // modest penalty
           breakdown[label] = `Tight collar (Garment collar is ${chartVal.toFixed(1)}" on a ${userVal.toFixed(1)}" neck)`;
         } else if (physicalEase <= 1.0) {
           localSpectrum = 'ideal';
           breakdown[label] = `Collar perfect (${physicalEase.toFixed(1)}" ease)`;
         } else {
-          score -= (physicalEase - 1.0) * 1.5;
+          pen((physicalEase - 1.0) * 1.5);
           breakdown[label] = `Collar loose (${physicalEase.toFixed(1)}" ease)`;
+        }
+      } else if (label === 'length') {
+        // Garment length vs torso. Unlike a circumference there is no "too big"
+        // failure — a longer top is a style choice — so this nudges the score
+        // rather than ruling a size out.
+        if (physicalEase < -2.0) {
+          pen(Math.abs(physicalEase + 2.0) * 3);
+          breakdown[label] = `Cropped (${Math.abs(physicalEase).toFixed(1)}" shorter than your torso)`;
+        } else if (physicalEase <= 3.0) {
+          localSpectrum = 'ideal';
+          breakdown[label] = `Length works (${physicalEase.toFixed(1)}" below your waist)`;
+        } else {
+          pen((physicalEase - 3.0) * 1.5);
+          breakdown[label] = `Long on you (${physicalEase.toFixed(1)}" below your waist)`;
+        }
+      } else if (label === 'rise') {
+        if (physicalEase < -1.0) {
+          pen(Math.abs(physicalEase + 1.0) * 4);
+          breakdown[label] = `Low rise (${Math.abs(physicalEase).toFixed(1)}" below your natural rise)`;
+        } else if (physicalEase <= 1.5) {
+          localSpectrum = 'ideal';
+          breakdown[label] = `Rise sits right (${physicalEase.toFixed(1)}")`;
+        } else {
+          pen((physicalEase - 1.5) * 2);
+          breakdown[label] = `High rise (${physicalEase.toFixed(1)}" above your natural rise)`;
         }
       } else if (label === 'inseam') {
         // Inseam length
         if (physicalEase < -2.0) {
-          score -= Math.abs(physicalEase + 2.0) * 5;
+          pen(Math.abs(physicalEase + 2.0) * 5);
           breakdown[label] = `Too short (Garment inseam is ${Math.abs(physicalEase).toFixed(1)}" shorter than your leg)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 1;
+          pen(Math.abs(physicalEase) * 1);
           breakdown[label] = `Cropped fit (Inseam is ${Math.abs(physicalEase).toFixed(1)}" shorter)`;
         } else if (physicalEase <= 1.5) {
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect length (${physicalEase.toFixed(1)}" break)`;
         } else {
-          score -= (physicalEase - 1.5) * 2.5;
+          pen((physicalEase - 1.5) * 2.5);
           breakdown[label] = `Long inseam (Puddles by ${physicalEase.toFixed(1)}")`;
         }
       } else {
         // General length/shoulders/thighs
         if (physicalEase < -stretchAllowance) {
           fits = false;
-          score -= Math.abs(physicalEase + stretchAllowance) * 8;
+          pen(Math.abs(physicalEase + stretchAllowance) * 8);
           breakdown[label] = `Too narrow (Garment is ${Math.abs(physicalEase).toFixed(1)}" smaller)`;
         } else if (physicalEase < 0) {
-          score -= Math.abs(physicalEase) * 2.5;
+          pen(Math.abs(physicalEase) * 2.5);
           localSpectrum = 'slim';
           breakdown[label] = `Snug fit (${Math.abs(physicalEase).toFixed(1)}" under target)`;
         } else if (physicalEase <= 1.5) {
           localSpectrum = 'ideal';
           breakdown[label] = `Perfect fit (${physicalEase.toFixed(1)}" ease)`;
         } else {
-          score -= (physicalEase - 1.5) * 1.5;
+          pen((physicalEase - 1.5) * 1.5);
           localSpectrum = 'relaxed';
           breakdown[label] = `Relaxed fit (${physicalEase.toFixed(1)}" ease)`;
         }
@@ -261,12 +315,22 @@ export function runSizingEngine(user, chart) {
     if (chartInseam && userInseam) scoreDimension(userInseam, chartInseam, 'inseam', category === 'bottoms');
     if (chartThigh && userThigh) scoreDimension(userThigh, chartThigh, 'thigh');
     if (chartNeck && userNeck) scoreDimension(userNeck, chartNeck, 'neck');
+    if (chartLength && userTorso) scoreDimension(userTorso, chartLength, 'length');
+    if (chartRise && userRise) scoreDimension(userRise, chartRise, 'rise');
+
+    // Published, but with no body measurement to judge them against. Report them
+    // rather than silently discard: the shopper and the AI can both use a number
+    // even when the engine can't score it. Deliberately does NOT touch `score`.
+    if (chartLength && !userTorso) breakdown.length = `Garment length ${chartLength.toFixed(1)}"`;
+    if (chartRise && !userRise) breakdown.rise = `Rise ${chartRise.toFixed(1)}"`;
+    if (chartLegOpen) breakdown.leg_opening = `Leg opening ${chartLegOpen.toFixed(1)}"`;
 
     const rawScore = score; // keep UNCLAMPED so failing sizes still rank by closeness
     score = Math.max(0, Math.min(100, Math.round(score)));
 
     candidateScores.push({
       name: sizeName,
+      scoredCount: scored.size,
       score,
       rawScore,
       fits,
@@ -290,7 +354,10 @@ export function runSizingEngine(user, chart) {
   // Coverage weighting: a "match" on a single dimension is not a real 100%.
   // Dampen confidence by how many body dimensions we could actually compare, so a
   // thin chest-only chart can't score 100% and brands we can fully assess rank higher.
-  const comparedDims = bestOption.breakdown ? Object.keys(bestOption.breakdown).length : 0;
+  // NB: scoredCount, not breakdown.length — the breakdown also carries
+  // informational rows (garment length, rise, leg opening) that we report but
+  // cannot score, and those must not buy confidence.
+  const comparedDims = bestOption.scoredCount || 0;
   const coverageFactor = Math.min(1, 0.55 + 0.15 * comparedDims); // 1 dim→0.70, 2→0.85, 3+→1.0
   const displayScore = Math.round(bestOption.score * coverageFactor);
 
