@@ -139,6 +139,13 @@ tbody td input:focus{background:#fff;border-color:var(--brand-2);}
 .linkcard{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;background:var(--surface);transition:border-color .14s,box-shadow .14s;}
 .linkcard:hover{border-color:#dcdfe6;box-shadow:var(--sh-1);}
 .chips{display:flex;flex-wrap:wrap;gap:7px;}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;flex:none;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.busy{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.busy .el{font-variant-numeric:tabular-nums;opacity:.6;font-size:.78rem;}
+.bar{height:3px;border-radius:3px;background:var(--line);overflow:hidden;width:150px;flex:none;}
+.bar i{display:block;height:100%;width:40%;border-radius:3px;background:var(--brand);animation:slide 1.25s ease-in-out infinite;}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;border:1px solid var(--line);border-radius:100px;padding:5px 11px;cursor:pointer;background:var(--surface);transition:border-color .14s,background .14s,color .14s;user-select:none;}
 .chip:hover{border-color:#cfd3dc;}
 .chip input{width:auto;margin:0;accent-color:var(--brand);}
@@ -609,7 +616,70 @@ el('shopline2').textContent = SHOP || '—';
 
 var TOASTT;
 function toast(text,isErr){ var t=el('toast'); t.textContent=text; t.className=(isErr?'err ':'')+'on'; clearTimeout(TOASTT); TOASTT=setTimeout(function(){t.className='';},2600); }
-function setMsg(id,text,kind){ var m=el(id); if(!m)return; m.textContent=text||''; m.className='msg'+(kind?(' '+kind):''); }
+// ---- ONE progress mechanism for the whole app ----
+//
+// We cannot get true percentage progress out of an AI parse or a catalog sync,
+// so we deliberately DON'T fake a percentage. What actually helps is knowing
+// it's alive and how long it's been going: an indeterminate bar, a live
+// elapsed counter, and stage captions written as expectations rather than as
+// claims about work already finished.
+//
+// The trick that makes this consistent everywhere: setMsg() treats any message
+// ending in an ellipsis as PENDING and renders it with the spinner + timer. So
+// every existing setMsg(id,'Saving…') across the app became a real progress
+// indicator without touching those call sites. busy() layers timed stages on
+// top for the genuinely slow operations.
+var PENDING = {};
+
+function stopPending(id){ if (PENDING[id]) { clearInterval(PENDING[id]); delete PENDING[id]; } }
+
+function renderPending(id, stageAt, opts){
+  var m = el(id); if (!m) return { done:function(){}, fail:function(){}, stop:function(){} };
+  opts = opts || {};
+  var t0 = Date.now();
+  var btn = opts.button ? el(opts.button) : null;
+  var prevLabel = btn ? btn.textContent : null;
+  if (btn) { btn.disabled = true; if (opts.buttonText) btn.textContent = opts.buttonText; }
+
+  function paint(){
+    var secs = Math.floor((Date.now() - t0) / 1000);
+    m.className = 'msg';
+    m.innerHTML = '<span class="busy"><span class="spin"></span>'
+      + '<span>' + esc(stageAt(secs)) + '</span>'
+      + (opts.bar === false ? '' : '<span class="bar"><i></i></span>')
+      + '<span class="el">' + (secs >= 3 ? secs + 's' : '') + '</span></span>';
+  }
+  stopPending(id); paint();
+  PENDING[id] = setInterval(paint, 400);
+
+  function stop(){ stopPending(id);
+    if (btn) { btn.disabled = false; if (prevLabel != null) btn.textContent = prevLabel; } }
+  return {
+    stop: stop,
+    done: function(text, kind){ stop(); setMsg(id, text || '', kind || 'ok'); },
+    fail: function(text){ stop(); setMsg(id, text || 'Something went wrong.', 'err'); },
+  };
+}
+
+function setMsg(id,text,kind){
+  var m = el(id); if(!m) return;
+  // A trailing ellipsis means "in progress" -- render it as live progress.
+  if (!kind && text && /[\u2026]\s*$/.test(text)) { renderPending(id, function(){ return text; }, { bar:false }); return; }
+  stopPending(id);
+  m.textContent = text || '';
+  m.className = 'msg' + (kind ? (' ' + kind) : '');
+}
+
+// Timed stage captions, for operations slow enough that one line isn't enough.
+//   busy('aimsg', [[0,'Uploading…'],[6,'Reading tables…']], {button:'parseBtn'})
+function busy(msgId, stages, opts){
+  stages = (stages && stages.length) ? stages : [[0,'Working\u2026']];
+  return renderPending(msgId, function(secs){
+    var stage = stages[0][1];
+    for (var i = 0; i < stages.length; i++) if (secs >= stages[i][0]) stage = stages[i][1];
+    return stage;
+  }, opts);
+}
 
 function go(v){
   ['lobby','charts','assign','settings','analytics','discover'].forEach(function(x){ el('v-'+x).classList.toggle('on', x===v); });
@@ -767,13 +837,26 @@ function showConvGuess(){
 }
 el('convSleeve').addEventListener('change',function(){CONV.sleeve_convention=this.value;});
 el('convShoulder').addEventListener('change',function(){CONV.shoulder_convention=this.value;});
-async function parseShots(){if(!SHOTS.length)return;var m=el('aimsg');m.textContent='Reading your chart…';
-  try{var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
+async function parseShots(){
+  if(!SHOTS.length)return;
+  var n=SHOTS.length, many=n>1;
+  // Reading several images means uploading them, OCRing each, then merging --
+  // that is genuinely slow, so set the expectation up front instead of leaving
+  // a frozen "Reading your chart…" on screen.
+  var b=busy('aimsg', [
+    [0,  'Uploading '+n+' image'+(n>1?'s':'')+'…'],
+    [3,  many ? 'Reading the tables…' : 'Reading the table…'],
+    [10, many ? 'Merging '+n+' images into one chart…' : 'Pulling out the measurements…'],
+    [22, 'Still going — detailed charts take longer.'],
+    [45, 'Nearly there. Large charts can take up to a minute.'],
+  ], { button:'parseBtn', buttonText:'Reading…' });
+  try{
+    var resp=await fetch(STYLA+'/api/parse-size-chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:SHOTS.map(function(s){return {fileData:s.dataUrl,mimeType:s.mime};})})});
     var j=await resp.json();if(j.error)throw new Error(j.error);
     applyParsed(j);
-    m.textContent='✓ Read '+((j.sizes||[]).length)+' sizes — check the table, then save.';
+    b.done('\u2713 Read '+((j.sizes||[]).length)+' sizes'+(many?(' from '+n+' images'):'')+' — check the table, then save.');
     toast('Chart read — review and save');
-  }catch(e){m.textContent='Could not read that: '+(e.message||e);toast('Could not read that chart',true);}}
+  }catch(e){ b.fail('Could not read that: '+(e.message||e)); toast('Could not read that chart',true); }}
 el('drop').addEventListener('click',function(e){var t=e.target;if(t.id!=='file'&&t.tagName!=='IMG'&&t.className!=='shotx')el('file').click();});
 el('file').addEventListener('change',function(){[].forEach.call(this.files||[],addShot);this.value='';});
 el('drop').addEventListener('dragover',function(e){e.preventDefault();});
@@ -866,11 +949,11 @@ el('save').addEventListener('click',async function(){
   if(warns.length&&!pending){wbox.style.display='block';wbox.innerHTML='⚠ '+warns.join('<br>⚠ ')+'<br><b>Click “Save anyway” or fix the rows.</b>';this.textContent='Save anyway';pending=true;return;}
   wbox.style.display='none';this.textContent='Save chart';pending=false;
   var chart_data={name:(el('name').value||'').trim()||null,subcategory:null,chart_type:'body',columns:COLS.slice(),sleeve_convention:CONV.sleeve_convention,shoulder_convention:CONV.shoulder_convention,length_options:collectLens(),notes:(el('notes').value||'').trim(),sizes:sizes,categories:[],applies_all:false};
-  setMsg('saveMsg','Saving…');
+  var bSave=busy('saveMsg',[[0,'Saving the chart…'],[6,'Still saving…']],{button:'save',buttonText:'Saving…',bar:false});
   try{var r=await mfetch('/api/merchant/charts',{method:'POST',body:JSON.stringify({shop:SHOP,id:EDITING_ID||undefined,category:null,subcategory:chart_data.subcategory,gender:null,chart_data:chart_data,parsed:LAST_PARSE})});
     var d=await r.json();if(d.error)throw new Error(d.error);
-    setMsg('saveMsg',EDITING_ID?'✓ Updated.':'✓ Saved — now assign it.','ok');toast(EDITING_ID?'Chart updated':'Chart saved');resetForm();loadCharts();
-  }catch(e){setMsg('saveMsg',e.message||'Save failed.','err');toast('Save failed',true);}
+    bSave.done(EDITING_ID?'\u2713 Updated.':'\u2713 Saved — now assign it.');toast(EDITING_ID?'Chart updated':'Chart saved');resetForm();loadCharts();
+  }catch(e){bSave.fail(e.message||'Save failed.');toast('Save failed',true);}
 });
 
 /* ---- charts list ---- */
@@ -1300,7 +1383,8 @@ el('pkApplyAll').addEventListener('click',async function(){
   var chartId=el('pkChart').value; if(!chartId) return;
   var conds=futureConditions(pickerFilters()); if(!conds.length) return;
   var ids=filteredProducts().map(function(p){return p.external_id;});
-  this.disabled=true; setMsg('pkMsg','Applying to the whole group\u2026');
+  var bg=busy('pkMsg',[[0,'Applying to '+ids.length+' product'+(ids.length===1?'':'s')+'…'],[5,'Saving the rule for future products…']],{bar:false});
+  this.disabled=true;
   try{
     if(ids.length){
       var r=await mfetch('/api/merchant/assign-chart',{method:'POST',
@@ -1312,16 +1396,17 @@ el('pkApplyAll').addEventListener('click',async function(){
     var r2=await mfetch('/api/merchant/link-chart',{method:'POST',
       body:JSON.stringify({shop:SHOP,id:chartId,rules:{match:conds.length>1?'all':'any',conditions:conds}})});
     var d2=await r2.json(); if(d2.error) throw new Error(d2.error);
-    setMsg('pkMsg','\u2713 Applied to '+ids.length+' product'+(ids.length===1?'':'s')+'. Anything new '+describeConds(conds)+' gets it automatically.','ok');
+    bg.done('\u2713 Applied to '+ids.length+' product'+(ids.length===1?'':'s')+'. Anything new '+describeConds(conds)+' gets it automatically.');
     toast('Applied to group'); PICKED={}; loadProducts(); loadCharts();
-  }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
+  }catch(e){ bg.fail(e.message||'Failed.'); }
   updateApplyAll();
 });
 
 el('pkAssign').addEventListener('click',async function(){
   var chartId=el('pkChart').value; if(!chartId) return;
   var ids=Object.keys(PICKED); if(!ids.length) return;
-  this.disabled=true; setMsg('pkMsg','Assigning…');
+  var ba=busy('pkMsg',[[0,'Assigning '+ids.length+' product'+(ids.length===1?'':'s')+'…']],{bar:false});
+  this.disabled=true;
   try{
     var r=await mfetch('/api/merchant/assign-chart',{method:'POST',
       body:JSON.stringify({shop:SHOP,externalIds:ids,chartId:chartId})});
@@ -1337,9 +1422,9 @@ el('pkAssign').addEventListener('click',async function(){
         note=' New products '+describeConds(conds)+' will use it automatically.';
       }
     }
-    setMsg('pkMsg','✓ Assigned '+ids.length+' product'+(ids.length===1?'':'s')+'.'+note,'ok');
+    ba.done('\u2713 Assigned '+ids.length+' product'+(ids.length===1?'':'s')+'.'+note);
     toast('Chart assigned'); PICKED={}; loadProducts(); loadCharts();
-  }catch(e){ setMsg('pkMsg',e.message||'Failed.','err'); }
+  }catch(e){ ba.fail(e.message||'Failed.'); }
   this.disabled=false;
 });
 
@@ -1365,9 +1450,15 @@ function updateSyncStatus(){
   el('syncBtn').textContent = n ? 'Re-sync products' : 'Sync products';
 }
 el('syncBtn').addEventListener('click',async function(){this.disabled=true;setMsg('syncMsg','Reading your products…');
+  var b=busy('syncMsg', [
+    [0,  'Reading your products from Shopify…'],
+    [5,  'Indexing them for the AI…'],
+    [15, 'Still working — large catalogues take a while.'],
+    [40, 'Almost done. Only changed products are re-indexed.'],
+  ]);
   try{var r=await mfetch('/api/merchant/sync-catalog',{method:'POST',body:JSON.stringify({shop:SHOP})});var d=await r.json();if(d.error)throw new Error(d.error);
-    setMsg('syncMsg','✓ '+(d.message||('Synced '+(d.synced||0)+' products.')),'ok');toast('Products synced');loadProducts();
-  }catch(e){setMsg('syncMsg',e.message||'Sync failed.','err');toast('Sync failed',true);}this.disabled=false;});
+    b.done('\u2713 '+(d.message||('Synced '+(d.synced||0)+' products.')));toast('Products synced');loadProducts();
+  }catch(e){b.fail(e.message||'Sync failed.');toast('Sync failed',true);}this.disabled=false;});
 
 var SETTINGS_LOADED=false;
 async function loadSettings(){
