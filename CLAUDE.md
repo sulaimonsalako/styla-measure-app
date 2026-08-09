@@ -305,6 +305,30 @@ Three linked additions so a chart is captured WHOLE and its non-tabular context 
 - chart_data now carries: columns, sizes, sleeve/shoulder_convention, length_options, notes.
 - NOT run live; verify on deploy.
 
+## Sizing engine corrections (2026-08-09)
+
+Audited `api/_helpers/sizing-engine.js` against real chart data. It scores 9 dims
+(chest, waist, belly, hips, shoulder, sleeve, inseam, thigh, neck) but each is gated
+on `if (chartX && userX)` — so the BRAND'S CHART is the ceiling, not the engine. Across
+499 stored size rows: waist 466, hips 380, chest 349, length 57, sleeve 21, shoulder 18,
+thigh/inseam/rise 6. ~93% of recommendations run on the standard three. More scan
+measurements won't help until charts carry more columns.
+
+Three defects fixed (commit `cb5b55e`):
+- `critical` flag was accepted and never read → now weights deductions x1.75 for hard
+  measurements (waist/inseam on bottoms). Verified it flips a real trade-off.
+- `chartBelly` fell back to `chartWaist` → waist scored TWICE on tops (double penalty +
+  fake 3rd dimension). Belly now needs a real belly/abdomen/stomach column.
+- `length`/`rise`/`leg_opening` were discarded → now scored when the shopper has
+  torso/rise, otherwise reported in the breakdown as informational.
+- Also: coverage/confidence counted `Object.keys(breakdown).length`, which the phantom
+  belly inflated. Now counts a per-candidate `scored` Set, so informational rows can't
+  buy confidence. EXPECT SCORES TO DROP on thin charts (chest/waist top: 97 → 82) —
+  that's honesty, not regression. `rank-brands` reads `dimensions_compared` and benefits.
+
+Regression harness: `/tmp/run.mjs` + `/tmp/suite.mjs` pattern (before/after diff over
+5 chart shapes + 6 assertions). Recreate if the engine is touched again.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
