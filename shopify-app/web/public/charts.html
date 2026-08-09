@@ -341,6 +341,7 @@ details.adv>summary:hover{color:var(--ink-2);}
       </div>
 
       <div id="chartEditor" style="display:none">
+        <div id="editBar" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:.85rem"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
           <span class="hint">Measurements in</span>
           <div class="unit-sw">
@@ -681,8 +682,34 @@ function rowHTML(s){s=s||{};
 function addRow(s){var tr=document.createElement('tr');tr.innerHTML=rowHTML(s);el('rows').appendChild(tr);}
 function collectRows(){var rows=[];el('rows').querySelectorAll('tr').forEach(function(tr){var ins=tr.querySelectorAll('input');var r={name:ins[0].value};COLS.forEach(function(c,i){r[c]=ins[i+1]?ins[i+1].value:'';});rows.push(r);});return rows;}
 function renderTable(rows){renderHead();el('rows').innerHTML='';(rows&&rows.length?rows:[{}]).forEach(addRow);}
-function showEditor(rows){ el('chartEmpty').style.display='none'; el('chartEditor').style.display='block'; renderTable(rows); }
-el('enterManual').addEventListener('click',function(){ showEditor([{},{}]); });
+function showEditor(rows){ el('chartEmpty').style.display='none'; el('chartEditor').style.display='block'; renderTable(rows); paintEditState(); }
+
+// Starting a NEW chart must drop any chart we were previously editing.
+// Without this, opening a saved chart with Edit and then pasting a screenshot
+// silently saved the new table over the old chart.
+function beginNewChart(){
+  EDITING_ID=null;
+  el('save').textContent='Save chart';
+  setMsg('saveMsg','');
+  paintEditState();
+}
+
+// Make the editing state impossible to miss, and always escapable.
+function paintEditState(){
+  var bar=el('editBar'); if(!bar) return;
+  if(!EDITING_ID){ bar.style.display='none'; return; }
+  var c=CHARTS.filter(function(x){return x.id===EDITING_ID;})[0];
+  var nm=((c&&c.chart_data&&c.chart_data.name)||'this chart');
+  bar.style.display='flex';
+  bar.innerHTML='<span>Editing <b>'+esc(nm)+'</b> — saving replaces it.</span>'
+    +'<button class="btn btn-ghost btn-sm" id="editBarNew">Save as a new chart instead</button>';
+  el('editBarNew').addEventListener('click',function(){
+    beginNewChart();
+    setMsg('saveMsg','This will be saved as a new chart. Give it its own name.','ok');
+    el('name').focus();
+  });
+}
+el('enterManual').addEventListener('click',function(){ beginNewChart(); showEditor([{},{}]); });
 el('addRow').addEventListener('click',function(){addRow();});
 el('addCol').addEventListener('click',function(){
   var name=prompt('Measurement name (e.g. Shoulder, Sleeve Length, Length, Thigh, Neck):');
@@ -699,6 +726,9 @@ function renderShots(){var host=el('shots');if(!host)return;
 function updParseBtn(){var b=el('parseBtn');if(!b)return;b.style.display=SHOTS.length?'inline-flex':'none';b.textContent='Read chart ('+SHOTS.length+' image'+(SHOTS.length>1?'s':'')+')';}
 function addShot(file){if(!file)return;var r=new FileReader();r.onload=function(){SHOTS.push({dataUrl:r.result,mime:file.type||'image/png'});renderShots();updParseBtn();};r.readAsDataURL(file);}
 function applyParsed(j){
+  // A freshly read screenshot is always a NEW chart, never an edit of whatever
+  // was open before.
+  beginNewChart();
   LAST_PARSE=j;
   var poms=(j.poms&&j.poms.length)?j.poms.slice():[];
   if(!poms.length){var first=(j.sizes||[])[0]; if(first&&j.sizeChart&&j.sizeChart[first]) poms=Object.keys(j.sizeChart[first]);}
