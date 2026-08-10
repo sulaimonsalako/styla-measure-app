@@ -1027,3 +1027,30 @@
 .styla-forwho input.styla-invalid{ border-color:#e11d48; background:#fff5f7; }
 .styla-forwho-note{ margin:8px 0 0; font-size:.75rem; line-height:1.45; opacity:.7; }
 .styla-opt{ font-size:.66rem; text-transform:uppercase; letter-spacing:.05em; opacity:.5; margin-left:5px; }
+
+/* ---- Me / A friend as a visible mode, not a dropdown (2026-08-10) ---- */
+.styla-shopfor-row{ display:block; margin-top:11px; }
+.styla-mode{ display:inline-flex; border:1px solid #e4e4e4; border-radius:100px; padding:3px; background:#f7f7f8; }
+.styla-mode-btn{ border:none; background:transparent; border-radius:100px; cursor:pointer;
+  padding:6px 14px; font-size:.78rem; font-weight:600; color:#666; white-space:nowrap; }
+.styla-mode-btn.on{ background:#fff; color:#c2185b; box-shadow:0 1px 3px rgba(0,0,0,.10); }
+.styla-who-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
+.styla-who{ border:1px solid #e4e4e4; background:#fff; border-radius:100px;
+  padding:5px 12px; font-size:.77rem; cursor:pointer; color:#333; }
+.styla-who.on{ background:#fdf0f4; border-color:#f6c9d8; color:#c2185b; font-weight:600; }
+.styla-who-add{ border-style:dashed; color:#666; }
+.styla-who-add:hover{ border-color:#ff2a75; color:#c2185b; }
+
+/* ---- Gift questionnaire ---- */
+.styla-gift{ padding:2px 0 4px; }
+.styla-gift-intro{ margin:0 0 14px; font-size:.82rem; line-height:1.5; opacity:.75; }
+.styla-seg-wrap{ flex-wrap:wrap; }
+.styla-seg-wrap button{ flex:0 0 auto; }
+.styla-hint-sm{ margin:6px 0 0; font-size:.73rem; line-height:1.45; opacity:.6; }
+.styla-gift .styla-q{ margin-bottom:15px; }
+.styla-gift input[type="text"]{ width:100%; box-sizing:border-box; padding:10px 12px; font:inherit;
+  font-size:.88rem; border:1px solid #e2e2e2; border-radius:9px; background:#fff; }
+.styla-gift input[type="text"]:focus{ outline:none; border-color:#ff2a75; }
+.styla-req{ font-size:.63rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:#c2185b; background:#fdf0f4; border:1px solid #f6c9d8; border-radius:100px; padding:2px 7px; margin-left:6px; }
+.styla-opt{ font-size:.63rem; text-transform:uppercase; letter-spacing:.05em; opacity:.45; margin-left:6px; font-weight:600; }

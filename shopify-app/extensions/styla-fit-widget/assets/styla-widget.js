@@ -256,66 +256,78 @@
       // "Shopping for" — buying for a partner, a bridesmaid, a kid. Two sources:
       // people who SHARED their Styla profile (exact, needs sign-in) and people
       // the shopper estimated here in the widget (no sign-in, stays local).
+      // Two buttons, not a dropdown: "Me" vs "Someone else" is a mode, and a mode
+      // should be visible at a glance rather than hidden behind a select.
       async function renderShopFor() {
         var slot = el('styla-shopfor-slot'); if (!slot) return;
-        if (slot.querySelector('.styla-shopfor')) return;
 
-        var local = getPeople().map(function (p) { return { id: p.id, label: p.name, local: true }; });
+        var local = getPeople().map(function (p) { return { id: p.id, label: p.name, profile: p.profile }; });
         var shared = [];
         if (getToken()) {
           try {
             var d = await conn('list');
             shared = (d.sharedWithMe || []).map(function (p) {
               return { id: p.owner_id, label: (p.owner_name || p.owner_email || 'Someone') +
-                (p.relationship ? ' \u00b7 ' + p.relationship : ''), local: false };
+                (p.relationship ? ' \u00b7 ' + p.relationship : '') };
             });
           } catch (e) {}
         }
         STATE.people = shared;
         var people = shared.concat(local);
+        var forOther = !!STATE.shopForId;
 
-        var box = document.createElement('div');
-        box.className = 'styla-shopfor';
-        box.innerHTML = '<span class="styla-shopfor-lbl">Shopping for</span>' +
-          '<select class="styla-shopfor-sel" aria-label="Shopping for">' +
-            '<option value="me">Me</option>' +
-            people.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.label) + '</option>'; }).join('') +
-            '<option value="__add">+ Someone else…</option>' +
-          '</select>';
-        slot.innerHTML = '';
-        slot.appendChild(box);
+        var chips = people.map(function (p) {
+          return '<button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
+                 '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>';
+        }).join('');
 
-        var sel = box.querySelector('.styla-shopfor-sel');
-        sel.value = STATE.shopForId || 'me';
-        box.classList.toggle('is-other', !!STATE.shopForId);
+        slot.innerHTML =
+          '<div class="styla-mode">' +
+            '<button type="button" class="styla-mode-btn' + (forOther ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
+            '<button type="button" class="styla-mode-btn' + (forOther ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
+          '</div>' +
+          (forOther ? ('<div class="styla-who-row">' + chips +
+            '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add someone</button></div>') : '');
 
-        sel.addEventListener('change', async function () {
-          var v = this.value;
-
-          if (v === '__add') {                    // stay in the widget, ask about them
-            this.value = STATE.shopForId || 'me';
-            showFormForOther();
-            return;
-          }
-          if (v === 'me') {
-            STATE.shopForId = null; STATE.shopForProfile = null;
-          } else {
-            var loc = getPeople().filter(function (p) { return p.id === v; })[0];
-            if (loc) {
-              STATE.shopForId = v; STATE.shopForProfile = loc.profile;
+        slot.querySelectorAll('.styla-mode-btn').forEach(function (b) {
+          b.addEventListener('click', function () {
+            if (b.getAttribute('data-mode') === 'me') {
+              if (!STATE.shopForId) return;
+              STATE.shopForId = null; STATE.shopForProfile = null;
+              slot.innerHTML = ''; renderShopFor();
+              STATE.result = null; loadFit();
             } else {
-              try {
-                var pr = (await conn('get-profile', { ownerId: v })).profile || {};
-                STATE.shopForId = v;
-                STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist,
-                  hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
-              } catch (e) { this.value = 'me'; return; }
+              // No one saved yet -> go straight to the questions.
+              if (!people.length) { showFormForOther(); return; }
+              if (!STATE.shopForId) selectPerson(people[0]);
             }
-          }
-          box.classList.toggle('is-other', !!STATE.shopForId);
-          STATE.result = null; loadFit();
+          });
         });
+
+        slot.querySelectorAll('.styla-who').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-id');
+            if (id === '__add') { showFormForOther(); return; }
+            selectPerson(people.filter(function (p) { return p.id === id; })[0]);
+          });
+        });
+
+        async function selectPerson(p) {
+          if (!p) return;
+          STATE.shopForId = p.id;
+          if (p.profile) STATE.shopForProfile = p.profile;         // estimated here
+          else {
+            try {
+              var pr = (await conn('get-profile', { ownerId: p.id })).profile || {};
+              STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist,
+                hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
+            } catch (e) { return; }
+          }
+          slot.innerHTML = ''; renderShopFor();
+          STATE.result = null; loadFit();
+        }
       }
+
 
 
 
@@ -533,22 +545,26 @@
       // Shopping for someone else runs the SAME questionnaire, answered about
       // them. Sending the shopper off to styla.ca lost them mid-purchase; this
       // keeps the whole thing in the widget.
+      function setSelfQuizVisible(v) {
+        ['styla-form-title', 'styla-quiz', 'styla-manual'].forEach(function (id) {
+          var n = el(id); if (n) n.classList.toggle('styla-hidden', !v);
+        });
+        var acts = formPanel && formPanel.querySelector('.styla-form-actions');
+        if (acts) acts.classList.toggle('styla-hidden', !v);
+      }
       function showFormForOther() {
         STATE.forOther = true;
         var box = el('styla-forwho'); if (box) box.classList.remove('styla-hidden');
         var nameEl = el('styla-forwho-name'); if (nameEl) nameEl.value = '';
-        var t = el('styla-form-title');
-        if (t) t.textContent = 'Answer these about them — no tape measure needed.';
+        setSelfQuizVisible(false);             // the self-quiz asks things you can't know about a friend
         var wrap = formPanel && formPanel.querySelector('.styla-connect-wrap');
         if (wrap) wrap.remove();               // this isn't a sign-in moment
         showForm(false);
-        if (nameEl) nameEl.focus();
       }
       function exitOtherMode() {
         STATE.forOther = false;
         var box = el('styla-forwho'); if (box) box.classList.add('styla-hidden');
-        var t = el('styla-form-title');
-        if (t) t.textContent = 'A few quick questions — no tape measure needed.';
+        setSelfQuizVisible(true);
       }
       function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
       if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
@@ -646,28 +662,97 @@
         var p = manual ? profileFromManual() : profileFromQuiz();
         if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Chest, waist and height are needed — height decides Short/Regular/Long.'; return; }
 
-        if (STATE.forOther) {
-          var nameEl = el('styla-forwho-name');
-          var name = ((nameEl && nameEl.value) || '').trim();
-          if (!name) {                       // the one genuinely required extra field
-            if (nameEl) { nameEl.focus(); nameEl.classList.add('styla-invalid'); }
-            var t2 = el('styla-form-title');
-            if (t2) t2.textContent = 'Give them a name first, so you can switch between people.';
-            return;
-          }
-          var person = { id: 'local:' + Date.now().toString(36), name: name, profile: p, local: true };
-          savePerson(person);
-          STATE.shopForId = person.id;
-          STATE.shopForProfile = p;
-          exitOtherMode();
-          hideForm();
-          var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';  // force re-render
-          STATE.result = null; loadFit();
-          return;
-        }
-
         setProfile(p);
         hideForm();
+        STATE.result = null; loadFit();
+      });
+
+
+      // ---------- Gift estimation ----------
+      //
+      // Deliberately NOT the self-questionnaire. Weight, bra band and exact waist
+      // are things almost nobody knows about a friend, and asking is intrusive.
+      // What a gift-buyer genuinely knows is: who it's for, roughly how tall they
+      // are, the size they usually wear, and their general build. So we invert a
+      // standard size table instead of estimating girths from body mass.
+      var GIFT_W = {  // US women's, body measurements in inches
+        XS:  { chest: 32.5, waist: 25.0, hips: 35.5 },
+        S:   { chest: 34.5, waist: 27.0, hips: 37.5 },
+        M:   { chest: 36.5, waist: 29.0, hips: 39.5 },
+        L:   { chest: 39.5, waist: 32.0, hips: 42.5 },
+        XL:  { chest: 43.0, waist: 35.5, hips: 46.0 },
+        XXL: { chest: 46.5, waist: 39.0, hips: 49.5 },
+      };
+      var GIFT_M = {  // US men's
+        XS:  { chest: 34, waist: 28 }, S:   { chest: 36, waist: 30 },
+        M:   { chest: 40, waist: 33 }, L:   { chest: 43, waist: 36 },
+        XL:  { chest: 46, waist: 39 }, XXL: { chest: 49, waist: 43 },
+      };
+      var GIFT_HEIGHT = { women: { petite: 61, average: 65, tall: 69 },
+                          men:   { petite: 66, average: 70, tall: 74 } };
+
+      function profileFromGift() {
+        var g = GIFT.gender === 'men' ? 'men' : 'women';
+        var size = GIFT.size || 'M';
+        var height = GIFT_HEIGHT[g][GIFT.height || 'average'];
+        // Build nudges girths without pretending we know a number.
+        var adj = GIFT.build === 'slim' ? -1.0 : GIFT.build === 'curvy' ? 1.5 : 0;
+
+        var p = { height: height };
+        if (g === 'women') {
+          var b = GIFT_W[size] || GIFT_W.M;
+          p.chest = +(b.chest + adj).toFixed(1);
+          p.waist = +(b.waist + adj).toFixed(1);
+          p.hips  = +(b.hips + (GIFT.build === 'curvy' ? adj + 0.5 : adj)).toFixed(1);
+          p.inseam = Math.round(height * 0.45);
+        } else {
+          var m = GIFT_M[size] || GIFT_M.M;
+          p.chest = +(m.chest + adj).toFixed(1);
+          p.waist = +(m.waist + adj).toFixed(1);
+          p.hips  = +(m.waist + 2 + adj).toFixed(1);
+          p.neck  = +(12.5 + (p.chest - 38) * 0.15).toFixed(1);
+          p.inseam = Math.round(height * 0.44);
+        }
+        p.belly = p.waist;
+        p.estimated = true;   // so the UI can be honest about confidence
+        return p;
+      }
+
+      var GIFT = { gender: 'women', size: 'M', height: 'average', build: 'average' };
+      function bindGiftSeg(id, key, after) {
+        var host = el(id); if (!host) return;
+        host.addEventListener('click', function (e) {
+          var b = e.target.closest('button'); if (!b) return;
+          host.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+          GIFT[key] = b.getAttribute('data-v');
+          if (after) after();
+        });
+      }
+      bindGiftSeg('styla-g-gender', 'gender', function () {
+        var h = el('styla-g-hhint');
+        if (h) h.textContent = GIFT.gender === 'men'
+          ? 'Average is about 5\u201910\u201d. This decides Short / Regular / Long.'
+          : 'Average is about 5\u20194\u201d\u20135\u20198\u201d. This decides Short / Regular / Long.';
+      });
+      bindGiftSeg('styla-g-size', 'size');
+      bindGiftSeg('styla-g-height', 'height');
+      bindGiftSeg('styla-g-build', 'build');
+
+      var giftSave = el('styla-g-save'), giftCancel = el('styla-g-cancel');
+      if (giftCancel) giftCancel.addEventListener('click', function () { exitOtherMode(); hideForm(); });
+      if (giftSave) giftSave.addEventListener('click', function () {
+        var p = profileFromGift();
+        var nameEl = el('styla-forwho-name');
+        // Name is OPTIONAL — it only labels the saved entry. Nothing about the
+        // size recommendation needs it.
+        var name = ((nameEl && nameEl.value) || '').trim() ||
+                   ('Friend ' + (getPeople().length + 1));
+        var person = { id: 'local:' + Date.now().toString(36), name: name, profile: p, local: true };
+        savePerson(person);
+        STATE.shopForId = person.id;
+        STATE.shopForProfile = p;
+        exitOtherMode(); hideForm();
+        var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
         STATE.result = null; loadFit();
       });
 
