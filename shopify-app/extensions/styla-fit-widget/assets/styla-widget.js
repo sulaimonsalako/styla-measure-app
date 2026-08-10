@@ -758,13 +758,82 @@
         p.belly = p.waist;
         return p;
       }
+
+      // ---------- inches / centimetres on the INPUT side ----------
+      // Display units were already handled (factText/len). This is the other
+      // half: what the shopper types. One toggle drives both, so the panel and
+      // the fit breakdown never disagree.
+      var GIRTH_IDS = ['styla-in-chest', 'styla-in-waist', 'styla-in-hips', 'styla-in-shoulders', 'styla-in-inseam'];
+
+      function paintUnitUI() {
+        var metric = (UNIT === 'cm');
+        formPanel && formPanel.querySelectorAll('.styla-u').forEach(function (n) { n.textContent = metric ? '(cm)' : '(in)'; });
+        var imp = el('styla-h-imp'), met = el('styla-h-met');
+        if (imp) imp.classList.toggle('styla-hidden', metric);
+        if (met) met.classList.toggle('styla-hidden', !metric);
+        var seg = el('styla-unit');
+        if (seg) seg.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('on', b.getAttribute('data-v') === UNIT);
+        });
+      }
+
+      // Convert whatever is already typed, so switching never silently changes
+      // what the numbers MEAN.
+      function convertInputs(from, to) {
+        if (from === to) return;
+        var f = (to === 'cm') ? 2.54 : 1 / 2.54;
+        GIRTH_IDS.forEach(function (id) {
+          var n = el(id); if (!n) return;
+          var v = parseFloat(n.value); if (isNaN(v)) return;
+          n.value = String(Math.round(v * f * 10) / 10);
+        });
+        var ft = el('styla-in-hft'), inch = el('styla-in-hin'), cm = el('styla-in-hcm');
+        if (to === 'cm') {
+          var totalIn = (parseFloat((ft || {}).value) || 0) * 12 + (parseFloat((inch || {}).value) || 0);
+          if (cm) cm.value = totalIn ? String(Math.round(totalIn * 2.54)) : '';
+        } else {
+          var c = parseFloat((cm || {}).value);
+          if (!isNaN(c) && ft && inch) {
+            var ti = c / 2.54;
+            ft.value = String(Math.floor(ti / 12));
+            inch.value = String(Math.round(ti - Math.floor(ti / 12) * 12));
+          }
+        }
+      }
+
+      var unitSeg = el('styla-unit');
+      if (unitSeg) unitSeg.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var next = b.getAttribute('data-v'); if (next === UNIT) return;
+        convertInputs(UNIT, next);
+        setUnit(next);
+        paintUnitUI();
+        // the fit list is unit-aware too — keep them in step
+        if (STATE.result && STATE.activeSize) renderSize(STATE.activeSize);
+      });
+      paintUnitUI();
+
+      // Height in feet+inches (or cm) -> inches, which is what the engine wants.
+      function readHeightIn() {
+        if (UNIT === 'cm') {
+          var c = parseFloat((el('styla-in-hcm') || {}).value);
+          return isNaN(c) ? undefined : +(c / 2.54).toFixed(1);
+        }
+        var ft = parseFloat((el('styla-in-hft') || {}).value);
+        var inch = parseFloat((el('styla-in-hin') || {}).value);
+        if (isNaN(ft) && isNaN(inch)) return undefined;
+        return (isNaN(ft) ? 0 : ft) * 12 + (isNaN(inch) ? 0 : inch);
+      }
+
       // Height IS a body measurement — and it's the one that decides Short/Regular/
       // Long on suits, jackets and dresses. Required here, same as the quiz.
       // (Weight isn't asked: it's only used to *estimate* girths in the quiz, and
       // here the shopper is giving us the real ones.)
       function profileFromManual() {
-        var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : v; };
-        var chest = num('styla-in-chest'), waist = num('styla-in-waist'), height = num('styla-in-height');
+        // Whatever they typed, the engine is given inches.
+        var toIn = function (v) { return (v == null) ? undefined : (UNIT === 'cm' ? +(v / 2.54).toFixed(2) : v); };
+        var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : toIn(v); };
+        var chest = num('styla-in-chest'), waist = num('styla-in-waist'), height = readHeightIn();
         if (!chest || !waist || !height) return null;
         var hips = num('styla-in-hips');
         return {

@@ -249,33 +249,53 @@
 
               <!-- EXACT MEASUREMENTS (optional) -->
               <div id="styla-manual-{{ block.id }}" style="display:none">
+                <div class="styla-unitbar">
+                  <span class="styla-unitbar-lbl">Measurements in</span>
+                  <div class="styla-seg styla-unit-seg" id="styla-unit-{{ block.id }}">
+                    <button type="button" data-v="in">in</button>
+                    <button type="button" data-v="cm">cm</button>
+                  </div>
+                </div>
                 <div class="styla-form-grid">
                   <div class="styla-form-group">
-                    <label for="styla-in-chest-{{ block.id }}">Chest / bust (in)</label>
-                    <input type="number" id="styla-in-chest-{{ block.id }}" placeholder="38" step="0.5" min="20" max="70">
+                    <label for="styla-in-chest-{{ block.id }}">Chest / bust <span class="styla-u">(in)</span></label>
+                    <input type="number" id="styla-in-chest-{{ block.id }}" placeholder="38" step="0.5">
                   </div>
                   <div class="styla-form-group">
-                    <label for="styla-in-waist-{{ block.id }}">Waist (in)</label>
-                    <input type="number" id="styla-in-waist-{{ block.id }}" placeholder="32" step="0.5" min="20" max="70">
+                    <label for="styla-in-waist-{{ block.id }}">Waist <span class="styla-u">(in)</span></label>
+                    <input type="number" id="styla-in-waist-{{ block.id }}" placeholder="32" step="0.5">
                   </div>
                   <div class="styla-form-group">
-                    <label for="styla-in-hips-{{ block.id }}">Hips (in)</label>
-                    <input type="number" id="styla-in-hips-{{ block.id }}" placeholder="40" step="0.5" min="20" max="80">
+                    <label for="styla-in-hips-{{ block.id }}">Hips <span class="styla-u">(in)</span></label>
+                    <input type="number" id="styla-in-hips-{{ block.id }}" placeholder="40" step="0.5">
+                  </div>
+
+                  <!-- Height: nobody thinks of themselves as "66 inches". -->
+                  <div class="styla-form-group">
+                    <label>Height</label>
+                    <span class="styla-hgroup" id="styla-h-imp-{{ block.id }}">
+                      <input type="number" id="styla-in-hft-{{ block.id }}" placeholder="5" min="3" max="7">
+                      <span class="styla-hunit">ft</span>
+                      <input type="number" id="styla-in-hin-{{ block.id }}" placeholder="6" min="0" max="11">
+                      <span class="styla-hunit">in</span>
+                    </span>
+                    <span class="styla-hgroup styla-hidden" id="styla-h-met-{{ block.id }}">
+                      <input type="number" id="styla-in-hcm-{{ block.id }}" placeholder="168" min="120" max="215">
+                      <span class="styla-hunit">cm</span>
+                    </span>
+                  </div>
+
+                  <div class="styla-form-group">
+                    <label for="styla-in-shoulders-{{ block.id }}">Shoulder <span class="styla-u">(in)</span> <span class="styla-opt">optional</span></label>
+                    <input type="number" id="styla-in-shoulders-{{ block.id }}" placeholder="17" step="0.1">
                   </div>
                   <div class="styla-form-group">
-                    <label for="styla-in-height-{{ block.id }}">Height (in)</label>
-                    <input type="number" id="styla-in-height-{{ block.id }}" placeholder="66" step="0.5" min="48" max="84">
-                  </div>
-                  <div class="styla-form-group">
-                    <label for="styla-in-shoulders-{{ block.id }}">Shoulder (in) <span class="styla-opt">optional</span></label>
-                    <input type="number" id="styla-in-shoulders-{{ block.id }}" placeholder="17" step="0.1" min="10" max="30">
-                  </div>
-                  <div class="styla-form-group">
-                    <label for="styla-in-inseam-{{ block.id }}">Inseam (in) <span class="styla-opt">optional</span></label>
-                    <input type="number" id="styla-in-inseam-{{ block.id }}" placeholder="30" step="0.5" min="20" max="40">
+                    <label for="styla-in-inseam-{{ block.id }}">Inseam <span class="styla-u">(in)</span> <span class="styla-opt">optional</span></label>
+                    <input type="number" id="styla-in-inseam-{{ block.id }}" placeholder="30" step="0.5">
                   </div>
                 </div>
               </div>
+
               <div class="styla-known styla-hidden" id="styla-known-{{ block.id }}">
                 <p class="styla-gift-intro">Tell us a size you already wear — UK, EU, US, AUS, IT or FR — and we’ll work out what that means in this brand.</p>
 

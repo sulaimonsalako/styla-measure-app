@@ -1087,3 +1087,14 @@
 .styla-back:hover{ border-color:#bbb; color:#111; }
 .styla-formhead .styla-form-title{ font-size:.84rem; font-weight:600; margin:0; }
 .styla-chooser-intro span{ display:block; font-weight:400; font-size:.78rem; opacity:.6; margin-top:3px; }
+
+/* ---- inches / cm on the input side ---- */
+.styla-unitbar{ display:flex; align-items:center; gap:9px; margin-bottom:13px; }
+.styla-unitbar-lbl{ font-size:.76rem; opacity:.6; }
+.styla-unit-seg{ display:inline-flex; border:1px solid #e4e4e4; border-radius:100px; padding:2px; background:#f7f7f8; }
+.styla-unit-seg button{ border:none; background:transparent; border-radius:100px; cursor:pointer;
+  padding:4px 13px; font-size:.77rem; font-weight:600; color:#666; }
+.styla-unit-seg button.on{ background:#fff; color:#c2185b; box-shadow:0 1px 3px rgba(0,0,0,.10); }
+.styla-hgroup{ display:inline-flex; align-items:center; gap:6px; }
+.styla-hgroup input{ width:64px; }
+.styla-hunit{ font-size:.76rem; opacity:.55; }
