@@ -120,7 +120,8 @@ export function runSizingEngine(user, chart) {
     let chartNeck = getVal('neck') || getVal('collar') || getVal('neck_girth') || getVal('neck_girth_relaxed') || getVal('neck_base_girth');
 
     let score = 100;
-    const breakdown = {};
+    const breakdown = {};   // human prose (English) — kept for back-compat
+    const facts = {};       // machine-readable, so clients can translate + convert units
     const scored = new Set();   // dimensions genuinely compared, for confidence
     let fits = true;
     let localSpectrum = 'ideal';
@@ -135,6 +136,10 @@ export function runSizingEngine(user, chart) {
       const W = critical ? 1.75 : 1;
       const pen = (amt) => { score -= amt * W; };
       scored.add(label);
+      // Captured for the structured output: whether THIS dimension failed, and
+      // the ideal ease it was judged against (only circumferences have one).
+      let dimOk = true;
+      let idealUsed = null;
       
       // Sleeve/shoulder are already reconciled to canonical (shoulder-to-wrist,
       // full cross-back) above, so compare user and chart directly here.
@@ -176,7 +181,7 @@ export function runSizingEngine(user, chart) {
         else if (label === 'waist') ideal = structured ? 3.5 : 3.0;
 
         if (physicalEase < -stretchAllowance) {
-          fits = false;
+          fits = false; dimOk = false;
           pen(Math.abs(physicalEase + stretchAllowance) * 12);
           localSpectrum = 'slim';
           breakdown[label] = `Too tight (${Math.abs(physicalEase).toFixed(1)}" tighter than you need here)`;
@@ -187,12 +192,13 @@ export function runSizingEngine(user, chart) {
           else if (dev <= 1.5) localSpectrum = 'ideal';
           else if (dev <= 4.0) localSpectrum = 'relaxed';
           else localSpectrum = 'oversized';
+          idealUsed = ideal;
           breakdown[label] = `${localSpectrum.charAt(0).toUpperCase() + localSpectrum.slice(1)} fit (${physicalEase.toFixed(1)}" ease · ideal ~${ideal}")`;
         }
       } else if (label === 'waist' && category === 'bottoms') {
         // Waist on bottoms (pants)
         if (physicalEase < -stretchAllowance) {
-          fits = false;
+          fits = false; dimOk = false;
           pen(Math.abs(physicalEase + stretchAllowance) * 10);
           breakdown[label] = `Too tight (Garment waist is ${Math.abs(physicalEase).toFixed(1)}" smaller than your waist)`;
         } else if (physicalEase < 0) {
@@ -207,14 +213,14 @@ export function runSizingEngine(user, chart) {
           localSpectrum = 'relaxed';
           breakdown[label] = `Loose waist (${physicalEase.toFixed(1)}" ease)`;
         } else { // e.g. > 3.0" ease
-          fits = false; // falls off
+          fits = false; dimOk = false; // falls off
           pen((physicalEase - 3.0) * 8);
           breakdown[label] = `Too loose (Garment is ${physicalEase.toFixed(1)}" larger than your waist)`;
         }
       } else if (label === 'sleeve') {
         // Sleeve length (adjusted for standard bent-elbow / mobility wearing ease of 0.5" to 3.0")
         if (physicalEase < 0) {
-          fits = false;
+          fits = false; dimOk = false;
           pen(Math.abs(physicalEase) * 8);
           breakdown[label] = `Sleeves too short (Garment sleeve is ${Math.abs(physicalEase).toFixed(1)}" shorter than your arm)`;
         } else if (physicalEase < 0.5) {
@@ -287,7 +293,7 @@ export function runSizingEngine(user, chart) {
       } else {
         // General length/shoulders/thighs
         if (physicalEase < -stretchAllowance) {
-          fits = false;
+          fits = false; dimOk = false;
           pen(Math.abs(physicalEase + stretchAllowance) * 8);
           breakdown[label] = `Too narrow (Garment is ${Math.abs(physicalEase).toFixed(1)}" smaller)`;
         } else if (physicalEase < 0) {
@@ -303,6 +309,16 @@ export function runSizingEngine(user, chart) {
           breakdown[label] = `Relaxed fit (${physicalEase.toFixed(1)}" ease)`;
         }
       }
+
+      facts[label] = {
+        dim: label,
+        verdict: localSpectrum,      // slim | ideal | relaxed | oversized
+        ok: dimOk,                   // false = this dimension rules the size out
+        ease: +physicalEase.toFixed(2),   // ALWAYS inches — the client converts
+        ideal: idealUsed,
+        critical: !!critical,
+        text: breakdown[label],      // English fallback
+      };
     };
 
     // Evaluate dimensions
@@ -321,9 +337,13 @@ export function runSizingEngine(user, chart) {
     // Published, but with no body measurement to judge them against. Report them
     // rather than silently discard: the shopper and the AI can both use a number
     // even when the engine can't score it. Deliberately does NOT touch `score`.
-    if (chartLength && !userTorso) breakdown.length = `Garment length ${chartLength.toFixed(1)}"`;
-    if (chartRise && !userRise) breakdown.rise = `Rise ${chartRise.toFixed(1)}"`;
-    if (chartLegOpen) breakdown.leg_opening = `Leg opening ${chartLegOpen.toFixed(1)}"`;
+    const info = (key, val, text) => {
+      breakdown[key] = text;
+      facts[key] = { dim: key, verdict: 'info', ok: true, value: +val.toFixed(2), text };
+    };
+    if (chartLength && !userTorso) info('length', chartLength, `Garment length ${chartLength.toFixed(1)}"`);
+    if (chartRise && !userRise) info('rise', chartRise, `Rise ${chartRise.toFixed(1)}"`);
+    if (chartLegOpen) info('leg_opening', chartLegOpen, `Leg opening ${chartLegOpen.toFixed(1)}"`);
 
     const rawScore = score; // keep UNCLAMPED so failing sizes still rank by closeness
     score = Math.max(0, Math.min(100, Math.round(score)));
@@ -331,6 +351,7 @@ export function runSizingEngine(user, chart) {
     candidateScores.push({
       name: sizeName,
       scoredCount: scored.size,
+      facts,
       score,
       rawScore,
       fits,
@@ -374,7 +395,7 @@ export function runSizingEngine(user, chart) {
       fit_breakdown: {},
       explanation: 'This size chart doesn’t list the measurements we compare (it may size by height or use a format we can’t read yet), so we can’t confidently pick your size here.',
       warning: 'Not enough matching measurements on this chart to size you.',
-      candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, breakdown: {} })),
+      candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, breakdown: {}, facts: {} })),
     };
   }
 
@@ -440,13 +461,18 @@ export function runSizingEngine(user, chart) {
     fit_match_score: displayScore,
     dimensions_compared: comparedDims,
     fit_spectrum: bestOption.spectrum,
-    fit_breakdown: bestOption.breakdown,
+    fit_breakdown: bestOption.breakdown,   // English prose (back-compat)
+    // Structured equivalent. Eases are ALWAYS in inches; the client formats and
+    // converts. This is what lets the widget speak another language or show cm
+    // without the server knowing either.
+    fit_facts: bestOption.facts || {},
     explanation: explanation,
     warning: bestOption.fits ? null : `Warning: Size ${bestOption.name} may be a tight fit.`,
     // Every size, in chart order, so a widget can show "how each size fits you".
     candidates: sizes.map((s) => {
       const c = candidateScores.find((x) => x.name === s.name) || {};
-      return { name: s.name, score: c.score ?? 0, spectrum: c.spectrum || 'ideal', fits: !!c.fits, breakdown: c.breakdown || {} };
+      return { name: s.name, score: c.score ?? 0, spectrum: c.spectrum || 'ideal', fits: !!c.fits,
+               breakdown: c.breakdown || {}, facts: c.facts || {} };
     }),
   };
 }

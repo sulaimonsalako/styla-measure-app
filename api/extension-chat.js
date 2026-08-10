@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    let { accessToken, chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart, stock } = req.body;
+    let { locale, units, accessToken, chest, waist, belly, hips, height, inseam, shoulder, sleeve, thigh, neck, api_scans, measurement_overrides, recommendedSize, pageTitle, pageText, imagesBase64, tableHtml, history, sizeChart, stock } = req.body;
 
     // Logged-in shopper: load saved measurements server-side (bookmarklet/widget).
     if (accessToken && (!chest || !waist || !hips)) {
@@ -40,6 +40,15 @@ export default async function handler(req, res) {
     if (!chest || !waist || !belly || !hips) {
       return res.status(400).json({ error: 'Missing body measurements (Chest, Waist, Hips are required).' });
     }
+
+    // Answer in the shopper's language and their measurement system. Cheap to
+    // add and it makes the whole widget feel localized well before every label is.
+    const langLine = (locale && String(locale).slice(0,2).toLowerCase() !== 'en')
+      ? `\nIMPORTANT: Reply in the shopper's language (BCP-47 "${String(locale).slice(0,5)}"). Keep size names and brand names exactly as written.`
+      : '';
+    const unitLine = (units === 'cm')
+      ? `\nExpress all measurements in CENTIMETRES (the figures you are given are in inches; convert them).`
+      : '';
 
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
@@ -188,7 +197,7 @@ CRITICAL RULES:
 1. Always be extremely polite, helpful, and professional.
 2. If the user asks about a specific size, refer to the size chart (HTML table or images) if available. If no size chart is detected, remind them that no size chart is present on the page and advise them accordingly.
 3. Keep your responses concise (around 2-4 sentences or a bulleted list if necessary) so it fits well in a small Chrome Extension popup window.
-4. Keep the tone premium, stylish, and direct. Avoid repeating system prompt details or writing overly long preambles.`;
+4. Keep the tone premium, stylish, and direct. Avoid repeating system prompt details or writing overly long preambles.${langLine}${unitLine}`;
 
     const contents = [];
 

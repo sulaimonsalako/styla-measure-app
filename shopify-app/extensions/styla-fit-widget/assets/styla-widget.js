@@ -24,6 +24,65 @@
     return list;
   }
 
+
+  // ---------------- i18n + units ----------------
+  //
+  // Fit sentences used to arrive from the server as finished English prose with
+  // inch marks baked in ("Ideal fit (4.5\" ease · ideal ~3\")"). That made them
+  // impossible to translate AND impossible to show in centimetres. The engine now
+  // returns structured facts and we compose the sentence here, so language and
+  // units are both a client concern.
+  var STR = {
+    en: {
+      dim_chest:'Chest', dim_waist:'Waist', dim_hips:'Hips', dim_belly:'Stomach',
+      dim_shoulder:'Shoulder', dim_sleeve:'Sleeve', dim_inseam:'Inseam',
+      dim_thigh:'Thigh', dim_neck:'Neck', dim_length:'Length', dim_rise:'Rise',
+      dim_leg_opening:'Leg opening',
+      v_slim:'Snug', v_ideal:'Ideal', v_relaxed:'Relaxed', v_oversized:'Oversized',
+      fit_ease:'{v} ease', fit_ideal:'ideal ~{v}', fit_tight:'{v} too tight',
+      fit_info:'{v}',
+    }
+  };
+  var LOCALE = 'en';
+  function setLocale(v) { if (v) LOCALE = String(v).slice(0, 2).toLowerCase(); }
+  // Shopify gives us request.locale on the block; fall back to <html lang>.
+  setLocale((document.querySelector('.styla-widget-container') || {}).dataset &&
+            document.querySelector('.styla-widget-container').dataset.locale ||
+            document.documentElement.getAttribute('lang'));
+  function t(key, vars) {
+    var dict = STR[LOCALE] || STR.en;
+    var out = (dict[key] !== undefined ? dict[key] : STR.en[key]);
+    if (out === undefined) return key;
+    if (vars) Object.keys(vars).forEach(function (k) { out = out.replace('{' + k + '}', vars[k]); });
+    return out;
+  }
+
+  // The engine always reports inches. Everything else is presentation.
+  var UNIT = 'in';
+  function setUnit(u) { UNIT = (u === 'cm') ? 'cm' : 'in'; }
+  function len(inches) {
+    if (inches == null || isNaN(inches)) return '';
+    if (UNIT === 'cm') return (Math.round(inches * 2.54 * 10) / 10) + ' cm';
+    return (Math.round(inches * 10) / 10) + '"';
+  }
+
+  // Compose the fit sentence from a structured fact.
+  function factText(f) {
+    if (!f) return '';
+    if (f.verdict === 'info') return t('fit_info', { v: len(f.value) });
+    if (!f.ok) return t('fit_tight', { v: len(Math.abs(f.ease)) });
+    var bits = [t('fit_ease', { v: len(f.ease) })];
+    if (f.ideal != null) bits.push(t('fit_ideal', { v: len(f.ideal) }));
+    return bits.join(' \u00b7 ');
+  }
+  function factLabel(f, key) { return t('dim_' + (f && f.dim ? f.dim : key)); }
+  function factBadge(f) {
+    if (!f) return '';
+    if (f.verdict === 'info') return '';
+    if (!f.ok) return t('v_slim');
+    return t('v_' + f.verdict) || '';
+  }
+
   function getProfile() { try { return JSON.parse(localStorage.getItem(LS_PROFILE) || 'null'); } catch (e) { return null; } }
   function setProfile(p) { try { localStorage.setItem(LS_PROFILE, JSON.stringify(p)); } catch (e) {} }
   function getToken() { try { return localStorage.getItem(LS_TOKEN) || null; } catch (e) { return null; } }
@@ -107,6 +166,16 @@
       var d = container.dataset;
       var blockId = container.id.replace('styla-widget-', '');
       var el = function (id) { return document.getElementById(id + '-' + blockId); };
+
+      // Units: follow the storefront's country rather than defaulting everyone to
+      // inches. Most of the world measures in cm, which matters more for a fit
+      // product than the interface language does.
+      (function () {
+        var d = container.dataset;
+        if (d.units === 'cm' || d.units === 'in') { setUnit(d.units); return; }
+        var c = (d.country || '').toUpperCase();
+        setUnit(['US', 'GB', 'LR', 'MM'].indexOf(c) >= 0 ? 'in' : 'cm');
+      })();
 
       var product = {
         title: d.productTitle || '', type: d.productType || '',
@@ -434,13 +503,19 @@
         var rl = res.recommendedLength;
         if (lenBadgeEl) lenBadgeEl.textContent = (rl && rl.name) ? 'Suggested length: ' + rl.name : '';
 
-        var bk = c.breakdown || {};
-        var keys = Object.keys(bk);
+        // Prefer the structured facts (translatable + unit-aware). Fall back to
+        // the server's English prose only if an older response arrives.
+        var fx = c.facts || {}, bk = c.breakdown || {};
+        var keys = Object.keys(fx).length ? Object.keys(fx) : Object.keys(bk);
         listEl.innerHTML = keys.length ? keys.map(function (k) {
-          var txt = bk[k];
-          return '<li><span class="styla-fit-dim">' + dimLabel(k) + '</span>' +
-            '<span class="styla-fit-note">' + esc(txt) + '</span>' +
-            '<span class="styla-fit-tag ' + statusFor(txt) + '">' + badgeFor(txt) + '</span></li>';
+          var f = fx[k];
+          var label = f ? factLabel(f, k) : dimLabel(k);
+          var note  = f ? factText(f) : bk[k];
+          var badge = f ? factBadge(f) : badgeFor(bk[k]);
+          var cls   = f ? (f.verdict === 'info' ? 'info' : (!f.ok ? 'slim' : f.verdict)) : statusFor(bk[k]);
+          return '<li><span class="styla-fit-dim">' + esc(label) + '</span>' +
+            '<span class="styla-fit-note">' + esc(note) + '</span>' +
+            (badge ? '<span class="styla-fit-tag ' + esc(cls) + '">' + esc(badge) + '</span>' : '') + '</li>';
         }).join('') : '<li><span class="styla-fit-note">This brand\'s chart doesn\'t share a measurement we can compare.</span></li>';
 
         var st = res.stock, stockTxt = '';
@@ -818,6 +893,7 @@
           // store context -> lets the AI reason across this shop's whole catalog
           // (not just the current product) when the shopper asks for alternatives.
           domain: product.domain, shop: product.domain, category: mapType(product.type),
+          locale: LOCALE, units: UNIT,
           // Full brand chart (every column) so the AI can answer questions about any measurement.
           sizeChart: STATE.result ? (STATE.result.chart || { sizes: (STATE.result.candidates || []) }) : null,
           stock: STATE.result ? STATE.result.stock : null,   // live per-size availability
