@@ -10,7 +10,7 @@
      data-product-type="{{ product.type | escape }}"
      data-product-url="{{ shop.url }}{{ product.url }}"
      data-shop-domain="{{ shop.permanent_domain }}"
-     data-product-desc="{{ product.description | strip_html | truncate: 600 | escape }}"
+     data-product-desc="{{ product.description | strip_html | truncate: 2500 | escape }}"
      data-customer-id="{{ customer.id }}"
      {{ block.shopify_attributes }}>
      

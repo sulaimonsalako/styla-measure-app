@@ -491,8 +491,14 @@
         else { payload.chest = 38; payload.waist = 31; payload.belly = 31; payload.hips = 40; }
         try {
           var r = await fetch(API + '/api/extension-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-          if (r.body && r.body.getReader) {
-            var reader = r.body.getReader(), decr = new TextDecoder(), acc = '';
+          var ctype = (r.headers.get('content-type') || '');
+          var acc = '';
+
+          // Only treat it as a stream when the server actually said so. The old
+          // code read ANY body as a stream (getReader always exists), so a JSON
+          // error — or an empty body — silently produced a blank bubble.
+          if (r.ok && ctype.indexOf('text/plain') === 0 && r.body && r.body.getReader) {
+            var reader = r.body.getReader(), decr = new TextDecoder();
             out.textContent = '';
             while (true) {
               var chunk = await reader.read();
@@ -501,11 +507,16 @@
               out.textContent = acc;
               chatHistory.scrollTop = chatHistory.scrollHeight;
             }
-            CHAT.push({ role: 'model', text: acc });
           } else {
-            var data = await r.json(); var reply = (data && (data.reply || data.error)) || '…';
-            out.textContent = reply; CHAT.push({ role: 'model', text: reply });
+            var data = null;
+            try { data = await r.json(); } catch (e) {}
+            acc = (data && (data.reply || data.error)) || '';
           }
+
+          // Never leave an empty bubble — say something the shopper can act on.
+          if (!acc.trim()) acc = "Sorry — I couldn't answer that just now. Please try again.";
+          out.textContent = acc;
+          CHAT.push({ role: 'model', text: acc });
         } catch (e) { out.textContent = 'Sorry — I couldn’t answer just now. Try again?'; }
         STATE.chatBusy = false;
       }

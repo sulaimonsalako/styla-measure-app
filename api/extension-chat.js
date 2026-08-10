@@ -262,61 +262,93 @@ User message: ${msgText}`;
     };
 
     // FAST PATH: stream tokens to the client as they're generated (feels instant).
-    // flash-lite is materially quicker for short fit answers.
-    const MODEL = 'gemini-2.5-flash-lite';
+    //
+    // This used to fail SILENTLY. gRes.ok was never checked, so if Google
+    // returned an error (bad model id, quota, bad key) the body contained a JSON
+    // error, no line began with "data:", nothing was written, and we ended a 200
+    // with an EMPTY body — the widget rendered a blank grey bubble and the
+    // shopper saw the AI "not respond". Now: verify the response, count what we
+    // actually emit, and fall back rather than return nothing.
+    const MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash'];
+    const MODEL = MODELS[0];
+    let streamedAny = false;
+
     if (req.body && req.body.stream) {
-      try {
-        const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiPayload)
-        });
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
-        const reader = gRes.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          let nl;
-          while ((nl = buf.indexOf('\n')) >= 0) {
-            const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
-            if (!line.startsWith('data:')) continue;
-            const json = line.slice(5).trim();
-            if (json === '[DONE]') continue;
-            try {
-              const t = JSON.parse(json)?.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (t) res.write(t);
-            } catch (e) {}
+      for (const model of MODELS) {
+        if (streamedAny) break;
+        try {
+          const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiPayload)
+          });
+          if (!gRes.ok || !gRes.body) {
+            const detail = await gRes.text().catch(() => '');
+            console.error(`extension-chat: ${model} stream HTTP ${gRes.status}: ${detail.slice(0, 400)}`);
+            continue; // try the next model, then the non-streaming path
           }
+          const reader = gRes.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            let nl;
+            while ((nl = buf.indexOf('\n')) >= 0) {
+              const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+              if (!line.startsWith('data:')) continue;
+              const json = line.slice(5).trim();
+              if (json === '[DONE]') continue;
+              try {
+                const t = JSON.parse(json)?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (t) {
+                  if (!streamedAny) {
+                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                    res.setHeader('Cache-Control', 'no-cache, no-transform');
+                    streamedAny = true;
+                  }
+                  res.write(t);
+                }
+              } catch (e) {}
+            }
+          }
+          // A 200 that yielded no text is a failure too (safety block, empty
+          // candidate). Don't close an empty response — let the fallback run.
+          if (streamedAny) return res.end();
+          console.error(`extension-chat: ${model} streamed 0 tokens; falling back.`);
+        } catch (e) {
+          console.error(`extension-chat: ${model} stream threw: ${e.message}`);
         }
-        return res.end();
-      } catch (e) {
-        console.error('stream failed, falling back to full response:', e.message);
-        // fall through to the non-streaming path below
       }
+      // Nothing streamed. Headers are untouched, so the non-streaming JSON path
+      // below can still answer normally.
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiPayload)
-    });
+    // Non-streaming path. Also tries each model, so one bad/unavailable model id
+    // can't take the whole AI Tailor down — previously this used the same single
+    // MODEL as the stream, meaning both paths failed together.
+    let lastErr = 'No response from the model.';
+    for (const model of MODELS) {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(geminiPayload)
+      });
+      const data = await response.json().catch(() => ({}));
 
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Gemini Chat API Error:", data.error);
-      return res.status(500).json({ error: data.error.message });
+      if (data.error) {
+        lastErr = data.error.message || lastErr;
+        console.error(`extension-chat: ${model} generateContent error:`, lastErr);
+        continue;
+      }
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        lastErr = 'Empty response from the model.';
+        console.error(`extension-chat: ${model} returned no candidate text.`);
+        continue;
+      }
+      return res.status(200).json({ reply: text.trim(), model });
     }
-
-    if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-      console.error("Gemini Chat empty response payload:", data);
-      return res.status(500).json({ error: "Empty or invalid response from Gemini." });
-    }
-
-    const textAnswer = data.candidates[0].content.parts[0].text.trim();
-    res.status(200).json({ reply: textAnswer });
+    return res.status(502).json({ error: "The AI tailor couldn't answer just now. Please try again.", detail: lastErr });
 
   } catch (error) {
     console.error("Extension chat handler error:", error);
