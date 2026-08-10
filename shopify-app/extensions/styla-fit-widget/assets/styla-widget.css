@@ -859,8 +859,7 @@
 .styla-modal-container{
   width:min(560px,100%) !important;
   max-width:560px !important;
-  height:auto !important;
-  max-height:min(84vh, 760px) !important;
+  /* height + max-height are set once, further down, so the frame is constant */
   margin:auto !important;
   display:flex !important; flex-direction:column !important;
   overflow:hidden !important;
@@ -965,3 +964,26 @@
 }
 .styla-composer .styla-chat-send:disabled{ opacity:.45; cursor:default; }
 .styla-composer .styla-chat-send svg{ width:18px; height:18px; }
+
+/* ============================================================
+   STOP THE PANEL MOVING (2026-08-10)
+   The container was height:auto with margin:auto inside a flex
+   overlay. Every change to content — opening a panel, the edit
+   form, a reply arriving, the textarea growing — resized the box
+   AND re-centred it, so the composer slid up and down the screen.
+   A FIXED height makes the frame constant; the inner region
+   scrolls instead. The composer then never moves.
+   ============================================================ */
+.styla-modal-container{
+  height:min(660px, 86vh) !important;
+  max-height:86vh !important;
+}
+/* The scroll region is the only thing that flexes. */
+.styla-modal-right{ flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; }
+.styla-modal-head, .styla-composer{ flex:none !important; }
+/* Growing the textarea must not resize the frame either. */
+.styla-composer .styla-chat-input{ max-height:120px !important; }
+
+@media (max-width:560px){
+  .styla-modal-container{ height:100dvh !important; max-height:100dvh !important; }
+}
