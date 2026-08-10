@@ -329,6 +329,12 @@ Three defects fixed (commit `cb5b55e`):
 Regression harness: `/tmp/run.mjs` + `/tmp/suite.mjs` pattern (before/after diff over
 5 chart shapes + 6 assertions). Recreate if the engine is touched again.
 
+## Parked ideas — recall by codename
+
+- **"Liverpool"** → see `LIVERPOOL.md`. Cross-brand shoppable fit search
+  ("ChatGPT for fashion"). When the user says *recall Liverpool*, read that file
+  and continue from its "Suggested sequence". Parked 2026-08-09, nothing built yet.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
