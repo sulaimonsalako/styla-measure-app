@@ -11,6 +11,7 @@ import { runSizingEngine } from '../_helpers/sizing-engine.js';
 import { normalizeChart } from '../_helpers/normalize-chart.js';
 import { toStylaCategory } from '../_helpers/style-category.js';
 import { productMatchesRules, hasRules } from '../_helpers/chart-rules.js';
+import SZ from '../../shared/size-conversion.js';
 
 // Pick a garment length/proportion variant (Petite/Regular/Tall…) from the
 // shopper's height (inches). Prefer an option whose height range contains the
@@ -84,7 +85,7 @@ export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId, domain } = req.body || {};
+    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId, domain, knownSize } = req.body || {};
     const normDom = (d) => String(d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
 
     // The on-site widget is the paid feature. A store can switch it off (e.g. it
@@ -96,6 +97,50 @@ export default async function widgetSize(req, res) {
       if (st && st.settings && st.settings.widget_enabled === false) {
         return res.status(403).json({ error: 'The Styla size widget is turned off for this store.', widget_disabled: true });
       }
+    }
+
+    // "I'm a 12 UK" — turn a size LABEL into body measurements. Done here rather
+    // than in the widget so there's one conversion table, and so we can later
+    // invert the named brand's own chart (exact) instead of the nominal table
+    // (approximate) without shipping new widget code.
+    if (!profile && knownSize && knownSize.size) {
+      let derived = null;
+
+      // Exact path first: did they tell us WHICH brand that size is from, and do
+      // we hold that brand's chart?
+      if (knownSize.brand) {
+        const { data: b } = await supabaseAdmin.from('brands')
+          .select('id, name').ilike('name', String(knownSize.brand).trim()).maybeSingle();
+        if (b) {
+          const { data: charts } = await supabaseAdmin.from('size_charts')
+            .select('chart_data').eq('brand_id', b.id).limit(5);
+          for (const c of (charts || [])) {
+            derived = SZ.invertBrandChart(c.chart_data || {}, knownSize.size);
+            if (derived) { derived.source_brand = b.name; break; }
+          }
+        }
+      }
+
+      // Otherwise the standard tables for that system.
+      if (!derived) {
+        derived = SZ.toMeasurements({
+          gender: knownSize.gender, system: knownSize.system, size: knownSize.size,
+          heightIn: knownSize.heightIn, build: knownSize.build,
+        });
+      }
+      if (!derived) {
+        const derivedFrom = (profile && profile.derived_from) || null;
+    return res.status(200).json({
+      derived_from: derivedFrom,
+          unknown_size: true,
+          message: `We don't recognise ${String(knownSize.size)} as a ${String(knownSize.system || '').toUpperCase()} size. Check the system, or enter your measurements.`,
+        });
+      }
+      if (knownSize.heightIn && !derived.height) {
+        derived.height = knownSize.heightIn;
+        derived.inseam = derived.inseam || Math.round(knownSize.heightIn * (knownSize.gender === 'men' ? 0.44 : 0.45));
+      }
+      profile = derived;
     }
 
     // Logged-in shopper: load their saved profile with the service-role client.

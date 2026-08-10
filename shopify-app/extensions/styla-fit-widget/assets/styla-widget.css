@@ -1054,3 +1054,13 @@
 .styla-req{ font-size:.63rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
   color:#c2185b; background:#fdf0f4; border:1px solid #f6c9d8; border-radius:100px; padding:2px 7px; margin-left:6px; }
 .styla-opt{ font-size:.63rem; text-transform:uppercase; letter-spacing:.05em; opacity:.45; margin-left:6px; font-weight:600; }
+
+/* "I already know my size" */
+.styla-known{ padding:2px 0 4px; }
+.styla-known .styla-form-grid{ align-items:end; }
+.styla-known input[type="text"], .styla-known input[type="number"]{ padding:9px 11px; font:inherit;
+  font-size:.88rem; border:1px solid #e2e2e2; border-radius:9px; background:#fff; box-sizing:border-box; }
+.styla-known input[type="text"]{ width:100%; }
+.styla-known input:focus{ outline:none; border-color:#ff2a75; }
+.styla-switchmode{ background:none; border:none; color:#e11d48; font-weight:600; cursor:pointer;
+  font-size:.8rem; padding:6px 0; text-decoration:underline; display:block; }

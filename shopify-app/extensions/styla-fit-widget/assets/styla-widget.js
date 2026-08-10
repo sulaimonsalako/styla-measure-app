@@ -239,11 +239,12 @@
       // ---------- fetch the real fit ----------
       async function loadFit() {
         var profile = getProfile(), token = await ensureFreshToken();
-        if (!profile && !token) { showForm(true); return; }
+        if (!profile && !token && !STATE.knownSize) { showForm(true); return; }
         setLoading(true);
         try {
           var body = { domain: product.domain, productUrl: product.url, category: mapType(product.type) };
           if (STATE.shopForProfile) body.profile = STATE.shopForProfile;   // shopping for someone else
+          else if (STATE.knownSize) body.knownSize = STATE.knownSize;      // "I'm a 12 UK"
           else if (token) body.accessToken = token; else body.profile = profile;
           var r = await fetch(API + '/api/widget-size', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
@@ -251,6 +252,11 @@
           var data = await r.json();
           // Signed in, but no measurements saved yet (account created, quiz never
           // taken) -> ask the questions instead of claiming the brand has no chart.
+          if (data && data.unknown_size) {
+            showForm(true); showKnown(true);
+            var km = el('styla-k-equiv'); if (km) km.textContent = data.message || 'We don\u2019t recognise that size.';
+            return;
+          }
           if (data && data.needs_profile) {
             showForm(true);
             var ft = el('styla-form-title');
@@ -498,7 +504,20 @@
         var c = cands.find(function (x) { return x.name === sizeName; }) ||
                 { name: sizeName, spectrum: res.spectrum, breakdown: res.breakdown, fits: res.fits };
         bestValEl.textContent = sizeName || res.size;
-        if (confEl) confEl.textContent = (res.score != null ? res.score + '% match' : '');
+        // A label-derived answer is a band, not a body — say so rather than
+        // showing the same confidence as a real profile.
+        var df = res.derived_from;
+        if (confEl) {
+          if (df && df.label) {
+            confEl.textContent = 'Estimated from ' + String(df.system || '').toUpperCase() + ' ' + df.size;
+            confEl.title = 'Based on standard sizing for that label, not your own measurements.';
+          } else if (df && df.brandChart) {
+            confEl.textContent = 'Matched to your ' + df.size + ' at ' + (res.source_brand || 'that brand');
+          } else {
+            confEl.textContent = (res.score != null ? res.score + '% match' : '');
+            confEl.title = '';
+          }
+        }
 
         var rl = res.recommendedLength;
         if (lenBadgeEl) lenBadgeEl.textContent = (rl && rl.name) ? 'Suggested length: ' + rl.name : '';
@@ -829,6 +848,62 @@
         exitOtherMode(); hideForm();
         var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
         STATE.result = null; loadFit();
+      });
+
+
+      // ---------- "I already know my size" ----------
+      // The conversion table lives on the server (shared/size-conversion.js), so
+      // there's one definition and so a named brand can be inverted against its
+      // real chart. The widget only collects.
+      var KNOWN = { system: 'us', build: 'average' };
+      function bindKnownSeg(id, key) {
+        var host = el(id); if (!host) return;
+        host.addEventListener('click', function (e) {
+          var b = e.target.closest('button'); if (!b) return;
+          host.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+          KNOWN[key] = b.getAttribute('data-v');
+        });
+      }
+      bindKnownSeg('styla-k-system', 'system');
+      bindKnownSeg('styla-k-build', 'build');
+
+      function showKnown(v) {
+        var k = el('styla-known'); if (!k) return;
+        k.classList.toggle('styla-hidden', !v);
+        ['styla-quiz', 'styla-manual', 'styla-form-title'].forEach(function (id) {
+          var n = el(id); if (n) n.classList.toggle('styla-hidden', v);
+        });
+        var acts = formPanel && formPanel.querySelectorAll('.styla-form-actions');
+        if (acts && acts.length) acts[acts.length - 1].classList.toggle('styla-hidden', v);
+      }
+      var toKnown = el('styla-to-known');
+      if (toKnown) toKnown.addEventListener('click', function () { showKnown(true); });
+      var kCancel = el('styla-k-cancel');
+      if (kCancel) kCancel.addEventListener('click', function () { showKnown(false); });
+
+      var kSave = el('styla-k-save');
+      if (kSave) kSave.addEventListener('click', async function () {
+        var size = ((el('styla-k-size') || {}).value || '').trim();
+        var ft = parseFloat((el('styla-k-hft') || {}).value);
+        var inch = parseFloat((el('styla-k-hin') || {}).value);
+        var msg = el('styla-k-equiv');
+
+        if (!size) { if (msg) msg.textContent = 'Enter the size you usually wear.'; return; }
+        if (isNaN(ft)) {
+          // Required, and worth explaining rather than just rejecting.
+          if (msg) msg.textContent = 'Height is needed — a size label doesn\u2019t say how tall you are, and that decides Short / Regular / Long.';
+          return;
+        }
+        var heightIn = ft * 12 + (isNaN(inch) ? 0 : inch);
+        STATE.knownSize = {
+          system: KNOWN.system, size: size, build: KNOWN.build,
+          gender: (QZ && QZ.gender) === 'men' ? 'men' : 'women',
+          heightIn: heightIn,
+          brand: ((el('styla-k-brand') || {}).value || '').trim() || undefined,
+        };
+        showKnown(false); hideForm();
+        STATE.result = null;
+        loadFit();
       });
 
       // ---------- AI Tailor chat (streamed) ----------

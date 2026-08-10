@@ -211,6 +211,7 @@
                     <button type="button" data-f="loose">Relaxed</button>
                   </div>
                 </div>
+                <button type="button" class="styla-switchmode" id="styla-to-known-{{ block.id }}">I already know my size &rarr;</button>
                 <button type="button" class="styla-switchmode" id="styla-to-manual-{{ block.id }}">I know my measurements →</button>
               </div>
 
@@ -244,6 +245,58 @@
                 </div>
                 <button type="button" class="styla-switchmode" id="styla-to-quiz-{{ block.id }}">← Answer a few questions instead</button>
               </div>
+              <div class="styla-known styla-hidden" id="styla-known-{{ block.id }}">
+                <p class="styla-gift-intro">Tell us a size you already wear and we'll work out what that means here.</p>
+
+                <div class="styla-q">
+                  <label>Sizing system <span class="styla-req">Required</span></label>
+                  <div class="styla-seg styla-seg-wrap" id="styla-k-system-{{ block.id }}">
+                    <button type="button" data-v="us" class="on">US</button>
+                    <button type="button" data-v="uk">UK</button>
+                    <button type="button" data-v="eu">EU</button>
+                    <button type="button" data-v="au">AUS</button>
+                    <button type="button" data-v="it">IT</button>
+                    <button type="button" data-v="fr">FR</button>
+                  </div>
+                </div>
+
+                <div class="styla-form-grid">
+                  <div class="styla-form-group">
+                    <label for="styla-k-size-{{ block.id }}">Your size <span class="styla-req">Required</span></label>
+                    <input type="text" id="styla-k-size-{{ block.id }}" placeholder="12" maxlength="5">
+                  </div>
+                  <div class="styla-form-group">
+                    <label for="styla-k-height-{{ block.id }}">Height <span class="styla-req">Required</span></label>
+                    <span style="display:inline-flex;gap:5px;align-items:center">
+                      <input type="number" id="styla-k-hft-{{ block.id }}" placeholder="5" min="3" max="7" style="width:56px">
+                      <span class="styla-hint-sm">ft</span>
+                      <input type="number" id="styla-k-hin-{{ block.id }}" placeholder="6" min="0" max="11" style="width:56px">
+                      <span class="styla-hint-sm">in</span>
+                    </span>
+                  </div>
+                </div>
+                <p class="styla-hint-sm" id="styla-k-equiv-{{ block.id }}">A size label doesn't say how tall you are — and height is what decides Short, Regular or Long.</p>
+
+                <div class="styla-q">
+                  <label for="styla-k-brand-{{ block.id }}">Where is that size from? <span class="styla-opt">Optional</span></label>
+                  <input type="text" id="styla-k-brand-{{ block.id }}" placeholder="e.g. Zara — if we hold their chart we can be exact" maxlength="40">
+                </div>
+
+                <div class="styla-q">
+                  <label>Build <span class="styla-opt">Optional</span></label>
+                  <div class="styla-seg styla-seg-wrap" id="styla-k-build-{{ block.id }}">
+                    <button type="button" data-v="slim">Slim</button>
+                    <button type="button" data-v="average" class="on">Average</button>
+                    <button type="button" data-v="curvy">Fuller</button>
+                  </div>
+                </div>
+
+                <div class="styla-form-actions">
+                  <button type="button" class="styla-form-btn cancel" id="styla-k-cancel-{{ block.id }}">Back</button>
+                  <button type="button" class="styla-form-btn save" id="styla-k-save-{{ block.id }}">Find my size here</button>
+                </div>
+              </div>
+
               <div class="styla-form-actions">
                 <button type="button" class="styla-form-btn cancel" id="styla-cancel-specs-{{ block.id }}">Cancel</button>
                 <button type="button" class="styla-form-btn save" id="styla-save-specs-{{ block.id }}">Calculate Fit</button>
