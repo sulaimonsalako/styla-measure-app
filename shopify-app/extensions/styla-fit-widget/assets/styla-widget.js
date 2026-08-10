@@ -253,7 +253,7 @@
           // Signed in, but no measurements saved yet (account created, quiz never
           // taken) -> ask the questions instead of claiming the brand has no chart.
           if (data && data.unknown_size) {
-            showForm(true); showKnown(true);
+            showForm(true); formView('known');
             var km = el('styla-k-equiv'); if (km) km.textContent = data.message || 'We don\u2019t recognise that size.';
             return;
           }
@@ -634,31 +634,22 @@
 
       // ---------- guest measurement form ----------
       var editBtn = el('styla-edit-specs'), cancelBtn = el('styla-cancel-specs'), saveBtn = el('styla-save-specs');
-      function showForm(first) { ensureConnectBtn(); formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) intentEl.textContent = ''; }
+      function showForm(first) { ensureConnectBtn(); formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) { intentEl.textContent = ''; formView('choose'); } }
 
       // Shopping for someone else runs the SAME questionnaire, answered about
       // them. Sending the shopper off to styla.ca lost them mid-purchase; this
       // keeps the whole thing in the widget.
-      function setSelfQuizVisible(v) {
-        ['styla-form-title', 'styla-quiz', 'styla-manual'].forEach(function (id) {
-          var n = el(id); if (n) n.classList.toggle('styla-hidden', !v);
-        });
-        var acts = formPanel && formPanel.querySelector('.styla-form-actions');
-        if (acts) acts.classList.toggle('styla-hidden', !v);
-      }
       function showFormForOther() {
         STATE.forOther = true;
-        var box = el('styla-forwho'); if (box) box.classList.remove('styla-hidden');
         var nameEl = el('styla-forwho-name'); if (nameEl) nameEl.value = '';
-        setSelfQuizVisible(false);             // the self-quiz asks things you can't know about a friend
+        formView('gift');                      // the self-quiz asks things you can't know about a friend
         var wrap = formPanel && formPanel.querySelector('.styla-connect-wrap');
         if (wrap) wrap.remove();               // this isn't a sign-in moment
         showForm(false);
       }
       function exitOtherMode() {
         STATE.forOther = false;
-        var box = el('styla-forwho'); if (box) box.classList.add('styla-hidden');
-        setSelfQuizVisible(true);
+        formView('choose');
       }
       function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
       if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
@@ -693,15 +684,50 @@
       bindRange('styla-q-ww', 'styla-q-wwlbl', function (v) { return v + ' in'; });
       bindRange('styla-q-wm', 'styla-q-wmlbl', function (v) { return v + ' in'; });
 
-      var toManual = el('styla-to-manual'), toQuiz = el('styla-to-quiz');
-      function mode(manual) {
-        var q = el('styla-quiz'), m = el('styla-manual'), t = el('styla-form-title');
-        if (q) q.style.display = manual ? 'none' : '';
-        if (m) m.style.display = manual ? '' : 'none';
-        if (t) t.textContent = manual ? 'Enter your measurements (inches).' : 'A few quick questions — no tape measure needed.';
+      // The form has four faces: a chooser, and three ways to answer. There used
+      // to be THREE separate show/hide mechanisms for this (mode() toggling
+      // inline styles, showKnown() and setSelfQuizVisible() toggling classes),
+      // which is how panels ended up overlapping. One switcher now owns it.
+      var FORM_VIEWS = {
+        choose: { title: null },
+        quiz:   { title: 'A few quick questions — no tape measure needed.' },
+        manual: { title: 'Enter your measurements (inches).' },
+        known:  { title: 'Tell us a size you already wear.' },
+        gift:   { title: null },
+      };
+      function formView(view) {
+        if (!FORM_VIEWS[view]) view = 'choose';
+        STATE.formView = view;
+        var map = {
+          'styla-chooser': view === 'choose',
+          'styla-quiz':    view === 'quiz',
+          'styla-manual':  view === 'manual',
+          'styla-known':   view === 'known',
+          'styla-forwho':  view === 'gift',
+          'styla-formhead': view !== 'choose' && view !== 'gift',
+        };
+        Object.keys(map).forEach(function (id) {
+          var n = el(id); if (n) { n.classList.toggle('styla-hidden', !map[id]); n.style.display = ''; }
+        });
+        // Calculate Fit belongs to the quiz and manual panels only; the known and
+        // gift panels carry their own submit.
+        var acts = formPanel && formPanel.querySelectorAll('.styla-form-actions');
+        if (acts && acts.length) {
+          acts[acts.length - 1].classList.toggle('styla-hidden', !(view === 'quiz' || view === 'manual'));
+        }
+        var t = el('styla-form-title');
+        if (t && FORM_VIEWS[view].title) t.textContent = FORM_VIEWS[view].title;
+        // Signing in is offered on the chooser, not buried inside a panel.
+        var wrap = formPanel && formPanel.querySelector('.styla-connect-wrap');
+        if (wrap) wrap.style.display = (view === 'choose') ? '' : 'none';
       }
-      if (toManual) toManual.addEventListener('click', function () { mode(true); });
-      if (toQuiz) toQuiz.addEventListener('click', function () { mode(false); });
+      var backBtn = el('styla-back');
+      if (backBtn) backBtn.addEventListener('click', function () { formView('choose'); });
+      var chooser = el('styla-chooser');
+      if (chooser) chooser.addEventListener('click', function (e) {
+        var c = e.target.closest('.styla-card'); if (!c) return;
+        formView(c.getAttribute('data-view'));
+      });
 
       // Same estimation model as the Styla questionnaire on styla.ca.
       function profileFromQuiz() {
@@ -752,8 +778,7 @@
       if (cancelBtn) cancelBtn.addEventListener('click', exitOtherMode);
 
       if (saveBtn) saveBtn.addEventListener('click', function () {
-        var manual = el('styla-manual') && el('styla-manual').style.display !== 'none';
-        var p = manual ? profileFromManual() : profileFromQuiz();
+        var p = (STATE.formView === 'manual') ? profileFromManual() : profileFromQuiz();
         if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Chest, waist and height are needed — height decides Short/Regular/Long.'; return; }
 
         setProfile(p);
@@ -867,19 +892,6 @@
       bindKnownSeg('styla-k-system', 'system');
       bindKnownSeg('styla-k-build', 'build');
 
-      function showKnown(v) {
-        var k = el('styla-known'); if (!k) return;
-        k.classList.toggle('styla-hidden', !v);
-        ['styla-quiz', 'styla-manual', 'styla-form-title'].forEach(function (id) {
-          var n = el(id); if (n) n.classList.toggle('styla-hidden', v);
-        });
-        var acts = formPanel && formPanel.querySelectorAll('.styla-form-actions');
-        if (acts && acts.length) acts[acts.length - 1].classList.toggle('styla-hidden', v);
-      }
-      var toKnown = el('styla-to-known');
-      if (toKnown) toKnown.addEventListener('click', function () { showKnown(true); });
-      var kCancel = el('styla-k-cancel');
-      if (kCancel) kCancel.addEventListener('click', function () { showKnown(false); });
 
       var kSave = el('styla-k-save');
       if (kSave) kSave.addEventListener('click', async function () {
@@ -901,7 +913,7 @@
           heightIn: heightIn,
           brand: ((el('styla-k-brand') || {}).value || '').trim() || undefined,
         };
-        showKnown(false); hideForm();
+        formView('choose'); hideForm();
         STATE.result = null;
         loadFit();
       });

@@ -155,7 +155,41 @@
                 </div>
               </div>
 
-              <span class="styla-form-title" id="styla-form-title-{{ block.id }}">A few quick questions — no tape measure needed.</span>
+              <div class="styla-chooser" id="styla-chooser-{{ block.id }}">
+                <p class="styla-chooser-intro">How would you like to tell us your size?</p>
+
+                <button type="button" class="styla-card" data-view="quiz">
+                  <span class="styla-card-ico" aria-hidden="true">✎</span>
+                  <span class="styla-card-txt">
+                    <b>Answer a few questions</b>
+                    <em>No tape measure. Takes about 20 seconds.</em>
+                  </span>
+                  <span class="styla-card-go" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="styla-card" data-view="known">
+                  <span class="styla-card-ico" aria-hidden="true">#</span>
+                  <span class="styla-card-txt">
+                    <b>Use a size you already wear</b>
+                    <em>UK, EU, US, AUS, IT or FR.</em>
+                  </span>
+                  <span class="styla-card-go" aria-hidden="true">›</span>
+                </button>
+
+                <button type="button" class="styla-card" data-view="manual">
+                  <span class="styla-card-ico" aria-hidden="true">↔</span>
+                  <span class="styla-card-txt">
+                    <b>Enter your measurements</b>
+                    <em>Most accurate, if you have them.</em>
+                  </span>
+                  <span class="styla-card-go" aria-hidden="true">›</span>
+                </button>
+              </div>
+
+              <div class="styla-formhead styla-hidden" id="styla-formhead-{{ block.id }}">
+                <button type="button" class="styla-back" id="styla-back-{{ block.id }}">&larr; Back</button>
+                <span class="styla-form-title" id="styla-form-title-{{ block.id }}">A few quick questions — no tape measure needed.</span>
+              </div>
 
               <!-- QUESTIONNAIRE (default) -->
               <div id="styla-quiz-{{ block.id }}">
@@ -211,8 +245,6 @@
                     <button type="button" data-f="loose">Relaxed</button>
                   </div>
                 </div>
-                <button type="button" class="styla-switchmode" id="styla-to-known-{{ block.id }}">Tell us your size in UK, EU, US or AUS &rarr;</button>
-                <button type="button" class="styla-switchmode" id="styla-to-manual-{{ block.id }}">I know my measurements →</button>
               </div>
 
               <!-- EXACT MEASUREMENTS (optional) -->
@@ -243,7 +275,6 @@
                     <input type="number" id="styla-in-inseam-{{ block.id }}" placeholder="30" step="0.5" min="20" max="40">
                   </div>
                 </div>
-                <button type="button" class="styla-switchmode" id="styla-to-quiz-{{ block.id }}">← Answer a few questions instead</button>
               </div>
               <div class="styla-known styla-hidden" id="styla-known-{{ block.id }}">
                 <p class="styla-gift-intro">Tell us a size you already wear — UK, EU, US, AUS, IT or FR — and we’ll work out what that means in this brand.</p>
@@ -292,7 +323,6 @@
                 </div>
 
                 <div class="styla-form-actions">
-                  <button type="button" class="styla-form-btn cancel" id="styla-k-cancel-{{ block.id }}">Back</button>
                   <button type="button" class="styla-form-btn save" id="styla-k-save-{{ block.id }}">Find my size here</button>
                 </div>
               </div>
