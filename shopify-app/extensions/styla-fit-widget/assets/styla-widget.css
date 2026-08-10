@@ -1098,3 +1098,8 @@
 .styla-hgroup{ display:inline-flex; align-items:center; gap:6px; }
 .styla-hgroup input{ width:64px; }
 .styla-hunit{ font-size:.76rem; opacity:.55; }
+.styla-inline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.styla-seg-sm button{ padding:5px 10px !important; font-size:.75rem !important; }
+.styla-inline input{ width:78px; padding:8px 10px; font:inherit; font-size:.86rem;
+  border:1px solid #e2e2e2; border-radius:8px; background:#fff; box-sizing:border-box; }
+.styla-inline input:focus{ outline:none; border-color:#ff2a75; }

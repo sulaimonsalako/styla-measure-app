@@ -100,6 +100,32 @@
     return bestGap <= 3 ? best : null;
   }
 
+  // No label at all? Derive girths from height and build. Cruder, but a
+  // gift-buyer who has never seen a label still deserves an answer. Tuned so an
+  // average build lands mid-band: 5'5" woman ~ US 8, 5'10" man ~ 40.
+  var HEIGHT_RATIO = {
+    women: { chest: 0.562, waist: 0.446, hips: 0.600 },
+    men:   { chest: 0.571, waist: 0.486, hips: 0.530 },
+  };
+
+  // A men's SUIT/jacket number is the chest in inches (US/UK). That makes it the
+  // single most informative thing a man knows about himself, so it beats the
+  // alpha tables when we have it. Drop (chest - waist) is ~6" on a modern cut.
+  function fromSuitSize(suit, system) {
+    // Don't GUESS whether "50" is a US 50 or a EU 50 (which is a US 40) — the
+    // MEN table already carries us/uk/eu/au columns, so resolve it properly
+    // against whichever system the shopper told us.
+    var row = findRow('men', system || 'us', suit);
+    if (row) return { chest: row.chest, waist: row.waist, hips: +(row.waist + 4).toFixed(1) };
+
+    // Outside the table: in US/UK/AU a jacket number IS the chest in inches.
+    var sys = String(system || 'us').toLowerCase();
+    if (sys !== 'us' && sys !== 'uk' && sys !== 'au') return null;
+    var n = parseFloat(String(suit).replace(/[^0-9.]/g, ''));
+    if (isNaN(n) || n < 30 || n > 60) return null;
+    return { chest: n, waist: +(n - 6).toFixed(1), hips: +(n - 4).toFixed(1) };
+  }
+
   /**
    * Turn a known size label into estimated body measurements.
    * @param {object} o {gender, system, size, heightIn, build}
@@ -107,15 +133,29 @@
    */
   function toMeasurements(o) {
     o = o || {};
-    var row = findRow(o.gender, o.system, o.size);
-    if (!row) return null;
+    // Priority: a men's suit number (chest in inches) -> a labelled size in a
+    // known system -> height and build alone.
+    var base = null, how = null;
+    if (o.suit) { base = fromSuitSize(o.suit, o.system); how = 'suit'; }
+    if (!base && o.size) {
+      var row = findRow(o.gender, o.system, o.size);
+      if (row) { base = { chest: row.chest, waist: row.waist,
+                          hips: (row.hips != null ? row.hips : row.waist + 2) }; how = 'label'; }
+      else if (!o.heightIn) return null;   // a bad label and nothing to fall back on
+    }
+    if (!base && o.heightIn) {
+      var r = HEIGHT_RATIO[o.gender === 'men' ? 'men' : 'women'];
+      base = { chest: o.heightIn * r.chest, waist: o.heightIn * r.waist, hips: o.heightIn * r.hips };
+      how = 'height';
+    }
+    if (!base) return null;
 
     // Build nudges the girths; it can't be read off a label.
     var adj = o.build === 'slim' ? -1.0 : o.build === 'curvy' ? 1.5 : 0;
     var p = {
-      chest: +(row.chest + adj).toFixed(1),
-      waist: +(row.waist + adj).toFixed(1),
-      hips: +((row.hips != null ? row.hips : row.waist + 2) + adj).toFixed(1),
+      chest: +(base.chest + adj).toFixed(1),
+      waist: +(base.waist + adj).toFixed(1),
+      hips: +(base.hips + (o.build === 'curvy' ? adj + 0.5 : adj)).toFixed(1),
     };
     p.belly = p.waist;
 
@@ -128,7 +168,12 @@
     if (o.gender === 'men') p.neck = +(12.5 + (p.chest - 38) * 0.15).toFixed(1);
 
     p.estimated = true;
-    p.derived_from = { system: String(o.system || 'us').toLowerCase(), size: String(o.size), label: true };
+    p.confidence = how;                      // 'suit' | 'label' | 'height'
+    p.derived_from = (how === 'suit')
+      ? { suit: String(o.suit), label: true }
+      : (how === 'label')
+        ? { system: String(o.system || 'us').toLowerCase(), size: String(o.size), label: true }
+        : { heightOnly: true };
     return p;
   }
 
@@ -194,5 +239,6 @@
     WOMEN: WOMEN, MEN: MEN, SYSTEMS: SYSTEMS,
     findRow: findRow, toMeasurements: toMeasurements, equivalents: equivalents,
     invertBrandChart: invertBrandChart, parseSizeText: parseSizeText,
+    fromSuitSize: fromSuitSize, HEIGHT_RATIO: HEIGHT_RATIO,
   };
 }));

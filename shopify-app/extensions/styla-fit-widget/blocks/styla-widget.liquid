@@ -112,15 +112,33 @@
                   </div>
                 </div>
 
-                <div class="styla-q">
-                  <label>What size do they usually wear? <span class="styla-opt">Optional</span></label>
-                  <div class="styla-seg styla-seg-wrap" id="styla-g-size-{{ block.id }}">
-                    <button type="button" data-v="XS">XS</button>
-                    <button type="button" data-v="S">S</button>
-                    <button type="button" data-v="M">M</button>
-                    <button type="button" data-v="L">L</button>
-                    <button type="button" data-v="XL">XL</button>
-                    <button type="button" data-v="XXL">XXL</button>
+                <!-- Gender-specific, because the useful question differs. A man
+                     usually knows his jacket number (which IS his chest in inches);
+                     a woman knows a dress size, but only alongside its system. -->
+                <div class="styla-q styla-hidden" id="styla-g-men-size-{{ block.id }}">
+                  <label>Their suit or jacket size <span class="styla-opt">Optional</span></label>
+                  <div class="styla-inline">
+                    <div class="styla-seg styla-seg-sm" id="styla-g-msys-{{ block.id }}">
+                      <button type="button" data-v="us" class="on">US/UK</button>
+                      <button type="button" data-v="eu">EU</button>
+                    </div>
+                    <input type="text" id="styla-g-suit-{{ block.id }}" placeholder="40" maxlength="4">
+                  </div>
+                  <p class="styla-hint-sm">A jacket number is his chest in inches — the most useful thing you can know. Skip if unsure.</p>
+                </div>
+
+                <div class="styla-q" id="styla-g-women-size-{{ block.id }}">
+                  <label>The size she usually wears <span class="styla-opt">Optional</span></label>
+                  <div class="styla-inline">
+                    <div class="styla-seg styla-seg-sm styla-seg-wrap" id="styla-g-wsys-{{ block.id }}">
+                      <button type="button" data-v="uk" class="on">UK</button>
+                      <button type="button" data-v="us">US</button>
+                      <button type="button" data-v="eu">EU</button>
+                      <button type="button" data-v="au">AUS</button>
+                      <button type="button" data-v="it">IT</button>
+                      <button type="button" data-v="fr">FR</button>
+                    </div>
+                    <input type="text" id="styla-g-wsize-{{ block.id }}" placeholder="12" maxlength="4">
                   </div>
                   <p class="styla-hint-sm">If you've seen a label, this sharpens things a lot. Skip it if you don't know.</p>
                 </div>

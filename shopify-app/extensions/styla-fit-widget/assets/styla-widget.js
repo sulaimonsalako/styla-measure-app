@@ -243,7 +243,8 @@
         setLoading(true);
         try {
           var body = { domain: product.domain, productUrl: product.url, category: mapType(product.type) };
-          if (STATE.shopForProfile) body.profile = STATE.shopForProfile;   // shopping for someone else
+          if (STATE.shopForAnswers) body.knownSize = STATE.shopForAnswers; // friend, estimated server-side
+          else if (STATE.shopForProfile) body.profile = STATE.shopForProfile;  // friend with a shared Styla profile
           else if (STATE.knownSize) body.knownSize = STATE.knownSize;      // "I'm a 12 UK"
           else if (token) body.accessToken = token; else body.profile = profile;
           var r = await fetch(API + '/api/widget-size', {
@@ -295,7 +296,7 @@
         try { if (_stylaPopup) _stylaPopup.close(); } catch (e) {}
         var cta = detailsBody && detailsBody.querySelector('.styla-save-cta'); if (cta) cta.remove();
         hideForm();
-        STATE.result = null; STATE.shopForId = null; STATE.shopForProfile = null;
+        STATE.result = null; STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
         loadFit();
       });
       // Inject a "Continue with Styla" button at the top of the guest form.
@@ -336,7 +337,9 @@
       async function renderShopFor() {
         var slot = el('styla-shopfor-slot'); if (!slot) return;
 
-        var local = getPeople().map(function (p) { return { id: p.id, label: p.name, profile: p.profile }; });
+        var local = getPeople().map(function (p) {
+          return { id: p.id, label: p.name, profile: p.profile, answers: p.answers };
+        });
         var shared = [];
         if (getToken()) {
           try {
@@ -368,7 +371,7 @@
           b.addEventListener('click', function () {
             if (b.getAttribute('data-mode') === 'me') {
               if (!STATE.shopForId) return;
-              STATE.shopForId = null; STATE.shopForProfile = null;
+              STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
               slot.innerHTML = ''; renderShopFor();
               STATE.result = null; loadFit();
             } else {
@@ -390,7 +393,8 @@
         async function selectPerson(p) {
           if (!p) return;
           STATE.shopForId = p.id;
-          if (p.profile) STATE.shopForProfile = p.profile;         // estimated here
+          if (p.answers) { STATE.shopForAnswers = p.answers; STATE.shopForProfile = null; }
+          else if (p.profile) { STATE.shopForProfile = p.profile; STATE.shopForAnswers = null; }
           else {
             try {
               var pr = (await conn('get-profile', { ownerId: p.id })).profile || {};
@@ -854,65 +858,15 @@
       });
 
 
-      // ---------- Gift estimation ----------
+      // ---------- Gift answers ----------
       //
-      // Deliberately NOT the self-questionnaire. Weight, bra band and exact waist
-      // are things almost nobody knows about a friend, and asking is intrusive.
-      // What a gift-buyer genuinely knows is: who it's for, roughly how tall they
-      // are, the size they usually wear, and their general build. So we invert a
-      // standard size table instead of estimating girths from body mass.
-      var GIFT_W = {  // US women's, body measurements in inches
-        XS:  { chest: 32.5, waist: 25.0, hips: 35.5 },
-        S:   { chest: 34.5, waist: 27.0, hips: 37.5 },
-        M:   { chest: 36.5, waist: 29.0, hips: 39.5 },
-        L:   { chest: 39.5, waist: 32.0, hips: 42.5 },
-        XL:  { chest: 43.0, waist: 35.5, hips: 46.0 },
-        XXL: { chest: 46.5, waist: 39.0, hips: 49.5 },
-      };
-      var GIFT_M = {  // US men's
-        XS:  { chest: 34, waist: 28 }, S:   { chest: 36, waist: 30 },
-        M:   { chest: 40, waist: 33 }, L:   { chest: 43, waist: 36 },
-        XL:  { chest: 46, waist: 39 }, XXL: { chest: 49, waist: 43 },
-      };
-      // No size given? Estimate girths from height and build alone. Cruder than a
-      // size label, but a gift-buyer who has never seen a label still deserves an
-      // answer, and height is something anyone can approximate.
-      // Tuned so an average build lands mid-band: 5'5" woman ~ US 8, 5'10" man ~ 40.
-      var GIFT_RATIO = {
-        women: { chest: 0.562, waist: 0.446, hips: 0.600 },
-        men:   { chest: 0.571, waist: 0.486, hips: 0.530 },
-      };
+      // The widget converts nothing. It used to carry its own size tables and
+      // height ratios, duplicating shared/size-conversion.js on the server —
+      // two tables to keep in step is one too many. It now only collects what
+      // the buyer knows; widget-size does the conversion, which also lets a
+      // named brand be inverted against its real chart later.
 
-      function profileFromGift() {
-        var g = GIFT.gender === 'men' ? 'men' : 'women';
-        var height = GIFT.heightIn;
-        var adj = GIFT.build === 'slim' ? -1.0 : GIFT.build === 'curvy' ? 1.5 : 0;
-
-        var base;
-        if (GIFT.size) {                     // they've seen a label — much better
-          var tbl = (g === 'women') ? GIFT_W : GIFT_M;
-          var row = tbl[GIFT.size] || tbl.M;
-          base = { chest: row.chest, waist: row.waist, hips: (row.hips != null ? row.hips : row.waist + 2) };
-        } else {                             // height + build only
-          var r = GIFT_RATIO[g];
-          base = { chest: height * r.chest, waist: height * r.waist, hips: height * r.hips };
-        }
-
-        var p = {
-          height: height,
-          chest: +(base.chest + adj).toFixed(1),
-          waist: +(base.waist + adj).toFixed(1),
-          hips:  +(base.hips + (GIFT.build === 'curvy' ? adj + 0.5 : adj)).toFixed(1),
-        };
-        p.inseam = Math.round(height * (g === 'men' ? 0.44 : 0.45));
-        if (g === 'men') p.neck = +(12.5 + (p.chest - 38) * 0.15).toFixed(1);
-        p.belly = p.waist;
-        p.estimated = true;
-        p.confidence = GIFT.size ? 'size+height' : 'height only';
-        return p;
-      }
-
-      var GIFT = { gender: 'women', size: null, heightIn: null, build: 'average' };
+      var GIFT = { gender: 'women', system: 'uk', size: null, suit: null, heightIn: null, build: 'average' };
       function bindGiftSeg(id, key, after) {
         var host = el(id); if (!host) return;
         host.addEventListener('click', function (e) {
@@ -922,25 +876,43 @@
           if (after) after();
         });
       }
-      bindGiftSeg('styla-g-gender', 'gender');
+      bindGiftSeg('styla-g-gender', 'gender', function () {
+        // A man usually knows his jacket number (which IS his chest in inches);
+        // a woman knows a dress size, but it's meaningless without its system.
+        var men = (GIFT.gender === 'men');
+        var mBox = el('styla-g-men-size'), wBox = el('styla-g-women-size');
+        if (mBox) mBox.classList.toggle('styla-hidden', !men);
+        if (wBox) wBox.classList.toggle('styla-hidden', men);
+        GIFT.system = men ? 'us' : 'uk';
+        GIFT.size = null; GIFT.suit = null;
+      });
+      bindGiftSeg('styla-g-msys', 'system');
+      bindGiftSeg('styla-g-wsys', 'system');
 
       var giftSave = el('styla-g-save'), giftCancel = el('styla-g-cancel');
       if (giftCancel) giftCancel.addEventListener('click', function () { exitOtherMode(); hideForm(); });
       if (giftSave) giftSave.addEventListener('click', function () {
         var h = readGiftHeight();
         var hint = el('styla-g-hhint');
-        if (!h) {                                   // the one required field
+        if (!h) {                                   // the only required field
           if (hint) hint.textContent = 'We need roughly how tall they are \u2014 a guess is fine. It decides Short / Regular / Long.';
           return;
         }
-        GIFT.heightIn = h;
-        var p = profileFromGift();
-        // No name asked for; it only ever labelled the saved entry.
+        var men = (GIFT.gender === 'men');
+        var answers = {
+          gender: men ? 'men' : 'women',
+          system: GIFT.system,
+          heightIn: h,
+          build: GIFT.build,
+          suit: men ? (((el('styla-g-suit') || {}).value || '').trim() || undefined) : undefined,
+          size: men ? undefined : (((el('styla-g-wsize') || {}).value || '').trim() || undefined),
+        };
         var person = { id: 'local:' + Date.now().toString(36),
-                       name: 'Friend ' + (getPeople().length + 1), profile: p, local: true };
+                       name: 'Friend ' + (getPeople().length + 1), answers: answers, local: true };
         savePerson(person);
         STATE.shopForId = person.id;
-        STATE.shopForProfile = p;
+        STATE.shopForProfile = null;
+        STATE.shopForAnswers = answers;             // server converts these
         exitOtherMode(); hideForm();
         var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
         STATE.result = null; loadFit();
@@ -986,7 +958,7 @@
           clearSession();
           try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
           STATE.result = null; STATE.activeSize = null;
-          STATE.shopForId = null; STATE.shopForProfile = null; STATE.people = [];
+          STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null; STATE.people = [];
           var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
           paintAuth();
           showForm(true);
