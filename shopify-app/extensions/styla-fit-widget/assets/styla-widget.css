@@ -761,3 +761,93 @@
 .styla-seg button.on{border-color:#ff2a75;color:#e11d48;background:rgba(255,42,117,.07);font-weight:650;}
 .styla-switchmode{background:none;border:none;color:#e11d48;font-weight:650;font-size:.78rem;cursor:pointer;padding:4px 0;font-family:inherit;text-decoration:underline;}
 .styla-opt{font-weight:400;color:#a8aeb9;font-size:.72rem;}
+
+/* ============================================================
+   UNIFIED PANEL (2026-08-09)
+   Replaces the tabbed, half-image modal. One column, one scroll:
+   thumbnail header -> pinned answer -> inline panels -> chat.
+   The old .styla-modal-left took 50% of the width, which is what
+   squeezed "Ideal fit (4.5" ease · ideal ~3")" onto three lines.
+   ============================================================ */
+.styla-modal-container{ max-width:520px; width:calc(100vw - 32px); max-height:88vh;
+  display:flex; flex-direction:column; overflow:hidden; }
+.styla-modal-body{ display:flex; flex-direction:column; min-height:0; }
+
+.styla-modal-head{ display:flex; align-items:center; gap:12px; padding:16px 46px 14px 18px;
+  border-bottom:1px solid #ececec; flex:none; }
+.styla-head-thumb{ width:48px; height:60px; object-fit:cover; border-radius:6px; background:#f4f4f4; flex:none; }
+.styla-head-text{ display:flex; flex-direction:column; min-width:0; }
+.styla-head-title{ font-weight:600; font-size:.98rem; line-height:1.25;
+  overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.styla-head-sub{ font-size:.76rem; opacity:.6; margin-top:2px; }
+
+/* the one scrolling region */
+.styla-modal-right{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  display:flex; flex-direction:column; width:100%; }
+.styla-pane{ display:block; padding:16px 18px 4px; }
+
+/* pinned answer */
+.styla-answer{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:14px 16px; border:1px solid #ececec; border-radius:12px; background:#fafafa; }
+.styla-answer-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.styla-answer .styla-option-label{ font-size:.68rem; letter-spacing:.09em; opacity:.55; font-weight:600; }
+.styla-answer .styla-option-val{ display:flex; align-items:center; gap:7px; font-size:1.7rem; font-weight:700; line-height:1.1; }
+.styla-answer .styla-check-icon{ width:19px; height:19px; color:#12a150; flex:none; }
+.styla-answer-len{ font-size:.79rem; opacity:.7; }
+.styla-answer-side{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex:none; }
+.styla-conf{ font-size:.72rem; opacity:.6; white-space:nowrap; }
+
+/* fit rows — horizontal, so values stop wrapping */
+.styla-panel-title{ display:block; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
+  opacity:.55; font-weight:600; margin:18px 0 8px; }
+.styla-text-analysis-list{ list-style:none; margin:0; padding:0; }
+.styla-text-analysis-list li{ display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:9px 0; border-bottom:1px solid #f1f1f1; font-size:.87rem; }
+.styla-text-analysis-list li:last-child{ border-bottom:none; }
+.styla-fit-dim{ font-weight:600; flex:none; }
+.styla-fit-note{ text-align:right; opacity:.72; font-size:.82rem; }
+.styla-fit-tag{ font-size:.7rem; font-weight:600; padding:2px 8px; border-radius:100px; flex:none; }
+.styla-fit-tag.ideal{ background:#e7f7ee; color:#12a150; }
+.styla-fit-tag.slim{ background:#fdeceb; color:#c0392b; }
+.styla-fit-tag.relaxed,.styla-fit-tag.oversized{ background:#fff4e5; color:#b26a00; }
+
+/* inline expandables */
+.styla-disc{ border:1px solid #ececec; border-radius:10px; margin-top:10px; overflow:hidden; }
+.styla-disc>summary{ cursor:pointer; padding:11px 14px; font-size:.85rem; font-weight:600; list-style:none; }
+.styla-disc>summary::-webkit-details-marker{ display:none; }
+.styla-disc>summary::after{ content:'+'; float:right; opacity:.5; font-weight:400; }
+.styla-disc[open]>summary::after{ content:'\2212'; }
+.styla-disc-body{ padding:4px 14px 14px; font-size:.85rem; }
+
+.styla-alt{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:9px 0; border-bottom:1px solid #f4f4f4; }
+.styla-alt:last-child{ border-bottom:none; }
+.styla-alt-name{ font-weight:600; }
+.styla-alt-note{ opacity:.65; font-size:.79rem; text-align:right; }
+.styla-alt.is-best .styla-alt-name::after{ content:' · your size'; font-weight:400; opacity:.55; font-size:.75rem; }
+.styla-alt.oos .styla-alt-name{ opacity:.45; text-decoration:line-through; }
+
+.styla-chart-wrap{ overflow-x:auto; }
+.styla-chart-wrap table{ border-collapse:collapse; width:100%; font-size:.8rem; }
+.styla-chart-wrap th,.styla-chart-wrap td{ border:1px solid #eee; padding:6px 9px; text-align:left; white-space:nowrap; }
+.styla-chart-wrap th{ background:#fafafa; font-weight:600; }
+.styla-chart-wrap tr.is-best td{ background:#e7f7ee; font-weight:600; }
+
+/* chat, in the same scroll */
+.styla-chat-container{ display:block; border-top:1px solid #ececec; margin-top:18px; padding:14px 18px 16px; }
+.styla-chat-head{ font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; opacity:.55; font-weight:600; margin-bottom:10px; }
+.styla-chat-history{ max-height:none; overflow:visible; }
+.styla-chat-suggest{ display:flex; gap:6px; flex-wrap:wrap; margin:10px 0; }
+.styla-chip{ border:1px solid #e2e2e2; background:#fff; border-radius:100px; padding:6px 11px;
+  font-size:.78rem; cursor:pointer; }
+.styla-chip:hover{ border-color:#bbb; }
+/* input sticks to the bottom so it's reachable without scrolling the answer away */
+.styla-chat-input-bar{ position:sticky; bottom:0; background:#fff; padding-top:10px; }
+
+@media (max-width:560px){
+  .styla-modal-container{ max-width:100%; width:100%; max-height:92vh; border-radius:14px 14px 0 0; }
+  .styla-answer .styla-option-val{ font-size:1.45rem; }
+}
+.styla-alt{ cursor:pointer; border-radius:8px; padding-left:8px; padding-right:8px; }
+.styla-alt.is-active{ background:#fdf0f4; box-shadow:inset 0 0 0 1px #f6c9d8; }
+.styla-alt:focus-visible{ outline:2px solid #ff2a75; outline-offset:2px; }

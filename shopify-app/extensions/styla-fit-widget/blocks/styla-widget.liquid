@@ -34,74 +34,74 @@
     <button class="styla-modal-close" id="styla-close-{{ block.id }}">&times;</button>
     
     <div class="styla-modal-body">
-      <!-- 1. Left Column: Product Featured Image -->
-      <div class="styla-modal-left" style="background-image: url('{{ product.featured_image | image_url: width: 600 }}');">
-        <div class="styla-product-overlay">
-          <span class="styla-product-badge">GARMENT PREVIEW</span>
+      <!-- Header: a small thumbnail confirms WHICH product is being sized without
+           stealing half the width. The old left-hand image column is what forced
+           the content into a narrow, three-line-wrapping column. -->
+      <div class="styla-modal-head">
+        {% if product.featured_image %}
+          <img class="styla-head-thumb" src="{{ product.featured_image | image_url: width: 160 }}" alt="{{ product.title | escape }}" width="48" height="60" loading="lazy">
+        {% endif %}
+        <div class="styla-head-text">
+          <span class="styla-head-title">{{ product.title | escape }}</span>
+          <span class="styla-head-sub">Fit &amp; size advice for your body</span>
         </div>
       </div>
-      
-      <!-- 2. Right Column: Sizing & Chat Panel -->
+
+      <!-- ONE scrolling panel: pinned answer, then inline panels, then the chat.
+           No tabs — the recommendation stays visible while you ask about it. -->
       <div class="styla-modal-right">
-        <!-- Tab Bar -->
-        <div class="styla-tabs-bar">
-          <div class="styla-tabs">
-            <button class="styla-tab-btn active" data-tab="styla-tab-fit-{{ block.id }}">Fit Advisor</button>
-            <button class="styla-tab-btn" data-tab="styla-tab-chat-{{ block.id }}">Ask AI Tailor</button>
-          </div>
-        </div>
-        
-        <!-- Tab Panel 1: Sizing Details (Clean Text-based Layout) -->
-        <div class="styla-tab-content active" id="styla-tab-fit-{{ block.id }}">
+        <div class="styla-pane" id="styla-tab-fit-{{ block.id }}">
           <div class="styla-text-rec-container">
-            <!-- Top Section: Best Option Info & Edit Button -->
-            <div class="styla-best-option-row">
-              <div class="styla-best-option-box">
-                <span class="styla-option-label">BEST OPTION</span>
+            <!-- PINNED ANSWER. Comes straight from the local sizing engine, so it
+                 renders instantly and still works when the AI is unavailable. -->
+            <div class="styla-answer" id="styla-answer-{{ block.id }}">
+              <div class="styla-answer-main">
+                <span class="styla-option-label">YOUR SIZE</span>
                 <div class="styla-option-val">
-                  <span id="styla-best-size-val-{{ block.id }}">M</span>
+                  <span id="styla-best-size-val-{{ block.id }}">—</span>
                   <svg class="styla-check-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                   </svg>
                 </div>
+                <span class="styla-answer-len" id="styla-answer-len-{{ block.id }}"></span>
               </div>
-              <button type="button" class="styla-edit-specs-btn" id="styla-edit-specs-{{ block.id }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path>
-                </svg>
-                Edit Specs
-              </button>
+              <div class="styla-answer-side">
+                <span class="styla-conf" id="styla-conf-{{ block.id }}"></span>
+                <button type="button" class="styla-edit-specs-btn" id="styla-edit-specs-{{ block.id }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path>
+                  </svg>
+                  Edit
+                </button>
+              </div>
             </div>
-            
-            <!-- Sizing Details Content Area (Toggles with Input Form) -->
+
             <div class="styla-fit-details-body" id="styla-details-body-{{ block.id }}">
-              <!-- Middle Section: Sizing Details List -->
               <div class="styla-fit-analysis-panel">
-                <span class="styla-panel-title">Fit details relative to your body:</span>
-                <ul class="styla-text-analysis-list" id="styla-text-list-{{ block.id }}">
-                  <!-- Will be dynamically populated via JS -->
-                </ul>
+                <span class="styla-panel-title">How it fits you</span>
+                <ul class="styla-text-analysis-list" id="styla-text-list-{{ block.id }}"></ul>
               </div>
-              
-              <!-- Designer Intent Card -->
-              <div class="styla-intent-card">
-                <p id="styla-intent-text-{{ block.id }}">Designed as a "Relaxed Fit" tee. Choosing Size S is NOT recommended because the Chest would fit tight (-0.5" ease).</p>
+
+              <div class="styla-intent-card styla-hidden" id="styla-intent-card-{{ block.id }}">
+                <p id="styla-intent-text-{{ block.id }}"></p>
               </div>
-              
-              <!-- Bottom Section: Also Try Sizes slider -->
-              <div class="styla-size-picker-section">
-                <span class="styla-picker-title">Also try the sizes:</span>
-                <div class="styla-size-slider-row">
-                  <button type="button" class="styla-arrow-btn prev" id="styla-prev-size-{{ block.id }}">&lt;</button>
-                  <div class="styla-size-options-list">
-                    <button type="button" class="styla-size-opt-btn" data-size="S">S</button>
-                    <button type="button" class="styla-size-opt-btn active" data-size="M">M</button>
-                    <button type="button" class="styla-size-opt-btn" data-size="L">L</button>
-                  </div>
-                  <button type="button" class="styla-arrow-btn next" id="styla-next-size-{{ block.id }}">&gt;</button>
-                </div>
-              </div>
+
+              <!-- Inline expandables. Same scroll, no navigation away from the answer. -->
+              <details class="styla-disc" id="styla-disc-sizes-{{ block.id }}">
+                <summary>Compare other sizes</summary>
+                <div class="styla-disc-body" id="styla-sizes-body-{{ block.id }}"></div>
+              </details>
+
+              <details class="styla-disc styla-hidden" id="styla-disc-len-{{ block.id }}">
+                <summary>Length options</summary>
+                <div class="styla-disc-body" id="styla-len-body-{{ block.id }}"></div>
+              </details>
+
+              <details class="styla-disc styla-hidden" id="styla-disc-chart-{{ block.id }}">
+                <summary>Full size chart</summary>
+                <div class="styla-disc-body styla-chart-wrap" id="styla-chart-body-{{ block.id }}"></div>
+              </details>
             </div>
 
             <!-- Manual Specs Input Form (Hidden by default) -->
@@ -204,23 +204,21 @@
           </div>
         </div>
         
-        <!-- Tab Panel 2: AI Tailor Chat -->
-        <div class="styla-tab-content" id="styla-tab-chat-{{ block.id }}">
-          <div class="styla-chat-container">
-            <div class="styla-chat-history" id="styla-chat-history-{{ block.id }}">
-              <div class="chat-msg system">
-                <p>Hello! I am your STYLA AI Tailor. Ask me anything about how this item fits your body, its fabric composition, or styling suggestions.</p>
-              </div>
-            </div>
-            <div class="styla-chat-input-bar">
-              <input type="text" class="styla-chat-input" id="styla-chat-input-{{ block.id }}" placeholder="Ask about sizing, fabric, or fit...">
-              <button type="button" class="styla-chat-send" id="styla-chat-send-{{ block.id }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-              </button>
-            </div>
+        <!-- Conversation, in the same scroll and below the answer. -->
+        <div class="styla-chat-container" id="styla-tab-chat-{{ block.id }}">
+          <div class="styla-chat-head">Ask about this item</div>
+          <div class="styla-chat-history" id="styla-chat-history-{{ block.id }}">
+            <div class="chat-msg system"><p>Ask me anything — other sizes, length, fabric, or how this compares to something you already own.</p></div>
+          </div>
+          <div class="styla-chat-suggest" id="styla-chat-suggest-{{ block.id }}"></div>
+          <div class="styla-chat-input-bar">
+            <input type="text" class="styla-chat-input" id="styla-chat-input-{{ block.id }}" placeholder="Ask about sizing, fabric, or fit...">
+            <button type="button" class="styla-chat-send" id="styla-chat-send-{{ block.id }}" aria-label="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
           </div>
         </div>
       </div>

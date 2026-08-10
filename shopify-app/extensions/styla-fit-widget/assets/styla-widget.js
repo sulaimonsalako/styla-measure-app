@@ -74,6 +74,13 @@
     return 'Good';
   }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // Chart columns, size names and fit notes are merchant-authored strings that we
+  // now inject as HTML (tables, comparison rows) — escape everything.
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   // Explicit measurement vocabulary — shoppers and brands must know WHICH sleeve
   // and WHICH shoulder we're comparing. Canonical: sleeve = shoulder seam → wrist,
   // shoulder = full cross-back (seam to seam). Charts measured centre-back → wrist
@@ -104,7 +111,13 @@
       var listEl = el('styla-text-list');
       var intentEl = el('styla-intent-text');
       var bestValEl = el('styla-best-size-val');
-      var sliderRow = modal.querySelector('.styla-size-options-list');
+      var confEl = el('styla-conf');
+      var lenBadgeEl = el('styla-answer-len');
+      var intentCard = el('styla-intent-card');
+      var discSizes = el('styla-disc-sizes'), sizesBody = el('styla-sizes-body');
+      var discLen = el('styla-disc-len'), lenBody = el('styla-len-body');
+      var discChart = el('styla-disc-chart'), chartBody = el('styla-chart-body');
+      var suggestEl = el('styla-chat-suggest');
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
 
@@ -120,15 +133,8 @@
       closeBtn.addEventListener('click', close);
       modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
 
-      // ---------- tabs ----------
-      modal.querySelectorAll('.styla-tab-btn').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          modal.querySelectorAll('.styla-tab-btn').forEach(function (t) { t.classList.remove('active'); });
-          modal.querySelectorAll('.styla-tab-content').forEach(function (c) { c.classList.remove('active'); });
-          tab.classList.add('active');
-          document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
-        });
-      });
+      // No tabs any more — answer and conversation share one scroll, so the
+      // recommendation stays on screen while the shopper asks about it.
 
       // ---------- fetch the real fit ----------
       async function loadFit() {
@@ -246,47 +252,112 @@
 
       // ---------- render ----------
       function renderFit() {
-        var res = STATE.result;
-        var cands = res.candidates || [{ name: res.size, spectrum: res.spectrum, breakdown: res.breakdown, fits: res.fits }];
-        sliderRow.innerHTML = cands.map(function (c) {
-          return '<button type="button" class="styla-size-opt-btn' + (c.name === STATE.activeSize ? ' active' : '') +
-            '" data-size="' + c.name + '">' + c.name + '</button>';
-        }).join('');
-        sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
-          b.addEventListener('click', function () { STATE.activeSize = b.getAttribute('data-size'); renderSize(STATE.activeSize); });
-        });
+        renderAlternatives();
+        renderLengths();
+        renderChart();
         renderSize(STATE.activeSize);
       }
+
+      // ---- Compare other sizes (inline, no navigation) ----
+      function renderAlternatives() {
+        var res = STATE.result, cands = res.candidates || [];
+        if (!sizesBody) return;
+        if (cands.length < 2) { if (discSizes) discSizes.classList.add('styla-hidden'); return; }
+        if (discSizes) discSizes.classList.remove('styla-hidden');
+        var st = res.stock || null;
+        sizesBody.innerHTML = cands.map(function (c) {
+          var oos = false;
+          if (st) { var k = Object.keys(st).find(function (x) { return x.toLowerCase() === String(c.name).trim().toLowerCase(); });
+                    if (k) oos = !st[k]; }
+          var note = c.name === res.size ? cap(c.spectrum || '') + ' — best match'
+                   : (c.fits ? cap(c.spectrum || '') + ' on you' : 'Compromises fit');
+          return '<div class="styla-alt' + (c.name === res.size ? ' is-best' : '') + (oos ? ' oos' : '') +
+            '" data-size="' + esc(c.name) + '" role="button" tabindex="0">' +
+            '<span class="styla-alt-name">' + esc(c.name) + '</span>' +
+            '<span class="styla-alt-note">' + esc(note) + (oos ? ' · sold out' : '') + '</span></div>';
+        }).join('');
+        sizesBody.querySelectorAll('.styla-alt').forEach(function (r) {
+          r.addEventListener('click', function () { STATE.activeSize = r.getAttribute('data-size'); renderSize(STATE.activeSize); });
+        });
+      }
+
+      // ---- Length options exactly as the store defined them ----
+      function renderLengths() {
+        var res = STATE.result;
+        var opts = (res.chart && res.chart.length_options) || res.length_options || [];
+        if (!lenBody || !discLen) return;
+        if (!opts.length) { discLen.classList.add('styla-hidden'); return; }
+        discLen.classList.remove('styla-hidden');
+        var picked = (res.recommendedLength && res.recommendedLength.name) || null;
+        lenBody.innerHTML = opts.map(function (o) {
+          var bits = [];
+          if (o.inseam != null) bits.push('inseam ' + o.inseam + '"');
+          if (o.height_min != null || o.height_max != null) bits.push('for ' + ftin(o.height_min) + '–' + ftin(o.height_max));
+          if (o.note) bits.push(o.note);
+          return '<div class="styla-alt' + (o.name === picked ? ' is-best' : '') + '">' +
+            '<span class="styla-alt-name">' + esc(o.name) + '</span>' +
+            '<span class="styla-alt-note">' + esc(bits.join(' · ')) + '</span></div>';
+        }).join('');
+      }
+      function ftin(v) { if (v == null) return '—'; var f = Math.floor(v / 12), i = Math.round(v - f * 12); return f + "'" + i + '"'; }
+
+      // ---- The brand's own size chart, every column they published ----
+      function renderChart() {
+        var ch = STATE.result && STATE.result.chart;
+        if (!chartBody || !discChart) return;
+        var rows = ch && (ch.display_sizes || ch.sizes);
+        if (!rows || !rows.length) { discChart.classList.add('styla-hidden'); return; }
+        discChart.classList.remove('styla-hidden');
+        var cols = (ch.display_columns && ch.display_columns.length) ? ch.display_columns
+          : Object.keys(rows[0]).filter(function (k) { return k !== 'name'; });
+        var best = STATE.result.size;
+        var head = '<tr><th>Size</th>' + cols.map(function (c) { return '<th>' + esc(cap(c)) + '</th>'; }).join('') + '</tr>';
+        var body = rows.map(function (r) {
+          var cells = cols.map(function (c) {
+            var v = r[c]; if (v == null) { var kk = Object.keys(r).find(function (k) { return k.toLowerCase() === String(c).toLowerCase(); }); if (kk) v = r[kk]; }
+            if (Array.isArray(v)) v = v.join('–');
+            return '<td>' + esc(v == null ? '—' : String(v)) + '</td>';
+          }).join('');
+          return '<tr class="' + (r.name === best ? 'is-best' : '') + '"><td>' + esc(r.name || '') + '</td>' + cells + '</tr>';
+        }).join('');
+        var note = (ch.notes || STATE.result.notes) ? '<p class="styla-alt-note" style="text-align:left;margin-top:10px">' + esc(ch.notes || STATE.result.notes) + '</p>' : '';
+        chartBody.innerHTML = '<table>' + head + body + '</table>' + note;
+      }
+
       function renderSize(sizeName) {
         var res = STATE.result;
         var cands = res.candidates || [];
         var c = cands.find(function (x) { return x.name === sizeName; }) ||
                 { name: sizeName, spectrum: res.spectrum, breakdown: res.breakdown, fits: res.fits };
-        bestValEl.textContent = res.size + (sizeName !== res.size ? ' → ' + sizeName : '');
+        bestValEl.textContent = sizeName || res.size;
+        if (confEl) confEl.textContent = (res.score != null ? res.score + '% match' : '');
+
+        var rl = res.recommendedLength;
+        if (lenBadgeEl) lenBadgeEl.textContent = (rl && rl.name) ? 'Suggested length: ' + rl.name : '';
+
         var bk = c.breakdown || {};
         var keys = Object.keys(bk);
         listEl.innerHTML = keys.length ? keys.map(function (k) {
           var txt = bk[k];
-          return '<li class="styla-text-fit-item"><span class="styla-item-label">' + dimLabel(k) +
-            '</span><span class="styla-item-badge ' + statusFor(txt) + '">' + badgeFor(txt) +
-            '</span><span class="styla-item-ease">' + txt + '</span></li>';
-        }).join('') : '<li class="styla-text-fit-item"><span class="styla-item-ease">No overlapping measurements to compare on this chart.</span></li>';
+          return '<li><span class="styla-fit-dim">' + dimLabel(k) + '</span>' +
+            '<span class="styla-fit-note">' + esc(txt) + '</span>' +
+            '<span class="styla-fit-tag ' + statusFor(txt) + '">' + badgeFor(txt) + '</span></li>';
+        }).join('') : '<li><span class="styla-fit-note">This brand\'s chart doesn\'t share a measurement we can compare.</span></li>';
+
+        var st = res.stock, stockTxt = '';
+        if (st) { var sk = Object.keys(st).find(function (x) { return x.toLowerCase() === String(sizeName).trim().toLowerCase(); });
+                  if (sk) stockTxt = st[sk] ? 'In stock.' : 'Sold out in this size.'; }
         var verb = (sizeName === res.size)
           ? 'Your best fit — ' + cap(c.spectrum || res.spectrum) + '.'
           : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
-        var rl = STATE.result.recommendedLength;
-        var lenTxt = (rl && rl.name) ? ' · Suggested length: ' + rl.name : '';
-        // Live stock for the size currently being viewed (null = unknown, stay silent).
-        var st = STATE.result.stock, stockTxt = '';
-        if (st) {
-          var k = Object.keys(st).find(function (x) { return x.toLowerCase() === String(sizeName).trim().toLowerCase(); });
-          if (k) stockTxt = st[k] ? ' · In stock' : ' · Sold out in this size';
+        if (intentCard && intentEl) {
+          intentEl.textContent = [verb, stockTxt].filter(Boolean).join(' ');
+          intentCard.classList.remove('styla-hidden');
         }
-        intentEl.textContent = verb + (c.fits ? '' : ' This size compromises fit somewhere.') + lenTxt + stockTxt;
-        ensureAskChips();
-        sliderRow.querySelectorAll('.styla-size-opt-btn').forEach(function (b) {
-          b.classList.toggle('active', b.getAttribute('data-size') === sizeName);
+        if (sizesBody) sizesBody.querySelectorAll('.styla-alt').forEach(function (r) {
+          r.classList.toggle('is-active', r.getAttribute('data-size') === sizeName);
         });
+        ensureAskChips();
         maybeShowSave();
       }
 
@@ -294,20 +365,18 @@
       // can actually answer from data we hold (fit, stock, this store's catalog).
       // Deliberately no shipping/returns prompts — we don't hold that.
       function ensureAskChips() {
-        if (!detailsBody || detailsBody.querySelector('.styla-askchips')) return;
+        if (!suggestEl || suggestEl.childElementCount) return;
         var qs = ['Does it run small?', 'What if I size up?'];
         if (STATE.result && STATE.result.stock) qs.unshift('Is my size in stock?');
+        var lens = (STATE.result && ((STATE.result.chart && STATE.result.chart.length_options) || STATE.result.length_options)) || [];
+        if (lens.length) qs.push('Short, regular or long?');
         if (product.domain) qs.push('What else here would fit me?');
-        var box = document.createElement('div');
-        box.className = 'styla-askchips';
-        box.innerHTML = '<div class="styla-askchips-lbl">Ask the AI tailor</div>' +
-          qs.map(function (q) { return '<button type="button" class="styla-askchip">' + q + '</button>'; }).join('');
-        detailsBody.appendChild(box);
-        box.querySelectorAll('.styla-askchip').forEach(function (b) {
+        suggestEl.innerHTML = qs.map(function (q) {
+          return '<button type="button" class="styla-chip">' + esc(q) + '</button>';
+        }).join('');
+        suggestEl.querySelectorAll('.styla-chip').forEach(function (b) {
           b.addEventListener('click', function () {
-            // switch to the "Ask AI Tailor" tab (data-tab="styla-tab-chat-<blockId>")
-            var tabBtn = modal.querySelector('.styla-tab-btn[data-tab*="chat"]');
-            if (tabBtn) tabBtn.click();
+            // Same panel now — no tab to switch to. Just ask it.
             if (chatInput) { chatInput.value = b.textContent; sendChat(); }
           });
         });
@@ -349,12 +418,21 @@
             .catch(function () { msg.textContent = 'Could not save right now — try again.'; });
         });
       }
+      function showNote(text) {
+        // Both fallbacks used to point at an "AI Tailor tab" that no longer
+        // exists — the chat is right below now, so just say so.
+        if (intentCard) intentCard.classList.remove('styla-hidden');
+        if (intentEl) intentEl.textContent = text;
+      }
       function renderNoChart() {
         listEl.innerHTML = '';
-        intentEl.textContent = 'We don’t have this brand’s size chart yet, so we can’t compute your size here. Try the AI Tailor tab.';
         bestValEl.textContent = '—';
+        if (confEl) confEl.textContent = '';
+        [discSizes, discLen, discChart].forEach(function (d) { if (d) d.classList.add('styla-hidden'); });
+        showNote('We don\u2019t have this brand\u2019s size chart yet, so we can\u2019t compute your size. Ask below and I\u2019ll help from the product details.');
+        ensureAskChips();
       }
-      function renderError() { intentEl.textContent = 'Something went wrong reaching Styla. Please try again in a moment.'; }
+      function renderError() { showNote('Something went wrong reaching Styla. Please try again in a moment.'); }
       function setLoading(on) {
         STATE.loading = on;
         if (on) { bestValEl.textContent = '…'; intentEl.textContent = 'Matching this garment to your measurements…'; listEl.innerHTML = ''; }
