@@ -160,11 +160,11 @@ same index that will power the discovery feed).
 - **Widget + discovery wired (DONE in code, 2026-08-03):**
   - `styla-widget.js` chat payload now sends `domain`/`shop`/`category`, so the
     storefront AI Tailor gets cross-catalog retrieval (recommend other in-store
-    products, not just the current one). NOTE edge case: it sends
-    `d.shopDomain || location.hostname`; if a store uses a custom domain that
-    differs from the myshopify domain used at ingest, the shop filter won't match
-    (retrieval just returns nothing / falls back — chat still works). Verify on a
-    live storefront.
+    products, not just the current one). VERIFIED 2026-08-09: the block sends
+    `shop.permanent_domain` (the myshopify domain), which is exactly what ingest
+    stores as `shop_domain` — so the feared custom-domain mismatch does NOT apply
+    to the Shopify widget. It would only affect the universal embed, where the
+    host passes its own domain.
   - `prototypes/styla-discovery.html` now calls `/api/catalog-search` (fitsMe with
     a demo profile) and renders real results incl. product images + click-through;
     falls back to the built-in mock when the index has no matches. Set `SHOP` var
