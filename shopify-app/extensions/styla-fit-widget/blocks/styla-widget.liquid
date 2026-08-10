@@ -69,8 +69,8 @@
                 <span class="styla-sub-meta" id="styla-conf-{{ block.id }}"></span>
                 <span class="styla-sub-meta" id="styla-answer-len-{{ block.id }}"></span>
                 <span class="styla-sub-spacer"></span>
-                <div class="styla-shopfor-slot" id="styla-shopfor-slot-{{ block.id }}"></div>
               </div>
+              <div class="styla-shopfor-row" id="styla-shopfor-slot-{{ block.id }}"></div>
               <div class="styla-sub-links">
                 <button type="button" class="styla-lnk" id="styla-lnk-fit-{{ block.id }}" aria-expanded="false">How it fits</button>
                 <button type="button" class="styla-lnk" id="styla-lnk-sizes-{{ block.id }}" aria-expanded="false">Other sizes</button>
@@ -99,6 +99,13 @@
 
             <!-- Manual Specs Input Form (Hidden by default) -->
             <div class="styla-specs-form styla-hidden" id="styla-form-{{ block.id }}">
+              <div class="styla-forwho styla-hidden" id="styla-forwho-{{ block.id }}">
+                <label class="styla-forwho-lbl" for="styla-forwho-name-{{ block.id }}">
+                  Who are you shopping for? <span class="styla-req">Required</span>
+                </label>
+                <input type="text" id="styla-forwho-name-{{ block.id }}" placeholder="e.g. Amara, or Mum" maxlength="40">
+                <p class="styla-forwho-note">Answer for <b>them</b>, not you. Height and build are required; everything else just sharpens the result.</p>
+              </div>
               <span class="styla-form-title" id="styla-form-title-{{ block.id }}">A few quick questions — no tape measure needed.</span>
 
               <!-- QUESTIONNAIRE (default) -->

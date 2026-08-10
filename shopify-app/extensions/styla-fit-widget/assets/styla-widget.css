@@ -1008,3 +1008,22 @@
   .styla-shopfor{ width:100%; justify-content:space-between; }
   .styla-shopfor-sel{ max-width:none; }
 }
+
+/* "Shopping for" gets its own row — it's a mode selector, not another chip. */
+.styla-shopfor-row{ display:flex; margin-top:10px; }
+.styla-shopfor-slot{ display:none; }              /* superseded by the row */
+.styla-shopfor{ width:100%; justify-content:space-between; }
+.styla-shopfor-sel{ max-width:none; flex:1 1 auto; text-align:right; }
+
+/* Asking about the other person */
+.styla-forwho{ border:1px solid #f6c9d8; background:#fdf0f4; border-radius:10px;
+  padding:12px 13px; margin-bottom:14px; }
+.styla-forwho-lbl{ display:block; font-size:.82rem; font-weight:600; margin-bottom:7px; }
+.styla-req{ font-size:.66rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  color:#c2185b; background:#fff; border:1px solid #f6c9d8; border-radius:100px; padding:2px 7px; margin-left:6px; }
+.styla-forwho input{ width:100%; box-sizing:border-box; padding:10px 12px; font:inherit;
+  font-size:.88rem; border:1px solid #e2e2e2; border-radius:9px; background:#fff; }
+.styla-forwho input:focus{ outline:none; border-color:#ff2a75; }
+.styla-forwho input.styla-invalid{ border-color:#e11d48; background:#fff5f7; }
+.styla-forwho-note{ margin:8px 0 0; font-size:.75rem; line-height:1.45; opacity:.7; }
+.styla-opt{ font-size:.66rem; text-transform:uppercase; letter-spacing:.05em; opacity:.5; margin-left:5px; }
