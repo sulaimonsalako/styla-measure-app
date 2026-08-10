@@ -1052,6 +1052,92 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
 // per-product (or per-type) OVERRIDE for brands who keep a chart per product.
 //
 // List the store's synced products + their current chart assignment.
+// ---- Is the widget ACTUALLY on the storefront? ----
+//
+// A theme app block with target "section" has to be placed by the merchant, and
+// placement is stored per theme — so switching themes silently removes it. The
+// merchant gets no signal: the app looks configured, charts are assigned, and
+// nothing renders. That's the worst failure mode we have, because they conclude
+// Styla doesn't work rather than that a block is missing.
+//
+// This reads the LIVE theme's product template (read_themes, read-only) and looks
+// for our block. Deliberately conservative: anything we can't determine is
+// reported as 'unknown', never as 'not placed', so we don't cry wolf.
+const BLOCK_MARKER = '/blocks/styla-widget/';
+
+async function widgetPlacement(shop, accessToken) {
+  // 1. the live theme
+  const themes = await fetchShopifyAPI(shop, accessToken, 'themes.json');
+  const live = (themes.themes || []).find((t) => t.role === 'main');
+  if (!live) return { status: 'unknown', reason: 'No live theme returned.' };
+
+  // 2. its product template
+  const tryAsset = async (key) => {
+    try {
+      const r = await fetchShopifyAPI(shop, accessToken,
+        `themes/${live.id}/assets.json?asset[key]=${encodeURIComponent(key)}`);
+      return r && r.asset ? r.asset.value : null;
+    } catch (e) { return null; }
+  };
+
+  let value = await tryAsset('templates/product.json');
+  let vintage = false;
+  if (!value) { value = await tryAsset('templates/product.liquid'); vintage = !!value; }
+  if (!value) {
+    return { status: 'unknown', theme: live.name,
+             reason: 'Could not read the product template.' };
+  }
+
+  if (vintage) {
+    // Vintage (non-sectioned) themes can't take app blocks at all.
+    return { status: 'unsupported', theme: live.name,
+             reason: 'This theme uses an older template format that cannot host app blocks.' };
+  }
+
+  // 3. our block, either inline in the template or inside a referenced section
+  if (value.indexOf(BLOCK_MARKER) >= 0) {
+    return { status: 'placed', theme: live.name };
+  }
+  let tpl = null;
+  try { tpl = JSON.parse(value); } catch (e) {
+    return { status: 'unknown', theme: live.name, reason: 'Product template was not valid JSON.' };
+  }
+  // Sectioned themes may point at shared sections/*.json holding the blocks.
+  const sectionKeys = Object.values(tpl.sections || {})
+    .map((sec) => sec && sec.type).filter(Boolean)
+    .map((t) => `sections/${t}.json`);
+  for (const key of [...new Set(sectionKeys)]) {
+    const sv = await tryAsset(key);
+    if (sv && sv.indexOf(BLOCK_MARKER) >= 0) return { status: 'placed', theme: live.name };
+  }
+
+  return {
+    status: 'missing', theme: live.name, themeId: live.id,
+    reason: 'The Styla block is not in your live theme\'s product page.',
+  };
+}
+
+app.get('/api/merchant/widget-status', async (req, res) => {
+  try {
+    const shop = await requireShop(req, res); if (!shop) return;
+    const accessToken = await getOfflineToken(req);
+    if (!accessToken) return res.json({ status: 'unknown', reason: 'Not authorized with Shopify yet.' });
+
+    let out;
+    try { out = await widgetPlacement(shop, accessToken); }
+    catch (e) {
+      // Most likely the merchant hasn't re-consented to read_themes yet. Never
+      // report "missing" off the back of an error.
+      console.error('widget-status failed:', e.message);
+      out = { status: 'unknown', reason: 'Could not read your theme (the app may need reauthorising).' };
+    }
+    if (out.themeId) {
+      out.editorUrl = `https://${shop.replace('.myshopify.com','')}.myshopify.com/admin/themes/${out.themeId}/editor?template=product`;
+    }
+    res.json(out);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/merchant/products', async (req, res) => {
   try {
     const shop = await requireShop(req, res); if (!shop) return;

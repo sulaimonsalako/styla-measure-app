@@ -139,6 +139,12 @@ tbody td input:focus{background:#fff;border-color:var(--brand-2);}
 .linkcard{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;background:var(--surface);transition:border-color .14s,box-shadow .14s;}
 .linkcard:hover{border-color:#dcdfe6;box-shadow:var(--sh-1);}
 .chips{display:flex;flex-wrap:wrap;gap:7px;}
+.warnbar{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:12px;margin-bottom:18px;
+  border:1px solid #f3c9a0;background:#fff8f0;font-size:.88rem;line-height:1.45;}
+.warnbar.ok{border-color:#bfe3cd;background:#f2fbf5;}
+.warnbar .wtxt{flex:1;min-width:0;}
+.warnbar b{display:block;margin-bottom:2px;}
+.warnbar .wact{flex:none;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;flex:none;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .busy{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
@@ -261,6 +267,7 @@ details.adv>summary:hover{color:var(--ink-2);}
 
   <!-- ================= LOBBY ================= -->
   <div class="view on" id="v-lobby">
+    <div id="widgetWarn" style="display:none"></div>
     <div class="top">
       <div>
         <h1>Size &amp; fit</h1>
@@ -727,6 +734,39 @@ function chartScope(c){
            assigned: !!(conds.length || cd.applies_all || cats || products) };
 }
 
+// The widget can be perfectly configured and still not be ON the storefront:
+// a "section" app block must be placed by the merchant, per theme. Say so
+// loudly rather than let them believe Styla is live when it isn't.
+async function checkWidgetPlacement(){
+  var host=el('widgetWarn'); if(!host) return;
+  try{
+    var r=await mfetch('/api/merchant/widget-status?shop='+encodeURIComponent(SHOP));
+    var d=await r.json();
+    if(d.status==='missing'){
+      host.style.display='block';
+      host.innerHTML='<div class="warnbar"><span>\u26a0\ufe0f</span><div class="wtxt">'
+        +'<b>Your widget isn\u2019t on your product pages yet.</b>'
+        +'Styla is set up, but the block hasn\u2019t been added to <b>'+esc(d.theme||'your live theme')+'</b>. '
+        +'Shoppers can\u2019t see their size until you add it.</div>'
+        +(d.editorUrl?('<div class="wact"><a class="btn btn-primary btn-sm" target="_top" href="'+esc(d.editorUrl)+'">Add it now</a></div>'):'')
+        +'</div>';
+    } else if(d.status==='unsupported'){
+      host.style.display='block';
+      host.innerHTML='<div class="warnbar"><span>\u26a0\ufe0f</span><div class="wtxt">'
+        +'<b>This theme can\u2019t host the widget.</b>'
+        +esc(d.theme||'Your theme')+' uses the older template format, which doesn\u2019t support app blocks. '
+        +'Switching to a sectioned theme (or using our universal embed) will fix it.</div></div>';
+    } else {
+      // 'placed' and 'unknown' both stay silent — never cry wolf on a read we
+      // couldn't complete.
+      host.style.display='none'; host.innerHTML='';
+    }
+    WIDGET_STATUS=d.status||'unknown';
+    refreshTiles();
+  }catch(e){ /* never block the app on this */ }
+}
+var WIDGET_STATUS='unknown';
+
 function refreshTiles(){
   var linked=CHARTS.filter(function(c){return chartScope(c).assigned;}).length;
   el('t-charts').textContent = CHARTS.length ? (CHARTS.length+' chart'+(CHARTS.length>1?'s':'')) : 'None yet — start here';
@@ -739,7 +779,7 @@ function refreshTiles(){
     : (CHARTS.length ? 'Not indexed yet — free' : 'Create a chart first');
   el('cr-1').classList.toggle('done', CHARTS.length>0);
   el('cr-2').classList.toggle('done', linked>0);
-  el('cr-3').classList.toggle('done', linked>0);
+  el('cr-3').classList.toggle('done', linked>0 && WIDGET_STATUS!=='missing' && WIDGET_STATUS!=='unsupported');
 }
 
 /* ---- chart table ---- */
@@ -1518,6 +1558,7 @@ async function loadAnalytics(){
 
 loadCharts();
 loadProducts();
+checkWidgetPlacement();
 </script>
 </body>
 </html>

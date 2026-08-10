@@ -12,11 +12,12 @@ api_version = "2024-04"
 embedded = false
 
 [access_scopes]
-# Minimal — the app only READS products (catalog sync + products/* webhooks).
-# Chart assignments live in Styla's DB; shoppers auth via Continue-with-Styla, not
-# Shopify customers; analytics isn't built. Add read_orders/read_customers/
+# Minimal — the app only READS. Chart assignments live in Styla's DB; shoppers auth
+# via Continue-with-Styla, not Shopify customers. Add read_orders/read_customers/
 # write_products only when a feature actually needs them (incremental re-consent).
-scopes = "read_products,read_inventory,read_shipping"
+#   read_themes — needed ONLY to check whether the merchant has actually placed the
+#   widget block in their live theme. Read-only: we never write to a theme.
+scopes = "read_products,read_inventory,read_shipping,read_themes"
 
 [auth]
 redirect_urls = [
