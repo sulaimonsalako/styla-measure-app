@@ -106,6 +106,7 @@
       };
 
       var modal = document.getElementById('styla-modal-' + blockId);
+      if (modal && modal.parentNode !== document.body) document.body.appendChild(modal);
       var triggerBtn = document.getElementById('styla-trigger-btn-' + blockId);
       var closeBtn = document.getElementById('styla-close-' + blockId);
       var listEl = el('styla-text-list');
@@ -114,9 +115,27 @@
       var confEl = el('styla-conf');
       var lenBadgeEl = el('styla-answer-len');
       var intentCard = el('styla-intent-card');
+      var discFit = el('styla-disc-fit');
       var discSizes = el('styla-disc-sizes'), sizesBody = el('styla-sizes-body');
       var discLen = el('styla-disc-len'), lenBody = el('styla-len-body');
       var discChart = el('styla-disc-chart'), chartBody = el('styla-chart-body');
+
+      // One panel open at a time keeps the chat area clean — the whole point of
+      // demoting these out of the always-on list.
+      var PANELS = [['styla-lnk-fit', discFit], ['styla-lnk-sizes', discSizes],
+                    ['styla-lnk-len', discLen], ['styla-lnk-chart', discChart]];
+      PANELS.forEach(function (pair) {
+        var btn = el(pair[0]), panel = pair[1];
+        if (!btn || !panel) return;
+        btn.addEventListener('click', function () {
+          var open = !panel.classList.contains('styla-hidden');
+          PANELS.forEach(function (o) {
+            if (o[1]) o[1].classList.add('styla-hidden');
+            var b = el(o[0]); if (b) b.setAttribute('aria-expanded', 'false');
+          });
+          if (!open) { panel.classList.remove('styla-hidden'); btn.setAttribute('aria-expanded', 'true'); }
+        });
+      });
       var suggestEl = el('styla-chat-suggest');
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
@@ -192,7 +211,15 @@
       });
       // Inject a "Continue with Styla" button at the top of the guest form.
       function ensureConnectBtn() {
-        if (!formPanel || formPanel.querySelector('.styla-connect-wrap')) return;
+        if (!formPanel) return;
+        // Already signed in? Then don't ask them to sign in again — that was
+        // reading as "log in every time" even though the session was valid.
+        if (getToken()) {
+          var old = formPanel.querySelector('.styla-connect-wrap');
+          if (old) old.remove();
+          return;
+        }
+        if (formPanel.querySelector('.styla-connect-wrap')) return;
         var wrap = document.createElement('div');
         wrap.className = 'styla-connect-wrap';
         wrap.innerHTML = '<button type="button" class="styla-connect-btn">Continue with Styla</button>' +
@@ -262,8 +289,9 @@
       function renderAlternatives() {
         var res = STATE.result, cands = res.candidates || [];
         if (!sizesBody) return;
-        if (cands.length < 2) { if (discSizes) discSizes.classList.add('styla-hidden'); return; }
-        if (discSizes) discSizes.classList.remove('styla-hidden');
+        var lnkSizes = el('styla-lnk-sizes');
+        if (cands.length < 2) { if (lnkSizes) lnkSizes.classList.add('styla-hidden'); return; }
+        if (lnkSizes) lnkSizes.classList.remove('styla-hidden');
         var st = res.stock || null;
         sizesBody.innerHTML = cands.map(function (c) {
           var oos = false;
@@ -286,8 +314,9 @@
         var res = STATE.result;
         var opts = (res.chart && res.chart.length_options) || res.length_options || [];
         if (!lenBody || !discLen) return;
-        if (!opts.length) { discLen.classList.add('styla-hidden'); return; }
-        discLen.classList.remove('styla-hidden');
+        var lnkLen = el('styla-lnk-len');
+        if (!opts.length) { if (lnkLen) lnkLen.classList.add('styla-hidden'); return; }
+        if (lnkLen) lnkLen.classList.remove('styla-hidden');
         var picked = (res.recommendedLength && res.recommendedLength.name) || null;
         lenBody.innerHTML = opts.map(function (o) {
           var bits = [];
@@ -306,8 +335,9 @@
         var ch = STATE.result && STATE.result.chart;
         if (!chartBody || !discChart) return;
         var rows = ch && (ch.display_sizes || ch.sizes);
-        if (!rows || !rows.length) { discChart.classList.add('styla-hidden'); return; }
-        discChart.classList.remove('styla-hidden');
+        var lnkChart = el('styla-lnk-chart');
+        if (!rows || !rows.length) { if (lnkChart) lnkChart.classList.add('styla-hidden'); return; }
+        if (lnkChart) lnkChart.classList.remove('styla-hidden');
         var cols = (ch.display_columns && ch.display_columns.length) ? ch.display_columns
           : Object.keys(rows[0]).filter(function (k) { return k !== 'name'; });
         var best = STATE.result.size;
@@ -350,10 +380,10 @@
         var verb = (sizeName === res.size)
           ? 'Your best fit — ' + cap(c.spectrum || res.spectrum) + '.'
           : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
-        if (intentCard && intentEl) {
-          intentEl.textContent = [verb, stockTxt].filter(Boolean).join(' ');
-          intentCard.classList.remove('styla-hidden');
-        }
+        if (intentEl) intentEl.textContent = [verb, stockTxt].filter(Boolean).join(' ');
+        // stock is the one thing worth showing WITHOUT opening a panel
+        var meta = el('styla-conf');
+        if (meta && stockTxt) meta.textContent = (res.score != null ? res.score + '% match · ' : '') + stockTxt;
         if (sizesBody) sizesBody.querySelectorAll('.styla-alt').forEach(function (r) {
           r.classList.toggle('is-active', r.getAttribute('data-size') === sizeName);
         });
@@ -419,16 +449,17 @@
         });
       }
       function showNote(text) {
-        // Both fallbacks used to point at an "AI Tailor tab" that no longer
-        // exists — the chat is right below now, so just say so.
-        if (intentCard) intentCard.classList.remove('styla-hidden');
+        // The chat is right below now — no tab to point at.
+        if (discFit) discFit.classList.remove('styla-hidden');
         if (intentEl) intentEl.textContent = text;
       }
       function renderNoChart() {
         listEl.innerHTML = '';
         bestValEl.textContent = '—';
         if (confEl) confEl.textContent = '';
-        [discSizes, discLen, discChart].forEach(function (d) { if (d) d.classList.add('styla-hidden'); });
+        ['styla-lnk-fit','styla-lnk-sizes','styla-lnk-len','styla-lnk-chart'].forEach(function (id) {
+          var b = el(id); if (b) b.classList.add('styla-hidden');
+        });
         showNote('We don\u2019t have this brand\u2019s size chart yet, so we can\u2019t compute your size. Ask below and I\u2019ll help from the product details.');
         ensureAskChips();
       }

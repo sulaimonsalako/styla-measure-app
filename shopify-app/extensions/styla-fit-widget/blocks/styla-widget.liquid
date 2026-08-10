@@ -52,56 +52,47 @@
       <div class="styla-modal-right">
         <div class="styla-pane" id="styla-tab-fit-{{ block.id }}">
           <div class="styla-text-rec-container">
-            <!-- PINNED ANSWER. Comes straight from the local sizing engine, so it
-                 renders instantly and still works when the AI is unavailable. -->
-            <div class="styla-answer" id="styla-answer-{{ block.id }}">
-              <div class="styla-answer-main">
-                <span class="styla-option-label">YOUR SIZE</span>
-                <div class="styla-option-val">
+
+            <!-- THE ANSWER, as a sub-header: one compact sticky line, so the size
+                 stays visible while the shopper reads or chats. Everything else
+                 is behind a link so the conversation area stays clean. -->
+            <div class="styla-subhead" id="styla-answer-{{ block.id }}">
+              <div class="styla-sub-row">
+                <span class="styla-sub-label">YOUR SIZE</span>
+                <span class="styla-sub-size">
                   <span id="styla-best-size-val-{{ block.id }}">—</span>
                   <svg class="styla-check-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                   </svg>
-                </div>
-                <span class="styla-answer-len" id="styla-answer-len-{{ block.id }}"></span>
+                </span>
+                <span class="styla-sub-meta" id="styla-conf-{{ block.id }}"></span>
+                <span class="styla-sub-meta" id="styla-answer-len-{{ block.id }}"></span>
+                <span class="styla-sub-spacer"></span>
               </div>
-              <div class="styla-answer-side">
-                <span class="styla-conf" id="styla-conf-{{ block.id }}"></span>
-                <button type="button" class="styla-edit-specs-btn" id="styla-edit-specs-{{ block.id }}">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path>
-                  </svg>
-                  Edit
-                </button>
+              <div class="styla-sub-links">
+                <button type="button" class="styla-lnk" id="styla-lnk-fit-{{ block.id }}" aria-expanded="false">How it fits</button>
+                <button type="button" class="styla-lnk" id="styla-lnk-sizes-{{ block.id }}" aria-expanded="false">Other sizes</button>
+                <button type="button" class="styla-lnk styla-hidden" id="styla-lnk-len-{{ block.id }}" aria-expanded="false">Length</button>
+                <button type="button" class="styla-lnk styla-hidden" id="styla-lnk-chart-{{ block.id }}" aria-expanded="false">Size chart</button>
+                <button type="button" class="styla-lnk" id="styla-edit-specs-{{ block.id }}">Edit my measurements</button>
               </div>
             </div>
 
-            <div class="styla-fit-details-body" id="styla-details-body-{{ block.id }}">
-              <div class="styla-fit-analysis-panel">
-                <span class="styla-panel-title">How it fits you</span>
+            <div class="styla-panels styla-fit-details-body" id="styla-details-body-{{ block.id }}">
+              <div class="styla-disc-body styla-hidden" id="styla-disc-fit-{{ block.id }}">
                 <ul class="styla-text-analysis-list" id="styla-text-list-{{ block.id }}"></ul>
+                <p class="styla-alt-note" id="styla-intent-text-{{ block.id }}" style="text-align:left"></p>
               </div>
-
-              <div class="styla-intent-card styla-hidden" id="styla-intent-card-{{ block.id }}">
-                <p id="styla-intent-text-{{ block.id }}"></p>
+              <div class="styla-disc-body styla-hidden" id="styla-disc-sizes-{{ block.id }}">
+                <div id="styla-sizes-body-{{ block.id }}"></div>
               </div>
-
-              <!-- Inline expandables. Same scroll, no navigation away from the answer. -->
-              <details class="styla-disc" id="styla-disc-sizes-{{ block.id }}">
-                <summary>Compare other sizes</summary>
-                <div class="styla-disc-body" id="styla-sizes-body-{{ block.id }}"></div>
-              </details>
-
-              <details class="styla-disc styla-hidden" id="styla-disc-len-{{ block.id }}">
-                <summary>Length options</summary>
-                <div class="styla-disc-body" id="styla-len-body-{{ block.id }}"></div>
-              </details>
-
-              <details class="styla-disc styla-hidden" id="styla-disc-chart-{{ block.id }}">
-                <summary>Full size chart</summary>
-                <div class="styla-disc-body styla-chart-wrap" id="styla-chart-body-{{ block.id }}"></div>
-              </details>
+              <div class="styla-disc-body styla-hidden" id="styla-disc-len-{{ block.id }}">
+                <div id="styla-len-body-{{ block.id }}"></div>
+              </div>
+              <div class="styla-disc-body styla-chart-wrap styla-hidden" id="styla-disc-chart-{{ block.id }}">
+                <div id="styla-chart-body-{{ block.id }}"></div>
+              </div>
+              <div class="styla-hidden" id="styla-intent-card-{{ block.id }}"></div>
             </div>
 
             <!-- Manual Specs Input Form (Hidden by default) -->

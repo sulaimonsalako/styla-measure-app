@@ -498,10 +498,7 @@
 
 /* Chat container sized exactly the same */
 .styla-chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 20px;
+  display: block;
   box-sizing: border-box;
 }
 
@@ -512,7 +509,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 330px; /* Constrains chat height */
   box-sizing: border-box;
 }
 
@@ -724,17 +720,10 @@
 .styla-btn-text { font-size: 14px !important; font-weight: 600 !important; }
 
 /* Compact desktop sizing so the modal reads proportional to the store */
-.styla-modal-container { width: min(680px, 94vw) !important; height: min(500px, 88vh) !important; }
-.styla-modal-left { width: 34% !important; }
-.styla-modal-right { width: 66% !important; }
 .styla-option-val, #styla-best-size-val, [id^="styla-best-size-val"] { font-size: 22px !important; }
-.styla-modal-right, .styla-tab-content, .styla-text-rec-container { font-size: 13.5px !important; }
 .styla-panel-title, .styla-picker-title, .styla-form-title { font-size: 12px !important; }
 .styla-intent-card p { font-size: 12.5px !important; line-height: 1.5 !important; }
 .styla-fit-analysis-panel, .styla-intent-card, .styla-size-picker-section { padding: 12px 14px !important; }
-.styla-size-opt-btn { min-width: 40px !important; height: 36px !important; font-size: 14px !important; }
-.styla-tabs-bar { padding: 0 !important; }
-.styla-modal-right { padding: 16px 18px !important; }
 
 /* Continue with Styla */
 .styla-connect-wrap{margin-bottom:14px;text-align:center;}
@@ -851,3 +840,70 @@
 .styla-alt{ cursor:pointer; border-radius:8px; padding-left:8px; padding-right:8px; }
 .styla-alt.is-active{ background:#fdf0f4; box-shadow:inset 0 0 0 1px #f6c9d8; }
 .styla-alt:focus-visible{ outline:2px solid #ff2a75; outline-offset:2px; }
+
+/* ============================================================
+   LAYOUT FIXES (2026-08-10)
+   1. Modal was trapped in the theme's stacking context and clipped
+      by the sticky header -> portal to <body> in JS + scrollable overlay.
+   2. Old two-column !important rules left 34% dead space; removed above.
+   3. Answer becomes a compact sticky sub-header; the chat gets the
+      clean remaining space.
+   ============================================================ */
+.styla-modal-overlay{
+  align-items:flex-start !important;
+  padding:24px 16px !important;
+  overflow-y:auto !important;
+  z-index:2147483000 !important;   /* above sticky theme headers */
+  -webkit-overflow-scrolling:touch;
+}
+.styla-modal-container{
+  width:min(560px,100%) !important;
+  max-width:560px !important;
+  height:auto !important;
+  max-height:min(84vh, 760px) !important;
+  margin:auto !important;
+  display:flex !important; flex-direction:column !important;
+  overflow:hidden !important;
+}
+.styla-modal-body{ display:flex !important; flex-direction:column !important; min-height:0; flex:1 1 auto; }
+.styla-modal-right{ width:100% !important; padding:0 !important; flex:1 1 auto; min-height:0; overflow-y:auto; }
+
+/* --- the answer, as a sub-header: compact, sticky, one line --- */
+.styla-subhead{
+  position:sticky; top:0; z-index:3; background:#fff;
+  border-bottom:1px solid #ececec; padding:12px 18px;
+}
+.styla-sub-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.styla-sub-label{ font-size:.66rem; letter-spacing:.09em; opacity:.55; font-weight:700; }
+.styla-sub-size{ font-size:1.45rem; font-weight:700; line-height:1; display:flex; align-items:center; gap:6px; }
+.styla-sub-size .styla-check-icon{ width:17px; height:17px; color:#12a150; }
+.styla-sub-meta{ font-size:.78rem; opacity:.65; }
+.styla-sub-spacer{ flex:1 1 auto; }
+/* quick links replace the always-open lists */
+.styla-sub-links{ display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
+.styla-lnk{ border:1px solid #e4e4e4; background:#fff; border-radius:100px;
+  padding:5px 11px; font-size:.76rem; cursor:pointer; color:#333; }
+.styla-lnk:hover{ border-color:#bbb; }
+.styla-lnk[aria-expanded="true"]{ background:#fdf0f4; border-color:#f6c9d8; color:#c2185b; }
+
+/* panels live under the sub-header, closed by default so chat stays clean */
+.styla-panels{ padding:0 18px; }
+.styla-panels:empty{ display:none; }
+.styla-disc{ margin-top:10px; }
+.styla-disc[hidden]{ display:none; }
+
+/* --- chat: the clean area --- */
+.styla-chat-container{ padding:14px 18px 16px !important; border-top:1px solid #ececec; margin-top:14px; }
+.styla-chat-history{ display:flex; flex-direction:column; gap:12px; height:auto !important; overflow:visible !important; padding:0 !important; }
+.chat-msg{ max-width:88%; }
+.chat-msg.user{ align-self:flex-end; }
+.chat-msg.system{ align-self:flex-start; }
+.styla-chat-suggest{ position:relative; z-index:1; background:#fff; }
+.styla-chat-input-bar{ position:sticky; bottom:0; background:#fff; padding:10px 0 0; z-index:2; }
+
+@media (max-width:560px){
+  .styla-modal-overlay{ padding:0 !important; }
+  .styla-modal-container{ width:100% !important; max-width:100% !important;
+    max-height:100dvh !important; height:100dvh !important; border-radius:0 !important; }
+  .styla-sub-size{ font-size:1.3rem; }
+}
