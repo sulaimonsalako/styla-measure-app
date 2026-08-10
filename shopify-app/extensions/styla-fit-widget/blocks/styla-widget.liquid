@@ -113,26 +113,31 @@
                 </div>
 
                 <div class="styla-q">
-                  <label>What size do they usually wear? <span class="styla-req">Required</span></label>
+                  <label>What size do they usually wear? <span class="styla-opt">Optional</span></label>
                   <div class="styla-seg styla-seg-wrap" id="styla-g-size-{{ block.id }}">
                     <button type="button" data-v="XS">XS</button>
                     <button type="button" data-v="S">S</button>
-                    <button type="button" data-v="M" class="on">M</button>
+                    <button type="button" data-v="M">M</button>
                     <button type="button" data-v="L">L</button>
                     <button type="button" data-v="XL">XL</button>
                     <button type="button" data-v="XXL">XXL</button>
                   </div>
-                  <p class="styla-hint-sm">The single most useful thing you know. If you've seen a label, use that.</p>
+                  <p class="styla-hint-sm">If you've seen a label, this sharpens things a lot. Skip it if you don't know.</p>
                 </div>
 
                 <div class="styla-q">
-                  <label>Roughly how tall? <span class="styla-req">Required</span></label>
-                  <div class="styla-seg styla-seg-wrap" id="styla-g-height-{{ block.id }}">
-                    <button type="button" data-v="petite">Petite</button>
-                    <button type="button" data-v="average" class="on">Average</button>
-                    <button type="button" data-v="tall">Tall</button>
-                  </div>
-                  <p class="styla-hint-sm" id="styla-g-hhint-{{ block.id }}">Average is about 5'4"–5'8". This decides Short / Regular / Long.</p>
+                  <label>How tall are they? <span class="styla-req">Required</span></label>
+                  <span class="styla-hgroup" id="styla-g-himp-{{ block.id }}">
+                    <input type="number" id="styla-g-hft-{{ block.id }}" placeholder="5" min="3" max="7">
+                    <span class="styla-hunit">ft</span>
+                    <input type="number" id="styla-g-hin-{{ block.id }}" placeholder="8" min="0" max="11">
+                    <span class="styla-hunit">in</span>
+                  </span>
+                  <span class="styla-hgroup styla-hidden" id="styla-g-hmet-{{ block.id }}">
+                    <input type="number" id="styla-g-hcm-{{ block.id }}" placeholder="173" min="120" max="215">
+                    <span class="styla-hunit">cm</span>
+                  </span>
+                  <p class="styla-hint-sm" id="styla-g-hhint-{{ block.id }}">A guess is fine. This is what decides Short / Regular / Long.</p>
                 </div>
 
                 <div class="styla-q">
@@ -142,11 +147,6 @@
                     <button type="button" data-v="average" class="on">Average</button>
                     <button type="button" data-v="curvy">Fuller</button>
                   </div>
-                </div>
-
-                <div class="styla-q">
-                  <label for="styla-forwho-name-{{ block.id }}">Save them as <span class="styla-opt">Optional</span></label>
-                  <input type="text" id="styla-forwho-name-{{ block.id }}" placeholder="e.g. Amara — so you can switch back later" maxlength="40">
                 </div>
 
                 <div class="styla-form-actions">

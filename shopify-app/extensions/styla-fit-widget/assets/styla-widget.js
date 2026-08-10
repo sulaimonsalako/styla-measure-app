@@ -641,7 +641,7 @@
       // keeps the whole thing in the widget.
       function showFormForOther() {
         STATE.forOther = true;
-        var nameEl = el('styla-forwho-name'); if (nameEl) nameEl.value = '';
+        paintGiftUnit();
         formView('gift');                      // the self-quiz asks things you can't know about a friend
         var wrap = formPanel && formPanel.querySelector('.styla-connect-wrap');
         if (wrap) wrap.remove();               // this isn't a sign-in moment
@@ -842,8 +842,6 @@
           height: height, shoulder: num('styla-in-shoulders'), inseam: num('styla-in-inseam'),
         };
       }
-      var forWhoName = el('styla-forwho-name');
-      if (forWhoName) forWhoName.addEventListener('input', function () { this.classList.remove('styla-invalid'); });
       if (cancelBtn) cancelBtn.addEventListener('click', exitOtherMode);
 
       if (saveBtn) saveBtn.addEventListener('click', function () {
@@ -876,37 +874,45 @@
         M:   { chest: 40, waist: 33 }, L:   { chest: 43, waist: 36 },
         XL:  { chest: 46, waist: 39 }, XXL: { chest: 49, waist: 43 },
       };
-      var GIFT_HEIGHT = { women: { petite: 61, average: 65, tall: 69 },
-                          men:   { petite: 66, average: 70, tall: 74 } };
+      // No size given? Estimate girths from height and build alone. Cruder than a
+      // size label, but a gift-buyer who has never seen a label still deserves an
+      // answer, and height is something anyone can approximate.
+      // Tuned so an average build lands mid-band: 5'5" woman ~ US 8, 5'10" man ~ 40.
+      var GIFT_RATIO = {
+        women: { chest: 0.562, waist: 0.446, hips: 0.600 },
+        men:   { chest: 0.571, waist: 0.486, hips: 0.530 },
+      };
 
       function profileFromGift() {
         var g = GIFT.gender === 'men' ? 'men' : 'women';
-        var size = GIFT.size || 'M';
-        var height = GIFT_HEIGHT[g][GIFT.height || 'average'];
-        // Build nudges girths without pretending we know a number.
+        var height = GIFT.heightIn;
         var adj = GIFT.build === 'slim' ? -1.0 : GIFT.build === 'curvy' ? 1.5 : 0;
 
-        var p = { height: height };
-        if (g === 'women') {
-          var b = GIFT_W[size] || GIFT_W.M;
-          p.chest = +(b.chest + adj).toFixed(1);
-          p.waist = +(b.waist + adj).toFixed(1);
-          p.hips  = +(b.hips + (GIFT.build === 'curvy' ? adj + 0.5 : adj)).toFixed(1);
-          p.inseam = Math.round(height * 0.45);
-        } else {
-          var m = GIFT_M[size] || GIFT_M.M;
-          p.chest = +(m.chest + adj).toFixed(1);
-          p.waist = +(m.waist + adj).toFixed(1);
-          p.hips  = +(m.waist + 2 + adj).toFixed(1);
-          p.neck  = +(12.5 + (p.chest - 38) * 0.15).toFixed(1);
-          p.inseam = Math.round(height * 0.44);
+        var base;
+        if (GIFT.size) {                     // they've seen a label — much better
+          var tbl = (g === 'women') ? GIFT_W : GIFT_M;
+          var row = tbl[GIFT.size] || tbl.M;
+          base = { chest: row.chest, waist: row.waist, hips: (row.hips != null ? row.hips : row.waist + 2) };
+        } else {                             // height + build only
+          var r = GIFT_RATIO[g];
+          base = { chest: height * r.chest, waist: height * r.waist, hips: height * r.hips };
         }
+
+        var p = {
+          height: height,
+          chest: +(base.chest + adj).toFixed(1),
+          waist: +(base.waist + adj).toFixed(1),
+          hips:  +(base.hips + (GIFT.build === 'curvy' ? adj + 0.5 : adj)).toFixed(1),
+        };
+        p.inseam = Math.round(height * (g === 'men' ? 0.44 : 0.45));
+        if (g === 'men') p.neck = +(12.5 + (p.chest - 38) * 0.15).toFixed(1);
         p.belly = p.waist;
-        p.estimated = true;   // so the UI can be honest about confidence
+        p.estimated = true;
+        p.confidence = GIFT.size ? 'size+height' : 'height only';
         return p;
       }
 
-      var GIFT = { gender: 'women', size: 'M', height: 'average', build: 'average' };
+      var GIFT = { gender: 'women', size: null, heightIn: null, build: 'average' };
       function bindGiftSeg(id, key, after) {
         var host = el(id); if (!host) return;
         host.addEventListener('click', function (e) {
@@ -916,75 +922,28 @@
           if (after) after();
         });
       }
-      bindGiftSeg('styla-g-gender', 'gender', function () {
-        var h = el('styla-g-hhint');
-        if (h) h.textContent = GIFT.gender === 'men'
-          ? 'Average is about 5\u201910\u201d. This decides Short / Regular / Long.'
-          : 'Average is about 5\u20194\u201d\u20135\u20198\u201d. This decides Short / Regular / Long.';
-      });
-      bindGiftSeg('styla-g-size', 'size');
-      bindGiftSeg('styla-g-height', 'height');
-      bindGiftSeg('styla-g-build', 'build');
+      bindGiftSeg('styla-g-gender', 'gender');
 
       var giftSave = el('styla-g-save'), giftCancel = el('styla-g-cancel');
       if (giftCancel) giftCancel.addEventListener('click', function () { exitOtherMode(); hideForm(); });
       if (giftSave) giftSave.addEventListener('click', function () {
+        var h = readGiftHeight();
+        var hint = el('styla-g-hhint');
+        if (!h) {                                   // the one required field
+          if (hint) hint.textContent = 'We need roughly how tall they are \u2014 a guess is fine. It decides Short / Regular / Long.';
+          return;
+        }
+        GIFT.heightIn = h;
         var p = profileFromGift();
-        var nameEl = el('styla-forwho-name');
-        // Name is OPTIONAL — it only labels the saved entry. Nothing about the
-        // size recommendation needs it.
-        var name = ((nameEl && nameEl.value) || '').trim() ||
-                   ('Friend ' + (getPeople().length + 1));
-        var person = { id: 'local:' + Date.now().toString(36), name: name, profile: p, local: true };
+        // No name asked for; it only ever labelled the saved entry.
+        var person = { id: 'local:' + Date.now().toString(36),
+                       name: 'Friend ' + (getPeople().length + 1), profile: p, local: true };
         savePerson(person);
         STATE.shopForId = person.id;
         STATE.shopForProfile = p;
         exitOtherMode(); hideForm();
         var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
         STATE.result = null; loadFit();
-      });
-
-
-      // ---------- "I already know my size" ----------
-      // The conversion table lives on the server (shared/size-conversion.js), so
-      // there's one definition and so a named brand can be inverted against its
-      // real chart. The widget only collects.
-      var KNOWN = { system: 'us', build: 'average' };
-      function bindKnownSeg(id, key) {
-        var host = el(id); if (!host) return;
-        host.addEventListener('click', function (e) {
-          var b = e.target.closest('button'); if (!b) return;
-          host.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
-          KNOWN[key] = b.getAttribute('data-v');
-        });
-      }
-      bindKnownSeg('styla-k-system', 'system');
-      bindKnownSeg('styla-k-build', 'build');
-
-
-      var kSave = el('styla-k-save');
-      if (kSave) kSave.addEventListener('click', async function () {
-        var size = ((el('styla-k-size') || {}).value || '').trim();
-        var ft = parseFloat((el('styla-k-hft') || {}).value);
-        var inch = parseFloat((el('styla-k-hin') || {}).value);
-        var msg = el('styla-k-equiv');
-
-        if (!size) { if (msg) msg.textContent = 'Enter the size you usually wear.'; return; }
-        if (isNaN(ft)) {
-          // Required, and worth explaining rather than just rejecting.
-          if (msg) msg.textContent = 'Height is needed — a size label doesn\u2019t say how tall you are, and that decides Short / Regular / Long.';
-          return;
-        }
-        var heightIn = ft * 12 + (isNaN(inch) ? 0 : inch);
-        STATE.knownSize = {
-          system: KNOWN.system, size: size, build: KNOWN.build,
-          gender: (QZ && QZ.gender) === 'men' ? 'men' : 'women',
-          heightIn: heightIn,
-          brand: ((el('styla-k-brand') || {}).value || '').trim() || undefined,
-        };
-        formView('choose'); hideForm();
-        STATE.result = null;
-        loadFit();
       });
 
       // ---------- AI Tailor chat (streamed) ----------
