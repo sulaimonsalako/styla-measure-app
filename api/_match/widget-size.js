@@ -125,13 +125,12 @@ export default async function widgetSize(req, res) {
       if (!derived) {
         derived = SZ.toMeasurements({
           gender: knownSize.gender, system: knownSize.system, size: knownSize.size,
+          suit: knownSize.suit,                 // men's jacket number = chest in inches
           heightIn: knownSize.heightIn, build: knownSize.build,
         });
       }
       if (!derived) {
-        const derivedFrom = (profile && profile.derived_from) || null;
-    return res.status(200).json({
-      derived_from: derivedFrom,
+        return res.status(200).json({
           unknown_size: true,
           message: `We don't recognise ${String(knownSize.size)} as a ${String(knownSize.system || '').toUpperCase()} size. Check the system, or enter your measurements.`,
         });
@@ -175,6 +174,9 @@ export default async function widgetSize(req, res) {
       thigh: profile.thigh,
       neck: profile.neck,
       height: profile.height,
+      // Provenance travels with the body so the widget can say "estimated from
+      // UK 12" instead of showing a match % it hasn't earned.
+      derived_from: profile.derived_from || null,
     };
 
     // Live stock for THIS product, per size label — lets the widget say "your size
@@ -240,7 +242,9 @@ export default async function widgetSize(req, res) {
         fits: !r.warning,
         resolvedBy,
         explanation: r.explanation,
-        breakdown: r.fit_breakdown,
+        breakdown: r.fit_breakdown,      // English prose (back-compat)
+        facts: r.fit_facts,              // structured — lets the widget translate + show cm
+        derived_from: user.derived_from || null,   // 'estimated from UK 12' vs a real profile
         candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
         chart: (cd && cd.sizes) ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
         recommendedLength: pickLength(user.height, (cd && (cd.length_options || cd.length_variants)), user.inseam) || (lengthNote ? { name: lengthNote } : null),
@@ -365,6 +369,8 @@ export default async function widgetSize(req, res) {
       resolvedBy: 'brand-category',
       explanation: r.explanation,
       breakdown: r.fit_breakdown,
+      facts: r.fit_facts,
+      derived_from: user.derived_from || null,
       candidates: r.candidates,        // every size's fit, for the "try other sizes" picker
       chart: cd.sizes ? { columns: cd.columns || null, sizes: cd.sizes, length_options: cd.length_options || null, notes: cd.notes || null } : null, // full table + context for the AI
       recommendedLength: pickLength(user.height, cd.length_options, user.inseam),

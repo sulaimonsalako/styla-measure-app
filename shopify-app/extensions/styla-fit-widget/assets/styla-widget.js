@@ -986,9 +986,20 @@
           stock: STATE.result ? STATE.result.stock : null,   // live per-size availability
           history: CHAT
         };
-        if (token) payload.accessToken = token;
+        // The AI must reason about the SAME body the recommendation used.
+        // widget-size returns exactly what it sized against, so prefer that —
+        // otherwise a shopper who said "I'm a 12 UK", or who is buying for a
+        // friend, got an answer computed from a hardcoded 38/31/40 stranger
+        // while the panel above showed their real size.
+        var m = STATE.result && STATE.result.measurements;
+        if (m && m.chest && m.waist) {
+          payload.chest = m.chest; payload.waist = m.waist;
+          payload.belly = m.belly || m.waist; payload.hips = m.hips;
+        } else if (token) { payload.accessToken = token; }
         else if (profile) { payload.chest = profile.chest; payload.waist = profile.waist; payload.belly = profile.belly || profile.waist; payload.hips = profile.hips; payload.shoulder = profile.shoulder; }
         else { payload.chest = 38; payload.waist = 31; payload.belly = 31; payload.hips = 40; }
+        // Tell the AI when the body is an estimate, so it doesn't overclaim.
+        if (STATE.result && STATE.result.derived_from) payload.derivedFrom = STATE.result.derived_from;
         try {
           var r = await fetch(API + '/api/extension-chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           var ctype = (r.headers.get('content-type') || '');
