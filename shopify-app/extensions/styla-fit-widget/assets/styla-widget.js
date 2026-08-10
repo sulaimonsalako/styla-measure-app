@@ -184,6 +184,7 @@
           if (!data || !data.size || data.insufficient_data || noOverlap) { renderNoChart(); return; }
           STATE.result = data;
           STATE.activeSize = data.size;
+          paintAuth();
           renderFit();
           renderShopFor();
         } catch (e) { renderError(); } finally { setLoading(false); }
@@ -205,6 +206,7 @@
         var d = ev.data || {};
         if (d.type !== 'styla-auth' || !d.access_token) return;
         setSession(d);
+        paintAuth();   // reflect the new session NOW — sign-out must appear
         try { if (_stylaPopup) _stylaPopup.close(); } catch (e) {}
         var cta = detailsBody && detailsBody.querySelector('.styla-save-cta'); if (cta) cta.remove();
         hideForm();
@@ -238,32 +240,56 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify(Object.assign({ action: action }, extra || {})) })).json();
       }
+      // "Shopping for" — buying for a partner, a bridesmaid, a kid. This is a real
+      // differentiator and it was buried inside the collapsed panels area where
+      // nobody would find it, so it now lives in the sub-header beside the size.
       async function renderShopFor() {
-        if (!getToken()) return;
-        var host = detailsBody; if (!host) return;
-        var existing = host.querySelector('.styla-shopfor'); if (existing) return;
+        var slot = el('styla-shopfor-slot'); if (!slot) return;
+        if (!getToken()) { slot.innerHTML = ''; return; }
+        if (slot.querySelector('.styla-shopfor')) return;
         try {
           var d = await conn('list'); var people = d.sharedWithMe || [];
-          if (!people.length) return;
           STATE.people = people;
-          var box = document.createElement('div'); box.className = 'styla-shopfor';
-          box.innerHTML = '<span class="styla-shopfor-lbl">🛍️ Shopping for</span>' +
-            '<select class="styla-shopfor-sel"><option value="me">Me</option>' +
-            people.map(function (p) { return '<option value="' + p.owner_id + '">' + (p.owner_email || 'Someone') + (p.relationship ? ' · ' + p.relationship : '') + '</option>'; }).join('') + '</select>';
-          host.insertBefore(box, host.firstChild);
-          box.querySelector('.styla-shopfor-sel').value = STATE.shopForId || 'me';
-          box.querySelector('.styla-shopfor-sel').addEventListener('change', async function () {
+
+          if (!people.length) {
+            // Signed in with nobody shared yet — still surface the capability,
+            // quietly. This is how the feature gets discovered at all.
+            slot.innerHTML = '<button type="button" class="styla-shopfor-invite">Shop for someone else</button>';
+            slot.querySelector('.styla-shopfor-invite').addEventListener('click', function () {
+              window.open(STYLA_ORIGIN + '/share.html', '_blank', 'noopener');
+            });
+            return;
+          }
+
+          var box = document.createElement('div');
+          box.className = 'styla-shopfor';
+          box.innerHTML = '<span class="styla-shopfor-lbl">Shopping for</span>' +
+            '<select class="styla-shopfor-sel" aria-label="Shopping for"><option value="me">Me</option>' +
+            people.map(function (p) {
+              return '<option value="' + esc(p.owner_id) + '">' +
+                esc(p.owner_name || p.owner_email || 'Someone') +
+                (p.relationship ? ' \u00b7 ' + esc(p.relationship) : '') + '</option>';
+            }).join('') + '</select>';
+          slot.innerHTML = '';
+          slot.appendChild(box);
+          var sel = box.querySelector('.styla-shopfor-sel');
+          sel.value = STATE.shopForId || 'me';
+          box.classList.toggle('is-other', !!STATE.shopForId);
+          sel.addEventListener('change', async function () {
             var v = this.value;
             STATE.shopForId = (v === 'me') ? null : v;
+            box.classList.toggle('is-other', !!STATE.shopForId);
             if (!STATE.shopForId) { STATE.shopForProfile = null; }
             else {
               var pr = (await conn('get-profile', { ownerId: v })).profile || {};
-              STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist, hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
+              STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist,
+                hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
             }
             STATE.result = null; loadFit();
           });
         } catch (e) {}
       }
+
 
       // Rough Shopify product.type -> Styla measurement category.
       function mapType(t) {
@@ -611,6 +637,8 @@
           clearSession();
           try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
           STATE.result = null; STATE.activeSize = null;
+          STATE.shopForId = null; STATE.shopForProfile = null; STATE.people = [];
+          var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
           paintAuth();
           showForm(true);
           ensureConnectBtn();

@@ -987,3 +987,24 @@
 @media (max-width:560px){
   .styla-modal-container{ height:100dvh !important; max-height:100dvh !important; }
 }
+
+/* ---- "Shopping for" in the sub-header (2026-08-10) ---- */
+.styla-shopfor-slot{ flex:none; margin-left:auto; }
+.styla-shopfor{ display:inline-flex; align-items:center; gap:7px;
+  border:1px solid #e4e4e4; border-radius:100px; padding:4px 6px 4px 11px; background:#fff; }
+.styla-shopfor-lbl{ font-size:.72rem; opacity:.6; white-space:nowrap; }
+.styla-shopfor-sel{ border:none; background:transparent; font:inherit; font-size:.78rem;
+  font-weight:600; color:#1e293b; cursor:pointer; padding:2px 4px; max-width:150px; }
+.styla-shopfor-sel:focus{ outline:none; }
+/* buying for someone else is a different mode — make that unmistakable */
+.styla-shopfor.is-other{ border-color:#f6c9d8; background:#fdf0f4; }
+.styla-shopfor.is-other .styla-shopfor-lbl{ color:#c2185b; opacity:.85; }
+.styla-shopfor.is-other .styla-shopfor-sel{ color:#c2185b; }
+.styla-shopfor-invite{ border:1px dashed #d9d9d9; background:#fff; border-radius:100px;
+  padding:5px 11px; font-size:.74rem; color:#666; cursor:pointer; white-space:nowrap; }
+.styla-shopfor-invite:hover{ border-color:#ff2a75; color:#c2185b; }
+@media (max-width:560px){
+  .styla-shopfor-slot{ margin-left:0; width:100%; }
+  .styla-shopfor{ width:100%; justify-content:space-between; }
+  .styla-shopfor-sel{ max-width:none; }
+}
