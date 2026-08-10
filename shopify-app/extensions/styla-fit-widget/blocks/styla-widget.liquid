@@ -43,8 +43,9 @@
         {% endif %}
         <div class="styla-head-text">
           <span class="styla-head-title">{{ product.title | escape }}</span>
-          <span class="styla-head-sub">Fit &amp; size advice for your body</span>
+          <span class="styla-head-sub" id="styla-head-sub-{{ block.id }}">Fit &amp; size advice for your body</span>
         </div>
+        <button type="button" class="styla-signout styla-hidden" id="styla-signout-{{ block.id }}">Sign out</button>
       </div>
 
       <!-- ONE scrolling panel: pinned answer, then inline panels, then the chat.
@@ -202,16 +203,19 @@
             <div class="chat-msg system"><p>Ask me anything — other sizes, length, fabric, or how this compares to something you already own.</p></div>
           </div>
           <div class="styla-chat-suggest" id="styla-chat-suggest-{{ block.id }}"></div>
-          <div class="styla-chat-input-bar">
-            <input type="text" class="styla-chat-input" id="styla-chat-input-{{ block.id }}" placeholder="Ask about sizing, fabric, or fit...">
-            <button type="button" class="styla-chat-send" id="styla-chat-send-{{ block.id }}" aria-label="Send">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          </div>
         </div>
+      </div>
+
+      <!-- Composer: a sibling of the scroll area, so it stays put. -->
+      <div class="styla-composer">
+        <textarea class="styla-chat-input" id="styla-chat-input-{{ block.id }}" rows="1"
+                  placeholder="Ask about sizing, fabric, or fit…"></textarea>
+        <button type="button" class="styla-chat-send" id="styla-chat-send-{{ block.id }}" aria-label="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
       </div>
     </div>
   </div>

@@ -907,3 +907,61 @@
     max-height:100dvh !important; height:100dvh !important; border-radius:0 !important; }
   .styla-sub-size{ font-size:1.3rem; }
 }
+
+/* ============================================================
+   POLISH (2026-08-10) — tighter header, real composer, sign-out
+   ============================================================ */
+/* Header: was eating vertical space before the answer even appeared. */
+.styla-modal-head{ padding:12px 44px 11px 14px !important; gap:11px !important; align-items:center; }
+.styla-head-thumb{ width:40px !important; height:50px !important; border-radius:5px; }
+.styla-head-title{ font-size:.92rem !important; -webkit-line-clamp:1 !important; }
+.styla-head-sub{ font-size:.72rem !important; }
+.styla-modal-close{ top:10px !important; right:12px !important; }
+.styla-signout{ margin-left:auto; flex:none; background:none; border:none; cursor:pointer;
+  font-size:.74rem; color:#8a90a0; text-decoration:underline; padding:4px 6px; }
+.styla-signout:hover{ color:#e11d48; }
+
+/* Sub-header: one tight band, no dead space underneath. */
+.styla-subhead{ padding:11px 16px 12px !important; }
+.styla-sub-row{ gap:9px !important; }
+.styla-sub-label{ font-size:.62rem !important; opacity:.5 !important; }
+.styla-sub-size{ font-size:1.55rem !important; letter-spacing:-.01em; }
+.styla-sub-meta{ font-size:.75rem !important; }
+.styla-sub-meta:empty{ display:none; }
+/* match + length read as quiet pills rather than loose text */
+#styla-conf, [id^="styla-conf-"]{ background:#f2f4f7; border-radius:100px; padding:3px 9px; opacity:.85; }
+[id^="styla-answer-len-"]{ background:#f2f4f7; border-radius:100px; padding:3px 9px; opacity:.85; }
+.styla-sub-links{ margin-top:10px !important; gap:5px !important; }
+.styla-lnk{ padding:4px 10px !important; font-size:.745rem !important; }
+
+/* Panels: no padding when nothing is open (was leaving a big empty gap). */
+.styla-panels{ padding:0 16px !important; }
+.styla-panels > .styla-hidden{ display:none !important; }
+.styla-disc-body{ padding:12px 0 2px !important; }
+
+/* Chat area */
+.styla-pane{ padding:0 !important; }
+.styla-chat-container{ margin-top:0 !important; padding:14px 16px 10px !important; }
+.styla-chat-head{ margin-bottom:9px !important; }
+.styla-chat-suggest{ margin:12px 0 0 !important; }
+
+/* Composer — sibling of the scroll region, so it never moves. */
+.styla-composer{
+  flex:none; display:flex; align-items:flex-end; gap:9px;
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  border-top:1px solid #ececec; background:#fff;
+}
+.styla-composer .styla-chat-input{
+  flex:1 1 auto; resize:none; overflow-y:auto;
+  min-height:42px; max-height:132px;           /* ~5 lines, then scrolls */
+  padding:11px 14px; border:1px solid #e2e2e2; border-radius:20px;
+  font:inherit; font-size:.88rem; line-height:1.4; color:#1e293b;
+  background:#fff; box-sizing:border-box;
+}
+.styla-composer .styla-chat-input:focus{ outline:none; border-color:#ff2a75; }
+.styla-composer .styla-chat-send{
+  flex:none; width:42px; height:42px; border-radius:50%; border:none; cursor:pointer;
+  background:#ff2a75; color:#fff; display:flex; align-items:center; justify-content:center;
+}
+.styla-composer .styla-chat-send:disabled{ opacity:.45; cursor:default; }
+.styla-composer .styla-chat-send svg{ width:18px; height:18px; }

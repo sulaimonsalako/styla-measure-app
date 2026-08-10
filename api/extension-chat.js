@@ -257,7 +257,14 @@ User message: ${msgText}`;
       contents: contents,
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 400   // keep answers tight -> faster
+        // Gemini 2.5 models THINK by default and thinking tokens are billed
+        // against maxOutputTokens. At 400 the harder questions ("what else here
+        // would fit me?", which needs catalog reasoning) spent the budget
+        // thinking and the visible answer was cut off mid-sentence. Turn thinking
+        // off for this task — it's grounded Q&A over data we supply, not a
+        // reasoning problem — and leave real headroom for the reply.
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 1024
       }
     };
 

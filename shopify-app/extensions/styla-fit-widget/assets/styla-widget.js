@@ -137,6 +137,7 @@
         });
       });
       var suggestEl = el('styla-chat-suggest');
+      var signoutBtn = el('styla-signout');
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
 
@@ -146,6 +147,7 @@
       triggerBtn.addEventListener('click', function () {
         modal.classList.remove('styla-hidden');
         document.body.style.overflow = 'hidden';
+        paintAuth();
         if (!STATE.result) loadFit();
       });
       function close() { modal.classList.add('styla-hidden'); document.body.style.overflow = ''; }
@@ -211,6 +213,7 @@
       });
       // Inject a "Continue with Styla" button at the top of the guest form.
       function ensureConnectBtn() {
+        paintAuth();
         if (!formPanel) return;
         // Already signed in? Then don't ask them to sign in again — that was
         // reading as "log in every time" even though the session was valid.
@@ -576,9 +579,47 @@
         var p = document.createElement('p'); b.appendChild(p);
         chatHistory.appendChild(b); chatHistory.scrollTop = chatHistory.scrollHeight; return p;
       }
+      // Composer behaviour: Enter sends, Shift+Enter starts a new line, and the
+      // box grows with the text up to ~5 lines. It's a textarea now, so people
+      // can actually write more than one line.
+      function autoGrow() {
+        if (!chatInput) return;
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 132) + 'px';
+      }
+      if (chatInput) {
+        chatInput.addEventListener('input', autoGrow);
+        chatInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            sendChat();
+          }
+        });
+      }
+
+      // --- sign out ---
+      function paintAuth() {
+        var signedIn = !!getToken();
+        if (signoutBtn) signoutBtn.classList.toggle('styla-hidden', !signedIn);
+        var sub = el('styla-head-sub');
+        if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
+      }
+      if (signoutBtn) {
+        signoutBtn.addEventListener('click', function () {
+          // Clear the Styla session AND the guest measurements held for this
+          // store, otherwise "signed out" would still show their body data.
+          clearSession();
+          try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
+          STATE.result = null; STATE.activeSize = null;
+          paintAuth();
+          showForm(true);
+          ensureConnectBtn();
+        });
+      }
+
       async function sendChat() {
         var q = (chatInput.value || '').trim(); if (!q || STATE.chatBusy) return;
-        chatInput.value = '';
+        chatInput.value = ''; autoGrow();
         bubble('user').textContent = q;
         CHAT.push({ role: 'user', text: q });
         var out = bubble('system'); out.innerHTML = '<span class="styla-typing"><i></i><i></i><i></i></span>';
