@@ -1066,54 +1066,63 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
 const BLOCK_MARKER = '/blocks/styla-widget/';
 
 async function widgetPlacement(shop, accessToken) {
-  // 1. the live theme
   const themes = await fetchShopifyAPI(shop, accessToken, 'themes.json');
   const live = (themes.themes || []).find((t) => t.role === 'main');
   if (!live) return { status: 'unknown', reason: 'No live theme returned.' };
 
-  // 2. its product template
-  const tryAsset = async (key) => {
+  const readAsset = async (key) => {
     try {
       const r = await fetchShopifyAPI(shop, accessToken,
         `themes/${live.id}/assets.json?asset[key]=${encodeURIComponent(key)}`);
-      return r && r.asset ? r.asset.value : null;
+      return (r && r.asset && typeof r.asset.value === 'string') ? r.asset.value : null;
     } catch (e) { return null; }
   };
 
-  let value = await tryAsset('templates/product.json');
-  let vintage = false;
-  if (!value) { value = await tryAsset('templates/product.liquid'); vintage = !!value; }
-  if (!value) {
-    return { status: 'unknown', theme: live.name,
-             reason: 'Could not read the product template.' };
+  // Enumerate the theme instead of guessing at templates/product.json.
+  // Merchants use alternate product templates, and newer themes (Horizon and
+  // friends) can hold blocks in section files or section groups. One listing
+  // call and we can look everywhere that could legitimately contain the block.
+  let assets = [];
+  try {
+    const list = await fetchShopifyAPI(shop, accessToken, `themes/${live.id}/assets.json`);
+    assets = (list.assets || []).map((a) => a.key);
+  } catch (e) {
+    return { status: 'unknown', theme: live.name, reason: 'Could not list theme files.' };
+  }
+  if (!assets.length) return { status: 'unknown', theme: live.name, reason: 'Theme returned no files.' };
+
+  const productTemplates = assets.filter((k) => /^templates\/product[^/]*\.json$/.test(k));
+  const sectionJson     = assets.filter((k) => /^sections\/.*\.json$/.test(k));
+  const candidates = productTemplates.concat(sectionJson);
+
+  // Vintage themes can't host app blocks at all — say that plainly rather than
+  // sending the merchant to a theme editor that can't help them.
+  if (!productTemplates.length) {
+    const vintage = assets.some((k) => /^templates\/product[^/]*\.liquid$/.test(k));
+    if (vintage) {
+      return { status: 'unsupported', theme: live.name,
+               reason: 'This theme uses the older template format, which cannot host app blocks.' };
+    }
+    return { status: 'unknown', theme: live.name, reason: 'No product template found in the theme.' };
   }
 
-  if (vintage) {
-    // Vintage (non-sectioned) themes can't take app blocks at all.
-    return { status: 'unsupported', theme: live.name,
-             reason: 'This theme uses an older template format that cannot host app blocks.' };
+  const scanned = [];
+  for (const key of candidates) {
+    const v = await readAsset(key);
+    if (v == null) continue;
+    scanned.push(key);
+    if (v.indexOf(BLOCK_MARKER) >= 0) {
+      return { status: 'placed', theme: live.name, foundIn: key };
+    }
   }
-
-  // 3. our block, either inline in the template or inside a referenced section
-  if (value.indexOf(BLOCK_MARKER) >= 0) {
-    return { status: 'placed', theme: live.name };
-  }
-  let tpl = null;
-  try { tpl = JSON.parse(value); } catch (e) {
-    return { status: 'unknown', theme: live.name, reason: 'Product template was not valid JSON.' };
-  }
-  // Sectioned themes may point at shared sections/*.json holding the blocks.
-  const sectionKeys = Object.values(tpl.sections || {})
-    .map((sec) => sec && sec.type).filter(Boolean)
-    .map((t) => `sections/${t}.json`);
-  for (const key of [...new Set(sectionKeys)]) {
-    const sv = await tryAsset(key);
-    if (sv && sv.indexOf(BLOCK_MARKER) >= 0) return { status: 'placed', theme: live.name };
+  if (!scanned.length) {
+    return { status: 'unknown', theme: live.name, reason: 'Could not read any product template.' };
   }
 
   return {
     status: 'missing', theme: live.name, themeId: live.id,
-    reason: 'The Styla block is not in your live theme\'s product page.',
+    scanned,                                  // so a false alarm is diagnosable
+    reason: `Scanned ${scanned.length} template/section file(s) and found no Styla block.`,
   };
 }
 

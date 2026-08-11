@@ -145,6 +145,11 @@ tbody td input:focus{background:#fff;border-color:var(--brand-2);}
 .warnbar .wtxt{flex:1;min-width:0;}
 .warnbar b{display:block;margin-bottom:2px;}
 .warnbar .wact{flex:none;}
+.warnbar .wsub{margin-top:7px;font-size:.8rem;opacity:.8;}
+.warnbar .lnk{background:none;border:none;padding:0;font:inherit;font-size:.8rem;color:#c2185b;
+  text-decoration:underline;cursor:pointer;}
+.warnbar .wfiles{margin:8px 0 0;padding:8px 10px;background:#fff;border:1px solid #eee;border-radius:8px;
+  font-size:.72rem;line-height:1.5;max-height:150px;overflow:auto;white-space:pre-wrap;}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;flex:none;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .busy{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
@@ -742,26 +747,45 @@ async function checkWidgetPlacement(){
   try{
     var r=await mfetch('/api/merchant/widget-status?shop='+encodeURIComponent(SHOP));
     var d=await r.json();
+    WIDGET_STATUS=d.status||'unknown';
+
     if(d.status==='missing'){
       host.style.display='block';
       host.innerHTML='<div class="warnbar"><span>\u26a0\ufe0f</span><div class="wtxt">'
         +'<b>Your widget isn\u2019t on your product pages yet.</b>'
-        +'Styla is set up, but the block hasn\u2019t been added to <b>'+esc(d.theme||'your live theme')+'</b>. '
-        +'Shoppers can\u2019t see their size until you add it.</div>'
+        +'Styla is set up, but we can\u2019t find the block in <b>'+esc(d.theme||'your live theme')+'</b>. '
+        +'Shoppers can\u2019t see their size until it\u2019s added.'
+        +'<div class="wsub">Already added it? <button type="button" class="lnk" id="wRecheck">Re-check</button>'
+        +(d.scanned&&d.scanned.length?(' \u00b7 <button type="button" class="lnk" id="wDetail">What we looked at</button>'):'')
+        +'</div>'
+        +(d.scanned&&d.scanned.length?('<pre class="wfiles" id="wFiles" style="display:none">'+esc(d.scanned.join('\n'))+'</pre>'):'')
+        +'</div>'
         +(d.editorUrl?('<div class="wact"><a class="btn btn-primary btn-sm" target="_top" href="'+esc(d.editorUrl)+'">Add it now</a></div>'):'')
         +'</div>';
+      var rc=el('wRecheck'); if(rc) rc.addEventListener('click',function(){
+        host.innerHTML='<div class="warnbar"><span class="spin"></span><div class="wtxt">Checking your theme\u2026</div></div>';
+        checkWidgetPlacement();
+      });
+      var dt=el('wDetail'); if(dt) dt.addEventListener('click',function(){
+        var f=el('wFiles'); if(f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+      });
     } else if(d.status==='unsupported'){
       host.style.display='block';
       host.innerHTML='<div class="warnbar"><span>\u26a0\ufe0f</span><div class="wtxt">'
         +'<b>This theme can\u2019t host the widget.</b>'
         +esc(d.theme||'Your theme')+' uses the older template format, which doesn\u2019t support app blocks. '
-        +'Switching to a sectioned theme (or using our universal embed) will fix it.</div></div>';
+        +'A sectioned theme, or our universal embed, will work.</div></div>';
+    } else if(d.status==='placed'){
+      // Confirm success briefly — otherwise a merchant who just fixed it has no
+      // way to know the warning was resolved rather than merely hidden.
+      host.style.display='block';
+      host.innerHTML='<div class="warnbar ok"><span>\u2713</span><div class="wtxt">'
+        +'<b>Your widget is live on your product pages.</b>'
+        +'Found in <b>'+esc(d.theme||'your theme')+'</b>'+(d.foundIn?(' \u00b7 '+esc(d.foundIn)):'')+'.</div></div>';
+      setTimeout(function(){ host.style.display='none'; }, 6000);
     } else {
-      // 'placed' and 'unknown' both stay silent — never cry wolf on a read we
-      // couldn't complete.
       host.style.display='none'; host.innerHTML='';
     }
-    WIDGET_STATUS=d.status||'unknown';
     refreshTiles();
   }catch(e){ /* never block the app on this */ }
 }
