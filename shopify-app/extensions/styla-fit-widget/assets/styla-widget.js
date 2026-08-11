@@ -6,6 +6,12 @@
  * users get their saved profile. No hardcoded sizing.
  */
 (function () {
+  // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
+  // needs a restart to re-serve them, so "the fix didn't work" is often "the
+  // browser is still running the old file". Check this in the console first.
+  var BUILD = '2026-08-10.4';
+  try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
+
   var API = 'https://www.styla.ca';
   var STYLA_ORIGIN = 'https://www.styla.ca';
   var SB_URL = 'https://tneflxtpmzodauygtslk.supabase.co';
@@ -373,11 +379,15 @@
             '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
           '</div>' +
           (friendMode ? ('<div class="styla-who-row">' + chips +
-            '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add someone</button></div>') : '');
+            '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add someone</button></div>' +
+            (STATE.shopForId ? '' :
+              '<p class="styla-who-hint">The size above is still yours \u2014 pick someone, or add them.</p>')) : '');
 
-        if (!slotBound) {                       // delegated once; survives re-renders
+        if (!slotBound) {
           slotBound = true;
-          slot.addEventListener('click', function (ev) {
+          // Bound to the MODAL, which is never rewritten — not to the slot,
+          // whose contents are replaced on every render.
+          modal.addEventListener('click', function (ev) {
             var mode = ev.target.closest('.styla-mode-btn');
             if (mode) {
               if (mode.getAttribute('data-mode') === 'me') {

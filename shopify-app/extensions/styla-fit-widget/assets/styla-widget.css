@@ -1103,3 +1103,10 @@
 .styla-inline input{ width:78px; padding:8px 10px; font:inherit; font-size:.86rem;
   border:1px solid #e2e2e2; border-radius:8px; background:#fff; box-sizing:border-box; }
 .styla-inline input:focus{ outline:none; border-color:#ff2a75; }
+
+/* The mode control is a primary action: keep it out of the sticky header, above
+   any sibling, and always hit-testable. */
+.styla-shopfor-row{ position:relative; z-index:5; padding:0 16px; margin:12px 0 4px !important; }
+.styla-shopfor-row .styla-mode,
+.styla-shopfor-row .styla-who{ pointer-events:auto; }
+.styla-who-hint{ width:100%; margin:8px 0 0; font-size:.75rem; opacity:.65; }
