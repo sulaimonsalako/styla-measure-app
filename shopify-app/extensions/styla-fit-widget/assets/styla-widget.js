@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.8';
+  var BUILD = '2026-08-10.9';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -909,12 +909,12 @@
         });
       }
       function paintBuildLabels() {
-        // "Slim / Average / Fuller" reads as a judgement, and "Fuller" is vague.
-        // Framing it as a comparison to average is both kinder and more precise —
-        // it's literally what the estimator does to the girths.
         var men = (GIFT.gender === 'men');
         var host = el('styla-g-build'); if (!host) return;
-        var labels = { slim: 'Slimmer', average: 'About average', curvy: men ? 'Broader' : 'Curvier' };
+        // Everyday words. "Compared with average" was accurate but nobody
+        // talks that way — and "Fuller" before it was vague. This is how a
+        // person actually describes a friend.
+        var labels = { slim: 'Slim', average: 'Average', curvy: men ? 'Broad' : 'Curvy' };
         host.querySelectorAll('button').forEach(function (b) {
           var v = b.getAttribute('data-v');
           if (labels[v]) b.textContent = labels[v];
