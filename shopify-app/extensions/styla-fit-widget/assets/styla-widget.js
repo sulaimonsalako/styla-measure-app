@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.6';
+  var BUILD = '2026-08-10.7';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -222,6 +222,8 @@
       });
       var suggestEl = el('styla-chat-suggest');
       var signoutBtn = el('styla-signout');
+      var connectTop = el('styla-connect-top');
+      if (connectTop) connectTop.addEventListener('click', openStylaConnect);
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
 
@@ -307,8 +309,13 @@
       });
       // Inject a "Continue with Styla" button at the top of the guest form.
       function ensureConnectBtn() {
+        // The connect button lives in the header now; this only keeps the older
+        // in-body block from reappearing.
         paintAuth();
         if (!formPanel) return;
+        var stale = formPanel.querySelector('.styla-connect-wrap');
+        if (stale) stale.remove();
+        return;
         // Already signed in? Then don't ask them to sign in again — that was
         // reading as "log in every time" even though the session was valid.
         if (getToken()) {
@@ -1027,8 +1034,11 @@
 
       // --- sign out ---
       function paintAuth() {
+        // One slot, two states: sign in / sign out live in the same top-right
+        // spot instead of one being a full-width block in the body.
         var signedIn = !!getToken();
         if (signoutBtn) signoutBtn.classList.toggle('styla-hidden', !signedIn);
+        if (connectTop) connectTop.classList.toggle('styla-hidden', signedIn);
         var sub = el('styla-head-sub');
         if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
       }

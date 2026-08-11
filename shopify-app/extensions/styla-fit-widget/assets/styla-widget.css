@@ -1120,3 +1120,62 @@
 }
 .styla-connect-btn:hover{ border-color:#ff2a75; background:#fdf0f4; }
 .styla-connect-or{ font-size:.74rem; margin-top:6px; }
+
+/* Auth lives top-right: "Continue with Styla" when signed out, "Sign out" when
+   in. Keeps the pink, loses the full-width block that fought the cards. */
+.styla-authslot{ margin-left:auto; flex:none; display:flex; align-items:center; gap:8px; }
+.styla-connect-btn{
+  width:auto; display:inline-flex; align-items:center; cursor:pointer;
+  padding:7px 14px; font-size:.78rem; font-weight:700; white-space:nowrap;
+  border-radius:100px; border:none; color:#fff;
+  background:linear-gradient(135deg,#e11d48,#ff2a75);
+}
+.styla-connect-btn:hover{ filter:brightness(1.06); }
+.styla-connect-wrap{ display:none !important; }   /* superseded by the header slot */
+
+@media (max-width:560px){
+  .styla-modal-head{ padding-right:40px !important; flex-wrap:wrap; }
+  .styla-authslot{ width:100%; margin-left:0; order:3; }
+  .styla-connect-btn{ flex:1 1 auto; justify-content:center; padding:9px 14px; }
+}
+
+/* ============================================================
+   MOBILE (2026-08-10)
+   Audited rather than assumed. Three genuine faults found:
+   1. .styla-form-grid was repeat(3,1fr) at EVERY width — three
+      inputs across a 390px phone, and the ft/in height widget
+      (two fields + labels) inside one ~110px cell. That's the
+      horizontal scrollbar seen in the measurements panel.
+   2. Inputs were ~14px, and iOS auto-zooms the page on focus for
+      anything under 16px — the panel jumps as soon as you tap.
+   3. Chips, links and segment buttons were ~26px tall against a
+      ~44px recommended touch target.
+   ============================================================ */
+@media (max-width:560px){
+  /* 1. one field per row; height gets its own full line */
+  .styla-form-grid{ grid-template-columns:1fr !important; gap:11px !important; }
+  .styla-hgroup{ flex-wrap:nowrap; }
+  .styla-hgroup input{ width:auto; flex:1 1 0; min-width:0; }
+
+  /* 2. 16px stops iOS zooming the page when a field is focused */
+  .styla-known input, .styla-gift input, .styla-manual input,
+  .styla-form-group input, .styla-form-group select,
+  .styla-inline input, .styla-composer .styla-chat-input{
+    font-size:16px !important;
+  }
+
+  /* 3. finger-sized controls */
+  .styla-lnk{ padding:9px 13px !important; font-size:.8rem !important; }
+  .styla-chip, .styla-who, .styla-shopfor-invite{ padding:9px 13px; font-size:.8rem; }
+  .styla-mode-btn{ padding:9px 15px; font-size:.82rem; }
+  .styla-seg button, .styla-seg-sm button, .styla-unit-seg button{
+    min-height:38px; padding:8px 12px !important; font-size:.8rem !important;
+  }
+  .styla-card{ padding:14px 13px; }
+  .styla-back{ padding:9px 13px; }
+  .styla-modal-close{ width:40px; height:40px; }
+
+  /* nothing should be able to push the sheet sideways */
+  .styla-modal-container, .styla-modal-right, .styla-pane{ max-width:100vw; overflow-x:hidden; }
+  .styla-chart-wrap{ overflow-x:auto; }
+}

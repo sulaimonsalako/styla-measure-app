@@ -47,7 +47,10 @@
           <span class="styla-head-title">{{ product.title | escape }}</span>
           <span class="styla-head-sub" id="styla-head-sub-{{ block.id }}">Fit &amp; size advice for your body</span>
         </div>
-        <button type="button" class="styla-signout styla-hidden" id="styla-signout-{{ block.id }}">Sign out</button>
+        <div class="styla-authslot">
+          <button type="button" class="styla-connect-btn styla-hidden" id="styla-connect-top-{{ block.id }}">Continue with Styla</button>
+          <button type="button" class="styla-signout styla-hidden" id="styla-signout-{{ block.id }}">Sign out</button>
+        </div>
       </div>
 
       <!-- ONE scrolling panel: pinned answer, then inline panels, then the chat.
