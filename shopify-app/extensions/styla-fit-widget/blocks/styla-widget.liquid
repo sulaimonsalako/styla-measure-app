@@ -146,6 +146,12 @@
 
                 <div class="styla-q">
                   <label>How tall are they? <span class="styla-req">Required</span></label>
+                  <div class="styla-unitbar" style="margin-bottom:8px">
+                    <div class="styla-seg styla-unit-seg" id="styla-g-unit-{{ block.id }}">
+                      <button type="button" data-v="in">ft / in</button>
+                      <button type="button" data-v="cm">cm</button>
+                    </div>
+                  </div>
                   <span class="styla-hgroup" id="styla-g-himp-{{ block.id }}">
                     <input type="number" id="styla-g-hft-{{ block.id }}" placeholder="5" min="3" max="7">
                     <span class="styla-hunit">ft</span>
@@ -160,11 +166,11 @@
                 </div>
 
                 <div class="styla-q">
-                  <label>Build <span class="styla-opt">Optional</span></label>
+                  <label>Compared with average <span class="styla-opt">Optional</span></label>
                   <div class="styla-seg styla-seg-wrap" id="styla-g-build-{{ block.id }}">
-                    <button type="button" data-v="slim">Slim</button>
-                    <button type="button" data-v="average" class="on">Average</button>
-                    <button type="button" data-v="curvy">Fuller</button>
+                    <button type="button" data-v="slim">Slimmer</button>
+                    <button type="button" data-v="average" class="on">About average</button>
+                    <button type="button" data-v="curvy">Curvier</button>
                   </div>
                 </div>
 

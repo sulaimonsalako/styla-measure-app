@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.5';
+  var BUILD = '2026-08-10.6';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -402,8 +402,8 @@
                 STATE.friendMode = true;
                 // Nobody saved yet -> straight to the questions. Otherwise reveal
                 // the row so they can pick someone or add another.
-                if (!STATE.people.length) { showFormForOther(); return; }
-                renderShopFor();
+                renderShopFor();                       // light the pill FIRST
+                if (!STATE.people.length) showFormForOther();
               }
               return;
             }
@@ -670,6 +670,7 @@
       function showFormForOther() {
         STATE.forOther = true;
         paintGiftUnit();
+        paintBuildLabels();
         formView('gift');                      // the self-quiz asks things you can't know about a friend
         var wrap = formPanel && formPanel.querySelector('.styla-connect-wrap');
         if (wrap) wrap.remove();               // this isn't a sign-in moment
@@ -900,7 +901,20 @@
           if (after) after();
         });
       }
+      function paintBuildLabels() {
+        // "Slim / Average / Fuller" reads as a judgement, and "Fuller" is vague.
+        // Framing it as a comparison to average is both kinder and more precise —
+        // it's literally what the estimator does to the girths.
+        var men = (GIFT.gender === 'men');
+        var host = el('styla-g-build'); if (!host) return;
+        var labels = { slim: 'Slimmer', average: 'About average', curvy: men ? 'Broader' : 'Curvier' };
+        host.querySelectorAll('button').forEach(function (b) {
+          var v = b.getAttribute('data-v');
+          if (labels[v]) b.textContent = labels[v];
+        });
+      }
       bindGiftSeg('styla-g-gender', 'gender', function () {
+        paintBuildLabels();
         // A man usually knows his jacket number (which IS his chest in inches);
         // a woman knows a dress size, but it's meaningless without its system.
         var men = (GIFT.gender === 'men');
@@ -910,8 +924,32 @@
         GIFT.system = men ? 'us' : 'uk';
         GIFT.size = null; GIFT.suit = null;
       });
+      var giftUnitSeg = el('styla-g-unit');
+      if (giftUnitSeg) giftUnitSeg.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var next = b.getAttribute('data-v'); if (next === UNIT) return;
+        // Carry the number across rather than relabelling it.
+        var ft = el('styla-g-hft'), inch = el('styla-g-hin'), cm = el('styla-g-hcm');
+        if (next === 'cm') {
+          var ti = (parseFloat((ft || {}).value) || 0) * 12 + (parseFloat((inch || {}).value) || 0);
+          if (cm) cm.value = ti ? String(Math.round(ti * 2.54)) : '';
+        } else {
+          var c = parseFloat((cm || {}).value);
+          if (!isNaN(c) && ft && inch) {
+            var t = c / 2.54; ft.value = String(Math.floor(t / 12));
+            inch.value = String(Math.round(t - Math.floor(t / 12) * 12));
+          }
+        }
+        setUnit(next); paintGiftUnit();
+        if (typeof paintUnitUI === 'function') paintUnitUI();
+      });
+
       // Show the height inputs in whichever unit is active.
       function paintGiftUnit() {
+        var seg = el('styla-g-unit');
+        if (seg) seg.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('on', b.getAttribute('data-v') === UNIT);
+        });
         var metric = (UNIT === 'cm');
         var imp = el('styla-g-himp'), met = el('styla-g-hmet');
         if (imp) imp.classList.toggle('styla-hidden', metric);
