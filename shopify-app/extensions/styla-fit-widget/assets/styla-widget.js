@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.7';
+  var BUILD = '2026-08-10.8';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';

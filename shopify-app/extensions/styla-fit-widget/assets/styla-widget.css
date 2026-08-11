@@ -1179,3 +1179,88 @@
   .styla-modal-container, .styla-modal-right, .styla-pane{ max-width:100vw; overflow-x:hidden; }
   .styla-chart-wrap{ overflow-x:auto; }
 }
+
+/* ============================================================
+   DESIGN NORMALISATION (2026-08-10)
+   The panel had 20 separate input rules that had accreted one
+   feature at a time, so controls didn't match each other — and
+   the gift panel styled input[type=text] but NOT [type=number],
+   which is why the ft/in boxes rendered as raw browser defaults.
+   One set of tokens, one rule per control type.
+   ============================================================ */
+.styla-modal-container{
+  --s-line:#e6e7eb;
+  --s-line-2:#f0f1f4;
+  --s-ink:#14161c;
+  --s-muted:#6b7280;
+  --s-brand:#e11d48;
+  --s-tint:#fdf0f4;
+  --s-radius:10px;
+  --s-field:42px;
+  letter-spacing:-0.005em;
+}
+
+/* ---- every text-ish field, one definition ---- */
+.styla-modal-container input[type="text"],
+.styla-modal-container input[type="number"],
+.styla-modal-container input[type="email"],
+.styla-modal-container input[type="password"],
+.styla-modal-container select,
+.styla-modal-container textarea{
+  box-sizing:border-box; height:var(--s-field); padding:0 12px;
+  font:inherit; font-size:.9rem; color:var(--s-ink); background:#fff;
+  border:1px solid var(--s-line); border-radius:var(--s-radius);
+  transition:border-color .14s, box-shadow .14s; -webkit-appearance:none; appearance:none;
+}
+.styla-modal-container textarea{ height:auto; padding:11px 14px; }
+.styla-modal-container input:focus,
+.styla-modal-container select:focus,
+.styla-modal-container textarea:focus{
+  outline:none; border-color:var(--s-brand); box-shadow:0 0 0 3px rgba(225,29,72,.10);
+}
+.styla-modal-container input::placeholder{ color:#a8adb8; }
+/* spinners add visual noise on a height field */
+.styla-modal-container input[type="number"]{ -moz-appearance:textfield; }
+.styla-modal-container input[type="number"]::-webkit-outer-spin-button,
+.styla-modal-container input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+
+/* ---- segmented controls: one size, everywhere ---- */
+.styla-seg, .styla-unit-seg, .styla-mode{
+  display:inline-flex; gap:4px; padding:4px; background:#f5f6f8;
+  border:1px solid var(--s-line); border-radius:100px;
+}
+.styla-seg button, .styla-unit-seg button, .styla-mode-btn{
+  border:none; background:transparent; cursor:pointer; white-space:nowrap;
+  padding:7px 14px !important; min-height:34px; border-radius:100px;
+  font:inherit; font-size:.8rem !important; font-weight:600; color:var(--s-muted);
+  transition:background .14s, color .14s;
+}
+.styla-seg button.on, .styla-unit-seg button.on, .styla-mode-btn.on{
+  background:#fff; color:var(--s-brand); box-shadow:0 1px 2px rgba(16,24,40,.08);
+}
+.styla-seg button:hover:not(.on), .styla-mode-btn:hover:not(.on){ color:var(--s-ink); }
+/* the wrapping ones stay pill-per-item rather than a rail */
+.styla-seg-wrap{ background:transparent; border:none; padding:0; gap:6px; flex-wrap:wrap; }
+.styla-seg-wrap button{ border:1px solid var(--s-line) !important; background:#fff; }
+.styla-seg-wrap button.on{ border-color:#f6c9d8 !important; background:var(--s-tint); box-shadow:none; }
+
+/* ---- consistent vertical rhythm ---- */
+.styla-q{ margin-bottom:18px; }
+.styla-q > label, .styla-form-group > label{
+  display:block; margin-bottom:7px; font-size:.82rem; font-weight:600; color:var(--s-ink);
+}
+.styla-hint-sm, .styla-forwho-note{ margin-top:7px; font-size:.76rem; color:var(--s-muted); }
+.styla-req, .styla-opt{ vertical-align:1px; }
+.styla-opt{ font-weight:600; color:#9aa0ab; background:none; border:none; }
+
+/* height: keep ft and in on one line and matched to the fields */
+.styla-hgroup{ display:inline-flex; align-items:center; gap:8px; }
+.styla-hgroup input{ width:88px; text-align:center; }
+.styla-hunit{ font-size:.82rem; color:var(--s-muted); }
+
+.styla-card{ border-radius:12px; border-color:var(--s-line); }
+.styla-form-actions{ display:flex; gap:10px; justify-content:flex-end; padding-top:4px; }
+.styla-form-btn{ height:var(--s-field); padding:0 18px; border-radius:100px; font-size:.86rem;
+  font-weight:600; cursor:pointer; border:1px solid var(--s-line); background:#fff; color:var(--s-ink); }
+.styla-form-btn.save{ background:var(--s-brand); border-color:var(--s-brand); color:#fff; }
+.styla-form-btn.save:hover{ filter:brightness(1.06); }

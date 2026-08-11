@@ -126,7 +126,7 @@
                       <button type="button" data-v="us" class="on">US/UK</button>
                       <button type="button" data-v="eu">EU</button>
                     </div>
-                    <input type="text" id="styla-g-suit-{{ block.id }}" placeholder="40" maxlength="4">
+                    <input type="text" id="styla-g-suit-{{ block.id }}" placeholder="40" maxlength="4" inputmode="numeric" style="width:96px">
                   </div>
                   <p class="styla-hint-sm">A jacket number is his chest in inches — the most useful thing you can know. Skip if unsure.</p>
                 </div>
@@ -142,7 +142,7 @@
                       <button type="button" data-v="it">IT</button>
                       <button type="button" data-v="fr">FR</button>
                     </div>
-                    <input type="text" id="styla-g-wsize-{{ block.id }}" placeholder="12" maxlength="4">
+                    <input type="text" id="styla-g-wsize-{{ block.id }}" placeholder="12" maxlength="4" inputmode="numeric" style="width:96px">
                   </div>
                   <p class="styla-hint-sm">If you've seen a label, this sharpens things a lot. Skip it if you don't know.</p>
                 </div>
@@ -151,7 +151,7 @@
                   <label>How tall are they? <span class="styla-req">Required</span></label>
                   <div class="styla-unitbar" style="margin-bottom:8px">
                     <div class="styla-seg styla-unit-seg" id="styla-g-unit-{{ block.id }}">
-                      <button type="button" data-v="in">ft / in</button>
+                      <button type="button" data-v="in">ft·in</button>
                       <button type="button" data-v="cm">cm</button>
                     </div>
                   </div>
@@ -342,7 +342,7 @@
                 <div class="styla-form-grid">
                   <div class="styla-form-group">
                     <label for="styla-k-size-{{ block.id }}">Your size <span class="styla-req">Required</span></label>
-                    <input type="text" id="styla-k-size-{{ block.id }}" placeholder="12" maxlength="5">
+                    <input type="text" id="styla-k-size-{{ block.id }}" placeholder="12" maxlength="5" inputmode="numeric">
                   </div>
                   <div class="styla-form-group">
                     <label for="styla-k-height-{{ block.id }}">Height <span class="styla-req">Required</span></label>
