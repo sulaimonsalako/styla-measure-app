@@ -334,6 +334,15 @@
       // the shopper estimated here in the widget (no sign-in, stays local).
       // Two buttons, not a dropdown: "Me" vs "Someone else" is a mode, and a mode
       // should be visible at a glance rather than hidden behind a select.
+      // "Shopping for" — me, or someone else.
+      //
+      // Two faults before: listeners were attached to freshly written innerHTML
+      // (so any re-render silently dropped them), and clicking "Shop for a
+      // friend" did NOTHING when you already had a saved friend but none
+      // selected — it fell through both branches. The slot is now delegated
+      // once, and friend mode is real state, so the button always responds.
+      var slotBound = false;
+
       async function renderShopFor() {
         var slot = el('styla-shopfor-slot'); if (!slot) return;
 
@@ -350,65 +359,67 @@
             });
           } catch (e) {}
         }
-        STATE.people = shared;
-        var people = shared.concat(local);
-        var forOther = !!STATE.shopForId;
+        STATE.people = shared.concat(local);
+        var friendMode = !!STATE.friendMode || !!STATE.shopForId;
 
-        var chips = people.map(function (p) {
+        var chips = STATE.people.map(function (p) {
           return '<button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
                  '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>';
         }).join('');
 
         slot.innerHTML =
           '<div class="styla-mode">' +
-            '<button type="button" class="styla-mode-btn' + (forOther ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
-            '<button type="button" class="styla-mode-btn' + (forOther ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
           '</div>' +
-          (forOther ? ('<div class="styla-who-row">' + chips +
+          (friendMode ? ('<div class="styla-who-row">' + chips +
             '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add someone</button></div>') : '');
 
-        slot.querySelectorAll('.styla-mode-btn').forEach(function (b) {
-          b.addEventListener('click', function () {
-            if (b.getAttribute('data-mode') === 'me') {
-              if (!STATE.shopForId) return;
-              STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
-              slot.innerHTML = ''; renderShopFor();
-              STATE.result = null; loadFit();
-            } else {
-              // No one saved yet -> go straight to the questions.
-              if (!people.length) { showFormForOther(); return; }
-              if (!STATE.shopForId) selectPerson(people[0]);
+        if (!slotBound) {                       // delegated once; survives re-renders
+          slotBound = true;
+          slot.addEventListener('click', function (ev) {
+            var mode = ev.target.closest('.styla-mode-btn');
+            if (mode) {
+              if (mode.getAttribute('data-mode') === 'me') {
+                STATE.friendMode = false;
+                if (!STATE.shopForId) { renderShopFor(); return; }
+                STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
+                renderShopFor(); STATE.result = null; loadFit();
+              } else {
+                STATE.friendMode = true;
+                // Nobody saved yet -> straight to the questions. Otherwise reveal
+                // the row so they can pick someone or add another.
+                if (!STATE.people.length) { showFormForOther(); return; }
+                renderShopFor();
+              }
+              return;
             }
-          });
-        });
-
-        slot.querySelectorAll('.styla-who').forEach(function (b) {
-          b.addEventListener('click', function () {
-            var id = b.getAttribute('data-id');
+            var who = ev.target.closest('.styla-who');
+            if (!who) return;
+            var id = who.getAttribute('data-id');
             if (id === '__add') { showFormForOther(); return; }
-            selectPerson(people.filter(function (p) { return p.id === id; })[0]);
+            selectPerson(STATE.people.filter(function (p) { return p.id === id; })[0]);
           });
-        });
-
-        async function selectPerson(p) {
-          if (!p) return;
-          STATE.shopForId = p.id;
-          if (p.answers) { STATE.shopForAnswers = p.answers; STATE.shopForProfile = null; }
-          else if (p.profile) { STATE.shopForProfile = p.profile; STATE.shopForAnswers = null; }
-          else {
-            try {
-              var pr = (await conn('get-profile', { ownerId: p.id })).profile || {};
-              STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist,
-                hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
-            } catch (e) { return; }
-          }
-          slot.innerHTML = ''; renderShopFor();
-          STATE.result = null; loadFit();
         }
       }
 
-
-
+      async function selectPerson(p) {
+        if (!p) return;
+        STATE.friendMode = true;
+        STATE.shopForId = p.id;
+        if (p.answers) { STATE.shopForAnswers = p.answers; STATE.shopForProfile = null; }
+        else if (p.profile) { STATE.shopForProfile = p.profile; STATE.shopForAnswers = null; }
+        else {
+          try {
+            var pr = (await conn('get-profile', { ownerId: p.id })).profile || {};
+            STATE.shopForProfile = { chest: pr.chest, waist: pr.waist, belly: pr.belly || pr.waist,
+              hips: pr.hips, shoulder: pr.shoulder, height: pr.height, inseam: pr.inseam };
+            STATE.shopForAnswers = null;
+          } catch (e) { return; }
+        }
+        renderShopFor();
+        STATE.result = null; loadFit();
+      }
 
       // Rough Shopify product.type -> Styla measurement category.
       function mapType(t) {
@@ -910,6 +921,7 @@
         var person = { id: 'local:' + Date.now().toString(36),
                        name: 'Friend ' + (getPeople().length + 1), answers: answers, local: true };
         savePerson(person);
+        STATE.friendMode = true;
         STATE.shopForId = person.id;
         STATE.shopForProfile = null;
         STATE.shopForAnswers = answers;             // server converts these
@@ -958,7 +970,7 @@
           clearSession();
           try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
           STATE.result = null; STATE.activeSize = null;
-          STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null; STATE.people = [];
+          STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null; STATE.friendMode = false; STATE.people = [];
           var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
           paintAuth();
           showForm(true);
