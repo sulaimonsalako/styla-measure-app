@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.10';
+  var BUILD = '2026-08-10.11';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -385,13 +385,11 @@
             '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
             '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
           '</div>' +
-          // With nobody saved, the questionnaire below IS the flow — a
-          // "+ Add someone" button would just re-open the form that's already
-          // open, and "pick someone" is nonsense when there's no one to pick.
-          // The row only earns its place once there are people to choose between.
+          // Only the people you can actually choose between. No add button:
+          // with nobody saved the questionnaire below is already the flow, and
+          // a button that re-opens an open form is just noise.
           (friendMode && STATE.people.length
-            ? ('<div class="styla-who-row">' + chips +
-               '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add another</button></div>' +
+            ? ('<div class="styla-who-row">' + chips + '</div>' +
                (STATE.shopForId ? '' :
                  '<p class="styla-who-hint">Showing your size \u2014 choose who you\u2019re buying for.</p>'))
             : '');
@@ -423,7 +421,6 @@
             var who = ev.target.closest('.styla-who');
             if (!who) return;
             var id = who.getAttribute('data-id');
-            if (id === '__add') { showFormForOther(); return; }
             selectPerson(STATE.people.filter(function (p) { return p.id === id; })[0]);
           }
         }

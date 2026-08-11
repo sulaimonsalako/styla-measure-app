@@ -1037,8 +1037,6 @@
 .styla-who{ border:1px solid #e4e4e4; background:#fff; border-radius:100px;
   padding:5px 12px; font-size:.77rem; cursor:pointer; color:#333; }
 .styla-who.on{ background:#fdf0f4; border-color:#f6c9d8; color:#c2185b; font-weight:600; }
-.styla-who-add{ border-style:dashed; color:#666; }
-.styla-who-add:hover{ border-color:#ff2a75; color:#c2185b; }
 
 /* ---- Gift questionnaire ---- */
 .styla-gift{ padding:2px 0 4px; }
