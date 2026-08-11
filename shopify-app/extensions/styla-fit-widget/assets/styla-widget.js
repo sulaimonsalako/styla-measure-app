@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.9';
+  var BUILD = '2026-08-10.10';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -385,10 +385,16 @@
             '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
             '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
           '</div>' +
-          (friendMode ? ('<div class="styla-who-row">' + chips +
-            '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add someone</button></div>' +
-            (STATE.shopForId ? '' :
-              '<p class="styla-who-hint">The size above is still yours \u2014 pick someone, or add them.</p>')) : '');
+          // With nobody saved, the questionnaire below IS the flow — a
+          // "+ Add someone" button would just re-open the form that's already
+          // open, and "pick someone" is nonsense when there's no one to pick.
+          // The row only earns its place once there are people to choose between.
+          (friendMode && STATE.people.length
+            ? ('<div class="styla-who-row">' + chips +
+               '<button type="button" class="styla-who styla-who-add" data-id="__add">+ Add another</button></div>' +
+               (STATE.shopForId ? '' :
+                 '<p class="styla-who-hint">Showing your size \u2014 choose who you\u2019re buying for.</p>'))
+            : '');
 
         if (!slotBound) {
           slotBound = true;
