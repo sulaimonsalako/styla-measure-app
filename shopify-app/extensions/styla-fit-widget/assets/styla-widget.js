@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.4';
+  var BUILD = '2026-08-10.5';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -388,6 +388,9 @@
           // Bound to the MODAL, which is never rewritten — not to the slot,
           // whose contents are replaced on every render.
           modal.addEventListener('click', function (ev) {
+            try { handleSlotClick(ev); } catch (err) { console.error('[Styla] click failed', err); }
+          });
+          function handleSlotClick(ev) {
             var mode = ev.target.closest('.styla-mode-btn');
             if (mode) {
               if (mode.getAttribute('data-mode') === 'me') {
@@ -409,7 +412,7 @@
             var id = who.getAttribute('data-id');
             if (id === '__add') { showFormForOther(); return; }
             selectPerson(STATE.people.filter(function (p) { return p.id === id; })[0]);
-          });
+          }
         }
       }
 
@@ -907,6 +910,24 @@
         GIFT.system = men ? 'us' : 'uk';
         GIFT.size = null; GIFT.suit = null;
       });
+      // Show the height inputs in whichever unit is active.
+      function paintGiftUnit() {
+        var metric = (UNIT === 'cm');
+        var imp = el('styla-g-himp'), met = el('styla-g-hmet');
+        if (imp) imp.classList.toggle('styla-hidden', metric);
+        if (met) met.classList.toggle('styla-hidden', !metric);
+      }
+      function readGiftHeight() {
+        if (UNIT === 'cm') {
+          var c = parseFloat((el('styla-g-hcm') || {}).value);
+          return isNaN(c) ? null : +(c / 2.54).toFixed(1);
+        }
+        var ft = parseFloat((el('styla-g-hft') || {}).value);
+        var inch = parseFloat((el('styla-g-hin') || {}).value);
+        if (isNaN(ft) && isNaN(inch)) return null;
+        return (isNaN(ft) ? 0 : ft) * 12 + (isNaN(inch) ? 0 : inch);
+      }
+
       bindGiftSeg('styla-g-msys', 'system');
       bindGiftSeg('styla-g-wsys', 'system');
 
@@ -981,8 +1002,8 @@
           try { localStorage.removeItem(LS_PROFILE); } catch (e) {}
           STATE.result = null; STATE.activeSize = null;
           STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null; STATE.friendMode = false; STATE.people = [];
-          var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
           paintAuth();
+          renderShopFor();          // rebuild the mode row — it used to just vanish
           showForm(true);
           ensureConnectBtn();
         });
