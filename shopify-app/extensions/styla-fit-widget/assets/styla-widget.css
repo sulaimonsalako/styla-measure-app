@@ -1262,3 +1262,11 @@
   font-weight:600; cursor:pointer; border:1px solid var(--s-line); background:#fff; color:var(--s-ink); }
 .styla-form-btn.save{ background:var(--s-brand); border-color:var(--s-brand); color:#fff; }
 .styla-form-btn.save:hover{ filter:brightness(1.06); }
+
+/* Which cut — shown only when a brand publishes more than one chart for the
+   category (slim / classic / athletic). */
+.styla-cuts{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:0 16px; margin-top:12px; }
+.styla-cuts-lbl{ font-size:.72rem; color:var(--s-muted); margin-right:2px; }
+.styla-cut{ border:1px solid var(--s-line); background:#fff; border-radius:100px;
+  padding:6px 12px; font-size:.77rem; font-weight:600; color:var(--s-muted); cursor:pointer; }
+.styla-cut.on{ background:var(--s-tint); border-color:#f6c9d8; color:var(--s-brand); }

@@ -9,7 +9,7 @@
   // Build stamp. Theme-extension assets are CDN-cached and `shopify app dev`
   // needs a restart to re-serve them, so "the fix didn't work" is often "the
   // browser is still running the old file". Check this in the console first.
-  var BUILD = '2026-08-10.11';
+  var BUILD = '2026-08-10.12';
   try { window.__stylaWidgetBuild = BUILD; console.info('[Styla] widget build ' + BUILD); } catch (e) {}
 
   var API = 'https://www.styla.ca';
@@ -250,7 +250,8 @@
         if (!profile && !token && !STATE.knownSize) { showForm(true); return; }
         setLoading(true);
         try {
-          var body = { domain: product.domain, productUrl: product.url, category: mapType(product.type) };
+          var body = { domain: product.domain, productUrl: product.url, productTitle: product.title,
+                       category: mapType(product.type), chartId: STATE.chartId || undefined };
           if (STATE.shopForAnswers) body.knownSize = STATE.shopForAnswers; // friend, estimated server-side
           else if (STATE.shopForProfile) body.profile = STATE.shopForProfile;  // friend with a shared Styla profile
           else if (STATE.knownSize) body.knownSize = STATE.knownSize;      // "I'm a 12 UK"
@@ -460,7 +461,31 @@
       }
 
       // ---------- render ----------
+      // A brand often publishes several cuts in one category — slim, classic,
+      // athletic. We pick by matching the product, but the shopper knows better
+      // than a string match, so let them switch.
+      function renderCuts() {
+        var res = STATE.result, host = el('styla-cuts');
+        if (!host) return;
+        var opts = (res && res.chartOptions) || [];
+        if (opts.length < 2) { host.innerHTML = ''; host.classList.add('styla-hidden'); return; }
+        host.classList.remove('styla-hidden');
+        host.innerHTML = '<span class="styla-cuts-lbl">Cut</span>' +
+          opts.map(function (o) {
+            var on = (res.chartId === o.id);
+            return '<button type="button" class="styla-cut' + (on ? ' on' : '') +
+                   '" data-chart="' + esc(o.id) + '">' + esc(o.name) + '</button>';
+          }).join('');
+        host.querySelectorAll('.styla-cut').forEach(function (b) {
+          b.addEventListener('click', function () {
+            STATE.chartId = b.getAttribute('data-chart');
+            STATE.result = null; loadFit();
+          });
+        });
+      }
+
       function renderFit() {
+        renderCuts();
         renderAlternatives();
         renderLengths();
         renderChart();

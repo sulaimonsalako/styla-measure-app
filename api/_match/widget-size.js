@@ -81,11 +81,17 @@ function normVariant(name) {
   return LENGTH_ALIASES[v] || v || null;
 }
 
+// Words that show up in almost every chart name, so they can't tell one cut
+// from another. Without this, "Suit" in both the chart name and the product
+// title would score a false match.
+const STOP_FIT = new Set(['fit','size','chart','guide','mens','womens','men','women',
+  'unisex','adult','standard','regular','general','all','the','and','for','with']);
+
 export default async function widgetSize(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    let { profile, accessToken, brand, brandId, category, gender, productUrl, chartId, domain, knownSize } = req.body || {};
+    let { profile, accessToken, brand, brandId, category, gender, productUrl, productTitle, chartId, domain, knownSize } = req.body || {};
     const normDom = (d) => String(d || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
 
     // The on-site widget is the paid feature. A store can switch it off (e.g. it
@@ -351,7 +357,42 @@ export default async function widgetSize(req, res) {
       if (byGender.length) chosen = byGender;
     }
     // Among the survivors, prefer the brand's default chart for this category.
-    chosen = chosen.slice().sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0));
+    // A brand often has SEVERAL charts in one category — "Slim fit", "Classic
+    // fit", "Athletic build". Taking chosen[0] meant the other cuts were dead
+    // weight: uploaded, stored, never used. Score each chart's name and
+    // subcategory against the product we're sizing, and let the shopper override.
+    // The category word itself ("suit") appears in every chart name AND every
+    // product title in that category, so it can't discriminate — scoring on it
+    // made a generic "Suit Size Guide" beat "Slim Fit Suit" on a slim-fit product.
+    const catWords = new Set(String(category || '').toLowerCase().split(/[^a-z]+/)
+      .filter(Boolean).flatMap((w) => [w, w.replace(/s$/, '')]));
+    const fitTokens = (c) => {
+      const cd = c.chart_data || {};
+      return String([cd.name, c.subcategory, cd.subcategory].filter(Boolean).join(' '))
+        .toLowerCase().split(/[^a-z0-9]+/)
+        .filter((w) => w.length > 2 && !STOP_FIT.has(w)
+                    && !catWords.has(w) && !catWords.has(w.replace(/s$/, '')));
+    };
+    const haystack = String([productTitle, productUrl].filter(Boolean).join(' ')).toLowerCase();
+    // COUNT of discriminating words matched, not a proportion. A chart with no
+    // distinguishing words scores 0 and falls back to is_default, which is
+    // exactly right for a brand's one generic chart.
+    const scoreChart = (c) => fitTokens(c).filter((t) => haystack.includes(t)).length;
+
+    chosen = chosen.slice().sort((a, b) => {
+      const d = scoreChart(b) - scoreChart(a);
+      if (d !== 0) return d;
+      return (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0);
+    });
+
+    // Every cut we hold for this category, so the widget can offer a picker
+    // rather than pretending there's only one.
+    const chartOptions = chosen.map((x) => ({
+      id: x.id,
+      name: (x.chart_data && x.chart_data.name) || x.subcategory || 'Standard',
+      subcategory: x.subcategory || (x.chart_data && x.chart_data.subcategory) || null,
+      matched: scoreChart(x) > 0,
+    }));
 
     const c = chosen[0];
     const cd = c.chart_data || {};
@@ -367,6 +408,10 @@ export default async function widgetSize(req, res) {
       subcategory: cd.subcategory || null,
       fits: !r.warning,
       resolvedBy: 'brand-category',
+      chartId: c.id,
+      chartName: (c.chart_data && c.chart_data.name) || null,
+      chartOptions,                       // other cuts in this category
+      chartMatchedProduct: scoreChart(c) > 0,
       explanation: r.explanation,
       breakdown: r.fit_breakdown,
       facts: r.fit_facts,
