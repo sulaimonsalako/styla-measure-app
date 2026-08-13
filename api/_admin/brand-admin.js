@@ -40,7 +40,7 @@ export default async function brandAdmin(req, res) {
     // ---- BRANDS ----
     if (action === 'list-brands') {
       const { data: brands } = await supabaseAdmin
-        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about').order('name');
+        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about, reviewed, reviewed_at, review_notes').order('name');
       const { data: charts } = await supabaseAdmin
         .from('size_charts').select('id, brand_id');
       const counts = {};
@@ -52,7 +52,7 @@ export default async function brandAdmin(req, res) {
 
     if (action === 'get-brand') {
       const { data: brand } = await supabaseAdmin
-        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about').eq('id', b.id).maybeSingle();
+        .from('brands').select('id, name, domain, logo_url, category_aliases, small_business, specialties, ships_worldwide, ships_to, origin_country, made_in, about, reviewed, reviewed_at, review_notes').eq('id', b.id).maybeSingle();
       if (!brand) return res.status(404).json({ error: 'Brand not found.' });
       const { data: charts } = await supabaseAdmin
         .from('size_charts').select('id, category, subcategory, gender, chart_data, is_default, raw_source_url, source, verified, category_url, created_at')
@@ -80,6 +80,13 @@ export default async function brandAdmin(req, res) {
       if (b.ships_worldwide !== undefined) patch.ships_worldwide = !!b.ships_worldwide;
       if (b.ships_to !== undefined) patch.ships_to = Array.isArray(b.ships_to) ? b.ships_to.filter(Boolean) : [];
       if (b.category_aliases !== undefined) patch.category_aliases = b.category_aliases || {};
+      if (b.review_notes !== undefined) patch.review_notes = b.review_notes || null;
+      // Reviewed is a working flag, not brand data: stamp when it's ticked and
+      // clear the stamp when it's un-ticked, so the timestamp never lies.
+      if (b.reviewed !== undefined) {
+        patch.reviewed = !!b.reviewed;
+        patch.reviewed_at = b.reviewed ? new Date().toISOString() : null;
+      }
       const { error } = await supabaseAdmin.from('brands').update(patch).eq('id', b.id);
       if (error) throw error;
       return res.status(200).json({ ok: true });

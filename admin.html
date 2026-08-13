@@ -54,7 +54,37 @@
     .hint{color:var(--dim);font-size:.78rem;margin-top:.3rem;}
     .kv{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;margin-bottom:.4rem;align-items:center;}
     .loader{color:var(--dim);padding:2rem 0;text-align:center;}
-  </style>
+  
+    /* --- brand list at 146 rows: search, filter, review state --- */
+    .bfilter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:1.1rem 0 .8rem;}
+    .bfilter input{flex:1 1 220px;min-width:180px;}
+    .seg{display:inline-flex;gap:3px;padding:3px;background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);border-radius:100px;}
+    .seg button{border:none;background:transparent;color:var(--dim);cursor:pointer;
+      padding:6px 12px;border-radius:100px;font-size:.78rem;font-weight:600;white-space:nowrap;}
+    .seg button.on{background:rgba(255,255,255,.10);color:#fff;}
+    .bprog{font-size:.8rem;color:var(--dim);margin-left:auto;white-space:nowrap;}
+    .bprog b{color:#fff;}
+    .brandrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.07);margin-bottom:7px;background:rgba(255,255,255,.02);}
+    .brandrow.isdone{opacity:.55;border-color:rgba(52,211,153,.28);}
+    .brandrow .lg,.brandrow .lgph{width:34px;height:34px;border-radius:8px;flex:none;object-fit:contain;
+      background:#fff;padding:3px;box-sizing:border-box;}
+    .brandrow .lgph{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);
+      color:var(--dim);font-weight:700;padding:0;}
+    .brandrow .bmain{flex:1;min-width:0;}
+    .brandrow .bn{font-weight:600;font-size:.92rem;}
+    .brandrow .bmeta{font-size:.76rem;color:var(--dim);margin-top:2px;}
+    .brandrow .bmeta a{color:var(--dim);text-decoration:underline;}
+    .brandrow .bact{display:flex;align-items:center;gap:10px;flex:none;}
+    .revbox{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--dim);cursor:pointer;white-space:nowrap;}
+    .revbox input{width:auto;margin:0;cursor:pointer;}
+    @media (max-width:640px){
+      .brandrow{flex-wrap:wrap;}
+      .brandrow .bact{width:100%;justify-content:space-between;}
+      .bprog{margin-left:0;width:100%;}
+    }
+</style>
 </head>
 <body>
   <nav><div class="row">
@@ -95,6 +125,16 @@
           <div><label>Logo URL</label><input id="nbLogo" placeholder="https://…/logo.png"/></div>
         </div>
         <button class="btn btn-primary btn-sm" style="margin-top:.9rem" id="nbBtn">Add brand</button>
+      </div>
+      <div class="bfilter">
+        <input id="bSearch" placeholder="Search 146 brands…" autocomplete="off"/>
+        <div class="seg" id="bFilter">
+          <button data-v="all" class="on">All</button>
+          <button data-v="todo">Not reviewed</button>
+          <button data-v="done">Reviewed</button>
+          <button data-v="nocharts">No charts yet</button>
+        </div>
+        <span class="bprog" id="bProgress"></span>
       </div>
       <div id="brandsList"></div>
       <div class="card" style="margin-top:1.4rem">
@@ -295,13 +335,67 @@
     el('denyLogout').addEventListener('click',function(e){e.preventDefault();doLogout();});
 
     // ---- Brands list ----
-    function renderBrands(brands){
-      el('brandsList').innerHTML=brands.map(function(b){
-        var lg=b.logo_url?'<img class="lg" src="'+b.logo_url+'" alt="" onerror="this.outerHTML=\'<span class=&quot;lgph&quot;>'+(b.name||'?').charAt(0)+'</span>\'"/>':'<span class="lgph">'+(b.name||'?').charAt(0)+'</span>';
-        return '<div class="brandrow">'+lg+'<div class="bmain"><div class="bn">'+b.name+'</div><div class="bmeta">'+(b.domain||'no domain')+' · '+b.chart_count+' chart(s)</div></div>'+
-          '<div class="bact"><button class="btn btn-ghost btn-sm" onclick="openBrand(\''+b.id+'\')">Manage</button></div></div>';
-      }).join('')||'<p class="hint">No brands yet — add one above.</p>';
+    var ALL_BRANDS=[], B_FILTER='all', B_Q='';
+
+    function paintBrands(){
+      var q=B_Q.trim().toLowerCase();
+      var rows=ALL_BRANDS.filter(function(b){
+        if(B_FILTER==='todo' && b.reviewed) return false;
+        if(B_FILTER==='done' && !b.reviewed) return false;
+        if(B_FILTER==='nocharts' && b.chart_count>0) return false;
+        if(q && (b.name+' '+(b.domain||'')).toLowerCase().indexOf(q)<0) return false;
+        return true;
+      });
+      var done=ALL_BRANDS.filter(function(b){return b.reviewed;}).length;
+      var withCharts=ALL_BRANDS.filter(function(b){return b.chart_count>0;}).length;
+      el('bProgress').innerHTML='<b>'+done+'</b> / '+ALL_BRANDS.length+' reviewed · <b>'+withCharts+'</b> with charts';
+
+      el('brandsList').innerHTML=rows.map(function(b){
+        var initial=(b.name||'?').charAt(0).replace(/[^A-Za-z0-9]/,'?');
+        var lg=b.logo_url
+          ? '<img class="lg" src="'+b.logo_url+'" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;lgph&quot;>'+initial+'</span>\'"/>'
+          : '<span class="lgph">'+initial+'</span>';
+        var charts=b.chart_count
+          ? '<span class="badge green">'+b.chart_count+' chart'+(b.chart_count>1?'s':'')+'</span>'
+          : '<span class="badge">no charts</span>';
+        return '<div class="brandrow'+(b.reviewed?' isdone':'')+'">'+lg+
+          '<div class="bmain"><div class="bn">'+esc(b.name)+'</div>'+
+          '<div class="bmeta">'+(b.domain?('<a href="https://'+esc(b.domain)+'" target="_blank" rel="noopener">'+esc(b.domain)+'</a>'):'no domain')+' · '+charts+'</div></div>'+
+          '<div class="bact">'+
+            '<label class="revbox" title="Tick once you have checked this brand"><input type="checkbox" data-rev="'+b.id+'"'+(b.reviewed?' checked':'')+'/> Reviewed</label>'+
+            '<button class="btn btn-ghost btn-sm" onclick="openBrand(\''+b.id+'\')">Manage</button>'+
+          '</div></div>';
+      }).join('')||'<p class="hint">Nothing matches that filter.</p>';
+
+      el('brandsList').querySelectorAll('[data-rev]').forEach(function(cb){
+        cb.addEventListener('change', async function(){
+          var id=cb.getAttribute('data-rev');
+          var b=ALL_BRANDS.filter(function(x){return x.id===id;})[0];
+          if(b) b.reviewed=cb.checked;                 // optimistic — the tick should feel instant
+          cb.closest('.brandrow').classList.toggle('isdone', cb.checked);
+          var r=await api('update-brand',{id:id,reviewed:cb.checked});
+          if(r && r.error){                            // roll back rather than lie
+            if(b) b.reviewed=!cb.checked;
+            cb.checked=!cb.checked;
+            cb.closest('.brandrow').classList.toggle('isdone', cb.checked);
+          }
+          paintBrands();
+        });
+      });
     }
+    function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+    function renderBrands(brands){
+      ALL_BRANDS=brands;
+      paintBrands();
+    }
+    el('bSearch').addEventListener('input',function(){ B_Q=this.value; paintBrands(); });
+    el('bFilter').addEventListener('click',function(e){
+      var btn=e.target.closest('button'); if(!btn) return;
+      this.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===btn);});
+      B_FILTER=btn.getAttribute('data-v'); paintBrands();
+    });
+
     el('nbBtn').addEventListener('click',async function(){
       var name=el('nbName').value.trim();var msg=el('brandsMsg');
       if(!name){msg.style.color='#fca5a5';msg.textContent='Brand name required.';return;}
