@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/shared/taxonomy.js"></script>
   <script src="/shared/brand-attrs.js"></script>
+  <script src="/shared/chart-keys.js"></script>
   <style>
     :root{--bg:#0b0b14;--bg2:#121222;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--green:#34d399;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -575,20 +576,41 @@
 
     function parseVal(s){s=(s||'').trim();if(!s)return undefined;if(s.indexOf('-')>0){var p=s.split('-').map(function(x){return parseFloat(x);});if(!isNaN(p[0])&&!isNaN(p[1]))return [p[0],p[1]];}var n=parseFloat(s);return isNaN(n)?undefined:n;}
 
+    // The parser keeps the brand's OWN column names — "BUST", "Hip", "Sleeve
+    // length". The engine works in canonical keys (chest / hips / sleeve), and
+    // the SAVE path already converts via shared/chart-keys.js. These client-side
+    // checks did not, so on a BUST/WAIST/HIPS chart every one of them silently
+    // did nothing — including the "no body measurements" alarm, which fired on a
+    // perfectly good chart. Same map as the server; no second alias list.
+    var KEYMAP=(window.STYLA_CHART_KEYS&&window.STYLA_CHART_KEYS.CHART_KEY_MAP)||{};
+    function canonKey(k){ return KEYMAP[String(k||'').trim().toLowerCase()] || String(k||'').trim().toLowerCase(); }
+    function canonRow(s){
+      var out={name:(s&&s.name)||''};
+      Object.keys(s||{}).forEach(function(k){
+        if(k==='name') return;
+        var ck=canonKey(k);
+        if(out[ck]==null||out[ck]==='') out[ck]=s[k];
+      });
+      return out;
+    }
     function avgOf(sizes,k){var v=sizes.map(function(s){var x=s[k];return Array.isArray(x)?(x[0]+x[1])/2:x;}).filter(function(x){return typeof x==='number'&&!isNaN(x);});return v.length?v.reduce(function(a,b){return a+b;},0)/v.length:null;}
     // Detect which width measures on a GARMENT chart are flat (half-width) vs full
     // circumference, by magnitude — so we never blanket-double a full chest again.
     function detectFlat(sizes){
       var flat=[];
       var bands={chest:28,waist:18,hips:24,thigh:17}; // below this avg = half-width
-      Object.keys(bands).forEach(function(k){ var a=avgOf(sizes,k); if(a!=null && a<bands[k]) flat.push(k); });
+      var canon=sizes.map(canonRow);
+      Object.keys(bands).forEach(function(k){ var a=avgOf(canon,k); if(a!=null && a<bands[k]) flat.push(k); });
       return flat;
     }
     // Sanity checks — catch mis-parsed / mislabelled charts BEFORE shoppers see them.
     function validateChart(sizes,type,flat){
       var w=[];
+      // Every check below runs on canonical keys, so a chart labelled BUST /
+      // Hip / Sleeve length is checked exactly like one labelled chest/hips/sleeve.
+      sizes=sizes.map(canonRow);
       var bodyKeys=['chest','waist','hips','shoulder','sleeve','inseam','thigh','neck'];
-      var hasBody=sizes.some(function(s){return bodyKeys.some(function(k){return s[k]!=null;});});
+      var hasBody=sizes.some(function(s){return bodyKeys.some(function(k){return s[k]!=null&&s[k]!=='';});});
       if(!hasBody) w.push('No body measurements found — the engine can’t size this chart (it will be flagged unsizable).');
       var num=function(x){return Array.isArray(x)?(x[0]+x[1])/2:x;};
       // chest < waist (likely swapped/mis-parsed for tops/dresses/suits/outerwear)
