@@ -26,6 +26,67 @@
     height:'height',
   };
 
+  // Real charts don't label a column "waist". They say "Waist (in)", "WAIST (IN)",
+  // "Hip Circumference", "Natural Waist", "Sleeve length (in)". An exact lookup
+  // dropped every one of those — silently, so the column was parsed, shown in the
+  // editor, and then discarded on save. Clean the label first, then match.
+  var UNITS = /\b(in|ins|inch|inches|cm|cms|centimet(?:er|re)s?|mm)\b/g;
+  var NOISE = /\b(body|garment|finished|measurement|measurements|circumference|girth|size|approx|approximate|relaxed|natural|full)\b/g;
+
+  function cleanLabel(col) {
+    return String(col == null ? '' : col)
+      .toLowerCase()
+      .replace(/[\(\[\{][^\)\]\}]*[\)\]\}]/g, ' ')  // drop "(in)", "[cm]"
+      .replace(/["\u2033\u201d]/g, ' ')                  // inch marks
+      .replace(UNITS, ' ')
+      .replace(/[^a-z0-9\u4e00-\u9fff\/ ]+/g, ' ')      // keep CJK and the slash in "chest/bust"
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Longest canonical phrases first, so "sleeve length" wins over "sleeve" and
+  // "chest width" over "chest".
+  var KEYS_BY_LENGTH = null;
+  function keysByLength() {
+    if (!KEYS_BY_LENGTH) {
+      KEYS_BY_LENGTH = Object.keys(CHART_KEY_MAP).sort(function (a, b) { return b.length - a.length; });
+    }
+    return KEYS_BY_LENGTH;
+  }
+
+  /**
+   * A brand's column label -> canonical engine key, or null.
+   * Exact match on the cleaned label, then with filler words removed, then a
+   * containment pass that only fires when EXACTLY ONE canonical term appears —
+   * so "waist to hip" stays ambiguous rather than being guessed at.
+   */
+  function canonKeyFor(col) {
+    var c = cleanLabel(col);
+    if (!c) return null;
+    if (CHART_KEY_MAP[c]) return CHART_KEY_MAP[c];
+
+    var stripped = c.replace(NOISE, ' ').replace(/\s+/g, ' ').trim();
+    if (stripped && CHART_KEY_MAP[stripped]) return CHART_KEY_MAP[stripped];
+
+    var hits = [];
+    keysByLength().forEach(function (k) {
+      if (k.length < 3) return;                    // don't match on fragments
+      if (hits.indexOf(CHART_KEY_MAP[k]) >= 0) return;
+      var re = /[a-z]/.test(k)
+        ? new RegExp('(^|[^a-z])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^a-z]|$)')
+        : new RegExp(k);                           // CJK has no word boundaries
+      if (re.test(stripped || c)) hits.push(CHART_KEY_MAP[k]);
+    });
+    // "Inseam Length" hits both inseam and length. In a phrase like that,
+    // length/height is a qualifier on the real measurement, not the measurement
+    // itself — so drop it when something more specific is present.
+    if (hits.length > 1) {
+      var specific = hits.filter(function (h) { return h !== 'length' && h !== 'height'; });
+      if (specific.length === 1) return specific[0];
+    }
+    return hits.length === 1 ? hits[0] : null;
+  }
+
   function canonicalizeChart(cd, category) {
     if (!cd || !Array.isArray(cd.sizes)) return cd;
     var out = {};
@@ -40,7 +101,7 @@
       var o = { name: r.name };
       Object.keys(r).forEach(function (col) {
         if (col === 'name') return;
-        var key = CHART_KEY_MAP[String(col).trim().toLowerCase()];
+        var key = canonKeyFor(col);
         if (key && o[key] == null) o[key] = r[col];   // first mapped column wins
       });
       return o;
@@ -48,5 +109,6 @@
     return out;
   }
 
-  return { CHART_KEY_MAP: CHART_KEY_MAP, canonicalizeChart: canonicalizeChart };
+  return { CHART_KEY_MAP: CHART_KEY_MAP, canonicalizeChart: canonicalizeChart,
+           canonKeyFor: canonKeyFor, cleanLabel: cleanLabel };
 }));
