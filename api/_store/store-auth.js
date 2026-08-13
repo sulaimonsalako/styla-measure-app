@@ -62,6 +62,9 @@ export default async function handler(req, res) {
             chest: meas.chest || null, waist: meas.waist || null, hips: meas.hips || null,
             belly: meas.belly || meas.waist || null, shoulder: meas.shoulder || null,
             height: meas.height || null, inseam: meas.inseam || null, underbust: meas.underbust || null,
+            // The engine scores these; without somewhere to store them the
+            // merchant's thigh / neck / sleeve columns were silently unused.
+            thigh: meas.thigh || null, neck: meas.neck || null, sleeve: meas.sleeve || null,
             gender: meas.gender || null, updated_at: new Date().toISOString()
           }, { onConflict: 'id' });
         } catch (e) { /* non-fatal */ }

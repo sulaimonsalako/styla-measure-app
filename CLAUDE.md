@@ -329,6 +329,25 @@ Three defects fixed (commit `cb5b55e`):
 Regression harness: `/tmp/run.mjs` + `/tmp/suite.mjs` pattern (before/after diff over
 5 chart shapes + 6 assertions). Recreate if the engine is touched again.
 
+## Profile measurements — thigh / neck / sleeve (2026-08-11)
+
+The engine scores 9 dimensions but `public.profiles` only had columns for 6, so
+`user.thigh`, `user.neck` and `user.sleeve` were ALWAYS undefined and the
+`if (chartX && userX)` gate silently skipped them — even though 3DLook returns
+all three and merchants publish them. A denim chart's thigh column was parsed,
+stored, and never used.
+
+Fixed: added `thigh`, `neck`, `sleeve` to `profiles` (migration
+`profiles_thigh_neck_sleeve`), backfilled from each profile's active scan
+(sleeve derived as back-neck-to-wrist minus half cross-back, matching the
+engine's canonical convention), widened the SELECT in widget-size, catalog
+search, extension-chat and extension-decode, and added them to the store-auth
+upsert so new signups persist them.
+
+Effect: denim 82% -> 96% (2 -> 3 dims), dress shirt 67% -> 91% (1 -> 3 dims).
+Still missing a home: `rise` and `torso`, which the engine scores for
+length/rise. Add when a chart pipeline actually carries them.
+
 ## Parked ideas — recall by codename
 
 - **"Liverpool"** → see `LIVERPOOL.md`. Cross-brand shoppable fit search

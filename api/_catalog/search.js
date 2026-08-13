@@ -85,7 +85,7 @@ export default async function catalogSearch(req, res) {
       const { data: au } = await supabaseAdmin.auth.getUser(accessToken);
       if (au && au.user) {
         const { data: prof } = await supabaseAdmin.from('profiles')
-          .select('chest,waist,hips,belly,shoulder,height,inseam').eq('id', au.user.id).maybeSingle();
+          .select('chest,waist,hips,belly,shoulder,height,inseam,thigh,neck,sleeve').eq('id', au.user.id).maybeSingle();
         if (prof) profile = prof;
       }
     }

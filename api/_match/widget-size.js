@@ -154,7 +154,7 @@ export default async function widgetSize(req, res) {
       if (!error && data && data.user) {
         const { data: prof } = await supabaseAdmin
           .from('profiles')
-          .select('chest,waist,hips,belly,shoulder,height,inseam')
+          .select('chest,waist,hips,belly,shoulder,height,inseam,thigh,neck,sleeve')
           .eq('id', data.user.id)
           .maybeSingle();
         if (prof) profile = prof;
