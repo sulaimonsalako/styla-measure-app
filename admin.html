@@ -545,8 +545,22 @@
       el('chCatUrl').value=(c&&c.category_url)||'';
       el('sizeRows').innerHTML='';
       var cd=(c&&c.chart_data)||{};
-      var sizes=(cd.display_sizes&&cd.display_sizes.length)?cd.display_sizes:(cd.sizes||[{name:''}]);
-      COLS=(cd.display_columns&&cd.display_columns.length)?cd.display_columns.slice():colsFromSizes(cd.sizes||sizes);
+      // Rows and column headers MUST come from the same array. This used to take
+      // rows from display_sizes (keyed by the brand's own labels) while deriving
+      // headers from cd.sizes (canonical keys) whenever display_columns was
+      // missing — so every lookup s[col] missed and the whole table rendered
+      // blank. The values were in the database the entire time.
+      var useDisplay=!!(cd.display_sizes&&cd.display_sizes.length);
+      var sizes=useDisplay?cd.display_sizes:(cd.sizes||[{name:''}]);
+      var cols=(useDisplay&&cd.display_columns&&cd.display_columns.length)
+        ? cd.display_columns.slice()
+        : colsFromSizes(sizes);
+      // Guard against legacy rows whose display_columns don't match their keys.
+      var first=sizes[0]||{};
+      if(cols.length && !cols.some(function(k){return Object.prototype.hasOwnProperty.call(first,k);})){
+        cols=colsFromSizes(sizes);
+      }
+      COLS=cols;
       renderSizeHead();
       sizes.forEach(addSizeRow);
       el('chartMsg').textContent='';
