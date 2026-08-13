@@ -530,6 +530,11 @@
     }
     function openChart(c){
       state.editingChart=c;
+      // Screenshots are per-chart. They used to survive into the next chart form,
+      // and since the parser is designed to MERGE every image it is given into one
+      // table, leftovers from the previous chart silently contaminated the new one
+      // (this is how 7 For All Mankind's tops chart ended up holding bottoms rows).
+      if(typeof CH_SHOTS!=='undefined'){ CH_SHOTS.length=0; try{ renderChShots(); }catch(e){} }
       el('chartTitle').textContent=c?'Edit size chart':'New size chart';
       el('chCat').value=c?(c.category||'tops'):'tops';
       fillSubList();
@@ -641,6 +646,18 @@
       }
       // flat doubling that would exceed plausible circumference
       (flat||[]).forEach(function(k){ var a=avgOf(sizes,k); if(a!=null&&a*2>72) w.push(k+' will be DOUBLED to ~'+(a*2).toFixed(0)+'" — if these are already full circumferences, this chart shouldn’t be marked flat.'); });
+      // Category vs columns: a tops chart carrying only lower-body columns (or the
+      // reverse) almost always means the wrong screenshot was read into this form.
+      var cat=String((el('chCat')&&el('chCat').value)||'').toLowerCase();
+      var has=function(k){ return sizes.some(function(s){ return s[k]!=null&&s[k]!==''; }); };
+      var upper=has('chest')||has('shoulder')||has('sleeve')||has('neck');
+      var lower=has('waist')||has('hips')||has('inseam')||has('thigh');
+      var UPPER_CATS=['tops','dresses','suits','outerwear','activewear-top','swimwear-top'];
+      var LOWER_CATS=['pants','bottoms','jeans','shorts','skirts','activewear-bottom'];
+      if(UPPER_CATS.indexOf(cat)>-1 && lower && !upper)
+        w.push('This is filed under “'+cat+'” but has no chest/shoulder/sleeve column — only lower-body measurements. Check you read the right screenshot into this chart.');
+      if(LOWER_CATS.indexOf(cat)>-1 && upper && !lower)
+        w.push('This is filed under “'+cat+'” but has no waist/hip/inseam column — only upper-body measurements. Check you read the right screenshot into this chart.');
       // non-monotonic (a later size measurement smaller than an earlier one)
       ['chest','waist','hips'].forEach(function(k){
         var prev=null; for(var i=0;i<sizes.length;i++){ var v=sizes[i][k]!=null?num(sizes[i][k]):null; if(v!=null){ if(prev!=null&&v<prev-0.5){ w.push('“'+sizes[i].name+'” '+k+' ('+v+') is smaller than the previous size — possible mis-parse.'); break; } prev=v; } }
