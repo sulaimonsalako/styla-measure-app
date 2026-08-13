@@ -119,7 +119,7 @@ export default async function widgetSize(req, res) {
           .select('id, name').ilike('name', String(knownSize.brand).trim()).maybeSingle();
         if (b) {
           const { data: charts } = await supabaseAdmin.from('size_charts')
-            .select('chart_data').eq('brand_id', b.id).limit(5);
+            .select('chart_data').eq('brand_id', b.id).or('source.neq.import,verified.eq.true').limit(5);
           for (const c of (charts || [])) {
             derived = SZ.invertBrandChart(c.chart_data || {}, knownSize.size);
             if (derived) { derived.source_brand = b.name; break; }
@@ -272,7 +272,7 @@ export default async function widgetSize(req, res) {
     }
     if (overrideChartId) {
       const { data: chart } = await supabaseAdmin
-        .from('size_charts').select('id, chart_data').eq('id', overrideChartId).maybeSingle();
+        .from('size_charts').select('id, chart_data').eq('id', overrideChartId).or('source.neq.import,verified.eq.true').maybeSingle();
       if (chart) {
         const out = resultFor(chart.chart_data, 'product');
         if (out) return res.status(200).json(out);
@@ -301,7 +301,7 @@ export default async function widgetSize(req, res) {
       canonCategory = (aliases && aliases[k]) || toStylaCategory({ product_type: category, category }) || category;
     }
 
-    let query = supabaseAdmin.from('size_charts').select('id, brand_id, category, gender, chart_data, is_default');
+    let query = supabaseAdmin.from('size_charts').select('id, brand_id, category, gender, chart_data, is_default').or('source.neq.import,verified.eq.true');
     if (bId) query = query.eq('brand_id', bId);
     const { data: charts, error } = await query;
     if (error) throw error;

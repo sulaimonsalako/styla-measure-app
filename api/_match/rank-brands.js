@@ -33,7 +33,7 @@ export default async function rankBrands(req, res) {
 
     const { data: charts, error } = await supabaseAdmin
       .from('size_charts')
-      .select('id, brand_id, category, subcategory, gender, chart_data, category_url, verified');
+      .select('id, brand_id, category, subcategory, gender, chart_data, category_url, verified').or('source.neq.import,verified.eq.true');
     if (error) throw error;
 
     const { data: brandRows, error: bErr } = await supabaseAdmin

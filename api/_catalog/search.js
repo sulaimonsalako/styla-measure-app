@@ -102,13 +102,13 @@ export default async function catalogSearch(req, res) {
     const chartIds = [...new Set(products.map((p) => p.size_chart_id).filter(Boolean))];
     const chartById = {};
     if (chartIds.length) {
-      const { data: cs } = await supabaseAdmin.from('size_charts').select('id, chart_data').in('id', chartIds);
+      const { data: cs } = await supabaseAdmin.from('size_charts').select('id, chart_data').in('id', chartIds).or('source.neq.import,verified.eq.true');
       (cs || []).forEach((c) => { chartById[c.id] = c.chart_data; });
     }
     let brandCharts = [];
     if (bId) {
       const { data: bc } = await supabaseAdmin.from('size_charts')
-        .select('category, gender, chart_data, is_default').eq('brand_id', bId);
+        .select('category, gender, chart_data, is_default').eq('brand_id', bId).or('source.neq.import,verified.eq.true');
       brandCharts = bc || [];
     }
 

@@ -22,7 +22,7 @@ async function journalAnswer(req, res, apiKey) {
     if (mentioned.length) {
       const { data: charts } = await supabaseAdmin
         .from('size_charts').select('brand_id, category, gender, chart_data')
-        .in('brand_id', mentioned.map(b => b.id));
+        .in('brand_id', mentioned.map(b => b.id)).or('source.neq.import,verified.eq.true');
       const lines = [];
       (charts || []).forEach(c => {
         const bn = (mentioned.find(b => b.id === c.brand_id) || {}).name;

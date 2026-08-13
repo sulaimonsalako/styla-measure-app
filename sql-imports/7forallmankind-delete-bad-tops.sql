@@ -1,0 +1,1 @@
+delete from public.size_charts where id='23af668e-a895-47f3-92a4-661850a1bb82';
