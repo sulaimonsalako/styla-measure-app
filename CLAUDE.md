@@ -354,6 +354,48 @@ length/rise. Add when a chart pipeline actually carries them.
   ("ChatGPT for fashion"). When the user says *recall Liverpool*, read that file
   and continue from its "Suggested sequence". Parked 2026-08-09, nothing built yet.
 
+## Brand chart capture (NEW, 2026-08-12)
+
+How charts actually get in. Size charts are NOT fetchable in bulk: tested 7 routes
+(Uniqlo PDP + internal API, Everlane, J.Crew raw + JS-rendered, H&M, and three DTC
+Shopify brands) — zero returned a table. They're drawn client-side, often by a
+third-party sizing app, frequently as an image.
+
+Working method, via Claude-in-Chrome:
+1. Find the REAL chart URL (the 5-day spreadsheet's `/pages/size-guide` values are
+   guesses and mostly 404 — 7FAM's is `/pages/size-chart`). WebSearch scoped to the
+   brand domain works well.
+2. Open the size-guide modal, then `get_page_text` — with the modal open the FULL
+   table comes back as exact text, including columns clipped off-screen and the
+   US/UK/DE/EU/IT conversion block. No OCR. ~3 calls per chart.
+3. If `get_page_text` returns only a heading, the chart is an IMAGE (Citizens of
+   Humanity) — screenshot and read it, and cross-check the in vs cm tables against
+   each other; that catches transcription errors and real brand typos.
+4. Insert with `source='import'`, `verified=false`, plus `chart_data.notes` and
+   `chart_data.data_flags` (array of anomalies for the human reviewer).
+
+Gotchas learned the hard way:
+- `Escape` does NOT reliably close 7FAM's modal; a failed close silently serves the
+  PREVIOUS chart's text. Always close via the X and verify.
+- Refs from `find` for hidden gender tabs exist in the DOM but aren't clickable —
+  switch the tab first, then re-find.
+- Merged cells flatten ambiguously in text; verify against a screenshot.
+- UNIQUE(brand_id, category, gender, coalesce(subcategory,'-')) — one chart per
+  brand/category/gender unless you set `subcategory`. That IS the mechanism for the
+  "slim fit / athletic build" multi-chart-per-category request.
+
+### Unreviewed charts must not serve — GATE ADDED
+Nothing filtered on `verified`, so an imported chart went live to shoppers the instant
+it was inserted. All six serving queries now carry
+`.or('source.neq.import,verified.eq.true')`: `widget-size` (x3), `rank-brands`,
+`chat`, `catalog/search`. Charts with `source='import'` serve only once ticked
+verified in admin; the pre-existing 45 charts (source admin/parsed/brand) are
+unaffected. If you add a new read path for size_charts, ADD THE SAME GATE.
+
+Captured so far (all source='import', verified=false, awaiting review):
+7 For All Mankind (6 charts), AG Jeans (4), Citizens of Humanity (4). All 13 pass the
+monotonicity / chest-vs-waist / category-vs-columns sweep.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
