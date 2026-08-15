@@ -8,6 +8,7 @@
 // size when it had nothing to compare.
 
 import { createRequire } from 'module';
+import { readFileSync } from 'fs';
 import { runSizingEngine } from '../../api/_helpers/sizing-engine.js';
 import { BODIES, CHARTS, SIZE_INPUTS, COLUMN_LABELS, PRODUCTS } from './cases.mjs';
 
@@ -204,7 +205,27 @@ for (const c of CHARTS) {
         `declined "${r.recommended_size}" at ${r.fit_match_score}% (${v.reason})`, ctx);
 }
 
-// ------------------------------------------- 6. SHARED-COPY DRIFT ----
+// ------------------------- 6. MOVED IDENTIFIERS STILL REFERENCED ----
+// When i18n/units moved into shared/fit-ui.js, `var UNIT` and `var LOCALE` went
+// with them -- but ten call sites still read the bare identifiers. Each threw
+// ReferenceError at click time and silently killed a whole flow (the gift form,
+// the unit toggle, Calculate Fit). node --check can't see it: the syntax is fine,
+// the reference is only wrong at runtime. Grep for it instead.
+{
+  const src = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                   import.meta.url), 'utf8');
+  // Identifier -> what it must be reached through now.
+  const MOVED = { UNIT: 'FUI.getUnit()', LOCALE: 'FUI.getLocale()', STR: 'FUI.t()' };
+  for (const [name, via] of Object.entries(MOVED)) {
+    // bare read: not preceded by a dot or word char, not a property key
+    const bare = new RegExp(`(?<![\\w.$])${name}\\b(?!\\s*:)`, 'g');
+    const hits = (src.match(bare) || []).length;
+    if (hits) add('CRITICAL', 'refactor', 'moved identifiers are not referenced bare',
+                  `${name} read directly ${hits}x — use ${via}`, 'styla-widget.js');
+  }
+}
+
+// ------------------------------------------- 7. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the
 // two widget surfaces diverged in the first place.

@@ -1306,3 +1306,9 @@
 .styla-belly-row { display: flex; align-items: center; gap: 8px; }
 .styla-belly-row input { flex: 1; }
 .styla-belly-unit { font-size: .82rem; opacity: .6; min-width: 1.6rem; }
+
+/* "Size chart" in the header — shoppers hunt for it by name. */
+.styla-head-chart { border: 1px solid currentColor; background: transparent; color: inherit;
+  border-radius: 999px; padding: .4rem .8rem; font: inherit; font-size: .8rem;
+  cursor: pointer; opacity: .7; margin-right: .5rem; white-space: nowrap; }
+.styla-head-chart:hover { opacity: 1; }

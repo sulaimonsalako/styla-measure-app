@@ -414,6 +414,7 @@
 
       function renderFit() {
         setHasAnswer(true);
+        syncHeadChart();
         renderCuts();
         renderAlternatives();
         renderLengths();
@@ -716,6 +717,19 @@
         host.appendChild(btn);
       }
 
+      // Header "Size chart" mirrors the existing disclosure link, so there is one
+      // implementation and it can't drift: show it only when that link is shown,
+      // and delegate the click to it.
+      var headChartBtn = el('styla-head-chart');
+      if (headChartBtn) headChartBtn.addEventListener('click', function () {
+        var lnk = el('styla-lnk-chart');
+        if (lnk) lnk.click();
+      });
+      function syncHeadChart() {
+        var lnk = el('styla-lnk-chart');
+        if (headChartBtn) headChartBtn.classList.toggle('styla-hidden', !lnk || lnk.classList.contains('styla-hidden'));
+      }
+
       function renderNoChart() {
         listEl.innerHTML = '';
         bestValEl.textContent = '—';
@@ -904,14 +918,14 @@
       var GIRTH_IDS = ['styla-in-chest', 'styla-in-waist', 'styla-in-hips', 'styla-in-shoulders', 'styla-in-inseam'];
 
       function paintUnitUI() {
-        var metric = (UNIT === 'cm');
+        var metric = (FUI.setUnit== 'cm');
         formPanel && formPanel.querySelectorAll('.styla-u').forEach(function (n) { n.textContent = metric ? '(cm)' : '(in)'; });
         var imp = el('styla-h-imp'), met = el('styla-h-met');
         if (imp) imp.classList.toggle('styla-hidden', metric);
         if (met) met.classList.toggle('styla-hidden', !metric);
         var seg = el('styla-unit');
         if (seg) seg.querySelectorAll('button').forEach(function (b) {
-          b.classList.toggle('on', b.getAttribute('data-v') === UNIT);
+          b.classList.toggle('on', b.getAttribute('data-v') === FUI.getUnit());
         });
       }
 
@@ -942,8 +956,8 @@
       var unitSeg = el('styla-unit');
       if (unitSeg) unitSeg.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
-        var next = b.getAttribute('data-v'); if (next === UNIT) return;
-        convertInputs(UNIT, next);
+        var next = b.getAttribute('data-v'); if (next === FUI.getUnit()) return;
+        convertInputs(FUI.getUnit(), next);
         setUnit(next);
         paintUnitUI();
         // the fit list is unit-aware too — keep them in step
@@ -953,7 +967,7 @@
 
       // Height in feet+inches (or cm) -> inches, which is what the engine wants.
       function readHeightIn() {
-        if (UNIT === 'cm') {
+        if (FUI.setUnit== 'cm') {
           var c = parseFloat((el('styla-in-hcm') || {}).value);
           return isNaN(c) ? undefined : +(c / 2.54).toFixed(1);
         }
@@ -969,7 +983,7 @@
       // here the shopper is giving us the real ones.)
       function profileFromManual() {
         // Whatever they typed, the engine is given inches.
-        var toIn = function (v) { return (v == null) ? undefined : (UNIT === 'cm' ? +(v / 2.54).toFixed(2) : v); };
+        var toIn = function (v) { return (v == null) ? undefined : (FUI.setUnit== 'cm' ? +(v / 2.54).toFixed(2) : v); };
         var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : toIn(v); };
         var chest = num('styla-in-chest'), waist = num('styla-in-waist'), height = readHeightIn();
         if (!chest || !waist || !height) return null;
@@ -1074,7 +1088,7 @@
       var giftUnitSeg = el('styla-g-unit');
       if (giftUnitSeg) giftUnitSeg.addEventListener('click', function (e) {
         var b = e.target.closest('button'); if (!b) return;
-        var next = b.getAttribute('data-v'); if (next === UNIT) return;
+        var next = b.getAttribute('data-v'); if (next === FUI.getUnit()) return;
         // Carry the number across rather than relabelling it.
         var ft = el('styla-g-hft'), inch = el('styla-g-hin'), cm = el('styla-g-hcm');
         if (next === 'cm') {
@@ -1095,15 +1109,15 @@
       function paintGiftUnit() {
         var seg = el('styla-g-unit');
         if (seg) seg.querySelectorAll('button').forEach(function (b) {
-          b.classList.toggle('on', b.getAttribute('data-v') === UNIT);
+          b.classList.toggle('on', b.getAttribute('data-v') === FUI.getUnit());
         });
-        var metric = (UNIT === 'cm');
+        var metric = (FUI.setUnit== 'cm');
         var imp = el('styla-g-himp'), met = el('styla-g-hmet');
         if (imp) imp.classList.toggle('styla-hidden', metric);
         if (met) met.classList.toggle('styla-hidden', !metric);
       }
       function readGiftHeight() {
-        if (UNIT === 'cm') {
+        if (FUI.setUnit== 'cm') {
           var c = parseFloat((el('styla-g-hcm') || {}).value);
           return isNaN(c) ? null : +(c / 2.54).toFixed(1);
         }
@@ -1215,7 +1229,7 @@
           // store context -> lets the AI reason across this shop's whole catalog
           // (not just the current product) when the shopper asks for alternatives.
           domain: product.domain, shop: product.domain, category: mapType(product.type),
-          locale: LOCALE, units: UNIT,
+          locale: FUI.getLocale(), units: FUI.getUnit(),
           // Full brand chart (every column) so the AI can answer questions about any measurement.
           sizeChart: STATE.result ? (STATE.result.chart || { sizes: (STATE.result.candidates || []) }) : null,
           stock: STATE.result ? STATE.result.stock : null,   // live per-size availability
