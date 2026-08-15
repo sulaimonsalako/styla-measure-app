@@ -38,7 +38,9 @@ export default async function rankBrands(req, res) {
 
     const { data: brandRows, error: bErr } = await supabaseAdmin
       .from('brands')
-      .select('id, name, logo_url, domain');
+      // QA/fixture brands carry deliberately malformed charts. They must never
+      // reach a shopper-facing surface like brand ranking.
+      .select('id, name, logo_url, domain').eq('is_test', false);
     if (bErr) throw bErr;
     const brandMap = {};
     (brandRows || []).forEach(function(b){ brandMap[b.id] = { name: b.name, logo: b.logo_url || null, domain: b.domain || null }; });

@@ -16,7 +16,7 @@ async function journalAnswer(req, res, apiKey) {
   // Pull charts for any brands mentioned in the question (max 3).
   let chartContext = 'No specific brand from our database was mentioned.';
   try {
-    const { data: brands } = await supabaseAdmin.from('brands').select('id, name');
+    const { data: brands } = await supabaseAdmin.from('brands').select('id, name').eq('is_test', false);   // never surface QA fixture brands
     const q = question.toLowerCase();
     const mentioned = (brands || []).filter(b => b.name && q.includes(b.name.toLowerCase())).slice(0, 3);
     if (mentioned.length) {

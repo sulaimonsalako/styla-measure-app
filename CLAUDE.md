@@ -424,6 +424,27 @@ Started at 292 findings, now 4 (all informational). Fixed as a result:
 Remaining 4 are taxonomy ambiguity, not bugs: "Jeans" legitimately matches `pants`,
 `boys-bottoms` and `girls-bottoms`, so audience/gender must disambiguate.
 
+## QA fixture brand (NEW, 2026-08-12)
+
+`brands.is_test` (migration `brands_is_test_flag`) marks fixture brands. Brand
+**"STYLA QA (fixtures — do not ship)"** holds 17 deliberately malformed charts,
+one per `subcategory` (`01-control-normal` … `17-sixty-sizes`), `source='qa'`,
+`verified=true` so they DO serve when targeted by `chartId`.
+
+`rank-brands` and `chat` now filter `.eq('is_test', false)` — they sweep every
+brand for real shoppers, so QA data would otherwise leak into brand ranking.
+ADD THE SAME FILTER to any new surface that lists brands.
+
+`test/extremes/QA-FIXTURES.md` lists every chart id with the engine's actual
+output and what the widget must render. Reset SQL is at the bottom of that file.
+
+OPEN QUESTION — a 0% score is still presented as a recommendation. Fixtures 05
+(cm-as-inches), 06 (half-width) and 12 (huge values) all score 0% with
+`dimensions_compared > 0`, so `insufficient_data` is correctly false and the
+widget shows e.g. "S · 0% match". Honest arithmetic, misleading UI. Needs a
+score floor below which the widget declines to recommend — the threshold is a
+product decision, not made yet.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
