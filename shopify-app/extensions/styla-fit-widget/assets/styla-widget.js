@@ -865,7 +865,9 @@
           p.hips = Math.round((p.waist + 2 + bmi * 0.15) * 10) / 10;
           p.inseam = Math.round(h * 0.44);
         }
-        p.belly = p.waist;
+        // Deliberately NOT p.belly = p.waist. A quiz cannot know whether the
+        // stomach exceeds the natural waist, and guessing they are equal hides
+        // exactly the shoppers who need the belly measured. Left absent.
         return p;
       }
 

@@ -48,7 +48,11 @@ export function runSizingEngine(user, chart) {
   // Determine user dimensions using hierarchy: override > API scan > manual
   let userChest = parseFloat(user.chest || (user.twin && user.twin.chest));
   let userWaist = parseFloat(user.waist || (user.twin && user.twin.waist));
-  let userBelly = parseFloat(user.belly || (user.twin && user.twin.belly) || userWaist);
+  // NOT `|| userWaist`. Defaulting belly to the waist makes the one population
+  // that needs a belly measurement — anyone whose stomach exceeds their natural
+  // waist — invisible to the engine by construction, and silently scores a real
+  // belly column against the wrong number. Absent is better than wrong.
+  let userBelly = parseFloat(user.belly || (user.twin && user.twin.belly));
   let userHips = parseFloat(user.hips || (user.twin && user.twin.hips));
   let userShoulder = parseFloat(user.shoulder || (user.twin && user.twin.shoulder));
   let userSleeve = parseFloat(user.sleeve || (user.twin && user.twin.sleeve));
@@ -63,7 +67,7 @@ export function runSizingEngine(user, chart) {
   if (activeScan) {
     userChest = parseFloat(activeScan.volume_params.chest) || userChest;
     userWaist = parseFloat(activeScan.volume_params.waist) || userWaist;
-    userBelly = parseFloat(activeScan.volume_params.abdomen) || parseFloat(activeScan.volume_params.waist) || userBelly;
+    userBelly = parseFloat(activeScan.volume_params.abdomen) || userBelly;   // no waist fallback: see above
     userHips = parseFloat(activeScan.volume_params.low_hips) || userHips;
     userShoulder = parseFloat(activeScan.front_params.shoulders) || userShoulder;
     userSleeve = parseFloat(activeScan.front_params.back_neck_point_to_wrist_length) || 
@@ -150,6 +154,7 @@ export function runSizingEngine(user, chart) {
     const facts = {};       // machine-readable, so clients can translate + convert units
     const scored = new Set();   // dimensions genuinely compared, for confidence
     const blocked = [];         // dimensions that make this size unwearable
+    const alterations = [];     // things a tailor fixes cheaply (hem, take in)
     let fits = true;
     let localSpectrum = 'ideal';
 
@@ -227,11 +232,14 @@ export function runSizingEngine(user, chart) {
         blocked.push({ dim: label, short: +(Math.abs(rawDeficit) - stretchAllowance).toFixed(2),
                        need: +governing.toFixed(1), has: +chartVal.toFixed(1) });
       }
-      // Too short is effectively unwearable too — you cannot lengthen a sleeve.
-      if ((label === 'sleeve' || label === 'inseam') && rawDeficit < -1.5) {
-        blocked.push({ dim: label, short: +(Math.abs(rawDeficit) - 1.5).toFixed(2),
-                       need: +targetUserVal.toFixed(1), has: +chartVal.toFixed(1) });
-      }
+      // NOTE: length is deliberately NOT a veto. Two reasons. A short sleeve is
+      // unflattering, not unwearable — you can still put the shirt on. And the
+      // sleeve figure may itself be a GUESS: charts publishing centre-back-to-wrist
+      // are converted to shoulder-to-wrist by a heuristic above, so vetoing on it
+      // would let a mis-detected convention refuse a size that actually fits (a 28"
+      // sleeve becomes 19.5" and blocked an otherwise perfect size in testing).
+      // Unwearable means "cannot be got on" — circumference only. Too-short length
+      // keeps its heavy penalty in the branches below.
 
       // Evaluate fit based on label and physicalEase
       if (label === 'chest' || label === 'hips' || label === 'belly' || (label === 'waist' && category !== 'bottoms')) {
@@ -295,14 +303,16 @@ export function runSizingEngine(user, chart) {
         } else if (physicalEase <= 3.0) { // 0.5" to 3.0" ease is ideal for movement/wearing ease
           localSpectrum = 'ideal';
           breakdown[label] = `Sleeves perfect (${physicalEase.toFixed(1)}" mobility allowance)`;
-        } else if (physicalEase <= 4.5) { // 3.0" to 4.5" is relaxed
-          pen((physicalEase - 3.0) * 2);
-          localSpectrum = 'relaxed';
-          breakdown[label] = `Sleeves long (${physicalEase.toFixed(1)}" ease)`;
-        } else { // 4.5"+ is oversized
-          pen((physicalEase - 4.5) * 5);
-          localSpectrum = 'oversized';
-          breakdown[label] = `Sleeves very long (${physicalEase.toFixed(1)}" ease)`;
+        } else {
+          // TOO LONG IS NOT A FIT PROBLEM. Shortening a sleeve is routine and
+          // cheap; you cannot add fabric to a short one. Penalising both ends
+          // equally pushed shoppers away from sizes that were right everywhere
+          // else and merely needed a hem. Record the alteration instead.
+          const excess = +(physicalEase - 3.0).toFixed(1);
+          localSpectrum = physicalEase > 4.5 ? 'relaxed' : 'ideal';
+          pen(1);   // token nudge so an exact-length size still wins a tie
+          alterations.push({ dim: label, action: 'shorten', amount: excess });
+          breakdown[label] = `Sleeves ${excess}" long — easily shortened`;
         }
       } else if (label === 'neck') {
         // Neck/Collar (tightness can be worn open/unbuttoned, so fits remains true)
@@ -417,6 +427,7 @@ export function runSizingEngine(user, chart) {
     candidateScores.push({
       name: sizeName,
       blocked,                     // non-empty => cannot physically be worn
+      alterations,                 // cheap fixes, surfaced as advice not penalty
       wearable: blocked.length === 0,
       scoredCount: scored.size,
       facts,
@@ -569,6 +580,8 @@ export function runSizingEngine(user, chart) {
     // converts. This is what lets the widget speak another language or show cm
     // without the server knowing either.
     fit_facts: bestOption.facts || {},
+    alterations: bestOption.alterations || [],   // "take 2in off the hem"
+
     explanation: explanation,
     warning: bestOption.fits ? null : `Warning: Size ${bestOption.name} may be a tight fit.`,
     // Every size, in chart order, so a widget can show "how each size fits you".

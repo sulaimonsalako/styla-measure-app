@@ -622,7 +622,7 @@
         try{
           var d=await conn('get-profile',{ownerId:SHOPFOR.activeOwnerId});
           var pr=d.profile||{};
-          extra={chest:pr.chest,waist:pr.waist,belly:pr.belly||pr.waist,hips:pr.hips,shoulder:pr.shoulder,height:pr.height,inseam:pr.inseam};
+          extra={chest:pr.chest,waist:pr.waist,belly:pr.belly,hips:pr.hips,shoulder:pr.shoulder,height:pr.height,inseam:pr.inseam};
         }catch(e){ extra=lastExtra; }
       }
       if(DECODE){ lastExtra=extra; decode(extra); }
@@ -673,7 +673,7 @@
         history: CHAT.map(function(c){return {role:c.role, text:c.parts[0].text};}) };
       var token = x.accessToken || await currentToken();
       if(token) payload.accessToken=token;
-      else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||x.waist||m.belly||m.waist;
+      else { payload.chest=x.chest||m.chest; payload.waist=x.waist||m.waist; payload.belly=x.belly||m.belly;   // never fall back to waist
              payload.hips=x.hips||m.hips; payload.height=x.height||m.height; payload.inseam=x.inseam||m.inseam; payload.neck=x.neck||m.neck; }
       try{
         var r=await fetch('/api/extension-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -797,7 +797,7 @@
         var x=lastExtra||{};
         var body={ imagesBase64:[dataUrl], pageTitle:(PAGE&&PAGE.pageTitle)||'', pageText:(PAGE&&PAGE.pageText)||'', url:(PAGE&&PAGE.url)||'' };
         if(x.accessToken) body.accessToken=x.accessToken;
-        else { body.chest=x.chest; body.waist=x.waist; body.belly=x.belly||x.waist; body.hips=x.hips; body.height=x.height; body.inseam=x.inseam; body.neck=x.neck; body.shoulder=x.shoulder; }
+        else { body.chest=x.chest; body.waist=x.waist; body.belly=x.belly; body.hips=x.hips; body.height=x.height; body.inseam=x.inseam; body.neck=x.neck; body.shoulder=x.shoulder; }
         var r=await fetch('/api/extension-decode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         var d=await r.json();
         var m=mapDecode(d);
