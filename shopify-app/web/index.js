@@ -1066,7 +1066,13 @@ app.post('/api/merchant/sync-catalog', async (req, res) => {
 // This reads the LIVE theme's product template (read_themes, read-only) and looks
 // for our block. Deliberately conservative: anything we can't determine is
 // reported as 'unknown', never as 'not placed', so we don't cry wolf.
-const BLOCK_MARKER = '/blocks/styla-widget/';
+// A theme records an app block as
+//   "shopify://apps/<app-handle>/blocks/<block-file>/<extension-uuid>"
+// Matching the full path is brittle: the app handle differs between the dev
+// preview and the published app, and Horizon-era themes nest blocks inside other
+// blocks. Match on the parts that cannot change instead.
+const BLOCK_MARKERS = ['/blocks/styla-widget/', 'styla-fit-widget', 'styla-widget'];
+const hasBlock = (text) => !!text && BLOCK_MARKERS.some((m) => text.indexOf(m) >= 0);
 
 async function widgetPlacement(shop, accessToken) {
   const themes = await fetchShopifyAPI(shop, accessToken, 'themes.json');
@@ -1096,7 +1102,13 @@ async function widgetPlacement(shop, accessToken) {
 
   const productTemplates = assets.filter((k) => /^templates\/product[^/]*\.json$/.test(k));
   const sectionJson     = assets.filter((k) => /^sections\/.*\.json$/.test(k));
-  const candidates = productTemplates.concat(sectionJson);
+  // Horizon-era themes can put the product layout in a section GROUP, or in a
+  // template whose name we can't predict. Scanning every JSON in the theme costs
+  // a handful of reads and removes a whole class of false "not installed".
+  const otherJson = assets.filter((k) => /\.json$/.test(k) &&
+    !productTemplates.includes(k) && !sectionJson.includes(k) &&
+    !/^locales\//.test(k) && k !== 'config/settings_schema.json');
+  const candidates = productTemplates.concat(sectionJson, otherJson);
 
   // Vintage themes can't host app blocks at all — say that plainly rather than
   // sending the merchant to a theme editor that can't help them.
@@ -1114,7 +1126,7 @@ async function widgetPlacement(shop, accessToken) {
     const v = await readAsset(key);
     if (v == null) continue;
     scanned.push(key);
-    if (v.indexOf(BLOCK_MARKER) >= 0) {
+    if (hasBlock(v)) {
       return { status: 'placed', theme: live.name, foundIn: key };
     }
   }
@@ -1125,7 +1137,10 @@ async function widgetPlacement(shop, accessToken) {
   return {
     status: 'missing', theme: live.name, themeId: live.id,
     scanned,                                  // so a false alarm is diagnosable
-    reason: `Scanned ${scanned.length} template/section file(s) and found no Styla block.`,
+    reason: `Scanned ${scanned.length} theme file(s) and found no Styla block.`,
+    // If the merchant swears it's there, this is the first thing to check: an
+    // unsaved theme editor, or a block added to a theme that isn't live.
+    hint: 'If you just added it, make sure you pressed Save in the theme editor, and that you edited the LIVE theme.',
   };
 }
 
