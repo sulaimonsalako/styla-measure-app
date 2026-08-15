@@ -107,7 +107,15 @@ export default async function handler(req, res) {
       const lastMsg = Array.isArray(history) && history.length
         ? String(history[history.length - 1].text || history[history.length - 1].content || '')
         : '';
-      const wantsCatalog = /\b(other|another|alternativ|instead|recommend|do you (have|sell|carry)|something (else|similar)|similar|show me|options?|browse|what else|anything|looking for|suggest)\b/i.test(lastMsg);
+      // The old gate was a keyword whitelist, and styling questions matched none
+      // of it: "what would go with this?", "is the linen one cooler?", "how do I
+      // dress this down?" all fell through and the model answered with no idea
+      // what else the store sells -- generic advice it couldn't sell against.
+      // Invert it: retrieve UNLESS the question is purely about the shopper's own
+      // body or this one garment's fit. An embedding call costs a fraction of a
+      // cent; a blind answer costs the sale.
+      const purelyFit = /^(?:\s*(?:what|which)?\s*(?:size|siz)\b[^?]*\?*\s*)$|^\s*(?:will|does|is)\s+(?:it|this)\s+fit\b[^?]*\?*\s*$|^\s*(?:my|the)?\s*(?:measurements?|waist|chest|bust|hips?|inseam)\b[^?]*$/i.test(lastMsg.trim());
+      const wantsCatalog = !purelyFit && lastMsg.trim().length > 2;
       if ((shopDom || bId) && wantsCatalog && lastMsg) {
         const { retrieveCatalog } = await import('./_catalog/retrieve.js');
         const hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
@@ -192,10 +200,39 @@ PROFESSIONAL SIZING & APPAREL MATCHING RULES:
      b) Shoulder to Wrist (Arm Length): Usually < 26" for adults. Compare to the user's Shoulder-to-Wrist Arm Length, which is equal to (User's Sleeve Length) - (User's Shoulder Width / 2).
 
 ${stock && Object.keys(stock).length ? `\nLIVE STOCK for this product (size -> in stock): ${JSON.stringify(stock)}\nIf asked about availability, answer from THIS data only — say plainly whether their size is in stock, and suggest an alternative size that fits AND is in stock if theirs is sold out.\n` : ''}
-GROUNDING — what you may and may not answer:
-- You may answer from: the shopper's measurements, this product's page details, the brand's size chart and fit notes, the live stock data above, and the other in-store products listed above.
-- You must NOT invent or guess shipping times, delivery dates, prices not shown, discount codes, return/exchange policies, order status, or stock you were not given. If asked, say you don't have that information and suggest they check the store's own page or contact the store. Never state a policy as fact.
-- If the size chart lacks a measurement needed to answer, say so honestly rather than estimating.
+GROUNDING — facts vs judgement. These are different and the rules differ.
+
+FACTS about this product, this store, or this order must come from the data above:
+the shopper's measurements, the page details, the brand's size chart and fit notes,
+the live stock, and the other in-store products listed.
+- Never invent or guess shipping times, delivery dates, prices not shown, discount
+  codes, return/exchange policies, order status, or stock you were not given. Say
+  you don't have it and point them at the store. Never state a policy as fact.
+- If the size chart lacks a measurement needed to answer, say so rather than
+  estimating it.
+- Never claim a material, colour or detail that isn't in the product information
+  above. If they ask what it's made of and it isn't stated, say it isn't listed.
+
+JUDGEMENT — styling, proportion and what suits them — is what you are FOR, and you
+should give it freely. It is not a factual claim about the product, so the rule
+above doesn't gag you. You are a stylist, not a catalogue.
+- Answer styling questions directly: what to wear it with, how to dress it up or
+  down, what works for an occasion, what proportion or silhouette suits them.
+- Own the opinion. "I'd wear this with…" is better than "some people pair this
+  with…". Give ONE clear recommendation, not a list of hedged options.
+- Your real advantage is that you know their BODY, which no other styling advice
+  online does. Use it whenever it's relevant and specific:
+  their shoulders vs sleeve style, their height vs hem length, their rise vs where
+  a waistband sits, their proportions vs where to break a line. Reach for that
+  before generic advice.
+- Style advice is about the garment and the body, never about the person's worth.
+  Say "this cut sits low — a higher rise will sit above your stomach", never
+  anything that reads as a judgement of them.
+- When you suggest pairing something, recommend from the in-store products listed
+  above if any fit the brief, and say the size that would fit them. If nothing
+  listed works, give the advice in general terms rather than inventing a product.
+- If a styling question is really a matter of taste and you have nothing specific
+  to add, say what you'd do and why in one line. Don't refuse and don't waffle.
 
 CRITICAL RULES:
 1. Always be extremely polite, helpful, and professional.
