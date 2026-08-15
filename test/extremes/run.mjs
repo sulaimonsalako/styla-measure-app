@@ -225,7 +225,25 @@ for (const c of CHARTS) {
   }
 }
 
-// ------------------------------------- 7. OUTFIT PAIRING SANITY ----
+// ------------------------------ 7. MERCHANT-SAFETY RULES IN PROMPT ----
+// The widget runs on the merchant's own product page. A styling AI that names
+// another retailer is a breach of the deal, and it's the kind of thing that
+// quietly disappears in a prompt edit. Assert the rules are present.
+{
+  const chat = readFileSync(new URL('../../api/extension-chat.js', import.meta.url), 'utf8');
+  const MUST = [
+    [/NEVER name another shop, retailer or marketplace/i, 'no competitor referrals'],
+    [/never state a policy as fact/i, 'no invented policies'],
+    [/Never claim a material, colour or detail that isn't in the product information/i,
+     'no invented product facts'],
+  ];
+  for (const [re, what] of MUST) {
+    if (!re.test(chat))
+      add('CRITICAL', 'prompt', 'merchant-safety rules are present', `missing: ${what}`, 'extension-chat.js');
+  }
+}
+
+// ------------------------------------- 8. OUTFIT PAIRING SANITY ----
 // Styling retrieval filters on these category slugs. A typo means the RPC
 // filters on a category that doesn't exist and silently returns nothing, which
 // looks exactly like "the store has no trousers".
