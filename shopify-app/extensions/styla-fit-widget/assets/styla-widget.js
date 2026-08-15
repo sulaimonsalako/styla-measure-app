@@ -606,6 +606,13 @@
         if (discFit) discFit.classList.remove('styla-hidden');
         if (intentEl) intentEl.textContent = text;
       }
+      // Three different situations used to share this one message. They are not
+      // the same and the shopper can tell:
+      //   - no size axis  -> nothing to recommend, ever (Liquid usually hides the
+      //     button entirely; this only fires if the merchant overrode that)
+      //   - no chart yet  -> we can still answer fit questions from the product
+      //     details, so lead with the chat instead of an empty size box
+      //   - chart unusable -> same as no chart, from the shopper's point of view
       function renderNoChart() {
         listEl.innerHTML = '';
         bestValEl.textContent = '—';
@@ -613,7 +620,17 @@
         ['styla-lnk-fit','styla-lnk-sizes','styla-lnk-len','styla-lnk-chart'].forEach(function (id) {
           var b = el(id); if (b) b.classList.add('styla-hidden');
         });
-        showNote('We don\u2019t have this brand\u2019s size chart yet, so we can\u2019t compute your size. Ask below and I\u2019ll help from the product details.');
+        var hasSizes = container.dataset.hasSizeAxis !== 'false';
+        if (!hasSizes) {
+          showNote('This one only comes in a single size, so there\u2019s nothing for me to pick. Ask me anything about the fit or the fabric.');
+        } else if (container.dataset.hideWithoutChart === 'true') {
+          // Merchant chose to stay quiet until a chart exists — don't advertise a
+          // capability we can't deliver on this product.
+          try { container.style.display = 'none'; } catch (e) {}
+          return;
+        } else {
+          showNote('I don\u2019t have this item\u2019s size chart yet, so I won\u2019t guess your size. I can still answer from the product details \u2014 ask me anything.');
+        }
         ensureAskChips();
       }
       function renderError() { showNote('Something went wrong reaching Styla. Please try again in a moment.'); }
