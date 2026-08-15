@@ -19,6 +19,8 @@ const DEST = join(ROOT, 'shopify-app/extensions/styla-fit-widget/assets');
 export const SYNCED = [
   ['fit-ui.js', 'styla-fit-ui.js'],
   ['size-conversion.js', 'styla-size-conversion.js'],
+  ['variant-size.js', 'styla-variant-size.js'],
+  ['pdp-variant.js', 'styla-pdp-variant.js'],
 ];
 
 const BANNER = (src) => `/* GENERATED COPY of shared/${src} — do not edit here.\n` +

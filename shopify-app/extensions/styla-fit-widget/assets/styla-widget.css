@@ -1270,3 +1270,14 @@
 .styla-cut{ border:1px solid var(--s-line); background:#fff; border-radius:100px;
   padding:6px 12px; font-size:.77rem; font-weight:600; color:var(--s-muted); cursor:pointer; }
 .styla-cut.on{ background:var(--s-tint); border-color:#f6c9d8; color:var(--s-brand); }
+
+/* Act-on-the-answer: select the size / add it to the bag. The recommendation is
+   only worth something if the shopper can act on it without hunting. */
+.styla-action { margin: .6rem 0 .2rem; }
+.styla-action-btn {
+  width: 100%; border: 0; border-radius: 10px; padding: .7rem 1rem;
+  font: inherit; font-weight: 600; cursor: pointer;
+  background: var(--btn-bg, #ff2a75); color: var(--btn-color, #fff);
+}
+.styla-action-btn[disabled] { opacity: .5; cursor: default; }
+.styla-action-note { font-size: .75rem; opacity: .7; margin-bottom: .35rem; }

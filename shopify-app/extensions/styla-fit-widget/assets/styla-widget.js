@@ -206,6 +206,7 @@
           if (!data || !data.size || data.insufficient_data || noOverlap) { renderNoChart(); return; }
           STATE.result = data;
           STATE.activeSize = data.size;
+          try { renderAction(data.size); } catch (e) {}
           paintAuth();
           renderFit();
           renderShopFor();
@@ -613,6 +614,100 @@
       //   - no chart yet  -> we can still answer fit questions from the product
       //     details, so lead with the chat instead of an empty size box
       //   - chart unusable -> same as no chart, from the shopper's point of view
+      // ---------- act on the answer: select the size, or add it to the bag ----------
+      // Telling a shopper "you're a M" and leaving them to hunt for M is where the
+      // funnel leaked. Drive the theme's own picker first (so price, image and
+      // availability update the way the theme expects); fall back to a direct cart
+      // POST, which works even on themes we can't parse.
+      var VARIANT_DATA = (function () {
+        try { return JSON.parse(container.querySelector('.styla-variant-data').textContent); }
+        catch (e) { return null; }
+      }());
+
+      function currentSelection() {
+        if (!VARIANT_DATA) return [];
+        return (VARIANT_DATA.options || []).map(function (name) {
+          var sel = document.querySelector(
+            'select[name="options[' + name + ']"], input[name="options[' + name + ']"]:checked');
+          return sel ? sel.value : null;
+        });
+      }
+
+      function selectOnPage(v) {
+        if (!v || !v.optionName) return false;
+        var changed = false, target = null;
+        var sel = document.querySelector('select[name="options[' + v.optionName + ']"]');
+        if (sel) {
+          for (var i = 0; i < sel.options.length; i++) {
+            if (STYLA_PDP.matches(sel.options[i].value, v.optionValue)) {
+              sel.selectedIndex = i; target = sel; changed = true; break;
+            }
+          }
+        }
+        if (!changed) {
+          var radios = document.querySelectorAll('input[type="radio"][name="options[' + v.optionName + ']"]');
+          for (var j = 0; j < radios.length; j++) {
+            if (STYLA_PDP.matches(radios[j].value, v.optionValue)) {
+              radios[j].checked = true; target = radios[j]; changed = true; break;
+            }
+          }
+        }
+        if (!changed || !target) return false;
+        // Themes listen for one or the other; send both, bubbling, so delegated
+        // handlers (Dawn's variant-selects) pick it up.
+        ['input', 'change'].forEach(function (t) {
+          try { target.dispatchEvent(new Event(t, { bubbles: true })); } catch (e) {}
+        });
+        return true;
+      }
+
+      async function addToBag(v) {
+        var r = await fetch('/cart/add.js', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: [{ id: v.id, quantity: 1 }] })
+        });
+        if (!r.ok) throw new Error('cart ' + r.status);
+        return r.json();
+      }
+
+      // Silent when the size can't be mapped to a real variant — a dead button is
+      // worse than no button.
+      function renderAction(sizeName) {
+        var host = el('styla-action'); if (!host) return;
+        host.innerHTML = '';
+        if (!VARIANT_DATA || !sizeName || typeof STYLA_PDP === 'undefined') return;
+        var v = STYLA_PDP.findVariant(VARIANT_DATA, sizeName, currentSelection());
+        if (!v) return;
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'styla-action-btn';
+        if (!v.available) {
+          btn.disabled = true;
+          btn.textContent = sizeName + ' is sold out';
+          host.appendChild(btn);
+          return;
+        }
+        if (selectOnPage(v)) {
+          var note = document.createElement('div');
+          note.className = 'styla-action-note';
+          note.textContent = sizeName + ' selected on the page';
+          host.appendChild(note);
+        }
+        btn.textContent = 'Add ' + sizeName + ' to bag';
+        btn.addEventListener('click', async function () {
+          btn.disabled = true;
+          var was = btn.textContent;
+          btn.textContent = 'Adding\u2026';
+          try {
+            await addToBag(v);
+            btn.textContent = 'Added ' + sizeName + ' \u2713';
+            try { document.dispatchEvent(new CustomEvent('styla:added', { detail: v })); } catch (e) {}
+          } catch (e) { btn.textContent = was; btn.disabled = false; }
+        });
+        host.appendChild(btn);
+      }
+
       function renderNoChart() {
         listEl.innerHTML = '';
         bestValEl.textContent = '—';
