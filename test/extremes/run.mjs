@@ -60,8 +60,16 @@ for (const b of BODIES) {
     const score = out.fit_match_score;
     const dims = out.dimensions_compared;
 
-    if (typeof out.recommended_size !== 'string' && out.recommended_size !== undefined)
+    // null is a legitimate answer now: it means no size in the chart can physically
+    // be worn. It must be accompanied by no_fit so the widget can explain why.
+    if (out.recommended_size === null) {
+      if (!out.no_fit)
+        add('CRITICAL', 'engine', 'a null size is explained by no_fit', 'recommended_size null without no_fit', ctx);
+      if (!Array.isArray(out.blocked_by) || !out.blocked_by.length)
+        add('BUG', 'engine', 'no_fit names the blocking dimension', 'blocked_by empty', ctx);
+    } else if (typeof out.recommended_size !== 'string' && out.recommended_size !== undefined) {
       add('BUG', 'engine', 'recommended_size is a string', `got ${typeof out.recommended_size}`, ctx);
+    }
 
     if (!isNum(score))
       add('BUG', 'engine', 'score is a finite number', `got ${String(score)}`, ctx);
@@ -176,7 +184,9 @@ for (const c of CHARTS) {
   const r = runSizingEngine({ chest: 38, waist: 31, hips: 41, height: 66 }, c.chart);
   // Shape the engine output the way api/_match/widget-size.js does.
   const payload = { size: r.recommended_size, score: r.fit_match_score,
-                    insufficient_data: !!r.insufficient_data, candidates: r.candidates };
+                    insufficient_data: !!r.insufficient_data, no_fit: !!r.no_fit, candidates: r.candidates };
+  if (r.no_fit && r.recommended_size !== null)
+    add('BUG', 'parity', 'no_fit means there is no size to show', `got "${r.recommended_size}"`, ctx);
   let v;
   try { v = FUI.shouldDecline(payload); }
   catch (e) { add('CRASH', 'parity', 'shouldDecline must not throw', `${e.name}: ${e.message}`, ctx); continue; }

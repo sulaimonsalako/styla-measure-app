@@ -149,6 +149,7 @@ export function runSizingEngine(user, chart) {
     const breakdown = {};   // human prose (English) — kept for back-compat
     const facts = {};       // machine-readable, so clients can translate + convert units
     const scored = new Set();   // dimensions genuinely compared, for confidence
+    const blocked = [];         // dimensions that make this size unwearable
     let fits = true;
     let localSpectrum = 'ideal';
 
@@ -171,26 +172,65 @@ export function runSizingEngine(user, chart) {
       // full cross-back) above, so compare user and chart directly here.
       let targetUserVal = userVal;
 
-      // Calculate physical ease
+      // ---- EASE SEMANTICS: the two chart types mean different things ----
+      //
+      // GARMENT chart: the number IS the finished garment, so ease is literally
+      //   garment - body, and the ideal ease is ours to choose.
+      //
+      // BODY chart ("this size fits a 38in chest"): the brand has ALREADY chosen
+      //   its ease when it decided a 38in chest buys this size. The number is the
+      //   body the size is cut for, so a perfect match is chartVal == yourVal.
+      //
+      // This used to add a flat brandEase (4.5in on tops) to body charts and then
+      // compare the result against a 3.0in ideal — so a shopper who matched the
+      // chart EXACTLY came out 1.5in "loose" and scored 81% instead of ~100%,
+      // biasing every body-chart recommendation a size down. It also reported an
+      // invented "4.5in ease" the chart never stated.
+      //
+      // Fix: for body charts the assumed ease and the target ease are the SAME
+      // number, so an exact match lands exactly on ideal and the existing
+      // snug/relaxed branches keep working unchanged.
+      const idealEaseFor = (lbl) => {
+        if (lbl === 'chest') return structured ? 4.5 : (fabric === 'woven' ? 3.0 : 2.5);
+        if (lbl === 'hips') return category === 'bottoms' ? 3.5 : 3.5;
+        if (lbl === 'belly') return structured ? 4.0 : 3.5;
+        if (lbl === 'waist') return category === 'bottoms' ? 1.0 : (structured ? 3.5 : 3.0);
+        if (lbl === 'shoulder' || lbl === 'sleeve' || lbl === 'inseam' || lbl === 'thigh'
+            || lbl === 'length' || lbl === 'rise') return 0.8;
+        return 3.0;
+      };
       let physicalEase = 0;
-      if (chartType === 'garment') {
+      const isBodyChart = chartType !== 'garment';
+      if (!isBodyChart) {
         physicalEase = chartVal - targetUserVal;
       } else {
-        // For body charts, estimate physical ease by adding typical brand ease
-        let brandEase = 4.5; // default chest/hips tops
-        if (label === 'chest') {
-          brandEase = (category === 'outerwear') ? 5.5 : 4.5;
-        } else if (label === 'waist') {
-          brandEase = (category === 'bottoms') ? 1.0 : 4.0;
-        } else if (label === 'belly') {
-          brandEase = (category === 'bottoms') ? 1.5 : 4.0;
-        } else if (label === 'hips') {
-          brandEase = (category === 'bottoms') ? 3.5 : 4.0;
-        } else if (label === 'shoulder' || label === 'sleeve' || label === 'inseam' || label === 'thigh'
-                   || label === 'length' || label === 'rise') {
-          brandEase = 0.8;
-        }
-        physicalEase = brandEase + (chartVal - targetUserVal);
+        physicalEase = idealEaseFor(label) + (chartVal - targetUserVal);
+      }
+
+      // ---- WEARABILITY: can this be got on at all? ----
+      // Circumference is not a matter of degree. If the garment cannot close
+      // around the body it is unwearable no matter how well everything else
+      // scores — a top whose chest is right but whose waist won't do up is not a
+      // "78% fit", it is a no. Length is different: too long is hemmable, so it
+      // never blocks; too SHORT does, because fabric cannot be added.
+      // A waistband is pulled OVER the stomach, so for anyone whose belly exceeds
+      // their natural waist the belly is the binding circumference and the waist
+      // is nearly irrelevant to whether the garment closes. Same for a buttoned
+      // shirt, which gaps at the stomach, not the narrowest point.
+      const governing = (label === 'waist' && Number.isFinite(userBelly))
+        ? Math.max(targetUserVal, userBelly) : targetUserVal;
+      const rawDeficit = (chartVal - governing);   // negative = size is smaller than you
+      const CLOSING = (category === 'bottoms')
+        ? ['waist', 'hips', 'thigh']
+        : ['chest', 'belly'].concat(structured ? ['shoulder', 'neck'] : []);
+      if (CLOSING.indexOf(label) >= 0 && rawDeficit < -stretchAllowance) {
+        blocked.push({ dim: label, short: +(Math.abs(rawDeficit) - stretchAllowance).toFixed(2),
+                       need: +governing.toFixed(1), has: +chartVal.toFixed(1) });
+      }
+      // Too short is effectively unwearable too — you cannot lengthen a sleeve.
+      if ((label === 'sleeve' || label === 'inseam') && rawDeficit < -1.5) {
+        blocked.push({ dim: label, short: +(Math.abs(rawDeficit) - 1.5).toFixed(2),
+                       need: +targetUserVal.toFixed(1), has: +chartVal.toFixed(1) });
       }
 
       // Evaluate fit based on label and physicalEase
@@ -376,6 +416,8 @@ export function runSizingEngine(user, chart) {
 
     candidateScores.push({
       name: sizeName,
+      blocked,                     // non-empty => cannot physically be worn
+      wearable: blocked.length === 0,
       scoredCount: scored.size,
       facts,
       score,
@@ -391,12 +433,46 @@ export function runSizingEngine(user, chart) {
   // value) means a body bigger than every size gets the LARGEST size (closest), not
   // the first one in the list — the clamp was making all failing sizes tie at 0.
   candidateScores.sort((a, b) => {
+    // WEARABILITY FIRST. A size whose closing circumference can't get round the
+    // body isn't a worse fit, it's not a fit — it must never outrank one that can,
+    // however well it scores elsewhere.
+    if (a.wearable !== b.wearable) return a.wearable ? -1 : 1;
     if (a.fits && !b.fits) return -1;
     if (!a.fits && b.fits) return 1;
     return b.rawScore - a.rawScore;
   });
 
-  const bestOption = candidateScores[0];
+  // If NOTHING in the chart can be worn, say so. Recommending the least-bad
+  // unwearable size is how a shopper ends up returning something that was never
+  // going to work — and we can be specific about why, which is far more useful
+  // than a number: "their largest waist is 34, you measure 36".
+  const wearableSizes = candidateScores.filter((c) => c.wearable);
+  if (!wearableSizes.length) {
+    const closest = candidateScores[0];
+    const worst = (closest.blocked || []).slice().sort((x, y) => y.short - x.short)[0] || {};
+    return {
+      recommended_size: null,
+      no_fit: true,
+      blocked_by: closest.blocked || [],
+      closest_size: closest.name,
+      fit_match_score: 0,
+      dimensions_compared: closest.scoredCount || 0,
+      fit_spectrum: 'slim',
+      fit_breakdown: closest.breakdown || {},
+      fit_facts: closest.facts || {},
+      insufficient_data: false,
+      candidates: candidateScores.map((c) => ({ name: c.name, score: c.score, spectrum: c.spectrum,
+        fits: !!c.fits, wearable: !!c.wearable, blocked: c.blocked || [],
+        breakdown: c.breakdown || {}, facts: c.facts || {} })),
+      explanation: worst.dim
+        ? `No size in this chart will fit you. The closest is ${closest.name}, and its ${worst.dim} is ` +
+          `${worst.has}" against your ${worst.need}" — about ${worst.short}" short of wearable.`
+        : `No size in this chart will fit you. The closest is ${closest.name}.`,
+      warning: 'No wearable size in this chart.'
+    };
+  }
+
+  const bestOption = wearableSizes[0];
 
   // Coverage weighting: a "match" on a single dimension is not a real 100%.
   // Dampen confidence by how many body dimensions we could actually compare, so a

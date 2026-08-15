@@ -253,6 +253,9 @@ export default async function widgetSize(req, res) {
         // was dead code and the honest "can't size this" state relied entirely on
         // every candidate happening to have an empty breakdown.
         insufficient_data: !!r.insufficient_data,
+        no_fit: !!r.no_fit,               // nothing in the chart can physically be worn
+        blocked_by: r.blocked_by || null,  // which measurement, and by how much
+        closest_size: r.closest_size || null,
         breakdown: r.fit_breakdown,      // English prose (back-compat)
         facts: r.fit_facts,              // structured — lets the widget translate + show cm
         derived_from: user.derived_from || null,   // 'estimated from UK 12' vs a real profile
@@ -419,6 +422,9 @@ export default async function widgetSize(req, res) {
       chartMatchedProduct: scoreChart(c) > 0,
       explanation: r.explanation,
       insufficient_data: !!r.insufficient_data,   // see note on the other return path
+      no_fit: !!r.no_fit,               // nothing in the chart can physically be worn
+      blocked_by: r.blocked_by || null,  // which measurement, and by how much
+      closest_size: r.closest_size || null,
       breakdown: r.fit_breakdown,
       facts: r.fit_facts,
       derived_from: user.derived_from || null,

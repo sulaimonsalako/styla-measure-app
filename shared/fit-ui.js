@@ -44,6 +44,8 @@
       conf_label: 'Estimated from {system} {size}',
       conf_label_hint: 'Based on standard sizing for that label, not your own measurements.',
       conf_brand: 'Matched to your {size} at {brand}',
+      no_fit: 'Nothing here will fit you',
+      no_fit_why: "We checked every size in this chart — none of them will physically go on. That's the brand's range, not you.",
       no_size: "We can't size this one",
       no_size_why: "This size chart doesn't list the measurements we compare, so we won't guess.",
       low_score: "We can't confidently recommend a size here",
@@ -202,7 +204,7 @@
   //    rendered as "S · 0% match".
   function shouldDecline(res, opts) {
     var minScore = (opts && typeof opts.minScore === 'number') ? opts.minScore : 0;
-    if (!res || !res.size) return { decline: true, reason: 'no-size' };
+    if (!res || !res.size) return { decline: true, reason: res && res.no_fit ? 'no-fit' : 'no-size' };
     if (res.insufficient_data) return { decline: true, reason: 'insufficient-data' };
     var cands = res.candidates;
     if (Array.isArray(cands) && cands.length && cands.every(function (c) {
@@ -213,6 +215,7 @@
     return { decline: false, reason: null };
   }
   function declineCopy(reason) {
+    if (reason === 'no-fit') return { title: t('no_fit'), body: t('no_fit_why') };
     if (reason === 'below-floor') return { title: t('low_score'), body: t('low_score_why') };
     return { title: t('no_size'), body: t('no_size_why') };
   }
