@@ -225,7 +225,38 @@ for (const c of CHARTS) {
   }
 }
 
-// ------------------------- 7. CONTROLS THAT EXIST BUT DO NOTHING ----
+// ------------------------------------- 7. OUTFIT PAIRING SANITY ----
+// Styling retrieval filters on these category slugs. A typo means the RPC
+// filters on a category that doesn't exist and silently returns nothing, which
+// looks exactly like "the store has no trousers".
+{
+  const OUT = require('../../shared/outfit-pairing.js');
+  const slugs = new Set((TAX.TAXONOMY || []).map((t) => t.slug));
+  for (const [cat, comps] of Object.entries(OUT.PAIRS)) {
+    if (!slugs.has(cat))
+      add('BUG', 'pairing', 'pairing keys are real taxonomy slugs', `"${cat}" is not a category`, 'outfit-pairing');
+    for (const c of comps) {
+      if (!slugs.has(c))
+        add('BUG', 'pairing', 'pairing targets are real taxonomy slugs', `${cat} -> "${c}"`, 'outfit-pairing');
+      if (c === cat)
+        add('CRITICAL', 'pairing', 'a category never completes itself',
+            `${cat} pairs to itself — that is similarity, not styling`, 'outfit-pairing');
+    }
+  }
+  // A fit question must NOT trigger complementary retrieval, or "does this run
+  // small" comes back with trousers.
+  for (const q of ['does this run small?', 'what size am I?', 'will it fit my chest?']) {
+    if (OUT.retrievalCategories('tops', q).length)
+      add('BUG', 'pairing', 'fit questions use similarity, not complements', `"${q}" asked for complements`, 'outfit-pairing');
+  }
+  // And a styling question MUST.
+  for (const q of ['what would go with this?', 'what should I wear with it?', 'can I wear this to a wedding?']) {
+    if (!OUT.retrievalCategories('tops', q).length)
+      add('BUG', 'pairing', 'styling questions retrieve complements', `"${q}" fell back to similarity`, 'outfit-pairing');
+  }
+}
+
+// ------------------------- 8. CONTROLS THAT EXIST BUT DO NOTHING ----
 // Twice now a control shipped that rendered, looked interactive, and had no
 // handler at all: styla-k-save ("Find my size here") and styla-g-build
 // (Slim/Average/Broad). Nothing throws, so nothing catches it. Every id the

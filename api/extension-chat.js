@@ -118,7 +118,27 @@ export default async function handler(req, res) {
       const wantsCatalog = !purelyFit && lastMsg.trim().length > 2;
       if ((shopDom || bId) && wantsCatalog && lastMsg) {
         const { retrieveCatalog } = await import('./_catalog/retrieve.js');
-        const hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
+        // Similarity is the wrong axis for styling: "what goes with this navy
+        // blazer" embeds close to OTHER NAVY BLAZERS. When the shopper is trying
+        // to build an outfit we retrieve against the categories that COMPLETE
+        // it instead, a few per category so the model has a real choice.
+        const { default: OUTFIT } = await import('../shared/outfit-pairing.js')
+          .then((m) => ({ default: m.default || m }))
+          .catch(() => ({ default: null }));
+        const pairCats = OUTFIT ? OUTFIT.retrievalCategories(category, lastMsg) : [];
+        let hits;
+        if (pairCats.length) {
+          const per = Math.max(2, Math.ceil(6 / pairCats.length));
+          const groups = await Promise.all(pairCats.map((cat) =>
+            retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, category: cat, count: per })
+              .catch(() => [])));
+          hits = groups.flat();
+          // A store may simply not stock the complement (a shirts-only brand has
+          // no trousers). Falling back beats returning nothing.
+          if (!hits.length) hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
+        } else {
+          hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
+        }
         if (hits && hits.length) {
           catalogContext = 'OTHER PRODUCTS IN THIS STORE (semantically ranked for the shopper\'s request — when they ask for alternatives or other items, recommend from THESE, and include the price and link):\n'
             + hits.map((h) => `- ${h.title}${h.price != null ? ` ($${h.price})` : ''}${h.category ? ` [${h.category}]` : ''}${h.url ? ` — ${h.url}` : ''}`).join('\n');
