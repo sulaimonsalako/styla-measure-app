@@ -982,6 +982,44 @@
       }
       if (cancelBtn) cancelBtn.addEventListener('click', exitOtherMode);
 
+      // "Use a size you already wear" -> Find my size here.
+      // This button existed in the markup with NOTHING bound to it, so the entire
+      // known-size path was dead: the panel rendered, took input, and the button
+      // did nothing at all. Nothing threw, which is why it looked like a styling
+      // problem rather than a missing handler.
+      var kSaveBtn = el('styla-k-save');
+      if (kSaveBtn) kSaveBtn.addEventListener('click', function () {
+        var sysSeg = el('styla-k-system');
+        var sysOn = sysSeg && sysSeg.querySelector('.styla-seg-on, .on, [aria-pressed="true"]');
+        var system = (sysOn && (sysOn.dataset.sys || sysOn.textContent || '').trim().toLowerCase()) || 'us';
+        var size = ((el('styla-k-size') || {}).value || '').trim();
+        var ft = parseFloat((el('styla-k-hft') || {}).value);
+        var inch = parseFloat((el('styla-k-hin') || {}).value);
+        var heightIn = Number.isFinite(ft) ? (ft * 12 + (Number.isFinite(inch) ? inch : 0)) : null;
+
+        var msg = el('styla-k-equiv');
+        if (!size) { if (msg) msg.textContent = 'Enter the size you usually wear.'; return; }
+        if (!heightIn) { if (msg) msg.textContent = 'Height decides Short, Regular or Long — please add it.'; return; }
+        if (msg) msg.textContent = '';
+
+        STATE.knownSize = {
+          size: size,
+          system: system,
+          gender: QZ.gender,
+          height: heightIn,
+          brand: ((el('styla-k-brand') || {}).value || '').trim() || null,
+          build: (function () {
+            var b = el('styla-k-build');
+            var on = b && b.querySelector('.styla-seg-on, .on, [aria-pressed="true"]');
+            return on ? (on.dataset.build || on.textContent || '').trim().toLowerCase() : null;
+          }())
+        };
+        hideForm();
+        setLoading(true);
+        STATE.result = null;
+        loadFit();
+      });
+
       if (saveBtn) saveBtn.addEventListener('click', function () {
         var p = (STATE.formView === 'manual') ? profileFromManual() : profileFromQuiz();
         if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Chest, waist and height are needed — height decides Short/Regular/Long.'; return; }

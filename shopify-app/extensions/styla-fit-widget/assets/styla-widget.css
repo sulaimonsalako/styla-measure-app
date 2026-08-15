@@ -1299,3 +1299,10 @@
 .styla-modal-overlay:not(.styla-has-answer) .styla-sub-row,
 .styla-modal-overlay:not(.styla-has-answer) .styla-action { display: none !important; }
 .styla-modal-overlay:not(.styla-has-answer) .styla-subhead { padding: 0 !important; border: 0 !important; }
+
+/* Optional fields must READ optional, and a measurement box must say its unit. */
+.styla-opt { font-weight: 400; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .06em; opacity: .55; margin-left: .35rem; }
+.styla-belly-row { display: flex; align-items: center; gap: 8px; }
+.styla-belly-row input { flex: 1; }
+.styla-belly-unit { font-size: .82rem; opacity: .6; min-width: 1.6rem; }
