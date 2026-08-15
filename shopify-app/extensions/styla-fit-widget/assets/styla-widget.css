@@ -868,7 +868,7 @@
 
 /* --- the answer, as a sub-header: compact, sticky, one line --- */
 .styla-subhead{
-  position:sticky; top:0; z-index:3; background:#fff;
+  position:sticky; top:0; z-index:20; background:#fff;
   border-bottom:1px solid #ececec; padding:12px 18px;
 }
 .styla-sub-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -1103,7 +1103,10 @@
 
 /* The mode control is a primary action: keep it out of the sticky header, above
    any sibling, and always hit-testable. */
-.styla-shopfor-row{ position:relative; z-index:5; padding:0 16px; margin:12px 0 4px !important; }
+/* The sub-header is position:sticky, so it MUST outrank everything it scrolls
+   past. This row used to be z-index:5 against the header's 3, so the
+   shop-for toggle rode over the pinned answer while scrolling. */
+.styla-shopfor-row{ position:relative; z-index:0; padding:0 16px; margin:12px 0 4px !important; }
 .styla-shopfor-row .styla-mode,
 .styla-shopfor-row .styla-who{ pointer-events:auto; }
 .styla-who-hint{ width:100%; margin:8px 0 0; font-size:.75rem; opacity:.65; }
@@ -1281,3 +1284,9 @@
 }
 .styla-action-btn[disabled] { opacity: .5; cursor: default; }
 .styla-action-note { font-size: .75rem; opacity: .7; margin-bottom: .35rem; }
+
+/* Secondary tier for the reference links. They stay reachable, they just stop
+   competing with "Why this size" and "Other sizes" for the shopper's attention. */
+.styla-lnk-quiet { opacity: .62; font-weight: 400; }
+.styla-lnk-quiet:hover { opacity: 1; }
+.styla-lnk-sep { flex: 0 0 1px; align-self: stretch; background: currentColor; opacity: .14; margin: 0 2px; }

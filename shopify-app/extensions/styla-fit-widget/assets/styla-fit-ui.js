@@ -40,6 +40,11 @@
       fit_ease: '{v} ease', fit_ideal: 'ideal ~{v}', fit_tight: '{v} too tight',
       fit_info: '{v}',
       conf_match: '{v}% match',
+      v_fit_ideal: 'Should fit you well',
+      v_fit_slim: 'Snug on you',
+      v_fit_relaxed: 'Relaxed on you',
+      v_fit_oversized: 'Oversized on you',
+      v_fit_tight: 'Likely too tight',
       conf_label: 'Estimated from {system} {size}',
       conf_label_hint: 'Based on standard sizing for that label, not your own measurements.',
       conf_brand: 'Matched to your {size} at {brand}',
@@ -172,6 +177,22 @@
     return { text: t('conf_match', { v: res.score }), hint: '' };
   }
 
+  // "93% match" is a number a shopper cannot calibrate — is that good? — and it
+  // invites doubt at the exact moment you want confidence. Lead with what it
+  // MEANS; keep the number as the tooltip for anyone who wants it.
+  function verdictLabel(res) {
+    if (!res) return { text: '', hint: '' };
+    var df = res.derived_from;
+    if (df && (df.label || df.brandChart)) return confidenceLabel(res);
+    var spec = res.spectrum || res.fit_spectrum;
+    var key = spec === 'slim' || spec === 'tight' ? 'v_fit_slim'
+            : spec === 'relaxed' ? 'v_fit_relaxed'
+            : spec === 'oversized' ? 'v_fit_oversized'
+            : res.fits === false ? 'v_fit_tight' : 'v_fit_ideal';
+    return { text: t(key),
+             hint: (typeof res.score === 'number') ? t('conf_match', { v: res.score }) : '' };
+  }
+
   // The single decision both surfaces must agree on: may we show this as a
   // recommendation at all? Getting this wrong is the worst failure in the product
   // — a confident size the shopper trusts and returns.
@@ -212,6 +233,7 @@
     statusFor: statusFor, badgeFor: badgeFor, cap: cap, esc: esc,
     DIM_LABELS: DIM_LABELS, dimLabel: dimLabel,
     // honesty
-    confidenceLabel: confidenceLabel, shouldDecline: shouldDecline, declineCopy: declineCopy
+    confidenceLabel: confidenceLabel, verdictLabel: verdictLabel,
+    shouldDecline: shouldDecline, declineCopy: declineCopy
   };
 }));

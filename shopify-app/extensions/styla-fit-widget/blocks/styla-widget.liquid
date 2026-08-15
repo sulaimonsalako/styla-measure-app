@@ -127,11 +127,17 @@
                    to go hunt for it in the theme's picker. -->
               <div class="styla-action" id="styla-action-{{ block.id }}"></div>
               <div class="styla-sub-links">
-                <button type="button" class="styla-lnk" id="styla-lnk-fit-{{ block.id }}" aria-expanded="false">How it fits</button>
+                {%- comment -%}
+                  Two tiers, not five peers. "Why this size" and "Other sizes" are
+                  what shoppers actually open; the chart and their own measurements
+                  are reference material and shouldn't compete for the same weight.
+                {%- endcomment -%}
+                <button type="button" class="styla-lnk" id="styla-lnk-fit-{{ block.id }}" aria-expanded="false">Why this size</button>
                 <button type="button" class="styla-lnk" id="styla-lnk-sizes-{{ block.id }}" aria-expanded="false">Other sizes</button>
                 <button type="button" class="styla-lnk styla-hidden" id="styla-lnk-len-{{ block.id }}" aria-expanded="false">Length</button>
-                <button type="button" class="styla-lnk styla-hidden" id="styla-lnk-chart-{{ block.id }}" aria-expanded="false">Size chart</button>
-                <button type="button" class="styla-lnk" id="styla-edit-specs-{{ block.id }}">Edit my measurements</button>
+                <span class="styla-lnk-sep" aria-hidden="true"></span>
+                <button type="button" class="styla-lnk styla-lnk-quiet styla-hidden" id="styla-lnk-chart-{{ block.id }}" aria-expanded="false">Size chart</button>
+                <button type="button" class="styla-lnk styla-lnk-quiet" id="styla-edit-specs-{{ block.id }}">My measurements</button>
               </div>
             </div>
 

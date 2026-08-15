@@ -505,8 +505,9 @@
           } else if (df && df.brandChart) {
             confEl.textContent = 'Matched to your ' + df.size + ' at ' + (res.source_brand || 'that brand');
           } else {
-            confEl.textContent = (res.score != null ? res.score + '% match' : '');
-            confEl.title = '';
+            var vd = FUI.verdictLabel(res);
+            confEl.textContent = vd.text;
+            confEl.title = vd.hint;   // the % stays available, just not shouted
           }
         }
 
@@ -558,12 +559,18 @@
         suggestEl.innerHTML = qs.map(function (q) {
           return '<button type="button" class="styla-chip">' + esc(q) + '</button>';
         }).join('');
-        suggestEl.querySelectorAll('.styla-chip').forEach(function (b) {
-          b.addEventListener('click', function () {
-            // Same panel now — no tab to switch to. Just ask it.
-            if (chatInput) { chatInput.value = b.textContent; sendChat(); }
+        // Delegate on the container, not per button. Per-button listeners die the
+        // moment anything re-renders suggestEl.innerHTML, which is why the chips
+        // silently stopped doing anything.
+        if (!suggestEl.dataset.stylaBound) {
+          suggestEl.dataset.stylaBound = '1';
+          suggestEl.addEventListener('click', function (ev) {
+            var b = ev.target.closest('.styla-chip');
+            if (!b || !chatInput) return;
+            chatInput.value = b.textContent;
+            sendChat();
           });
-        });
+        }
       }
 
       // Guests: after they see their size, offer to save it as a free Styla account
@@ -1104,8 +1111,12 @@
         // One slot, two states: sign in / sign out live in the same top-right
         // spot instead of one being a full-width block in the body.
         var signedIn = !!getToken();
+        // Showing a personalised answer AND a big "Continue with Styla" reads as
+        // broken: we clearly already know them. Guests who have answered get the
+        // gentler "save my size" CTA from maybeShowSave() instead.
+        var known = signedIn || !!getProfile();
         if (signoutBtn) signoutBtn.classList.toggle('styla-hidden', !signedIn);
-        if (connectTop) connectTop.classList.toggle('styla-hidden', signedIn);
+        if (connectTop) connectTop.classList.toggle('styla-hidden', known);
         var sub = el('styla-head-sub');
         if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
       }
