@@ -92,6 +92,14 @@
       padding:.25rem .5rem;border-radius:999px;cursor:pointer;color:var(--dim)}
     .unit-tog button.on{background:#fff;color:inherit;box-shadow:0 1px 2px rgba(0,0,0,.12)}
     .unit-tog button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+    /* "I can't see a size chart" — numbered steps, because the shopper has to
+       do something on the STORE's page and then come back to us. */
+    .nc-step{display:flex;gap:.7rem;align-items:flex-start;margin:.9rem 0;text-align:left}
+    .nc-num{flex:0 0 1.4rem;height:1.4rem;border-radius:50%;background:var(--accent,#e75480);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;margin-top:.1rem}
+    .nc-step b{display:block;font-size:.92rem;margin-bottom:.15rem}
+    .nc-hint{font-size:.78rem;color:var(--dim);margin-bottom:.45rem;line-height:1.35}
+    .btn-sm{padding:.45rem .8rem;font-size:.82rem;width:auto;display:inline-block}
   </style>
 </head>
 <body>
@@ -543,16 +551,42 @@
     // No chart on the page: guide the user to open the store's size guide, then re-read,
     // OR let them upload a screenshot of the chart, OR use our indexed chart.
     window.renderNoChart=function(){
-      var idx = DOMAIN ? '<button class="btn btn-ghost" onclick="useIndexChart()">Use this brand’s official chart from Styla</button>' : '';
+      // The bookmarklet runs on stores we don't index, where the size chart is
+      // usually behind a "Size guide" link and rendered only when opened. So the
+      // honest flow is: step out of the way, let the shopper open it, then read
+      // the page again. Clicking the bookmarklet a second time re-scrapes.
+      var idx = DOMAIN ? '<button class="btn btn-ghost" id="nc-idx">Use '+esc(BRAND||'this brand')+'\u2019s official chart from Styla</button>' : '';
       el('result-body').innerHTML =
-        '<h2>One quick step 📖</h2>'
-        + '<p class="sub">We couldn’t see a size chart on this page. Do any of these:</p>'
-        + '<button class="btn btn-primary" onclick="reReadPage()">I opened the size guide — read it</button>'
-        + '<label class="btn btn-ghost" style="cursor:pointer;text-align:center">📷 Upload a screenshot of the chart'
-        + '<input type="file" accept="image/*" style="display:none" onchange="uploadShot(this.files[0])"/></label>'
-        + idx
-        + '<p class="sub" style="margin-top:1rem;font-size:.8rem;color:var(--dim)">Tip: screenshot the brand’s size chart and drop it here — we’ll read it and give you your size.</p>'
-        + '<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
+          '<h2>I can\u2019t see a size chart here</h2>'
+        + '<p class="sub">Most stores only draw theirs when you open it. Pick whichever is easiest:</p>'
+        + '<div class="nc-step"><span class="nc-num">1</span><div>'
+        +   '<b>Open the store\u2019s size guide</b>'
+        +   '<div class="nc-hint">I\u2019ll get out of the way \u2014 then click the Styla bookmarklet again and I\u2019ll read it.</div>'
+        +   '<button class="btn btn-primary btn-sm" id="nc-hide">Hide Styla so I can open it</button>'
+        + '</div></div>'
+        + '<div class="nc-step"><span class="nc-num">2</span><div>'
+        +   '<b>Already opened it?</b>'
+        +   '<div class="nc-hint">Read the page again without closing this.</div>'
+        +   '<button class="btn btn-ghost btn-sm" id="nc-reread">Read the page again</button>'
+        + '</div></div>'
+        + '<div class="nc-step"><span class="nc-num">3</span><div>'
+        +   '<b>Or send me a picture of it</b>'
+        +   '<div class="nc-hint">A screenshot of just the chart works best.</div>'
+        +   '<label class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-block">\ud83d\udcf7 Upload a screenshot'
+        +   '<input type="file" accept="image/*" style="display:none" id="nc-file"/></label>'
+        + '</div></div>'
+        + (idx?('<div class="nc-step"><span class="nc-num">4</span><div><b>Skip it</b>'
+             + '<div class="nc-hint">We may already hold this brand\u2019s chart.</div>'+idx+'</div></div>'):'')
+        + '<p class="foot"><span class="linky" id="nc-close">Close</span></p>';
+
+      var on=function(id,fn){var e=el(id); if(e) e.addEventListener('click',fn);};
+      on('nc-hide', function(){
+        try{ parent.postMessage('styla-hide','*'); }catch(e){}
+      });
+      on('nc-reread', function(){ reReadPage(); });
+      on('nc-idx', function(){ useIndexChart(); });
+      on('nc-close', function(){ try{ parent.postMessage('styla-close','*'); }catch(e){} });
+      var f=el('nc-file'); if(f) f.addEventListener('change', function(){ uploadShot(this.files[0]); });
     };
     // Screenshot upload -> parse the chart from the image + return the user's size.
     window.uploadShot=async function(file){

@@ -9,8 +9,25 @@
  */
 (function () {
   var ORIGIN = 'https://www.styla.ca';
+
+  // RE-CLICK = RE-READ. The documented flow is: click Styla -> we can't see a
+  // chart -> "open the store's size guide, then click Styla again". That only
+  // works if a second click actually re-scrapes; this used to just un-hide the
+  // overlay and return, so the freshly-opened size guide was never read and the
+  // shopper saw the same "no chart" screen no matter how many times they tried.
   var existing = document.getElementById('styla-bm-overlay');
-  if (existing) { existing.style.display = 'flex'; return; }
+  if (existing) {
+    existing.style.display = 'flex';
+    var f = existing.querySelector('iframe');
+    if (f && f.contentWindow) {
+      try {
+        var again = window.__stylaScrape();
+        if (window.__stylaProfileB64) again.profile_b64 = window.__stylaProfileB64;
+        f.contentWindow.postMessage({ type: 'styla-page', page: again }, ORIGIN);
+      } catch (e) {}
+    }
+    return;
+  }
 
   // Scrape what's on THIS page: visible text, every table's HTML, title, url —
   // PLUS hidden size-guide content (modals are display:none, so innerText misses
@@ -42,12 +59,13 @@
       url: location.href
     };
   }
+  try { window.__stylaScrape = scrape; } catch (e) {}
   var pageData = scrape();
   // Personalized bookmarklet: the dashboard embeds the user's fit profile on the
   // script tag (base64url) so no login is needed inside the store-site iframe.
   try {
     var pd = document.currentScript && document.currentScript.getAttribute('data-styla-p');
-    if (pd) pageData.profile_b64 = pd;
+    if (pd) { pageData.profile_b64 = pd; try { window.__stylaProfileB64 = pd; } catch (e) {} }
   } catch (e) {}
 
   var overlay = document.createElement('div');
@@ -84,7 +102,9 @@
         pageData = fresh;
         iframe.contentWindow.postMessage({ type: 'styla-page', page: fresh }, ORIGIN);
       } catch (e) {}
-    } else if (ev.data === 'styla-close') {
+    } else if (ev.data === 'styla-close' || ev.data === 'styla-hide') {
+      // 'styla-hide' backs off so the shopper can open the store's own size
+      // guide; clicking the bookmarklet again re-scrapes and re-reads.
       overlay.style.display = 'none';
     }
   });

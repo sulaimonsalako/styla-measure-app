@@ -480,6 +480,34 @@ input-method cards + back button, size-label entry ("12 EU"), dropping the
 slim/average/fuller wording, and the single-panel layout. Those need the markup
 itself extracted, which is the larger second half of this job.
 
+## Bookmarklet chart-discovery flow (2026-08-12)
+
+The intended flow — click Styla, we can't see a chart, "open the store's size
+guide and click Styla again" — was BROKEN at the second click.
+`tools/bookmarklet-script.js` began with
+`if (existing) { existing.style.display = 'flex'; return; }`, so a re-click only
+un-hid the overlay. It never re-scraped, so the just-opened size guide was never
+read and the shopper got the identical "no chart" screen forever. The in-widget
+"read it again" button worked (it postMessages `styla-rescrape`), but nobody
+would guess that after being told to click the bookmarklet.
+
+Fixed: `scrape` is exposed as `window.__stylaScrape`, and the re-click path
+re-scrapes and posts fresh `styla-page` data — which widget.html already listens
+for and re-runs `runDecode()` on. Verified by evaluating the script twice against
+a stub DOM and asserting a `styla-page` message is posted on the second click.
+
+Also added a `styla-hide` message so the widget can back the overlay off without
+closing, and rewrote `renderNoChart()` as explicit numbered steps: (1) hide Styla
+and open the store's guide, (2) read the page again, (3) upload a screenshot,
+(4) use Styla's own chart for that brand. All handlers are delegated now — the
+old version built inline `onclick` attributes around merchant strings.
+
+REMAINING widget.html gaps vs the Shopify widget (the markup half):
+single-panel layout, the three input-method cards + back button, size-label entry
+("12 EU"), dropping slim/average/fuller wording, and gift mode — widget.html can
+only shop for people who SHARED their size (connections), while the Shopify
+widget can also estimate for an arbitrary person (LS_PEOPLE).
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
