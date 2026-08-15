@@ -646,6 +646,26 @@
       }
       // flat doubling that would exceed plausible circumference
       (flat||[]).forEach(function(k){ var a=avgOf(sizes,k); if(a!=null&&a*2>72) w.push(k+' will be DOUBLED to ~'+(a*2).toFixed(0)+'" — if these are already full circumferences, this chart shouldn’t be marked flat.'); });
+      // Garment measurements filed as a body chart. The engine treats a body
+      // chart's number as "the body this size is cut for" and a garment chart's
+      // as the finished garment, so mislabelling shifts every recommendation a
+      // size. Typical body chest for alpha sizes is well known, and a garment
+      // runs 3-5in above it, so a chart claiming a 41in chest for a small is
+      // almost certainly garment measurements.
+      var BODY_CHEST = { xs:33, s:35.5, m:38.5, l:41.5, xl:44.5, xxl:48 };
+      if (String((el('chType')&&el('chType').value)||'body') === 'body') {
+        var over = [], seen = 0;
+        sizes.forEach(function(sz){
+          var key = String(sz.name||'').trim().toLowerCase().replace(/[^a-z]/g,'');
+          var expect = BODY_CHEST[key];
+          var got = sz.chest!=null ? num(sz.chest) : null;
+          if (expect && got) { seen++; if (got - expect >= 2.5) over.push(sz.name); }
+        });
+        if (seen >= 2 && over.length >= Math.ceil(seen*0.6))
+          w.push('These chest values run well above a typical BODY measurement for those size labels ('
+            + over.slice(0,4).join(', ') + '). If they are finished garment measurements, set '
+            + 'Chart type to "garment" — otherwise every recommendation here will come out a size too big.');
+      }
       // Category vs columns: a tops chart carrying only lower-body columns (or the
       // reverse) almost always means the wrong screenshot was read into this form.
       var cat=String((el('chCat')&&el('chCat').value)||'').toLowerCase();

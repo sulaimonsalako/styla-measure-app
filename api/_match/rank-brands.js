@@ -58,7 +58,15 @@ export default async function rankBrands(req, res) {
       if (!norm.sizes.length) continue;
 
       const r = runSizingEngine(user, norm);
+      // The engine can now say "no size here will fit you". A brand that cannot
+      // dress you is not a low-scoring match, it is a different answer — listing
+      // it at 0% alongside real matches is how a shopper wastes a click and loses
+      // trust. Keep it, but labelled, so the dashboard can say "doesn't carry
+      // your size" instead of pretending it's a near miss.
       matches.push({
+        no_fit: !!r.no_fit,
+        blocked_by: r.blocked_by || null,
+        closest_size: r.closest_size || null,
         brand: (brandMap[c.brand_id] && brandMap[c.brand_id].name) || 'Unknown',
         logo: (brandMap[c.brand_id] && brandMap[c.brand_id].logo) || null,
         domain: (brandMap[c.brand_id] && brandMap[c.brand_id].domain) || null,
@@ -74,7 +82,12 @@ export default async function rankBrands(req, res) {
       });
     }
 
-    matches.sort((a, b) => b.score - a.score);
+    // Wearable brands first, then by score. Within the unwearable group the score
+    // is meaningless, so order by how close the closest size came.
+    matches.sort((a, b) => {
+      if (!!a.no_fit !== !!b.no_fit) return a.no_fit ? 1 : -1;
+      return b.score - a.score;
+    });
     return res.status(200).json({ matches: limit ? matches.slice(0, Number(limit)) : matches });
   } catch (e) {
     console.error('rank-brands error:', e);

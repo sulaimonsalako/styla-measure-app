@@ -310,6 +310,14 @@
                   <div class="styla-q">
                     <label>Usual waist size (in) <span class="styla-qval" id="styla-q-wwlbl-{{ block.id }}">28 in</span></label>
                     <input type="range" id="styla-q-ww-{{ block.id }}" min="22" max="48" value="28">
+                    {%- comment -%}
+                      Optional, and only useful when it differs. A waistband is
+                      pulled OVER the stomach, so for anyone whose belly exceeds
+                      their natural waist this is the measurement that decides
+                      whether the garment closes at all.
+                    {%- endcomment -%}
+                    <label>Stomach at its fullest <span class="styla-qhint">optional — only if it's bigger than your waist</span></label>
+                    <input type="number" step="0.5" inputmode="decimal" placeholder="in" id="styla-q-belly-{{ block.id }}">
                   </div>
                 </div>
 
@@ -321,6 +329,14 @@
                   <div class="styla-q">
                     <label>Usual waist size (in) <span class="styla-qval" id="styla-q-wmlbl-{{ block.id }}">32 in</span></label>
                     <input type="range" id="styla-q-wm-{{ block.id }}" min="26" max="54" value="32">
+                    {%- comment -%}
+                      Optional, and only useful when it differs. A waistband is
+                      pulled OVER the stomach, so for anyone whose belly exceeds
+                      their natural waist this is the measurement that decides
+                      whether the garment closes at all.
+                    {%- endcomment -%}
+                    <label>Stomach at its fullest <span class="styla-qhint">optional — only if it's bigger than your waist</span></label>
+                    <input type="number" step="0.5" inputmode="decimal" placeholder="in" id="styla-q-belly-{{ block.id }}">
                   </div>
                 </div>
 

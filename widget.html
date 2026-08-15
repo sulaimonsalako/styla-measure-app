@@ -178,6 +178,8 @@
       <div><label>Hips</label><input type="number" step="0.1" id="m-hips" /></div>
       <div><label>Height</label><input type="text" id="m-height" placeholder="5'6&quot; or 168cm" /></div>
     </div>
+    <label>Stomach at its fullest <span style="font-weight:400;color:var(--dim);font-size:.75rem">optional — only if it's bigger than your waist</span></label>
+    <input type="number" step="0.1" id="m-belly" />
     <div class="msg" id="m-msg"></div>
     <div class="spacer"></div>
     <button class="btn btn-primary" id="m-go">Find my size</button>
@@ -414,6 +416,12 @@
         return MUNIT==='cm' ? n/2.54 : n;
       };
       var p={ chest:toIn('m-chest'), waist:toIn('m-waist'), hips:toIn('m-hips') };
+      // A waistband is pulled over the stomach, so when it exceeds the natural
+      // waist it — not the waist — decides whether a garment closes. Only kept
+      // when it's actually bigger; below the waist it's a mis-entry.
+      var bel=toIn('m-belly');
+      if (bel != null && p.waist != null && bel >= p.waist) p.belly = bel;
+      else if (bel != null && p.waist == null) p.belly = bel;
       var h=el('m-height'); p.height = h && h.value ? FUI.parseHeight(h.value) : null;
       Object.keys(p).forEach(function(k){ if(p[k]==null) delete p[k]; });
       var given=['chest','waist','hips'].filter(function(k){ return p[k]!=null; }).length;

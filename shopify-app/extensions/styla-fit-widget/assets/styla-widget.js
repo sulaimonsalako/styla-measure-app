@@ -865,6 +865,10 @@
           p.hips = Math.round((p.waist + 2 + bmi * 0.15) * 10) / 10;
           p.inseam = Math.round(h * 0.44);
         }
+        // Only set when the shopper actually told us, and only when it differs
+        // enough to matter. Below the waist it is almost certainly a mis-entry.
+        var bellyIn = parseFloat((el('styla-q-belly') || {}).value);
+        if (Number.isFinite(bellyIn) && bellyIn > 0 && bellyIn >= p.waist) p.belly = bellyIn;
         // Deliberately NOT p.belly = p.waist. A quiz cannot know whether the
         // stomach exceeds the natural waist, and guessing they are equal hides
         // exactly the shoppers who need the belly measured. Left absent.
