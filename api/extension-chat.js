@@ -6,6 +6,11 @@ export const config = {
   },
 };
 
+// Static, for the same reason as the ingest import: a dynamic import() of a path
+// Vercel's tracer can't see means the file isn't deployed, so the feature works
+// perfectly in dev and silently never fires in production.
+import OUTFIT from '../shared/outfit-pairing.js';
+
 export default async function handler(req, res) {
   // CORS — the widget runs on the merchant's storefront domain (Shopify/Woo/custom).
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -122,9 +127,6 @@ export default async function handler(req, res) {
         // blazer" embeds close to OTHER NAVY BLAZERS. When the shopper is trying
         // to build an outfit we retrieve against the categories that COMPLETE
         // it instead, a few per category so the model has a real choice.
-        const { default: OUTFIT } = await import('../shared/outfit-pairing.js')
-          .then((m) => ({ default: m.default || m }))
-          .catch(() => ({ default: null }));
         const pairCats = OUTFIT ? OUTFIT.retrievalCategories(category, lastMsg) : [];
         let hits;
         if (pairCats.length) {

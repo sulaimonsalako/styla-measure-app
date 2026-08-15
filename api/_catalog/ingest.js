@@ -16,9 +16,13 @@
 
 import crypto from 'crypto';
 import { supabaseAdmin } from '../_helpers/supabase-admin.js';
-import { createRequire as _cr } from 'module';
-const _req = _cr(import.meta.url);
-const { extract: deriveAttrsRaw } = _req('../../shared/product-attrs.js');
+// STATIC import, deliberately. createRequire() is invisible to Vercel's module
+// tracer, so shared/product-attrs.js would not be bundled and this file would
+// throw at IMPORT time -- which takes down api/store-api.js, and with it every
+// route's CORS headers. The browser then reports a CORS failure and the real
+// error is never seen. A static import is traced and bundled.
+import PRODUCT_ATTRS from '../../shared/product-attrs.js';
+const deriveAttrsRaw = PRODUCT_ATTRS.extract;
 const deriveAttrs = (p) => deriveAttrsRaw({
   title: p.title, product_type: p.product_type, description: p.description,
   body_html: p.body_html, tags: p.tags, options: p.options });

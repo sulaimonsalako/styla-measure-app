@@ -225,7 +225,29 @@ for (const c of CHARTS) {
   }
 }
 
-// ------------------------------ 7. MERCHANT-SAFETY RULES IN PROMPT ----
+// --------------------- 7. SERVERLESS IMPORTS MUST BE TRACEABLE ----
+// api/store-api.js imports every route at module level, so ONE unresolvable
+// import kills the whole dispatcher -- and with it the CORS headers it sets.
+// The browser then reports "blocked by CORS policy" and the real error is never
+// seen. createRequire() and dynamic import() of a computed path are invisible to
+// Vercel's module tracer, so the file isn't bundled and the failure only appears
+// in production. Static imports are traced.
+{
+  const files = ['api/_catalog/ingest.js', 'api/_catalog/search.js', 'api/extension-chat.js',
+                 'api/_match/widget-size.js', 'api/_match/rank-brands.js', 'api/store-api.js'];
+  for (const f of files) {
+    let src;
+    try { src = readFileSync(new URL('../../' + f, import.meta.url), 'utf8'); } catch { continue; }
+    if (/createRequire\s*\(/.test(src.replace(/^\s*\/\/.*$/gm, '')))
+      add('CRITICAL', 'bundling', 'no createRequire in serverless code',
+          'the required file will not be bundled', f);
+    if (/await\s+import\s*\(\s*['"`][^'"`]*shared\//.test(src))
+      add('CRITICAL', 'bundling', 'shared/ modules are imported statically',
+          'a dynamic import of shared/ may not be deployed', f);
+  }
+}
+
+// ------------------------------ 8. MERCHANT-SAFETY RULES IN PROMPT ----
 // The widget runs on the merchant's own product page. A styling AI that names
 // another retailer is a breach of the deal, and it's the kind of thing that
 // quietly disappears in a prompt edit. Assert the rules are present.
