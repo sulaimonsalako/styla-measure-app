@@ -1312,3 +1312,6 @@
   border-radius: 999px; padding: .4rem .8rem; font: inherit; font-size: .8rem;
   cursor: pointer; opacity: .7; margin-right: .5rem; white-space: nowrap; }
 .styla-head-chart:hover { opacity: 1; }
+
+/* Sold out is a fact, not an action. Quiet line, then the useful next step. */
+.styla-soldout { font-size: .85rem; opacity: .7; margin-bottom: .5rem; }

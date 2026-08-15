@@ -225,7 +225,30 @@ for (const c of CHARTS) {
   }
 }
 
-// ------------------------------------------- 7. SHARED-COPY DRIFT ----
+// ------------------------- 7. CONTROLS THAT EXIST BUT DO NOTHING ----
+// Twice now a control shipped that rendered, looked interactive, and had no
+// handler at all: styla-k-save ("Find my size here") and styla-g-build
+// (Slim/Average/Broad). Nothing throws, so nothing catches it. Every id the
+// liquid declares for a button or a segment must be referenced by the JS.
+{
+  const liquid = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/blocks/styla-widget.liquid',
+                                      import.meta.url), 'utf8');
+  const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                  import.meta.url), 'utf8');
+  const ids = [...liquid.matchAll(/id="(styla-[a-z0-9-]+)-\{\{ block\.id \}\}"/g)].map((m) => m[1]);
+  // Only interactive things: buttons and segment hosts. Panels/labels are fine.
+  const interactive = ids.filter((id) => /(-btn|-save|-cancel|-go|btn-|-build|-sys|-system|-gender|-seg)$|(-btn|-save|-cancel|-build)-/.test(id));
+  for (const id of [...new Set(interactive)]) {
+    // Some ids are reached as a prefix ('styla-trigger-btn-' + blockId) rather
+    // than through el(). Accept either form -- the point is that SOMETHING
+    // references it, not how.
+    if (!js.includes(`'${id}'`) && !js.includes(`'${id}-'`))
+      add('CRITICAL', 'dead-control', 'every interactive id is referenced by the JS',
+          `${id} is rendered but never wired`, 'styla-widget.liquid');
+  }
+}
+
+// ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the
 // two widget surfaces diverged in the first place.

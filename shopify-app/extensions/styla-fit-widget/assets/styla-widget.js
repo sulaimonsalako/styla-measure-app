@@ -174,7 +174,11 @@
       // ---------- fetch the real fit ----------
       async function loadFit() {
         var profile = getProfile(), token = await ensureFreshToken();
-        if (!profile && !token && !STATE.knownSize) { showForm(true); return; }
+        // shopForAnswers is a friend's description, which the server converts --
+        // it is just as valid an input as a profile or a known size. Leaving it
+        // out of this guard sent the shopper straight back to the chooser and
+        // silently dropped the Shop-for-a-friend state they had just entered.
+        if (!profile && !token && !STATE.knownSize && !STATE.shopForAnswers) { showForm(true); return; }
         setLoading(true);
         try {
           var body = { domain: product.domain, productUrl: product.url, productTitle: product.title,
@@ -692,9 +696,31 @@
         btn.type = 'button';
         btn.className = 'styla-action-btn';
         if (!v.available) {
-          btn.disabled = true;
-          btn.textContent = sizeName + ' is sold out';
-          host.appendChild(btn);
+          // A full-width filled bar reads as the primary action. Sold out is not
+          // an action -- it's a fact, and the useful part is what to do next.
+          var note = document.createElement('div');
+          note.className = 'styla-soldout';
+          var alt = null;
+          var cands = (STATE.result && STATE.result.candidates) || [];
+          for (var i = 0; i < cands.length; i++) {
+            if (String(cands[i].name) === String(sizeName)) continue;
+            var av = STYLA_PDP.findVariant(VARIANT_DATA, cands[i].name, currentSelection());
+            if (av && av.available) { alt = { name: cands[i].name, v: av }; break; }
+          }
+          note.textContent = sizeName + ' is sold out' + (alt ? '' : ' — nothing else here fits you either.');
+          host.appendChild(note);
+          if (alt) {
+            var altBtn = document.createElement('button');
+            altBtn.type = 'button';
+            altBtn.className = 'styla-action-btn';
+            altBtn.textContent = 'Add ' + alt.name + ' to bag — closest that fits';
+            altBtn.addEventListener('click', async function () {
+              altBtn.disabled = true; var was = altBtn.textContent; altBtn.textContent = 'Adding\u2026';
+              try { await addToBag(alt.v); altBtn.textContent = 'Added ' + alt.name + ' \u2713'; }
+              catch (e) { altBtn.textContent = was; altBtn.disabled = false; }
+            });
+            host.appendChild(altBtn);
+          }
           return;
         }
         if (selectOnPage(v)) {
@@ -727,7 +753,12 @@
       });
       function syncHeadChart() {
         var lnk = el('styla-lnk-chart');
-        if (headChartBtn) headChartBtn.classList.toggle('styla-hidden', !lnk || lnk.classList.contains('styla-hidden'));
+        var has = !!lnk && !lnk.classList.contains('styla-hidden');
+        if (headChartBtn) headChartBtn.classList.toggle('styla-hidden', !has);
+        // It was asked for IN the header, not in addition to the sub-links. Keep
+        // the link in the DOM (the header button delegates its click to it) but
+        // take it out of the row so there is one control, not two.
+        if (lnk) lnk.style.display = 'none';
       }
 
       function renderNoChart() {
@@ -1127,6 +1158,10 @@
         return (isNaN(ft) ? 0 : ft) * 12 + (isNaN(inch) ? 0 : inch);
       }
 
+      // Slim / Average / Broad had labels painted onto it but no click handler --
+      // paintBuildLabels only rewrites the text. Same dead-control class as
+      // styla-k-save: it looked interactive and did nothing.
+      bindGiftSeg('styla-g-build', 'build');
       bindGiftSeg('styla-g-msys', 'system');
       bindGiftSeg('styla-g-wsys', 'system');
 
@@ -1194,9 +1229,10 @@
         // Showing a personalised answer AND a big "Continue with Styla" reads as
         // broken: we clearly already know them. Guests who have answered get the
         // gentler "save my size" CTA from maybeShowSave() instead.
-        var known = signedIn || !!getProfile();
         if (signoutBtn) signoutBtn.classList.toggle('styla-hidden', !signedIn);
-        if (connectTop) connectTop.classList.toggle('styla-hidden', known);
+        // Only hide it once they are ACTUALLY signed in. Hiding it for any guest
+        // who had answered the quiz removed their only route into an account.
+        if (connectTop) connectTop.classList.toggle('styla-hidden', signedIn);
         var sub = el('styla-head-sub');
         if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
       }
