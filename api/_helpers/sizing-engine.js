@@ -2,16 +2,31 @@ export function runSizingEngine(user, chart) {
   const chartType = chart.chart_type || 'body';
   const category = chart.garment_category || 'tops';
   const fabric = chart.fabric_type || 'woven';
-  const sizes = chart.sizes || [];
+  // A row with no name cannot be recommended -- a shopper can't pick "undefined".
+  // These used to flow straight through into recommended_size and the explanation
+  // string ("Size undefined fits you best"), so drop them up front.
+  const sizes = (Array.isArray(chart.sizes) ? chart.sizes : [])
+    .filter((s) => s && s.name != null && String(s.name).trim() !== '');
   const subclass = chart.garment_subclass || '';
   const structured = category === 'outerwear' || /suit|blazer|jacket|tailored/i.test(subclass + ' ' + category);
 
   if (sizes.length === 0) {
+    // This return MUST carry the same keys as every other exit. It used to omit
+    // `candidates`, `fit_facts`, `dimensions_compared` and — critically —
+    // `insufficient_data`. The widget decides whether to show the honest
+    // "can't size this" state from `insufficient_data` and from every candidate
+    // having an empty breakdown; with no candidates and no flag, both checks
+    // passed and the shopper was shown the literal size "Unknown" at 0% match
+    // as though it were a recommendation.
     return {
       recommended_size: 'Unknown',
       fit_match_score: 0,
+      dimensions_compared: 0,
       fit_spectrum: 'ideal',
       fit_breakdown: {},
+      fit_facts: {},
+      insufficient_data: true,
+      candidates: [],
       explanation: 'No sizes found in chart.',
       warning: 'Size chart is empty.'
     };
@@ -76,6 +91,17 @@ export function runSizingEngine(user, chart) {
     if (overrides.torso) userTorso = parseFloat(overrides.torso);
     if (overrides.rise) userRise = parseFloat(overrides.rise);
   }
+
+  // Sanitise the body before scoring. parseFloat happily yields Infinity from a
+  // bad client payload, and Infinity is truthy, so it sailed past the
+  // `if (!chartVal || !userVal) return;` guard and landed in fit_facts as
+  // `ease: -Infinity` -- which the widget then rendered to the shopper.
+  // A body measurement must be a finite positive number or it is simply absent.
+  const clean = (v) => (Number.isFinite(v) && v > 0 ? v : NaN);
+  userChest = clean(userChest); userWaist = clean(userWaist); userBelly = clean(userBelly);
+  userHips = clean(userHips); userShoulder = clean(userShoulder); userSleeve = clean(userSleeve);
+  userInseam = clean(userInseam); userThigh = clean(userThigh); userNeck = clean(userNeck);
+  userTorso = clean(userTorso); userRise = clean(userRise);
 
   const candidateScores = [];
 
@@ -393,6 +419,7 @@ export function runSizingEngine(user, chart) {
       insufficient_data: true,
       fit_spectrum: bestOption.spectrum,
       fit_breakdown: {},
+      fit_facts: {},
       explanation: 'This size chart doesn’t list the measurements we compare (it may size by height or use a format we can’t read yet), so we can’t confidently pick your size here.',
       warning: 'Not enough matching measurements on this chart to size you.',
       candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, breakdown: {}, facts: {} })),

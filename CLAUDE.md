@@ -396,6 +396,34 @@ Captured so far (all source='import', verified=false, awaiting review):
 7 For All Mankind (6 charts), AG Jeans (4), Citizens of Humanity (4). All 13 pass the
 monotonicity / chest-vs-waist / category-vs-columns sweep.
 
+## Adversarial harness — `node test/extremes/run.mjs` (NEW, 2026-08-12)
+
+783 engine runs (27 extreme bodies x 29 extreme charts) plus 49 size-label inputs,
+36 column labels and 11 product shapes. It does NOT assert "the answer is right" —
+for most fixtures there isn't one. It asserts the stack stays HONEST: never throws,
+never leaks NaN/undefined/Infinity to the widget, and never returns a confident size
+it has no evidence for. `--verbose` prints every violation. Exit code 1 on
+CRASH/CRITICAL, so it can gate a deploy.
+
+Started at 292 findings, now 4 (all informational). Fixed as a result:
+- **Engine returned a different SHAPE on its empty-chart path** — no `candidates`,
+  no `insufficient_data`. The widget decides whether to show the honest "can't size
+  this" state from exactly those two, so both guards passed and a shopper was shown
+  the literal size **"Unknown" at 0% match** as if it were a recommendation.
+- **`insufficient_data` was never forwarded by `widget-size`** — it existed only
+  inside the engine, so the widget's check for it had always been dead code.
+- **Unnamed chart rows** flowed into `recommended_size` and the explanation string
+  ("Size undefined fits you best"). Rows with no name are now dropped up front.
+- **`Infinity` survived `parseFloat`** and, being truthy, sailed past the
+  `if (!chartVal || !userVal)` guard into `fit_facts.ease = -Infinity`. Body values
+  are now clamped to finite positives.
+- **Variant option axis** (the bug parked in LIVERPOOL.md) — `v.option1` is
+  POSITIONAL, so colour-first stores indexed colours as sizes. Now resolved by NAME
+  via `shared/variant-size.js`, used by the app, the browser and the harness.
+
+Remaining 4 are taxonomy ambiguity, not bugs: "Jeans" legitimately matches `pants`,
+`boys-bottoms` and `girls-bottoms`, so audience/gender must disambiguate.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,

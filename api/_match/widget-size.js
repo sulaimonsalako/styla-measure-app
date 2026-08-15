@@ -248,6 +248,11 @@ export default async function widgetSize(req, res) {
         fits: !r.warning,
         resolvedBy,
         explanation: r.explanation,
+        // The engine raises this when the chart shares NO comparable dimension
+        // with the shopper. It was never forwarded, so the widget's check for it
+        // was dead code and the honest "can't size this" state relied entirely on
+        // every candidate happening to have an empty breakdown.
+        insufficient_data: !!r.insufficient_data,
         breakdown: r.fit_breakdown,      // English prose (back-compat)
         facts: r.fit_facts,              // structured — lets the widget translate + show cm
         derived_from: user.derived_from || null,   // 'estimated from UK 12' vs a real profile
@@ -413,6 +418,7 @@ export default async function widgetSize(req, res) {
       chartOptions,                       // other cuts in this category
       chartMatchedProduct: scoreChart(c) > 0,
       explanation: r.explanation,
+      insufficient_data: !!r.insufficient_data,   // see note on the other return path
       breakdown: r.fit_breakdown,
       facts: r.fit_facts,
       derived_from: user.derived_from || null,

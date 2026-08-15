@@ -13,6 +13,7 @@ const { shopifyApi, ApiVersion, RequestedTokenType } = require('@shopify/shopify
 // Shared definitions — one copy, used by the Styla admin and APIs too.
 const SHARED_CHART = require('../../shared/chart-keys.js');
 const SHARED_BRAND = require('../../shared/brand-attrs.js');
+const { variantSize } = require('../../shared/variant-size.js');
 
 // Express App Initialization
 const app = express();
@@ -140,7 +141,7 @@ function mapShopifyProduct(shop, p, collections) {
     tags: p.tags ? String(p.tags).split(',').map((t) => t.trim()).filter(Boolean) : [],
     price: (p.variants && p.variants[0] && p.variants[0].price != null) ? Number(p.variants[0].price) : null,
     image_url: (p.image && p.image.src) || (p.images && p.images[0] && p.images[0].src) || null,
-    variants: (p.variants || []).map((v) => ({ id: v.id, inventory_item_id: v.inventory_item_id, title: v.title, size: v.option1, price: v.price, available: variantSellable(v) })),
+    variants: (p.variants || []).map((v) => ({ id: v.id, inventory_item_id: v.inventory_item_id, title: v.title, size: variantSize(p, v), price: v.price, available: variantSellable(v) })),
     // NOTE: the Admin REST API does NOT return variant.available (that's the
     // Storefront API). Derive it: untracked inventory or "continue" policy is
     // always sellable, otherwise require stock. Product must also be active.
@@ -281,7 +282,8 @@ app.post('/api/webhooks', async (req, res) => {
       const sizesSet = new Set();
       if (Array.isArray(payload.variants)) {
         payload.variants.forEach(v => {
-          if (v.option1) sizesSet.add(v.option1);
+          const sz = variantSize(payload, v);
+          if (sz) sizesSet.add(sz);
           else if (v.title) sizesSet.add(v.title);
         });
       }
@@ -405,7 +407,8 @@ app.post('/api/sync/catalog', async (req, res) => {
       const sizesSet = new Set();
       if (Array.isArray(p.variants)) {
         p.variants.forEach(v => {
-          if (v.option1) sizesSet.add(v.option1);
+          const sz = variantSize(p, v);
+          if (sz) sizesSet.add(sz);
           else if (v.title) sizesSet.add(v.title);
         });
       }
