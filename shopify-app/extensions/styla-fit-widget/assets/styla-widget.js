@@ -413,6 +413,7 @@
       }
 
       function renderFit() {
+        setHasAnswer(true);
         renderCuts();
         renderAlternatives();
         renderLengths();
@@ -722,6 +723,7 @@
         ['styla-lnk-fit','styla-lnk-sizes','styla-lnk-len','styla-lnk-chart'].forEach(function (id) {
           var b = el(id); if (b) b.classList.add('styla-hidden');
         });
+        setHasAnswer(false);
         var hasSizes = container.dataset.hasSizeAxis !== 'false';
         if (!hasSizes) {
           showNote('This one only comes in a single size, so there\u2019s nothing for me to pick. Ask me anything about the fit or the fabric.');
@@ -743,7 +745,20 @@
 
       // ---------- guest measurement form ----------
       var editBtn = el('styla-edit-specs'), cancelBtn = el('styla-cancel-specs'), saveBtn = el('styla-save-specs');
-      function showForm(first) { ensureConnectBtn(); formPanel.classList.remove('styla-hidden'); detailsBody.classList.add('styla-hidden'); if (first) { intentEl.textContent = ''; formView('choose'); } }
+      // "Why this size / Other sizes / My measurements" are answers ABOUT a
+      // recommendation. Before one exists they're three dead controls sitting
+      // above the question we're actually asking, and "YOUR SIZE —" with a tick
+      // next to a blank is worse than showing nothing. Gate the whole answer
+      // header on there being an answer.
+      function setHasAnswer(on) { container.classList.toggle('styla-has-answer', !!on); }
+
+      function showForm(first) {
+        ensureConnectBtn();
+        setHasAnswer(false);
+        formPanel.classList.remove('styla-hidden');
+        detailsBody.classList.add('styla-hidden');
+        if (first) { intentEl.textContent = ''; formView('choose'); }
+      }
 
       // Shopping for someone else runs the SAME questionnaire, answered about
       // them. Sending the shopper off to styla.ca lost them mid-purchase; this

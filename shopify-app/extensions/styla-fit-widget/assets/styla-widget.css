@@ -1290,3 +1290,12 @@
 .styla-lnk-quiet { opacity: .62; font-weight: 400; }
 .styla-lnk-quiet:hover { opacity: 1; }
 .styla-lnk-sep { flex: 0 0 1px; align-self: stretch; background: currentColor; opacity: .14; margin: 0 2px; }
+
+/* The answer header only makes sense once there IS an answer. Until then the
+   size row reads "YOUR SIZE —" with a tick beside a blank, and the three
+   disclosure links sit above the question we're still asking. Hide both, and
+   let the panel start on the actual question. */
+.styla-widget-container:not(.styla-has-answer) .styla-sub-links,
+.styla-widget-container:not(.styla-has-answer) .styla-sub-row,
+.styla-widget-container:not(.styla-has-answer) .styla-action { display: none; }
+.styla-widget-container:not(.styla-has-answer) .styla-subhead { padding: 0; border: 0; }
