@@ -412,6 +412,13 @@
 </div>
 
 {{ 'styla-widget.css' | asset_url | stylesheet_tag }}
+{% comment %}
+  styla-fit-ui.js is a generated copy of shared/fit-ui.js (tools/sync-shared.mjs).
+  It MUST load before styla-widget.js, which now delegates i18n, units, fit-fact
+  sentences and the "may we recommend this?" decision to it. Both scripts are
+  deferred, and deferred scripts execute in document order, so this is ordered.
+{% endcomment %}
+<script src="{{ 'styla-fit-ui.js' | asset_url }}" defer></script>
 <script src="{{ 'styla-widget.js' | asset_url }}" defer></script>
 
 {% schema %}

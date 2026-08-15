@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:extremes": "node test/extremes/run.mjs"
+    "test:extremes": "node test/extremes/run.mjs",
+    "sync:shared": "node tools/sync-shared.mjs"
   },
   "repository": {
     "type": "git",

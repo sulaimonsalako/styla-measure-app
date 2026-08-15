@@ -165,6 +165,48 @@ for (const p of PRODUCTS) {
   }
 }
 
+// ------------------------------- 5. HONESTY PARITY ACROSS SURFACES ----
+// Both widget surfaces must reach the SAME verdict on "may we show this as a
+// recommendation?". They previously disagreed: the Shopify widget checked
+// candidates+insufficient_data, widget.html checked only that a size existed, so
+// the bookmarklet showed confident sizes the storefront widget refused to show.
+const FUI = require('../../shared/fit-ui.js');
+for (const c of CHARTS) {
+  const ctx = c.id;
+  const r = runSizingEngine({ chest: 38, waist: 31, hips: 41, height: 66 }, c.chart);
+  // Shape the engine output the way api/_match/widget-size.js does.
+  const payload = { size: r.recommended_size, score: r.fit_match_score,
+                    insufficient_data: !!r.insufficient_data, candidates: r.candidates };
+  let v;
+  try { v = FUI.shouldDecline(payload); }
+  catch (e) { add('CRASH', 'parity', 'shouldDecline must not throw', `${e.name}: ${e.message}`, ctx); continue; }
+
+  // The engine's own verdict is authoritative; the UI must not overrule it.
+  if (r.insufficient_data && !v.decline)
+    add('CRITICAL', 'parity', 'UI declines whenever the engine says it cannot size',
+        `engine insufficient_data but UI would render "${r.recommended_size}"`, ctx);
+  if (r.recommended_size === 'Unknown' && !v.decline)
+    add('CRITICAL', 'parity', 'the literal size "Unknown" is never rendered',
+        'UI would show "Unknown" as a size', ctx);
+  // And it must not decline a perfectly good answer.
+  if (!r.insufficient_data && r.dimensions_compared > 0 && r.fit_match_score > 50 && v.decline)
+    add('BUG', 'parity', 'a good answer is not suppressed',
+        `declined "${r.recommended_size}" at ${r.fit_match_score}% (${v.reason})`, ctx);
+}
+
+// ------------------------------------------- 6. SHARED-COPY DRIFT ----
+// The Shopify theme extension can only load local assets, so shared/ modules are
+// COPIED into its assets folder. A copy that silently drifts is exactly how the
+// two widget surfaces diverged in the first place.
+try {
+  const { execFileSync } = await import('child_process');
+  execFileSync(process.execPath, [new URL('../../tools/sync-shared.mjs', import.meta.url).pathname, '--check'],
+               { stdio: 'pipe' });
+} catch (e) {
+  add('CRITICAL', 'shared', 'generated copies match shared/ sources',
+      'run: node tools/sync-shared.mjs', 'shopify extension assets');
+}
+
 // ------------------------------------------------------------- REPORT ----
 const order = { CRASH: 0, CRITICAL: 1, BUG: 2, GAP: 3 };
 findings.sort((a, b) => order[a.sev] - order[b.sev] || a.rule.localeCompare(b.rule));

@@ -7,6 +7,10 @@
   <meta name="robots" content="noindex" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=EB+Garamond:wght@600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Shared with the Shopify storefront widget: i18n, cm/inch, fit-fact
+       sentences, and the "may we recommend this at all?" decision. One
+       definition so the bookmarklet and a merchant install cannot diverge. -->
+  <script src="/shared/fit-ui.js"></script>
   <style>
     :root{--bg:#0b0b14;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -81,6 +85,13 @@
     .bkbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;margin:0 0 1rem;}
     .bkrow{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--muted);padding:3px 0;}
     .bkrow span:first-child{text-transform:capitalize;color:var(--dim);}
+    /* cm / inch toggle. Every measurement is composed client-side from the
+       engine's inches, so switching is a pure re-render. */
+    .unit-tog{float:right;display:inline-flex;gap:2px;background:rgba(0,0,0,.06);border-radius:999px;padding:2px}
+    .unit-tog button{border:0;background:transparent;font:inherit;font-size:.7rem;line-height:1;
+      padding:.25rem .5rem;border-radius:999px;cursor:pointer;color:var(--dim)}
+    .unit-tog button.on{background:#fff;color:inherit;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+    .unit-tog button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
   </style>
 </head>
 <body>
@@ -207,12 +218,28 @@
     // Canonical measurement vocabulary: sleeve = shoulder seam → wrist,
     // shoulder = full cross-back. Charts using centre-back → wrist or half
     // shoulder are converted before comparison, so labels must be explicit.
-    var DIM_LABELS={sleeve:'Sleeve (shoulder → wrist)',shoulder:'Shoulder (cross-back)',chest:'Chest',waist:'Waist',hips:'Hips',belly:'Belly',inseam:'Inseam',neck:'Neck',thigh:'Thigh',length:'Length',height:'Height'};
-    function dimLabel(k){ return DIM_LABELS[k]||k; }
+    var FUI=window.STYLA_FIT_UI;
+    try{ FUI.setUnit(localStorage.getItem('styla_unit')||'in'); }catch(e){}
+    // Below this match score we decline to recommend rather than showing e.g.
+    // "S · 0% match". 0 = off. Kept in step with the Shopify widget.
+    var SCORE_FLOOR=0;
+    var DIM_LABELS=FUI.DIM_LABELS, dimLabel=FUI.dimLabel, esc=FUI.esc;
     function bkHTML(c){
-      if(!c||!c.breakdown) return '';
-      var bk=c.breakdown, keys=Object.keys(bk); if(!keys.length) return '';
-      return '<div class="bkbox">'+keys.map(function(k){return '<div class="bkrow"><span>'+dimLabel(k)+'</span><span>'+bk[k]+'</span></div>';}).join('')+'</div>';
+      if(!c) return '';
+      // Structured facts carry ease/ideal as numbers, so they can be shown in cm
+      // and translated. Fall back to the server's English prose only when the
+      // engine didn't send facts (older payloads).
+      var facts=c.facts&&Object.keys(c.facts).length?c.facts:null;
+      if(facts){
+        return '<div class="bkbox">'+Object.keys(facts).map(function(k){
+          var f=facts[k], badge=FUI.factBadge(f);
+          return '<div class="bkrow"><span>'+esc(FUI.factLabel(f,k))+'</span><span>'
+            +(badge?'<b>'+esc(badge)+'</b> · ':'')+esc(FUI.factText(f))+'</span></div>';
+        }).join('')+'</div>';
+      }
+      var bk=c.breakdown; if(!bk) return '';
+      var keys=Object.keys(bk); if(!keys.length) return '';
+      return '<div class="bkbox">'+keys.map(function(k){return '<div class="bkrow"><span>'+esc(dimLabel(k))+'</span><span>'+esc(bk[k])+'</span></div>';}).join('')+'</div>';
     }
     function candsOf(){ return (RES&&RES.candidates&&RES.candidates.length)?RES.candidates:(RES?[{name:RES.size,spectrum:RES.spectrum,breakdown:RES.breakdown,fits:RES.fits}]:[]); }
     function renderSizeOpts(){
@@ -220,8 +247,9 @@
       var cands=candsOf();
       if(cands.length<2){ host.innerHTML=''; return; }
       host.innerHTML='<div class="optlbl">See how other sizes fit you:</div><div class="optrow">'+cands.map(function(c){
-        return '<button class="sizeopt'+(String(c.name)===String(RES.size)?' active':'')+'" onclick="stylaPickSize(\''+String(c.name).replace(/\\/g,'').replace(/'/g,'')+'\')">'+c.name+'</button>';
+        return '<button class="sizeopt'+(String(c.name)===String(RES.size)?' active':'')+'" data-sz="'+esc(c.name)+'">'+esc(c.name)+'</button>';
       }).join('')+'</div>';
+      host.onclick=function(ev){ var b=ev.target.closest('.sizeopt'); if(b) stylaPickSize(b.getAttribute('data-sz')); };
     }
     window.stylaPickSize=function(name){
       if(!RES) return;
@@ -232,7 +260,7 @@
       var note=isBest?RES.note:((c.fits?'':'Not ideal — ')+(c.spectrum||'')+' on you vs. your best size '+RES.size);
       var sh=el('specHost'); if(sh) sh.innerHTML=specHTML(c.spectrum||RES.spectrum,note);
       var bh=el('bkHost'); if(bh) bh.innerHTML=bkHTML(c);
-      document.querySelectorAll('.sizeopt').forEach(function(b){b.classList.toggle('active',String(b.textContent)===String(name));});
+      document.querySelectorAll('.sizeopt').forEach(function(b){b.classList.toggle('active',String(b.getAttribute('data-sz'))===String(name));});
     };
 
     function go(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));el('s-'+name).classList.add('on');}
@@ -295,14 +323,23 @@
     }
 
     function showResult(res,guest){
-      if(res.error||!res.size){
-        el('result-body').innerHTML='<h2>Hmm.</h2><p class="sub">'+(res.error||'We couldn\'t find a size for this store yet.')+'</p><button class="btn btn-ghost" onclick="go(\'start\')">Try again</button>';
+      // ONE decision, shared with the Shopify widget: may we present this as a
+      // recommendation at all? This used to test only `res.size`, so a chart the
+      // engine could not read (no comparable measurement, or no rows at all) was
+      // still rendered as a confident size.
+      var verdict = res.error ? { decline:true, reason:'error' } : FUI.shouldDecline(res, { minScore: SCORE_FLOOR });
+      if(verdict.decline){
+        var copy = res.error ? { title:'Hmm.', body:res.error } : FUI.declineCopy(verdict.reason);
+        el('result-body').innerHTML='<h2>'+esc(copy.title)+'</h2><p class="sub">'+esc(copy.body)+'</p>'
+          +'<button class="btn btn-ghost" onclick="go(\'start\')">Try again</button>';
         return;
       }
       MEAS = res.measurements || lastProfile || {};
       RES = res;
       CHAT = [];
-      var pct=res.score!=null?res.score+'% fit':'';
+      // A label-derived answer is a size band, not a body — say so instead of
+      // showing the same "94% match" confidence as a real profile.
+      var conf=FUI.confidenceLabel(res); var pct=conf.text;
       var spec = '<div id="specHost"></div>';
       // Only offer questions the AI can answer from data we actually hold.
       var qs = ['Does it run small?',"I'm between sizes",'How does the fabric fit?'];
@@ -315,8 +352,13 @@
       var whoLabel = SHOPFOR.activeOwnerId ? ' for '+((SHOPFOR.people.find(function(p){return p.owner_id===SHOPFOR.activeOwnerId;})||{}).owner_email||'them') : '';
       var html='<h2>'+(SHOPFOR.activeOwnerId?'Their size':'Your size')+(BRAND?(' in '+BRAND):'')+'</h2>'
         +'<div id="shopfor"></div>'
-        +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel+'</div><div class="sz" id="szVal">'+res.size+'</div><div class="fit">'+pct+(res.category?(' · '+res.category):'')+'</div></div>'
-        +((res.recommendedLength&&res.recommendedLength.name)?'<div class="spectrum" style="margin:-.5rem 0 1rem">Suggested length: <b>'+res.recommendedLength.name+'</b></div>':'')
+        +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel
+          +'<span class="unit-tog" id="unitTog" title="Switch measurement units">'
+          +'<button data-u="in"'+(FUI.getUnit()==='in'?' class="on"':'')+'>in</button>'
+          +'<button data-u="cm"'+(FUI.getUnit()==='cm'?' class="on"':'')+'>cm</button></span>'
+          +'</div><div class="sz" id="szVal">'+esc(res.size)+'</div><div class="fit"'
+          +(conf.hint?' title="'+esc(conf.hint)+'"':'')+'>'+esc(pct)+(res.category?(' · '+esc(res.category)):'')+'</div></div>'
+        +((res.recommendedLength&&res.recommendedLength.name)?'<div class="spectrum" style="margin:-.5rem 0 1rem">Suggested length: <b>'+esc(res.recommendedLength.name)+'</b></div>':'')
         +'<div class="sizeopts" id="sizeopts"></div>'
         + spec + '<div id="bkHost"></div>' + chat;
       if(guest){
@@ -332,6 +374,13 @@
           +'<p class="foot"><span class="linky" onclick="parent.postMessage(\'styla-close\',\'*\')">Close</span></p>';
       }
       el('result-body').innerHTML=html;
+      var ut=el('unitTog');
+      if(ut) ut.onclick=function(ev){
+        var b=ev.target.closest('button[data-u]'); if(!b) return;
+        FUI.setUnit(b.getAttribute('data-u'));
+        try{ localStorage.setItem('styla_unit', FUI.getUnit()); }catch(e){}
+        showResult(RES, guest);   // re-render; every measurement is composed client-side
+      };
       renderSizeOpts();
       stylaPickSize(res.size);   // initialize spectrum + breakdown for the best size
       setTimeout(populateShopFor, 0);

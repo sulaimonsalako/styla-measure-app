@@ -445,6 +445,41 @@ widget shows e.g. "S · 0% match". Honest arithmetic, misleading UI. Needs a
 score floor below which the widget declines to recommend — the threshold is a
 product decision, not made yet.
 
+## Widget surfaces share one presentation layer (2026-08-12)
+
+CLAUDE.md was stale: `bookmarklet.html` and `decoder.js` no longer exist. The
+bookmarklet is `tools/bookmarklet-script.js` — 91 lines that scrape the page and
+iframe `widget.html` on styla.ca. So "the bookmarklet is behind" really means
+**widget.html was behind the Shopify widget**, and task #18 ("port features into
+widget.html") had already been done once and drifted again.
+
+`shared/fit-ui.js` is now the SOURCE OF TRUTH for i18n, cm/inch, fit-fact
+sentences, measurement labels, escaping, the confidence wording, and
+`shouldDecline()` — the single "may we present this as a recommendation?"
+decision. Pure: no DOM, no network, no storage, so the harness drives it offline.
+
+- `styla-widget.js` deletes its local copies and delegates (1157 -> 1084 lines).
+- `widget.html` loads `/shared/fit-ui.js` and uses it for the same things.
+- Theme app extensions can only load LOCAL assets, so the extension gets a
+  generated copy via `node tools/sync-shared.mjs` (`npm run sync:shared`). The
+  extremes harness runs `--check` and fails CRITICAL if the copy drifts. Verified
+  by deliberately drifting it.
+- The liquid loads `styla-fit-ui.js` BEFORE `styla-widget.js` (both deferred, and
+  deferred scripts run in document order).
+
+Fixed while wiring: widget.html injected chart-authored strings (breakdown text,
+size names, length names) as RAW HTML, and built the size buttons by interpolating
+the size name into an inline `onclick` with a hand-rolled quote strip. Now escaped
+throughout, with a data attribute + delegation instead of inline handlers.
+
+Harness section 5 asserts the two surfaces reach the SAME verdict per chart —
+verified to fail when `shouldDecline` is sabotaged.
+
+STILL TO DO on widget.html (it keeps its own markup for now): the three
+input-method cards + back button, size-label entry ("12 EU"), dropping the
+slim/average/fuller wording, and the single-panel layout. Those need the markup
+itself extracted, which is the larger second half of this job.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
