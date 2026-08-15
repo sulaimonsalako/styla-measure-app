@@ -11,6 +11,7 @@
        sentences, and the "may we recommend this at all?" decision. One
        definition so the bookmarklet and a merchant install cannot diverge. -->
   <script src="/shared/fit-ui.js"></script>
+  <script src="/shared/size-conversion.js"></script>
   <style>
     :root{--bg:#0b0b14;--card:#16162a;--border:rgba(255,255,255,0.1);--white:#fff;--muted:#cbd5e1;--dim:#8b90a0;--pink:#ff2a75;--grad:linear-gradient(135deg,#e11d48,#ff2a75);--head:'EB Garamond',serif;--body:'Inter',sans-serif;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -100,6 +101,15 @@
     .nc-step b{display:block;font-size:.92rem;margin-bottom:.15rem}
     .nc-hint{font-size:.78rem;color:var(--dim);margin-bottom:.45rem;line-height:1.35}
     .btn-sm{padding:.45rem .8rem;font-size:.82rem;width:auto;display:inline-block}
+    /* Method chooser — one tap per route, same shape as the storefront widget. */
+    .method{display:block;width:100%;text-align:left;border:1px solid var(--line,#e6e6e6);background:#fff;
+      border-radius:14px;padding:.85rem .95rem;margin:.5rem 0;cursor:pointer;font:inherit;transition:.15s}
+    .method:hover{border-color:var(--accent,#e75480);transform:translateY(-1px)}
+    .method b{display:block;font-size:.95rem;margin-bottom:.15rem}
+    .method span{display:block;font-size:.79rem;color:var(--dim);line-height:1.35}
+    .whofor{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin:.7rem 0 .4rem}
+    .whofor>span{font-size:.8rem;color:var(--dim)}
+    .seg-sm button{padding:.32rem .6rem;font-size:.78rem}
   </style>
 </head>
 <body>
@@ -112,10 +122,87 @@
   <div class="screen on" id="s-start">
     <h2>Find your size in <span id="brandName">this store</span></h2>
     <p class="sub">Get your correct size here in under two minutes — no tape measure, no guessing.</p>
-    <button class="btn btn-primary" onclick="go('questions')">Answer a few quick questions</button>
+    <button class="btn btn-primary" onclick="go('choose')">Find my size</button>
     <button class="btn btn-ghost" onclick="go('login')">I have a Styla account</button>
     <div class="spacer"></div>
     <p class="foot">Powered by Styla · your size, everywhere</p>
+  </div>
+
+  <!-- CHOOSE: how do you want to tell us your size? -->
+  <div class="screen" id="s-choose">
+    <h2>How should I size you?</h2>
+    <p class="sub">Any one of these is enough — pick whichever you can answer fastest.</p>
+
+    <div class="whofor">
+      <span>Shopping for</span>
+      <div class="seg seg-sm" id="seg-who">
+        <button data-w="me" class="on">Me</button>
+        <button data-w="other">Someone else</button>
+      </div>
+    </div>
+    <div id="gift-name-wrap" style="display:none">
+      <label>Their name (so I can keep them straight)</label>
+      <input type="text" id="gift-name" placeholder="e.g. Mum" />
+    </div>
+
+    <button class="method" data-go="manual">
+      <b>I know my measurements</b>
+      <span>Chest, waist, hips — the most accurate option.</span>
+    </button>
+    <button class="method" data-go="label">
+      <b>I know my size in another brand</b>
+      <span>“I’m a 12 EU” or “16 US”. I’ll work out the rest.</span>
+    </button>
+    <button class="method" data-go="questions">
+      <b>Estimate it for me</b>
+      <span>A few quick questions — no tape measure.</span>
+    </button>
+    <p class="foot"><span class="linky" onclick="go('start')">← back</span></p>
+  </div>
+
+  <!-- MANUAL MEASUREMENTS -->
+  <div class="screen" id="s-manual">
+    <h2>Your measurements</h2>
+    <p class="sub">Fill in what you know — even two is enough to size you.</p>
+    <div class="whofor"><span>Units</span>
+      <div class="seg seg-sm" id="seg-unit">
+        <button data-u="in" class="on">inches</button>
+        <button data-u="cm">cm</button>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>Chest / bust</label><input type="number" step="0.1" id="m-chest" /></div>
+      <div><label>Waist</label><input type="number" step="0.1" id="m-waist" /></div>
+    </div>
+    <div class="row">
+      <div><label>Hips</label><input type="number" step="0.1" id="m-hips" /></div>
+      <div><label>Height</label><input type="text" id="m-height" placeholder="5'6&quot; or 168cm" /></div>
+    </div>
+    <div class="msg" id="m-msg"></div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="m-go">Find my size</button>
+    <p class="foot"><span class="linky" onclick="go('choose')">← back</span></p>
+  </div>
+
+  <!-- SIZE LABEL -->
+  <div class="screen" id="s-label">
+    <h2>What size do you normally wear?</h2>
+    <p class="sub">Give me a size you trust from any brand and I’ll translate it here.</p>
+    <label>Your usual size</label>
+    <input type="text" id="l-size" placeholder="12 EU · 16 US · UK 10 · M" />
+    <label>For</label>
+    <div class="seg" id="seg-lgender">
+      <button data-g="women" class="on">Women’s</button>
+      <button data-g="men">Men’s</button>
+    </div>
+    <p class="sub" style="font-size:.78rem;margin-top:.6rem">
+      A label is a size <i>band</i>, not your body — I’ll say so on the answer, and it’s
+      less precise than measurements.
+    </p>
+    <div class="msg" id="l-msg"></div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="l-go">Find my size</button>
+    <p class="foot"><span class="linky" onclick="go('choose')">← back</span></p>
   </div>
 
   <!-- LOGIN -->
@@ -277,6 +364,108 @@
     function updH(){var v=+el('hRange').value;var ft=Math.floor(v/12),inch=v%12;el('hLbl').textContent=ft+"'"+inch+'"';}
     if(GENDER==='men') setG('men');
 
+    // ---------- method chooser, gift mode, manual entry, size labels ----------
+    var SZC = window.STYLA_SIZES || null;   // shared size-conversion tables
+    var GIFT = { on:false, name:'' };       // estimating for someone who is not the shopper
+    var MUNIT = 'in';                       // unit of the manual-entry inputs
+
+    function segPick(hostId, attr, cb){
+      var host=el(hostId); if(!host) return;
+      host.addEventListener('click', function(ev){
+        var b=ev.target.closest('button['+attr+']'); if(!b) return;
+        host.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on'); cb(b.getAttribute(attr));
+      });
+    }
+    segPick('seg-who','data-w', function(v){
+      GIFT.on = (v==='other');
+      var w=el('gift-name-wrap'); if(w) w.style.display = GIFT.on ? '' : 'none';
+    });
+    segPick('seg-unit','data-u', function(v){
+      // Convert what's already typed so switching units never silently changes
+      // the numbers' meaning.
+      if(v===MUNIT) return;
+      ['m-chest','m-waist','m-hips'].forEach(function(id){
+        var e=el(id); if(!e||!e.value) return;
+        var n=parseFloat(e.value); if(!isFinite(n)) return;
+        e.value = (v==='cm' ? n*2.54 : n/2.54).toFixed(1);
+      });
+      MUNIT=v;
+    });
+    var LGENDER='women';
+    segPick('seg-lgender','data-g', function(v){ LGENDER=v; });
+
+    (function(){
+      var host=el('s-choose'); if(!host) return;
+      host.addEventListener('click', function(ev){
+        var b=ev.target.closest('.method[data-go]'); if(!b) return;
+        if(GIFT.on){ GIFT.name = (el('gift-name')&&el('gift-name').value||'').trim(); }
+        go(b.getAttribute('data-go'));
+      });
+    }());
+
+    function giftLabel(){ return GIFT.on ? (GIFT.name || 'them') : ''; }
+
+    // Manual measurements -> straight into the same decode path.
+    function submitManual(){
+      var toIn=function(id){
+        var e=el(id); if(!e||!e.value) return null;
+        var n=parseFloat(e.value); if(!isFinite(n)||n<=0) return null;
+        return MUNIT==='cm' ? n/2.54 : n;
+      };
+      var p={ chest:toIn('m-chest'), waist:toIn('m-waist'), hips:toIn('m-hips') };
+      var h=el('m-height'); p.height = h && h.value ? FUI.parseHeight(h.value) : null;
+      Object.keys(p).forEach(function(k){ if(p[k]==null) delete p[k]; });
+      var given=['chest','waist','hips'].filter(function(k){ return p[k]!=null; }).length;
+      if(given<1){ el('m-msg').textContent='Give me at least one of chest, waist or hips.'; return; }
+      if(GIFT.on) p.for_name = giftLabel();
+      lastProfile=p; decode(p);
+    }
+
+    // "I'm a 12 EU" -> measurements, derived CLIENT-SIDE so it works on stores we
+    // don't index (which is most of what the bookmarklet meets). derived_from makes
+    // the widget say "Estimated from EU 12" instead of showing a fake match score.
+    function submitLabel(){
+      var raw=(el('l-size')&&el('l-size').value||'').trim();
+      if(!raw){ el('l-msg').textContent='Type a size — e.g. “12 EU”.'; return; }
+      if(!SZC){ el('l-msg').textContent='Size tables are still loading — try again in a second.'; return; }
+      var parsed, m;
+      try{
+        parsed = SZC.parseSizeText(raw);
+        m = SZC.toMeasurements({ size: parsed && parsed.size != null ? parsed.size : raw,
+                                 system: (parsed && parsed.system) || 'us', gender: LGENDER });
+      }catch(e){ m=null; }
+      if(!m || (m.chest==null && m.waist==null)){
+        // Don't guess. "12 EU" is the classic case: EU womenswear runs ~32-46, so
+        // a shopper saying that almost certainly means UK/AU 12 — but "almost
+        // certainly" isn't good enough when the output is a size they'll order.
+        // Name the systems that number DOES exist in and let them choose.
+        var num = parsed && parsed.size, alt = [];
+        if(num!=null){
+          ['us','uk','eu','au','it','fr'].forEach(function(sy){
+            if(sy===(parsed&&parsed.system)) return;
+            try{ if(SZC.toMeasurements({size:num, system:sy, gender:LGENDER})) alt.push(sy.toUpperCase()); }catch(e){}
+          });
+        }
+        el('l-msg').textContent = alt.length
+          ? ('There’s no ' + String((parsed&&parsed.system)||'').toUpperCase() + ' ' + num +
+             ' in that sizing. That number does exist in ' + alt.join(', ') +
+             ' — try one of those, or give me your measurements instead.')
+          : 'I don’t recognise that size. Try “16 US”, “UK 10” or “IT 44”.';
+        return;
+      }
+      var p={ chest:m.chest, waist:m.waist, hips:m.hips, gender:LGENDER,
+              derived_from:{ label:true, system:(parsed&&parsed.system)||'us', size:(parsed&&parsed.size)||raw } };
+      Object.keys(p).forEach(function(k){ if(p[k]==null) delete p[k]; });
+      if(GIFT.on) p.for_name = giftLabel();
+      lastProfile=p; decode(p);
+    }
+    (function(){
+      var a=el('m-go'); if(a) a.addEventListener('click', submitManual);
+      var b=el('l-go'); if(b) b.addEventListener('click', submitLabel);
+      var li=el('l-size'); if(li) li.addEventListener('keydown', function(e){ if(e.key==='Enter') submitLabel(); });
+    }());
+
     function computeProfile(){
       var p={};var g=state.gender;
       var height=+el('hRange').value;var weight=+el('wRange').value;
@@ -357,8 +546,9 @@
       var chat = '<div class="chat"><div class="chips">'+chips+'</div>'
         +'<div class="chatlog" id="chatlog"></div>'
         +'<div class="chatin"><input id="chatin" placeholder="Ask about the fit…" onkeydown="if(event.key===&quot;Enter&quot;)sendChat()" /><button onclick="sendChat()">Ask</button></div></div>';
-      var whoLabel = SHOPFOR.activeOwnerId ? ' for '+((SHOPFOR.people.find(function(p){return p.owner_id===SHOPFOR.activeOwnerId;})||{}).owner_email||'them') : '';
-      var html='<h2>'+(SHOPFOR.activeOwnerId?'Their size':'Your size')+(BRAND?(' in '+BRAND):'')+'</h2>'
+      var whoLabel = res.for_name ? (' for '+esc(res.for_name))
+        : (SHOPFOR.activeOwnerId ? ' for '+esc(((SHOPFOR.people.find(function(p){return p.owner_id===SHOPFOR.activeOwnerId;})||{}).owner_email||'them')) : '');
+      var html='<h2>'+((res.for_name||SHOPFOR.activeOwnerId)?'Their size':'Your size')+(BRAND?(' in '+esc(BRAND)):'')+'</h2>'
         +'<div id="shopfor"></div>'
         +'<div class="sizebox"><div class="lbl">Recommended size'+whoLabel
           +'<span class="unit-tog" id="unitTog" title="Switch measurement units">'
@@ -515,6 +705,15 @@
       return { size:d.recommended_size, score:d.fit_match_score, spectrum:d.fit_spectrum, category:d.garment_category||d.category||'', fits:true };
     }
     var lastExtra=null, lastSize=null;
+    // The size came from the engine; HOW we got the body did not. A label-derived
+    // body must stay labelled, or "Estimated from UK 12" silently becomes
+    // "94% match" and reads as certain as a real scan.
+    function stampProvenance(res, extra){
+      if(!res || !extra) return res;
+      if(extra.derived_from && !res.derived_from) res.derived_from = extra.derived_from;
+      if(extra.for_name) res.for_name = extra.for_name;
+      return res;
+    }
     // FAST PATH: for a brand we already index, resolve the size from our DB by
     // domain (a few ms) instead of sending the page to Gemini (several seconds).
     async function tryIndexChart(extra){
@@ -525,7 +724,8 @@
         else p.profile={chest:extra.chest,waist:extra.waist,belly:extra.belly,hips:extra.hips,height:extra.height,inseam:extra.inseam,neck:extra.neck,shoulder:extra.shoulder};
         var r=await fetch('/api/widget-size',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
         var d=await r.json();
-        if(d && d.size){ d.note='From this brand’s official size chart in Styla.'; lastSize=d.size; showResult(d, !extra.accessToken); return true; }
+        if(d && d.size){ d.note='From this brand’s official size chart in Styla.'; lastSize=d.size;
+          showResult(stampProvenance(d, extra), !extra.accessToken); return true; }
       }catch(e){}
       return false;
     }
@@ -544,7 +744,7 @@
         var m=mapDecode(d);
         if(m.error){ renderNoChart(); return; }
         lastSize=m.size;
-        showResult(m, !extra.accessToken);
+        showResult(stampProvenance(m, extra), !extra.accessToken);
       }catch(e){ showResult({error:'Could not read this page — please try again.'}, false); }
     }
 

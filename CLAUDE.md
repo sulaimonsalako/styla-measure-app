@@ -508,6 +508,33 @@ single-panel layout, the three input-method cards + back button, size-label entr
 only shop for people who SHARED their size (connections), while the Shopify
 widget can also estimate for an arbitrary person (LS_PEOPLE).
 
+## widget.html feature parity (2026-08-12)
+
+Closed the markup-half gaps so the bookmarklet behaves like the storefront widget.
+
+- **Method chooser** (`s-choose`): three cards — know my measurements / know my
+  size in another brand / estimate it for me — each with a back link. The start
+  screen now routes here instead of straight into the quiz.
+- **Manual entry** (`s-manual`): chest/waist/hips/height with an in/cm toggle that
+  CONVERTS what is already typed, so switching units can't silently change what
+  the numbers mean. One measurement is enough.
+- **Size labels** (`s-label`): "16 US", "UK 10", "IT 44" resolved CLIENT-SIDE via
+  `shared/size-conversion.js`, so it works on stores we don't index — which is
+  most of what the bookmarklet meets. Sets `derived_from`, so the answer reads
+  "Estimated from UK 10" rather than a fake match percentage.
+- **Gift mode**: a Me / Someone else toggle plus a name, carried through as
+  `for_name` and shown in the heading. Previously widget.html could only shop for
+  people who had SHARED their size via connections.
+- `stampProvenance()` re-attaches `derived_from` / `for_name` to the result. The
+  server answers from measurements and knows nothing about how we got them, so
+  without this a label-derived body renders exactly like a real scan.
+
+**"12 EU" does not resolve, and that is correct.** EU womenswear runs ~32–46, so
+there is no EU 12; a shopper means UK/AU 12. Rather than guess (US 12 ≈ UK 16 —
+two sizes out), the widget names the systems that number DOES exist in and asks.
+Guessing here would produce a confident wrong size, which is the one failure this
+product cannot afford.
+
 ## Current State — UPDATE THIS EACH SESSION
 
 - 2026-07-23: Took over from Antigravity, wrote this doc, connected Supabase + Vercel,
