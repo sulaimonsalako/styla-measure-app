@@ -140,8 +140,20 @@ export default async function handler(req, res) {
           hits = await retrieveCatalog({ query: lastMsg, brandId: bId, shop: shopDom, count: 6 });
         }
         if (hits && hits.length) {
-          catalogContext = 'OTHER PRODUCTS IN THIS STORE (semantically ranked for the shopper\'s request — when they ask for alternatives or other items, recommend from THESE, and include the price and link):\n'
-            + hits.map((h) => `- ${h.title}${h.price != null ? ` ($${h.price})` : ''}${h.category ? ` [${h.category}]` : ''}${h.url ? ` — ${h.url}` : ''}`).join('\n');
+          // Include the extracted attributes so pairing can be SPECIFIC. Without
+          // them the best the model can say is "pair it with trousers"; with them
+          // it can say "the charcoal wool ones", which is the difference between
+          // advice and a sale. Only real values are printed — an unknown colour
+          // is simply absent, never guessed.
+          const attrLine = (a) => {
+            if (!a) return '';
+            const bits = [a.colour, a.material, a.formality].filter(Boolean);
+            return bits.length ? ` {${bits.join(', ')}}` : '';
+          };
+          catalogContext = (pairCats.length
+            ? 'PRODUCTS IN THIS STORE THAT WOULD COMPLETE THE OUTFIT (chosen from the categories that pair with this item, not look-alikes). Recommend from THESE, name the specific item, and give the size that would fit them:\n'
+            : 'OTHER PRODUCTS IN THIS STORE (semantically ranked for the shopper\'s request — when they ask for alternatives or other items, recommend from THESE, and include the price and link):\n')
+            + hits.map((h) => `- ${h.title}${attrLine(h.attrs)}${h.price != null ? ` ($${h.price})` : ''}${h.category ? ` [${h.category}]` : ''}${h.url ? ` — ${h.url}` : ''}`).join('\n');
         }
       }
     } catch (e) { /* retrieval is optional context; ignore failures */ }

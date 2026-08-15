@@ -16,6 +16,12 @@
 
 import crypto from 'crypto';
 import { supabaseAdmin } from '../_helpers/supabase-admin.js';
+import { createRequire as _cr } from 'module';
+const _req = _cr(import.meta.url);
+const { extract: deriveAttrsRaw } = _req('../../shared/product-attrs.js');
+const deriveAttrs = (p) => deriveAttrsRaw({
+  title: p.title, product_type: p.product_type, description: p.description,
+  body_html: p.body_html, tags: p.tags, options: p.options });
 import { embedMany, toVectorLiteral } from '../_helpers/embeddings.js';
 import { normDom } from './retrieve.js';
 import { toStylaCategory } from '../_helpers/style-category.js';
@@ -131,6 +137,10 @@ export default async function catalogIngest(req, res) {
           price: p.price != null && p.price !== '' ? Number(p.price) : null,
           currency: p.currency || 'USD',
           image_url: p.image_url || p.image || null,
+          // Styling attributes. The producer (the Shopify app) sends these; for
+          // any other feed we derive them here from the same text, so no source
+          // silently lands with an empty attrs and drops out of styling answers.
+          attrs: (p.attrs && Object.keys(p.attrs).length) ? p.attrs : deriveAttrs(p),
           variants: p.variants || [],
           available: p.available !== false,
           shared: isShared,

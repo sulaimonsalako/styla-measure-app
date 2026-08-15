@@ -14,6 +14,7 @@ const { shopifyApi, ApiVersion, RequestedTokenType } = require('@shopify/shopify
 const SHARED_CHART = require('../../shared/chart-keys.js');
 const SHARED_BRAND = require('../../shared/brand-attrs.js');
 const { variantSize } = require('../../shared/variant-size.js');
+const { extract: extractAttrs } = require('../../shared/product-attrs.js');
 
 // Express App Initialization
 const app = express();
@@ -132,6 +133,13 @@ function mapShopifyProduct(shop, p, collections) {
     url: `https://${shop}/products/${p.handle}`,
     title: p.title,
     description: stripHtml(p.body_html),
+    // Colour / material / formality for styling answers. Derived from the text we
+    // already have -- Shopify's REST product list does NOT return metafields
+    // inline (that costs one extra call per product, or a move to GraphQL), and
+    // in practice the title, tags, Colour option and description carry most of it.
+    attrs: extractAttrs({ title: p.title, product_type: p.product_type, body_html: p.body_html,
+                          tags: typeof p.tags === 'string' ? p.tags.split(',') : (p.tags || []),
+                          options: p.options }),
     vendor: p.vendor,
     product_type: p.product_type,
     // Shopify's Standard Product Category (structured taxonomy) when set — the
