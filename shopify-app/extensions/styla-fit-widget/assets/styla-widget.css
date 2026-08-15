@@ -1295,7 +1295,7 @@
    size row reads "YOUR SIZE —" with a tick beside a blank, and the three
    disclosure links sit above the question we're still asking. Hide both, and
    let the panel start on the actual question. */
-.styla-widget-container:not(.styla-has-answer) .styla-sub-links,
-.styla-widget-container:not(.styla-has-answer) .styla-sub-row,
-.styla-widget-container:not(.styla-has-answer) .styla-action { display: none; }
-.styla-widget-container:not(.styla-has-answer) .styla-subhead { padding: 0; border: 0; }
+.styla-modal-overlay:not(.styla-has-answer) .styla-sub-links,
+.styla-modal-overlay:not(.styla-has-answer) .styla-sub-row,
+.styla-modal-overlay:not(.styla-has-answer) .styla-action { display: none !important; }
+.styla-modal-overlay:not(.styla-has-answer) .styla-subhead { padding: 0 !important; border: 0 !important; }

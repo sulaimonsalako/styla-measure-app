@@ -750,7 +750,14 @@
       // above the question we're actually asking, and "YOUR SIZE —" with a tick
       // next to a blank is worse than showing nothing. Gate the whole answer
       // header on there being an answer.
-      function setHasAnswer(on) { container.classList.toggle('styla-has-answer', !!on); }
+      // Toggle on the MODAL, not the container. The modal is re-parented to
+      // <body> on open (see the portal above, which exists so theme stacking
+      // contexts can't clip it), so it is NOT a descendant of the container and
+      // a container-scoped CSS rule silently matches nothing.
+      function setHasAnswer(on) {
+        if (modal) modal.classList.toggle('styla-has-answer', !!on);
+        container.classList.toggle('styla-has-answer', !!on);
+      }
 
       function showForm(first) {
         ensureConnectBtn();
