@@ -720,17 +720,28 @@
             .sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
           for (var i = 0; i < cands.length; i++) {
             var av = STYLA_PDP.findVariant(VARIANT_DATA, cands[i].name, currentSelection());
-            if (av && av.available) { alt = { name: cands[i].name, v: av, score: cands[i].score }; break; }
+            if (av && av.available) {
+              alt = { name: cands[i].name, v: av, score: cands[i].score, spectrum: cands[i].spectrum };
+              break;
+            }
           }
+          // "Also fits you" is a flat claim, but a 72% and a 92% are different
+          // garments on the body. Say HOW the alternative sits so the shopper
+          // decides, using the same vocabulary as the main answer.
+          var altVerdict = alt ? FUI.verdictLabel({
+            spectrum: alt.spectrum, fits: true, score: alt.score
+          }) : null;
           note.textContent = sizeName + ' is sold out'
-            + (alt ? '' : ' — and nothing else in stock here would fit you.');
+            + (alt
+                ? '. ' + alt.name + ' also fits you — ' + altVerdict.text.replace(/^Should fit you well$/, 'a clean fit').toLowerCase() + '.'
+                : ' — and nothing else in stock here would fit you.');
           host.appendChild(note);
           if (alt) {
             var altBtn = document.createElement('button');
             altBtn.type = 'button';
             altBtn.className = 'styla-action-btn';
-            // Say WHY it's being offered, not just that it is.
-            altBtn.textContent = 'Add ' + alt.name + ' to bag — also fits you';
+            // The note above already says how it fits; the button just acts.
+            altBtn.textContent = 'Add ' + alt.name + ' to bag';
             altBtn.addEventListener('click', async function () {
               altBtn.disabled = true; var was = altBtn.textContent; altBtn.textContent = 'Adding\u2026';
               try { await addToBag(alt.v); altBtn.textContent = 'Added ' + alt.name + ' \u2713'; }
