@@ -1021,7 +1021,7 @@
       var GIRTH_IDS = ['styla-in-chest', 'styla-in-waist', 'styla-in-hips', 'styla-in-shoulders', 'styla-in-inseam'];
 
       function paintUnitUI() {
-        var metric = (FUI.setUnit== 'cm');
+        var metric = (FUI.getUnit() === 'cm');
         formPanel && formPanel.querySelectorAll('.styla-u').forEach(function (n) { n.textContent = metric ? '(cm)' : '(in)'; });
         var imp = el('styla-h-imp'), met = el('styla-h-met');
         if (imp) imp.classList.toggle('styla-hidden', metric);
@@ -1070,7 +1070,7 @@
 
       // Height in feet+inches (or cm) -> inches, which is what the engine wants.
       function readHeightIn() {
-        if (FUI.setUnit== 'cm') {
+        if (FUI.getUnit() === 'cm') {
           var c = parseFloat((el('styla-in-hcm') || {}).value);
           return isNaN(c) ? undefined : +(c / 2.54).toFixed(1);
         }
@@ -1086,7 +1086,7 @@
       // here the shopper is giving us the real ones.)
       function profileFromManual() {
         // Whatever they typed, the engine is given inches.
-        var toIn = function (v) { return (v == null) ? undefined : (FUI.setUnit== 'cm' ? +(v / 2.54).toFixed(2) : v); };
+        var toIn = function (v) { return (v == null) ? undefined : (FUI.getUnit() === 'cm' ? +(v / 2.54).toFixed(2) : v); };
         var num = function (id) { var v = parseFloat((el(id) || {}).value); return isNaN(v) ? undefined : toIn(v); };
         var chest = num('styla-in-chest'), waist = num('styla-in-waist'), height = readHeightIn();
         if (!chest || !waist || !height) return null;
@@ -1214,13 +1214,13 @@
         if (seg) seg.querySelectorAll('button').forEach(function (b) {
           b.classList.toggle('on', b.getAttribute('data-v') === FUI.getUnit());
         });
-        var metric = (FUI.setUnit== 'cm');
+        var metric = (FUI.getUnit() === 'cm');
         var imp = el('styla-g-himp'), met = el('styla-g-hmet');
         if (imp) imp.classList.toggle('styla-hidden', metric);
         if (met) met.classList.toggle('styla-hidden', !metric);
       }
       function readGiftHeight() {
-        if (FUI.setUnit== 'cm') {
+        if (FUI.getUnit() === 'cm') {
           var c = parseFloat((el('styla-g-hcm') || {}).value);
           return isNaN(c) ? null : +(c / 2.54).toFixed(1);
         }

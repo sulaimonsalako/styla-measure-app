@@ -379,6 +379,43 @@ for (const c of CHARTS) {
         'no forget control rendered on a locally saved person', 'styla-widget.js');
 }
 
+// --------------- 8. A FUNCTION IS NEVER COMPARED TO A VALUE ----
+// This has now shipped TWICE from the same cause. Extracting the presentation
+// layer into shared/fit-ui.js turned bare `UNIT` reads into `FUI.setUnit`
+// -- a mechanical rename to the wrong member. `FUI.setUnit == 'cm'` compares a
+// FUNCTION to a string, so it is always false, and nothing throws.
+//
+// The damage is silent and not cosmetic: both cm/inch toggles stopped
+// switching, and worse, measurements typed in centimetres were passed to the
+// engine as inches, so the shopper was sized off a body ~2.5x too small.
+//
+// Rule: an exported function may be ALIASED (var len = FUI.len) but must never
+// appear on either side of a comparison.
+{
+  const surfaces = [
+    ['shopify-app/extensions/styla-fit-widget/assets/styla-widget.js', 'FUI'],
+    ['widget.html', 'FUI'],
+  ];
+  const FUI_MOD = require('../../shared/fit-ui.js');
+  const fns = Object.keys(FUI_MOD).filter((k) => typeof FUI_MOD[k] === 'function');
+  for (const [rel, ns] of surfaces) {
+    let src;
+    try { src = readFileSync(new URL('../../' + rel, import.meta.url), 'utf8'); } catch { continue; }
+    for (const fn of fns) {
+      const left  = new RegExp(`\\b${ns}\\.${fn}\\s*(===|==|!==|!=)`);
+      const right = new RegExp(`(===|==|!==|!=)\\s*${ns}\\.${fn}\\b(?!\\s*\\()`);
+      if (left.test(src) || right.test(src))
+        add('CRITICAL', 'shared', 'an exported function is never compared to a value',
+            `${ns}.${fn} is compared, not called — did you mean ${ns}.${fn}()?`, rel);
+    }
+  }
+  // And the unit accessor must actually round-trip, or every conversion is wrong.
+  FUI_MOD.setUnit('cm');
+  if (FUI_MOD.getUnit() !== 'cm') add('CRITICAL', 'shared', 'setUnit/getUnit round-trip', 'setUnit("cm") did not stick', 'fit-ui');
+  FUI_MOD.setUnit('in');
+  if (FUI_MOD.getUnit() !== 'in') add('CRITICAL', 'shared', 'setUnit/getUnit round-trip', 'setUnit("in") did not stick', 'fit-ui');
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the
