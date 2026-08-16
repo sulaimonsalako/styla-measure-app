@@ -358,6 +358,27 @@ for (const c of CHARTS) {
   }
 }
 
+// ------------------- 8. NOTHING IS SAVED THE SHOPPER DIDN'T NAME ----
+// The gift flow used to persist every estimate to localStorage as "Friend 1",
+// "Friend 2" -- a permanent entry nobody asked for, with a name that meant
+// nothing a week later, and no way to remove it. Saving must be opt-in (they
+// type a name) and reversible (a forget control).
+{
+  const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                  import.meta.url), 'utf8');
+  const liquid = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/blocks/styla-widget.liquid',
+                                      import.meta.url), 'utf8');
+  if (/name:\s*['"`]Friend/.test(js) || /Friend '\s*\+/.test(js))
+    add('CRITICAL', 'privacy', 'no auto-generated saved people',
+        'a person is persisted under a generated "Friend N" name', 'styla-widget.js');
+  if (!liquid.includes('styla-g-name-{{ block.id }}'))
+    add('CRITICAL', 'privacy', 'the gift form asks for a name before saving',
+        'no name field in the estimate-for-someone form', 'styla-widget.liquid');
+  if (!js.includes('styla-who-x'))
+    add('BUG', 'privacy', 'saved people can be forgotten',
+        'no forget control rendered on a locally saved person', 'styla-widget.js');
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the

@@ -179,6 +179,18 @@
                   </div>
                 </div>
 
+                {%- comment -%}
+                  Naming them is what makes saving them the shopper's decision. The
+                  widget used to auto-save every estimate as "Friend 1", "Friend 2"
+                  — nobody asked for that, and the names meant nothing afterwards.
+                  Blank = use it now, remember nothing.
+                {%- endcomment -%}
+                <div class="styla-q">
+                  <label for="styla-g-name-{{ block.id }}">Their name <span class="styla-opt">Optional</span></label>
+                  <input type="text" id="styla-g-name-{{ block.id }}" placeholder="e.g. Mum" maxlength="24" autocomplete="off">
+                  <p class="styla-hint-sm">Only so you can pick them again next time. Leave it blank and we won’t save anything.</p>
+                </div>
+
                 <!-- Gender-specific, because the useful question differs. A man
                      usually knows his jacket number (which IS his chest in inches);
                      a woman knows a dress size, but only alongside its system. -->

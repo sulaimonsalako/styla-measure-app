@@ -23,12 +23,23 @@
   var LS_PEOPLE = 'styla_widget_people';   // people the shopper buys for, estimated locally
 
   function getPeople() { try { return JSON.parse(localStorage.getItem(LS_PEOPLE) || '[]'); } catch (e) { return []; } }
-  function savePerson(person) {
-    var list = getPeople().filter(function (p) { return p.id !== person.id; });
-    list.push(person);
+  function savePeople(list) {
     try { localStorage.setItem(LS_PEOPLE, JSON.stringify(list)); } catch (e) {}
     return list;
   }
+  function savePerson(person) {
+    var list = getPeople().filter(function (p) { return p.id !== person.id; });
+    list.push(person);
+    return savePeople(list);
+  }
+  // One-time cleanup: earlier builds auto-saved every estimate as "Friend 1",
+  // "Friend 2". The shopper never chose to keep those and the names carry no
+  // meaning, so drop them rather than make everyone tidy up by hand.
+  (function purgeAutoNamed() {
+    var list = getPeople();
+    var kept = list.filter(function (p) { return !/^Friend \d+$/.test(String((p && p.name) || '')); });
+    if (kept.length !== list.length) savePeople(kept);
+  }());
 
 
   // ---------------- shared presentation layer ----------------
@@ -207,7 +218,9 @@
           // No size, or a chart that shares no comparable measurement with the shopper,
           // must NOT show a confident size — show the honest "can't size this" state.
           var noOverlap = data && data.candidates && data.candidates.every(function(c){ return !c.breakdown || !Object.keys(c.breakdown).length; });
-          if (!data || !data.size || data.insufficient_data || noOverlap) { renderNoChart(); return; }
+          // Still repaint the shopping-for line: without a chart the shopper most
+          // wants to switch back to themselves, and blanking it stranded them.
+          if (!data || !data.size || data.insufficient_data || noOverlap) { renderNoChart(); renderShopFor(); return; }
           STATE.result = data;
           STATE.activeSize = data.size;
           try { renderAction(data.size); } catch (e) {}
@@ -293,7 +306,7 @@
         var slot = el('styla-shopfor-slot'); if (!slot) return;
 
         var local = getPeople().map(function (p) {
-          return { id: p.id, label: p.name, profile: p.profile, answers: p.answers };
+          return { id: p.id, label: p.name, profile: p.profile, answers: p.answers, local: true };
         });
         var shared = [];
         if (getToken()) {
@@ -309,14 +322,21 @@
         var friendMode = !!STATE.friendMode || !!STATE.shopForId;
 
         var chips = STATE.people.map(function (p) {
-          return '<button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
-                 '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>';
+          return '<span class="styla-who-wrap"><button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
+                 '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>' +
+                 (p.local ? '<button type="button" class="styla-who-x" data-forget="' + esc(p.id) +
+                            '" aria-label="Forget ' + esc(p.label) + '">×</button>' : '') + '</span>';
         }).join('');
 
+        // A quiet line of text, not a pair of pills. Most shoppers are buying for
+        // themselves; giving the minority flow the visual weight of a primary
+        // control was the single busiest thing on the panel.
         slot.innerHTML =
-          '<div class="styla-mode">' +
-            '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
-            '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
+          '<div class="styla-shopfor-line">' +
+            '<span class="styla-shopfor-lbl">Shopping for</span>' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">me</button>' +
+            '<span class="styla-shopfor-dot" aria-hidden="true">·</span>' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">someone else</button>' +
           '</div>' +
           // Only the people you can actually choose between. No add button:
           // with nobody saved the questionnaire below is already the flow, and
@@ -349,6 +369,19 @@
                 renderShopFor();                       // light the pill FIRST
                 if (!STATE.people.length) showFormForOther();
               }
+              return;
+            }
+            // Anything saved here was saved by the shopper, so they must be able
+            // to unsave it. A list you can only add to is how "Friend 1" ends up
+            // living in someone's widget forever.
+            var forget = ev.target.closest('.styla-who-x');
+            if (forget) {
+              var fid = forget.getAttribute('data-forget');
+              savePeople(getPeople().filter(function (p) { return p.id !== fid; }));
+              if (STATE.shopForId === fid) {
+                STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
+                renderShopFor(); STATE.result = null; loadFit();
+              } else renderShopFor();
               return;
             }
             var who = ev.target.closest('.styla-who');
@@ -586,15 +619,30 @@
         var host = detailsBody; if (!host || host.querySelector('.styla-save-cta')) return;
         var box = document.createElement('div');
         box.className = 'styla-save-cta';
+        // Collapsed by default. This is OUR ask, not the shopper's task — as a
+        // full sign-up form it filled the panel below the answer and pushed the
+        // conversation off-screen. One line, opens when they want it.
         box.innerHTML =
-          '<div class="styla-save-head">Save your size &amp; shop everywhere with Styla</div>' +
-          '<div class="styla-save-sub">Free account · your size in every brand you shop · no tape measure.</div>' +
-          '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
-          '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
-          '<button type="button" class="styla-save-btn">Save my size — free</button>' +
-          '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
-          '<div class="styla-save-msg"></div>';
+          '<button type="button" class="styla-save-open">' +
+            '<span class="styla-save-open-t">Save your size — free</span>' +
+            '<span class="styla-save-open-s">Use it in every store you shop</span>' +
+          '</button>' +
+          '<div class="styla-save-full styla-hidden">' +
+            '<div class="styla-save-sub">Free account · your size in every brand you shop · no tape measure.</div>' +
+            '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
+            '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
+            '<button type="button" class="styla-save-btn">Save my size — free</button>' +
+            '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
+            '<div class="styla-save-msg"></div>' +
+          '</div>';
         host.appendChild(box);
+        var opener = box.querySelector('.styla-save-open');
+        opener.addEventListener('click', function () {
+          opener.classList.add('styla-hidden');
+          box.classList.add('open');
+          box.querySelector('.styla-save-full').classList.remove('styla-hidden');
+          var em = box.querySelector('.styla-save-email'); if (em) em.focus();
+        });
         var connLink = box.querySelector('.styla-connect-link');
         if (connLink) connLink.addEventListener('click', openStylaConnect);
         box.querySelector('.styla-save-btn').addEventListener('click', function () {
@@ -856,6 +904,9 @@
       // keeps the whole thing in the widget.
       function showFormForOther() {
         STATE.forOther = true;
+        // Blank the name each time, or the second friend inherits the first
+        // one's name and quietly overwrites the wrong person.
+        var nm = el('styla-g-name'); if (nm) nm.value = '';
         paintGiftUnit();
         paintBuildLabels();
         formView('gift');                      // the self-quiz asks things you can't know about a friend
@@ -1222,15 +1273,22 @@
           suit: men ? (((el('styla-g-suit') || {}).value || '').trim() || undefined) : undefined,
           size: men ? undefined : (((el('styla-g-wsize') || {}).value || '').trim() || undefined),
         };
-        var person = { id: 'local:' + Date.now().toString(36),
-                       name: 'Friend ' + (getPeople().length + 1), answers: answers, local: true };
-        savePerson(person);
+        // Saving is opt-in, and opting in means naming them. Auto-saving every
+        // estimate as "Friend 1" put a permanent, meaningless entry in the
+        // shopper's widget that they never asked for and couldn't remove.
+        var name = (((el('styla-g-name') || {}).value) || '').trim().slice(0, 24);
         STATE.friendMode = true;
-        STATE.shopForId = person.id;
         STATE.shopForProfile = null;
         STATE.shopForAnswers = answers;             // server converts these
+        if (name) {
+          var person = { id: 'local:' + Date.now().toString(36), name: name, answers: answers, local: true };
+          savePerson(person);
+          STATE.shopForId = person.id;
+        } else {
+          STATE.shopForId = null;                   // this visit only
+        }
         exitOtherMode(); hideForm();
-        var slot = el('styla-shopfor-slot'); if (slot) slot.innerHTML = '';
+        renderShopFor();                            // repaint, don't blank-then-repaint
         STATE.result = null; loadFit();
       });
 
@@ -1273,7 +1331,10 @@
         // who had answered the quiz removed their only route into an account.
         if (connectTop) connectTop.classList.toggle('styla-hidden', signedIn);
         var sub = el('styla-head-sub');
-        if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
+        // Once there IS an answer the strapline is just words taking up the
+        // header — the answer explains the widget better than the tagline did.
+        if (sub) sub.textContent = signedIn ? 'Signed in with Styla'
+          : (STATE.result ? '' : 'Fit & size advice for your body');
       }
       if (signoutBtn) {
         signoutBtn.addEventListener('click', function () {

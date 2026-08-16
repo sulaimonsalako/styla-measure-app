@@ -695,8 +695,17 @@
 .styla-typing i:nth-child(2){ animation-delay:.2s; } .styla-typing i:nth-child(3){ animation-delay:.4s; }
 @keyframes stylaBlink { 0%,80%,100%{ opacity:.3; transform:translateY(0);} 40%{ opacity:1; transform:translateY(-3px);} }
 
-/* Guest save / signup CTA */
-.styla-save-cta { margin-top: 14px; padding: 16px; border-radius: 14px; background: linear-gradient(180deg,#fff5f8,#fff); border: 1px solid #ffd9e6; }
+/* Guest save / signup CTA.
+   Collapsed to a single row by default (2026-08-16). As an always-open form it
+   was the tallest thing on the panel and sat directly under the answer, so the
+   first screenful of a fit widget was a sign-up ask. */
+.styla-save-cta { margin-top: 14px; padding: 0; border-radius: 12px; background: transparent; border: 1px solid #ececf0; overflow: hidden; }
+.styla-save-cta.open { padding: 16px; background: linear-gradient(180deg,#fff5f8,#fff); border-color:#ffd9e6; }
+.styla-save-open { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; width:100%; box-sizing:border-box;
+  padding:11px 14px; border:0; background:transparent; cursor:pointer; text-align:left; font:inherit; }
+.styla-save-open:hover { background:#fafafb; }
+.styla-save-open-t { font-size:.82rem; font-weight:650; color:#c2185b; }
+.styla-save-open-s { font-size:.75rem; opacity:.6; }
 .styla-save-head { font-weight: 800; font-size: 14.5px; color:#1e293b; }
 .styla-save-sub { font-size: 12.5px; color:#64748b; margin: 4px 0 12px; line-height:1.5; }
 .styla-save-cta input { width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 11px 13px; border:1px solid #e2e5ec; border-radius: 10px; font-size: 14px; }
@@ -1027,16 +1036,30 @@
 .styla-forwho-note{ margin:8px 0 0; font-size:.75rem; line-height:1.45; opacity:.7; }
 .styla-opt{ font-size:.66rem; text-transform:uppercase; letter-spacing:.05em; opacity:.5; margin-left:5px; }
 
-/* ---- Me / A friend as a visible mode, not a dropdown (2026-08-10) ---- */
+/* ---- Me / A friend as a visible mode, not a dropdown (2026-08-10) ----
+   Demoted to a quiet line of text (2026-08-16). Two full pills gave a minority
+   flow the same weight as the recommendation itself. */
 .styla-shopfor-row{ display:block; margin-top:11px; }
-.styla-mode{ display:inline-flex; border:1px solid #e4e4e4; border-radius:100px; padding:3px; background:#f7f7f8; }
-.styla-mode-btn{ border:none; background:transparent; border-radius:100px; cursor:pointer;
-  padding:6px 14px; font-size:.78rem; font-weight:600; color:#666; white-space:nowrap; }
-.styla-mode-btn.on{ background:#fff; color:#c2185b; box-shadow:0 1px 3px rgba(0,0,0,.10); }
-.styla-who-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
+.styla-shopfor-line{ display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; font-size:.78rem; }
+.styla-shopfor-lbl{ opacity:.55; }
+.styla-shopfor-dot{ opacity:.3; }
+.styla-shopfor-line .styla-mode-btn{ border:0; background:none; box-shadow:none; padding:2px 0;
+  font-size:.78rem; font-weight:500; color:#8a90a0; cursor:pointer; text-decoration:underline;
+  text-decoration-color:rgba(0,0,0,.18); text-underline-offset:3px; white-space:nowrap; }
+.styla-shopfor-line .styla-mode-btn:hover{ color:#333; }
+.styla-shopfor-line .styla-mode-btn.on{ color:#c2185b; font-weight:650; text-decoration:none; }
+.styla-who-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.styla-who-wrap{ display:inline-flex; align-items:stretch; }
 .styla-who{ border:1px solid #e4e4e4; background:#fff; border-radius:100px;
   padding:5px 12px; font-size:.77rem; cursor:pointer; color:#333; }
 .styla-who.on{ background:#fdf0f4; border-color:#f6c9d8; color:#c2185b; font-weight:600; }
+.styla-who-wrap:has(.styla-who.on) .styla-who{ border-top-right-radius:0; border-bottom-right-radius:0; border-right:0; }
+.styla-who-x{ display:none; border:1px solid #f6c9d8; border-left:0; background:#fdf0f4;
+  border-radius:0 100px 100px 0; padding:0 9px 0 5px; font-size:.85rem; line-height:1; color:#c2185b;
+  cursor:pointer; opacity:.55; }
+.styla-who-x:hover{ opacity:1; }
+.styla-who-wrap:has(.styla-who.on) .styla-who-x,
+.styla-who-wrap:hover .styla-who-x{ display:block; }
 
 /* ---- Gift questionnaire ---- */
 .styla-gift{ padding:2px 0 4px; }
@@ -1107,8 +1130,10 @@
    past. This row used to be z-index:5 against the header's 3, so the
    shop-for toggle rode over the pinned answer while scrolling. */
 .styla-shopfor-row{ position:relative; z-index:0; padding:0 16px; margin:12px 0 4px !important; }
-.styla-shopfor-row .styla-mode,
-.styla-shopfor-row .styla-who{ pointer-events:auto; }
+.styla-shopfor-row .styla-shopfor-line,
+.styla-shopfor-row .styla-mode-btn,
+.styla-shopfor-row .styla-who,
+.styla-shopfor-row .styla-who-x{ pointer-events:auto; }
 .styla-who-hint{ width:100%; margin:8px 0 0; font-size:.75rem; opacity:.65; }
 
 /* "Continue with Styla" is an alternative, not the headline — the three cards
@@ -1125,13 +1150,16 @@
 /* Auth lives top-right: "Continue with Styla" when signed out, "Sign out" when
    in. Keeps the pink, loses the full-width block that fought the cards. */
 .styla-authslot{ margin-left:auto; flex:none; display:flex; align-items:center; gap:8px; }
+/* Outline, not solid (2026-08-16). Signing in is OUR goal, not the shopper's;
+   as a solid gradient it was the loudest thing on screen and outshouted the
+   size itself and the add-to-bag action. */
 .styla-connect-btn{
   width:auto; display:inline-flex; align-items:center; cursor:pointer;
-  padding:7px 14px; font-size:.78rem; font-weight:700; white-space:nowrap;
-  border-radius:100px; border:none; color:#fff;
-  background:linear-gradient(135deg,#e11d48,#ff2a75);
+  padding:6px 13px; font-size:.76rem; font-weight:600; white-space:nowrap;
+  border-radius:100px; color:#c2185b;
+  border:1px solid #f0cbd8; background:#fff;
 }
-.styla-connect-btn:hover{ filter:brightness(1.06); }
+.styla-connect-btn:hover{ border-color:#ff2a75; background:#fdf0f4; }
 .styla-connect-wrap{ display:none !important; }   /* superseded by the header slot */
 
 @media (max-width:560px){
