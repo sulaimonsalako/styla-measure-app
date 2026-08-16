@@ -328,15 +328,12 @@
                             '" aria-label="Forget ' + esc(p.label) + '">×</button>' : '') + '</span>';
         }).join('');
 
-        // A quiet line of text, not a pair of pills. Most shoppers are buying for
-        // themselves; giving the minority flow the visual weight of a primary
-        // control was the single busiest thing on the panel.
+        // "Shop for a friend" is the agreed wording — it was set deliberately in
+        // 049237e and must not be paraphrased away.
         slot.innerHTML =
-          '<div class="styla-shopfor-line">' +
-            '<span class="styla-shopfor-lbl">Shopping for</span>' +
-            '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">me</button>' +
-            '<span class="styla-shopfor-dot" aria-hidden="true">·</span>' +
-            '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">someone else</button>' +
+          '<div class="styla-mode">' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? '' : ' on') + '" data-mode="me">Shop for me</button>' +
+            '<button type="button" class="styla-mode-btn' + (friendMode ? ' on' : '') + '" data-mode="other">Shop for a friend</button>' +
           '</div>' +
           // Only the people you can actually choose between. No add button:
           // with nobody saved the questionnaire below is already the flow, and
@@ -619,30 +616,15 @@
         var host = detailsBody; if (!host || host.querySelector('.styla-save-cta')) return;
         var box = document.createElement('div');
         box.className = 'styla-save-cta';
-        // Collapsed by default. This is OUR ask, not the shopper's task — as a
-        // full sign-up form it filled the panel below the answer and pushed the
-        // conversation off-screen. One line, opens when they want it.
         box.innerHTML =
-          '<button type="button" class="styla-save-open">' +
-            '<span class="styla-save-open-t">Save your size — free</span>' +
-            '<span class="styla-save-open-s">Use it in every store you shop</span>' +
-          '</button>' +
-          '<div class="styla-save-full styla-hidden">' +
-            '<div class="styla-save-sub">Free account · your size in every brand you shop · no tape measure.</div>' +
-            '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
-            '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
-            '<button type="button" class="styla-save-btn">Save my size — free</button>' +
-            '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
-            '<div class="styla-save-msg"></div>' +
-          '</div>';
+          '<div class="styla-save-head">Save your size &amp; shop everywhere with Styla</div>' +
+          '<div class="styla-save-sub">Free account · your size in every brand you shop · no tape measure.</div>' +
+          '<input class="styla-save-email" type="email" placeholder="Email" autocomplete="email"/>' +
+          '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
+          '<button type="button" class="styla-save-btn">Save my size — free</button>' +
+          '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
+          '<div class="styla-save-msg"></div>';
         host.appendChild(box);
-        var opener = box.querySelector('.styla-save-open');
-        opener.addEventListener('click', function () {
-          opener.classList.add('styla-hidden');
-          box.classList.add('open');
-          box.querySelector('.styla-save-full').classList.remove('styla-hidden');
-          var em = box.querySelector('.styla-save-email'); if (em) em.focus();
-        });
         var connLink = box.querySelector('.styla-connect-link');
         if (connLink) connLink.addEventListener('click', openStylaConnect);
         box.querySelector('.styla-save-btn').addEventListener('click', function () {
@@ -1331,10 +1313,7 @@
         // who had answered the quiz removed their only route into an account.
         if (connectTop) connectTop.classList.toggle('styla-hidden', signedIn);
         var sub = el('styla-head-sub');
-        // Once there IS an answer the strapline is just words taking up the
-        // header — the answer explains the widget better than the tagline did.
-        if (sub) sub.textContent = signedIn ? 'Signed in with Styla'
-          : (STATE.result ? '' : 'Fit & size advice for your body');
+        if (sub) sub.textContent = signedIn ? 'Signed in with Styla' : 'Fit & size advice for your body';
       }
       if (signoutBtn) {
         signoutBtn.addEventListener('click', function () {

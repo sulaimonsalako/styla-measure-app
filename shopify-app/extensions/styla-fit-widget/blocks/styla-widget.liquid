@@ -487,12 +487,7 @@
         <div class="styla-chat-container" id="styla-tab-chat-{{ block.id }}">
           <div class="styla-chat-head">Ask about this item</div>
           <div class="styla-chat-history" id="styla-chat-history-{{ block.id }}">
-            {%- comment -%}
-              .intro, not a plain system message: this is placeholder copy, and
-              dressing it as a chat bubble made it look like the AI had already
-              said something — while making it the biggest block on the panel.
-            {%- endcomment -%}
-            <div class="chat-msg system intro"><p>Ask me anything — other sizes, length, fabric, or how this compares to something you already own.</p></div>
+            <div class="chat-msg system"><p>Ask me anything — other sizes, length, fabric, or how this compares to something you already own.</p></div>
           </div>
           <div class="styla-chat-suggest" id="styla-chat-suggest-{{ block.id }}"></div>
         </div>
