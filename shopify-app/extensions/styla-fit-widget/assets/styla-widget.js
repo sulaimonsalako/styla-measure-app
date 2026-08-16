@@ -737,10 +737,14 @@
           var altVerdict = alt ? FUI.verdictLabel({
             spectrum: alt.spectrum, fits: true, score: alt.score
           }) : null;
+          // When there IS a good alternative, say so. When there isn't, just say
+          // it's sold out and stop. Spelling out "nothing else here would fit
+          // you" adds nothing the shopper can act on and lands as a small
+          // rejection; "Other sizes" is right there if they want to look.
           note.textContent = sizeName + ' is sold out'
             + (alt
                 ? '. ' + alt.name + ' also fits you — ' + altVerdict.text.replace(/^Should fit you well$/, 'a clean fit').toLowerCase() + '.'
-                : ' — and nothing else in stock here would fit you.');
+                : '.');
           host.appendChild(note);
           if (alt) {
             var strong = typeof alt.score !== 'number' || alt.score >= ALT_STRONG_SCORE;
