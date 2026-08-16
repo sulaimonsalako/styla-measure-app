@@ -1354,3 +1354,56 @@
 }
 .styla-action-link:hover { opacity: 1; }
 .styla-action-link[disabled] { opacity: .45; cursor: default; text-decoration: none; }
+
+/* ============================================================
+   FLATTEN (2026-08-16)
+   Every element had become a bordered pill: the fit verdict, the suggested
+   length, four disclosure links, the shopping-for mode, the save CTA, the
+   chat opener. When everything is boxed nothing reads as more important
+   than anything else, and the panel is just outlines.
+
+   Rule from here on: a border means you can ACT on it. Facts about the
+   answer are text. Disclosures are links.
+   ============================================================ */
+
+/* Verdict and length describe the size, so they sit beside it as text,
+   separated by dots, instead of two chips flanking it. */
+.styla-sub-meta{ background:none !important; border:0 !important; box-shadow:none !important;
+  padding:0 !important; border-radius:0 !important; }
+.styla-sub-meta:not(:empty)::before{ content:'·'; opacity:.35; margin-right:9px; }
+
+/* Disclosures are links, not buttons. The open one is the only coloured one. */
+.styla-sub-links{ gap:0 16px !important; align-items:baseline; }
+.styla-lnk{ border:0 !important; background:none !important; border-radius:0 !important;
+  padding:4px 0 !important; color:#6b7280; font-weight:500;
+  text-decoration:underline; text-decoration-color:rgba(0,0,0,.16); text-underline-offset:3px; }
+.styla-lnk:hover{ color:#111; text-decoration-color:currentColor; }
+.styla-lnk[aria-expanded="true"]{ color:#c2185b !important; background:none !important;
+  border:0 !important; font-weight:650; text-decoration:none; }
+.styla-lnk-sep{ display:none; }          /* the gap already separates the tiers */
+.styla-lnk-quiet{ opacity:.55; }
+
+/* The "me" pill was inheriting the segmented-control white chip from the
+   generic .styla-mode-btn.on rule further up, which is exactly the box this
+   line was meant to lose. */
+.styla-shopfor-line .styla-mode-btn.on{
+  background:none !important; box-shadow:none !important; border:0 !important;
+  padding:2px 0 !important; border-radius:0 !important; }
+
+/* Our sign-up ask carries no border until the shopper opens it. */
+.styla-save-cta{ border:0; }
+.styla-save-cta.open{ border:1px solid #ffd9e6; }
+.styla-save-open{ padding:10px 0; }
+.styla-save-open:hover{ background:none; }
+.styla-save-open:hover .styla-save-open-t{ text-decoration:underline; text-underline-offset:3px; }
+
+/* "Size chart" sits beside "Continue with Styla"; two outlined controls in a
+   header is one too many, and only one of them is the primary action. */
+.styla-head-chart{ border:0 !important; padding:.4rem 0 !important; opacity:.6;
+  text-decoration:underline; text-underline-offset:3px; }
+
+/* The chat opener is placeholder copy, not a message anyone sent. A speech
+   bubble claims otherwise and it was the largest block on the panel. */
+.chat-msg.intro{ max-width:100%; }
+.chat-msg.intro p{ background:none !important; padding:0 !important;
+  color:#6b7280; font-size:.82rem; line-height:1.55; }
