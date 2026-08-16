@@ -160,6 +160,60 @@
   };
   function dimLabel(k) { return DIM_LABELS[k] || cap(k); }
 
+  // ------------------------------------------- why we passed it over ----
+  // A size we rejected used to be labelled "Compromises fit" — a phrase that
+  // tells the shopper nothing and reads as a shrug. Worse, a size can score
+  // HIGHER than the recommendation and still lose, because `fits` gates the
+  // sort above the score: 91 with a waist that won't do up loses to 88 that
+  // works everywhere. Without the reason on the row that looks like a mistake.
+  //
+  // Reads only the engine's structured facts, so it stays true when the
+  // wording, the language or the unit changes.
+  function blockReason(c) {
+    if (!c) return '';
+    var facts = c.facts || {};
+    // Unwearable beats merely-poor: a circumference that cannot get round the
+    // body is the whole story, so name it first.
+    var hard = (c.blocked || []).map(function (b) {
+      return dimShort(b.dim || b) + (b.short != null ? ' ' + len(b.short) + ' too small' : ' won’t close');
+    });
+    if (hard.length) return hard.slice(0, 2).join(', ');
+
+    var bad = Object.keys(facts).filter(function (k) {
+      return facts[k] && facts[k].ok === false && facts[k].verdict !== 'info';
+    }).map(function (k) { return dimShort(f_(k)) + ' ' + failText(f_(k)); });
+    function f_(k) { return facts[k]; }
+    return bad.slice(0, 2).join(', ');
+  }
+
+  // A sleeve is never "too tight" — it is too SHORT. factText() assumes
+  // circumference-ease semantics, so reusing it for length dimensions produced
+  // "Sleeve 6.2\" too tight", which is not a thing. Switch on the family.
+  var LENGTH_DIMS = { sleeve: 1, inseam: 1, length: 1, rise: 1, torso: 1 };
+  function failText(f) {
+    if (!f) return '';
+    var v = len(Math.abs(f.ease));
+    if (LENGTH_DIMS[f.dim]) return (f.ease < 0 ? v + ' too short' : v + ' too long');
+    return (f.ease < 0 ? v + ' too tight' : v + ' too loose');
+  }
+  // The canonical labels name the exact measurement convention, which matters in
+  // the breakdown and is far too long for a one-line row.
+  var SHORT_DIMS = { sleeve: 'Sleeve', shoulder: 'Shoulder' };
+  function dimShort(f) {
+    var k = (f && f.dim) || f;
+    return SHORT_DIMS[k] || dimLabel(k);
+  }
+
+  // One sentence for a row in the other-sizes list. `best` is the recommended
+  // size name, so the row that won says so and the rest explain themselves.
+  function sizeRowNote(c, best) {
+    if (!c) return '';
+    if (String(c.name) === String(best)) return cap(c.spectrum || '') + ' — your size';
+    var why = blockReason(c);
+    if (why) return why;
+    return cap(c.spectrum || '') + ' on you';
+  }
+
   // --------------------------------------------------------- honesty ----
   // A label-derived answer is a size BAND, not a body. Saying "94% match" for it
   // implies a precision we don't have, so it gets different wording.
@@ -231,6 +285,9 @@
     // labels
     statusFor: statusFor, badgeFor: badgeFor, cap: cap, esc: esc,
     DIM_LABELS: DIM_LABELS, dimLabel: dimLabel,
+    // why a size was passed over
+    blockReason: blockReason, sizeRowNote: sizeRowNote,
+    failText: failText, dimShort: dimShort,
     // honesty
     confidenceLabel: confidenceLabel, verdictLabel: verdictLabel,
     shouldDecline: shouldDecline, declineCopy: declineCopy

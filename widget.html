@@ -354,7 +354,10 @@
       var c=cands.find(function(x){return String(x.name)===String(name);})||cands[0];
       var isBest=String(name)===String(RES.size);
       var szv=el('szVal'); if(szv) szv.textContent=isBest?RES.size:(RES.size+' → '+name);
-      var note=isBest?RES.note:((c.fits?'':'Not ideal — ')+(c.spectrum||'')+' on you vs. your best size '+RES.size);
+      // Same sentence as the Shopify widget: name the dimension that lost it,
+      // not "Not ideal". A size can outscore the recommendation and still be
+      // passed over, and the row has to say why.
+      var note=isBest?RES.note:(FUI.sizeRowNote(c,RES.size)+' vs. your best size '+RES.size);
       var sh=el('specHost'); if(sh) sh.innerHTML=specHTML(c.spectrum||RES.spectrum,note);
       var bh=el('bkHost'); if(bh) bh.innerHTML=bkHTML(c);
       document.querySelectorAll('.sizeopt').forEach(function(b){b.classList.toggle('active',String(b.getAttribute('data-sz'))===String(name));});

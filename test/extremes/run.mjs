@@ -503,6 +503,42 @@ for (const c of CHARTS) {
         'cancel leaves the panel with no size in it', 'styla-widget.js');
 }
 
+// ------------- 8. A PASSED-OVER SIZE SAYS WHY IT WAS PASSED OVER ----
+// Rejected rows read "Compromises fit", which tells the shopper nothing. It
+// matters more than it looks: `fits` gates the sort ABOVE the score, so a size
+// can score 91 and lose to an 88. Without the reason on the row that reads as a
+// bug in the recommendation, and the shopper trusts the list over us.
+{
+  const FUI2 = require('../../shared/fit-ui.js');
+  const LENGTH = ['Sleeve', 'Inseam', 'Length', 'Rise'];
+  let checked = 0;
+  for (const b of BODIES) {
+    for (const c of CHARTS) {
+      let out; try { out = runSizingEngine(b.user, c.chart); } catch { continue; }
+      for (const cand of out.candidates || []) {
+        if (String(cand.name) === String(out.recommended_size)) continue;
+        if (cand.fits !== false && cand.wearable !== false) continue;
+        checked++;
+        const note = FUI2.sizeRowNote(cand, out.recommended_size);
+        if (!note || /^Compromises fit$/.test(note)) {
+          add('BUG', 'why-not', 'a rejected size names the dimension that lost it',
+              `"${note}"`, `${b.id} x ${c.id} size ${cand.name}`); break;
+        }
+        // A sleeve is not "tight" -- factText assumes circumference semantics,
+        // and reusing it for length dimensions produced "Sleeve 6.2" too tight".
+        for (const L of LENGTH)
+          if (note.startsWith(L) && /too (tight|loose)/.test(note)) {
+            add('BUG', 'why-not', 'length dimensions fail as short/long, not tight/loose',
+                `"${note}"`, `${b.id} x ${c.id}`); break;
+          }
+        if (/NaN|undefined/.test(note))
+          add('CRITICAL', 'why-not', 'the reason never leaks NaN/undefined', `"${note}"`, `${b.id} x ${c.id}`);
+      }
+    }
+  }
+  if (!checked) add('BUG', 'why-not', 'the fixtures actually exercise a rejected size', 'none found', 'coverage');
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the

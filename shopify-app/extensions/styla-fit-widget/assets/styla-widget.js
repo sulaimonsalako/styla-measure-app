@@ -484,8 +484,10 @@
           var oos = false;
           if (st) { var k = Object.keys(st).find(function (x) { return x.toLowerCase() === String(c.name).trim().toLowerCase(); });
                     if (k) oos = !st[k]; }
-          var note = c.name === res.size ? cap(c.spectrum || '') + ' — best match'
-                   : (c.fits ? cap(c.spectrum || '') + ' on you' : 'Compromises fit');
+          // "Compromises fit" told the shopper nothing, and a size can score
+          // HIGHER than the recommendation and still lose (fits gates the sort
+          // above the score) -- so without the reason, the list looks wrong.
+          var note = FUI.sizeRowNote(c, res.size);
           return '<div class="styla-alt' + (c.name === res.size ? ' is-best' : '') + (oos ? ' oos' : '') +
             '" data-size="' + esc(c.name) + '" role="button" tabindex="0">' +
             '<span class="styla-alt-name">' + esc(c.name) + '</span>' +
