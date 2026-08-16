@@ -689,6 +689,12 @@
       // reason to push a worse one; if they want to know how the others fit,
       // "Other sizes" tells them without any of it being sold to them.
       var ALT_MIN_SCORE = 70;
+      // Above this an alternative is genuinely good and can carry the primary
+      // button. Between ALT_MIN_SCORE and here it's wearable but a compromise, so
+      // it drops to a quiet link — the visual weight should match the confidence,
+      // not the sales opportunity. A pink full-width button says "buy this"; a
+      // text link says "this exists if you want it".
+      var ALT_STRONG_SCORE = 80;
 
       function renderAction(sizeName) {
         var host = el('styla-action'); if (!host) return;
@@ -737,9 +743,10 @@
                 : ' — and nothing else in stock here would fit you.');
           host.appendChild(note);
           if (alt) {
+            var strong = typeof alt.score !== 'number' || alt.score >= ALT_STRONG_SCORE;
             var altBtn = document.createElement('button');
             altBtn.type = 'button';
-            altBtn.className = 'styla-action-btn';
+            altBtn.className = strong ? 'styla-action-btn' : 'styla-action-link';
             // The note above already says how it fits; the button just acts.
             altBtn.textContent = 'Add ' + alt.name + ' to bag';
             altBtn.addEventListener('click', async function () {

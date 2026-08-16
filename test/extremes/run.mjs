@@ -242,6 +242,23 @@ for (const c of CHARTS) {
       add('CRITICAL', 'stock', 'a sold-out size never justifies a worse one',
           `would offer ${bad} to a shopper sized ${r.recommended_size}`, 'sold-out fallback');
   }
+  // Visual weight must track confidence, not sales opportunity. Assert the two
+  // thresholds stay ordered and that the widget still reads them; a silent edit
+  // to either turns a compromise back into a primary call to action.
+  {
+    const w = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                   import.meta.url), 'utf8');
+    const min = (w.match(/ALT_MIN_SCORE\s*=\s*(\d+)/) || [])[1];
+    const strong = (w.match(/ALT_STRONG_SCORE\s*=\s*(\d+)/) || [])[1];
+    if (!min || !strong)
+      add('CRITICAL', 'stock', 'alternative thresholds are defined', 'ALT_MIN_SCORE / ALT_STRONG_SCORE missing', 'styla-widget.js');
+    else if (Number(strong) < Number(min))
+      add('CRITICAL', 'stock', 'strong threshold is above the floor',
+          `ALT_STRONG_SCORE ${strong} < ALT_MIN_SCORE ${min}`, 'styla-widget.js');
+    if (!/styla-action-link/.test(w))
+      add('BUG', 'stock', 'a compromised alternative uses the quiet style',
+          'styla-action-link not used', 'styla-widget.js');
+  }
   if (!r.candidates.every((c) => 'wearable' in c))
     add('BUG', 'stock', 'candidates carry wearable',
         'the widget can only sort by chart order without it', 'sizing-engine');

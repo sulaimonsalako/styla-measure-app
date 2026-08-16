@@ -1315,3 +1315,14 @@
 
 /* Sold out is a fact, not an action. Quiet line, then the useful next step. */
 .styla-soldout { font-size: .85rem; opacity: .7; margin-bottom: .5rem; }
+
+/* A wearable-but-compromised alternative. Deliberately NOT the primary button:
+   the shopper asked for a size we can't supply, and the visual weight should
+   reflect how well this one actually fits, not how much we'd like to sell it. */
+.styla-action-link {
+  display: inline-block; width: auto; border: 0; background: none; padding: .3rem 0;
+  font: inherit; font-size: .88rem; cursor: pointer; color: inherit;
+  text-decoration: underline; text-underline-offset: 3px; opacity: .75;
+}
+.styla-action-link:hover { opacity: 1; }
+.styla-action-link[disabled] { opacity: .45; cursor: default; text-decoration: none; }
