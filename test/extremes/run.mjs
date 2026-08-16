@@ -476,6 +476,33 @@ for (const c of CHARTS) {
   }
 }
 
+// ------------- 8. A FIELD THE SHOPPER CAN SEE MUST BE FILLABLE ----
+// "My measurements" was a label with nothing behind it: the manual inputs were
+// only ever READ (profileFromManual), never WRITTEN, so no screen in the widget
+// could show the shopper the numbers being used to size them. For a product
+// whose claim is that it knows your body, that is the screen that has to exist.
+//
+// Rule: any input the shopper is shown as THEIR stored data must be written
+// from the stored profile as well as read from.
+{
+  const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                  import.meta.url), 'utf8');
+  for (const id of ['styla-in-chest', 'styla-in-waist', 'styla-in-hips',
+                    'styla-in-shoulders', 'styla-in-inseam']) {
+    // A write is any occurrence inside the prefill helper.
+    const fill = js.slice(js.indexOf('function fillManualFromProfile'), js.indexOf('if (editBtn)'));
+    if (!fill.includes(id))
+      add('CRITICAL', 'transparency', 'stored measurements are shown back to the shopper',
+          `${id} is read but never populated from the profile`, 'styla-widget.js');
+  }
+  // Backing out of the form must restore the answer -- showForm() clears
+  // has-answer and only renderFit ever set it.
+  const cancel = js.slice(js.indexOf('if (cancelBtn)'), js.indexOf('if (cancelBtn)') + 260);
+  if (!cancel.includes('setHasAnswer(true)'))
+    add('BUG', 'transparency', 'cancelling the form restores the answer',
+        'cancel leaves the panel with no size in it', 'styla-widget.js');
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the

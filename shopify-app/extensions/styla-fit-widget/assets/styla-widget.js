@@ -939,8 +939,55 @@
         formView('choose');
       }
       function hideForm() { formPanel.classList.add('styla-hidden'); detailsBody.classList.remove('styla-hidden'); }
-      if (editBtn) editBtn.addEventListener('click', function () { showForm(false); });
-      if (cancelBtn) cancelBtn.addEventListener('click', hideForm);
+      // "My measurements" must SHOW the measurements. It used to call
+      // showForm(false), which re-opened whatever panel the form happened to be
+      // on — the chooser, on a fresh load. So the shopper asking "what are you
+      // sizing me on?" was answered with "How should we work out your size?",
+      // as if we held nothing, and the answer disappeared behind it.
+      //
+      // Worse: the manual inputs were only ever READ, never written, so there
+      // was no path anywhere in the widget to see the numbers we size you from.
+      // For a product whose whole claim is that it knows your body, that is the
+      // one screen that has to exist.
+      function fillManualFromProfile() {
+        var p = getProfile(); if (!p) return false;
+        var cm = FUI.getUnit() === 'cm';
+        var out = function (inches) {
+          if (inches == null || !isFinite(inches)) return '';
+          return String(Math.round((cm ? inches * 2.54 : inches) * 10) / 10);
+        };
+        var put = function (id, v) { var n = el(id); if (n) n.value = v; };
+        put('styla-in-chest', out(p.chest));
+        put('styla-in-waist', out(p.waist));
+        put('styla-in-hips', out(p.hips));
+        put('styla-in-shoulders', out(p.shoulder));
+        put('styla-in-inseam', out(p.inseam));
+        if (p.height != null && isFinite(p.height)) {
+          if (cm) put('styla-in-hcm', String(Math.round(p.height * 2.54)));
+          else {
+            var ft = Math.floor(p.height / 12);
+            put('styla-in-hft', String(ft));
+            put('styla-in-hin', String(Math.round(p.height - ft * 12)));
+          }
+        }
+        return true;
+      }
+      if (editBtn) editBtn.addEventListener('click', function () {
+        var had = fillManualFromProfile();
+        showForm(false);
+        paintUnitUI();
+        // Nothing stored yet -> the chooser genuinely IS the right screen.
+        formView(had ? 'manual' : 'choose');
+        var t = el('styla-form-title');
+        if (had && t) t.textContent = 'These are the measurements we size you from. Change anything that looks wrong.';
+      });
+      // Backing out of the form must put the answer back. showForm() clears
+      // has-answer, and only renderFit ever set it, so cancelling left the
+      // shopper looking at a panel with no size in it until they reloaded.
+      if (cancelBtn) cancelBtn.addEventListener('click', function () {
+        hideForm();
+        if (STATE.result) setHasAnswer(true);
+      });
       // ---------- questionnaire (default) vs exact measurements ----------
       var QZ = { gender: 'women', fit: 'regular' };
       function qEl(id) { return el(id); }
@@ -978,7 +1025,7 @@
       var FORM_VIEWS = {
         choose: { title: null },
         quiz:   { title: 'A few quick questions — no tape measure needed.' },
-        manual: { title: 'Enter your measurements (inches).' },
+        manual: { title: 'Enter your measurements.' },   // unit lives on each field, and it changes
         known:  { title: 'Tell us a size you already wear.' },
         gift:   { title: null },
       };
