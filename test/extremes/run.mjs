@@ -225,7 +225,29 @@ for (const c of CHARTS) {
   }
 }
 
-// --------------------- 7. SERVERLESS IMPORTS MUST BE TRACEABLE ----
+// ------------------- 7. A SOLD-OUT SIZE IS NOT A LICENCE TO MIS-SELL ----
+// When the best size is out of stock the widget may offer an alternative, but
+// only one that actually fits. It used to take the first AVAILABLE variant in
+// chart order, which offered a 34 to a shopper the engine had sized at 38.
+{
+  const ALT_MIN = 70;   // must match ALT_MIN_SCORE in styla-widget.js
+  const chart = { chart_type: 'body', garment_category: 'suits', fabric_type: 'woven', sizes:
+    [34, 36, 38, 40, 42].map((n) => ({ name: String(n), chest: n, waist: n - 6 })) };
+  const r = runSizingEngine({ chest: 38, waist: 32 }, chart);
+  const offered = r.candidates
+    .filter((c) => c.name !== r.recommended_size && c.wearable !== false && c.fits && c.score >= ALT_MIN)
+    .map((c) => c.name);
+  for (const bad of ['34', '36']) {
+    if (offered.includes(bad))
+      add('CRITICAL', 'stock', 'a sold-out size never justifies a worse one',
+          `would offer ${bad} to a shopper sized ${r.recommended_size}`, 'sold-out fallback');
+  }
+  if (!r.candidates.every((c) => 'wearable' in c))
+    add('BUG', 'stock', 'candidates carry wearable',
+        'the widget can only sort by chart order without it', 'sizing-engine');
+}
+
+// --------------------- 8. SERVERLESS IMPORTS MUST BE TRACEABLE ----
 // api/store-api.js imports every route at module level, so ONE unresolvable
 // import kills the whole dispatcher -- and with it the CORS headers it sets.
 // The browser then reports "blocked by CORS policy" and the real error is never

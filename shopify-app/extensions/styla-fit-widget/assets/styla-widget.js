@@ -685,6 +685,11 @@
 
       // Silent when the size can't be mapped to a real variant — a dead button is
       // worse than no button.
+      // Below this we don't offer a size at all. A sold-out best size is not a
+      // reason to push a worse one; if they want to know how the others fit,
+      // "Other sizes" tells them without any of it being sold to them.
+      var ALT_MIN_SCORE = 70;
+
       function renderAction(sizeName) {
         var host = el('styla-action'); if (!host) return;
         host.innerHTML = '';
@@ -700,20 +705,32 @@
           // an action -- it's a fact, and the useful part is what to do next.
           var note = document.createElement('div');
           note.className = 'styla-soldout';
+          // An alternative is only worth offering if it ACTUALLY FITS. This used
+          // to take the first available variant in CHART order, so a shopper
+          // sized at 38 was offered a 34 -- four sizes down and unwearable. A
+          // sold-out best size is not a licence to sell them the wrong one.
           var alt = null;
-          var cands = (STATE.result && STATE.result.candidates) || [];
+          var cands = ((STATE.result && STATE.result.candidates) || [])
+            .filter(function (c) {
+              return String(c.name) !== String(sizeName)
+                && c.wearable !== false          // engine says it can be worn
+                && c.fits                        // and not flagged as a bad fit
+                && (typeof c.score !== 'number' || c.score >= ALT_MIN_SCORE);
+            })
+            .sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
           for (var i = 0; i < cands.length; i++) {
-            if (String(cands[i].name) === String(sizeName)) continue;
             var av = STYLA_PDP.findVariant(VARIANT_DATA, cands[i].name, currentSelection());
-            if (av && av.available) { alt = { name: cands[i].name, v: av }; break; }
+            if (av && av.available) { alt = { name: cands[i].name, v: av, score: cands[i].score }; break; }
           }
-          note.textContent = sizeName + ' is sold out' + (alt ? '' : ' — nothing else here fits you either.');
+          note.textContent = sizeName + ' is sold out'
+            + (alt ? '' : ' — and nothing else in stock here would fit you.');
           host.appendChild(note);
           if (alt) {
             var altBtn = document.createElement('button');
             altBtn.type = 'button';
             altBtn.className = 'styla-action-btn';
-            altBtn.textContent = 'Add ' + alt.name + ' to bag — closest that fits';
+            // Say WHY it's being offered, not just that it is.
+            altBtn.textContent = 'Add ' + alt.name + ' to bag — also fits you';
             altBtn.addEventListener('click', async function () {
               altBtn.disabled = true; var was = altBtn.textContent; altBtn.textContent = 'Adding\u2026';
               try { await addToBag(alt.v); altBtn.textContent = 'Added ' + alt.name + ' \u2713'; }

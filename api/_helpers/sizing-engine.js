@@ -509,7 +509,7 @@ export function runSizingEngine(user, chart) {
       fit_facts: {},
       explanation: 'This size chart doesn’t list the measurements we compare (it may size by height or use a format we can’t read yet), so we can’t confidently pick your size here.',
       warning: 'Not enough matching measurements on this chart to size you.',
-      candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, breakdown: {}, facts: {} })),
+      candidates: sizes.map((s) => ({ name: s.name, score: 0, spectrum: 'ideal', fits: false, wearable: false, blocked: [], breakdown: {}, facts: {} })),
     };
   }
 
@@ -587,7 +587,12 @@ export function runSizingEngine(user, chart) {
     // Every size, in chart order, so a widget can show "how each size fits you".
     candidates: sizes.map((s) => {
       const c = candidateScores.find((x) => x.name === s.name) || {};
+      // `wearable` must travel with each candidate. The widget offers an
+      // alternative when the best size is sold out, and without this it can only
+      // sort by chart order -- which is how it came to offer a 34 to someone the
+      // engine had sized at 38.
       return { name: s.name, score: c.score ?? 0, spectrum: c.spectrum || 'ideal', fits: !!c.fits,
+               wearable: c.wearable !== false, blocked: c.blocked || [],
                breakdown: c.breakdown || {}, facts: c.facts || {} };
     }),
   };
