@@ -22,6 +22,10 @@
   var LS_EXP = 'styla_widget_token_exp';
   var LS_PEOPLE = 'styla_widget_people';   // people the shopper buys for, estimated locally
 
+  var LS_SAVE_X = 'styla_widget_save_dismissed';
+  function saveDismissed() { try { return localStorage.getItem(LS_SAVE_X) === '1'; } catch (e) { return false; } }
+  function setSaveDismissed() { try { localStorage.setItem(LS_SAVE_X, '1'); } catch (e) {} }
+
   function getPeople() { try { return JSON.parse(localStorage.getItem(LS_PEOPLE) || '[]'); } catch (e) { return []; } }
   function savePeople(list) {
     try { localStorage.setItem(LS_PEOPLE, JSON.stringify(list)); } catch (e) {}
@@ -165,7 +169,10 @@
       var detailsBody = el('styla-details-body');
       var formPanel = el('styla-form');
 
-      var STATE = { result: null, activeSize: null, loading: false, chatBusy: false, shopForId: null, people: [] };
+      var STATE = { result: null, activeSize: null, loading: false, chatBusy: false, shopForId: null, people: [],
+                   // true only after the shopper has just worked out their size in
+                   // this session -- gates the one moment the save offer may appear
+                   answeredNow: false };
 
       // ---------- open / close ----------
       triggerBtn.addEventListener('click', function () {
@@ -355,10 +362,19 @@
             var mode = ev.target.closest('.styla-mode-btn');
             if (mode) {
               if (mode.getAttribute('data-mode') === 'me') {
+                // Every way of being in friend mode has to be undone here, not
+                // just a SELECTED friend. An estimated-but-unsaved friend has no
+                // shopForId, so the old early return repainted the buttons and
+                // left shopForAnswers in place -- the panel said "Shop for me"
+                // and went on showing the friend's size. Same trap if the gift
+                // form was open: it stayed open under the wrong mode.
+                var wasOther = !!(STATE.friendMode || STATE.shopForId ||
+                                  STATE.shopForProfile || STATE.shopForAnswers || STATE.forOther);
                 STATE.friendMode = false;
-                if (!STATE.shopForId) { renderShopFor(); return; }
                 STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
-                renderShopFor(); STATE.result = null; loadFit();
+                if (STATE.forOther) { exitOtherMode(); hideForm(); }
+                renderShopFor();
+                if (wasOther) { STATE.result = null; loadFit(); }
               } else {
                 STATE.friendMode = true;
                 // Nobody saved yet -> straight to the questions. Otherwise reveal
@@ -572,9 +588,17 @@
           ? 'Your best fit — ' + cap(c.spectrum || res.spectrum) + '.'
           : (c.fits ? cap(c.spectrum) + ' on you' : 'Not recommended') + ' vs. your best size ' + res.size + '.';
         if (intentEl) intentEl.textContent = [verb, stockTxt].filter(Boolean).join(' ');
-        // stock is the one thing worth showing WITHOUT opening a panel
+        // NO PERCENTAGE. "92% match" is a number the shopper cannot calibrate --
+        // is 92 good? -- and we removed it once already; this line was quietly
+        // putting it back by overwriting the verdict that was set above.
+        //
+        // Stock is worth showing without opening a panel, but only for a size
+        // the shopper has SELECTED. For the recommended size the sold-out line
+        // under the answer already says it, and saying it twice in two different
+        // wordings ("Sold out in this size." / "38 is sold out.") reads as noise.
         var meta = el('styla-conf');
-        if (meta && stockTxt) meta.textContent = (res.score != null ? res.score + '% match · ' : '') + stockTxt;
+        if (meta && stockTxt && sizeName !== res.size)
+          meta.textContent = [meta.textContent, stockTxt].filter(Boolean).join(' · ');
         if (sizesBody) sizesBody.querySelectorAll('.styla-alt').forEach(function (r) {
           r.classList.toggle('is-active', r.getAttribute('data-size') === sizeName);
         });
@@ -613,6 +637,13 @@
       // (keeps their size across this store's pages, and pitches Styla).
       function maybeShowSave() {
         if (getToken() || !getProfile()) return; // already signed in, or nothing to save
+        // It is an offer, not furniture. It may only appear in the moment the
+        // shopper has just worked out their size -- that is when saving it means
+        // something. Before this it rendered on every single load for any guest
+        // with a stored profile, so a permanent sign-up form sat under the
+        // answer forever, and dismissing it was impossible.
+        if (!STATE.answeredNow) return;
+        if (saveDismissed()) return;
         var host = detailsBody; if (!host || host.querySelector('.styla-save-cta')) return;
         var box = document.createElement('div');
         box.className = 'styla-save-cta';
@@ -623,8 +654,15 @@
           '<input class="styla-save-pass" type="password" placeholder="Create a password" autocomplete="new-password"/>' +
           '<button type="button" class="styla-save-btn">Save my size — free</button>' +
           '<div class="styla-save-alt">Already use Styla? <button type="button" class="styla-connect-link">Continue with Styla</button></div>' +
-          '<div class="styla-save-msg"></div>';
+          '<div class="styla-save-msg"></div>' +
+          '<button type="button" class="styla-save-x" aria-label="Not now">&times;</button>';
         host.appendChild(box);
+        // Declining has to be possible, and has to stick. Otherwise "not now"
+        // means "ask me again on the next product".
+        var dismiss = box.querySelector('.styla-save-x');
+        if (dismiss) dismiss.addEventListener('click', function () {
+          setSaveDismissed(); box.remove();
+        });
         var connLink = box.querySelector('.styla-connect-link');
         if (connLink) connLink.addEventListener('click', openStylaConnect);
         box.querySelector('.styla-save-btn').addEventListener('click', function () {
@@ -1131,6 +1169,7 @@
             return on ? (on.dataset.build || on.textContent || '').trim().toLowerCase() : null;
           }())
         };
+        STATE.answeredNow = true;
         hideForm();
         setLoading(true);
         STATE.result = null;
@@ -1142,6 +1181,7 @@
         if (!p) { var t = el('styla-form-title'); if (t) t.textContent = 'Chest, waist and height are needed — height decides Short/Regular/Long.'; return; }
 
         setProfile(p);
+        STATE.answeredNow = true;
         hideForm();
         STATE.result = null; loadFit();
       });

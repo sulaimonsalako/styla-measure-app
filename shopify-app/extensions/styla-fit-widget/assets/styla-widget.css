@@ -1337,3 +1337,10 @@
   color:#999; cursor:pointer; }
 .styla-who-x:hover{ color:#e11d48; }
 .styla-who.on + .styla-who-x{ background:#fdf0f4; border-color:#f6c9d8; color:#c2185b; }
+
+/* Declining the save offer. It only appears in the moment the shopper works
+   out their size, and it has to be refusable. */
+.styla-save-cta{ position:relative; }
+.styla-save-x{ position:absolute; top:6px; right:8px; border:0; background:none;
+  font-size:1.15rem; line-height:1; color:#b9909f; cursor:pointer; padding:4px 6px; }
+.styla-save-x:hover{ color:#c2185b; }

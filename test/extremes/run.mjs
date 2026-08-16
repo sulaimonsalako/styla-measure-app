@@ -416,6 +416,66 @@ for (const c of CHARTS) {
   if (FUI_MOD.getUnit() !== 'in') add('CRITICAL', 'shared', 'setUnit/getUnit round-trip', 'setUnit("in") did not stick', 'fit-ui');
 }
 
+// ------------------ 8. LEAVING FRIEND MODE ACTUALLY LEAVES IT ----
+// "Shop for me" repainted the buttons and did nothing else, because it took an
+// early return when there was no SELECTED friend. An estimated-but-unsaved
+// friend has no shopForId, so the panel said "Shop for me" while still showing
+// the friend's size -- stuck, with no way back to your own body.
+//
+// Every piece of friend state must be cleared on that branch. This is a source
+// check, not a behavioural one: there is no DOM in this sandbox (the registry
+// blocks jsdom), so it proves the clears are PRESENT, not that a click works.
+{
+  const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                  import.meta.url), 'utf8');
+  const start = js.indexOf("data-mode') === 'me'");
+  const end = start >= 0 ? js.indexOf('} else {', start) : -1;
+  if (start < 0 || end < 0) {
+    add('CRITICAL', 'shop-for', 'the "me" branch is findable', 'could not locate the mode handler', 'styla-widget.js');
+  } else {
+    // Strip comments first: the branch DOCUMENTS the old early-return bug, and
+    // scanning raw text made the guard fire on its own explanation.
+    const branch = js.slice(start, end).replace(/\/\/[^\n]*/g, '');
+    for (const clear of ['STATE.shopForId = null', 'STATE.shopForProfile = null',
+                         'STATE.shopForAnswers = null', 'STATE.friendMode = false'])
+      if (!branch.includes(clear))
+        add('CRITICAL', 'shop-for', 'switching back to "me" clears every piece of friend state',
+            `missing: ${clear}`, 'me branch');
+    // The early return was the actual defect -- a `return` before the clears.
+    const firstClear = Math.min(...['STATE.shopForId = null', 'STATE.shopForAnswers = null']
+      .map((c) => branch.indexOf(c)).filter((i) => i >= 0));
+    const earlyReturn = branch.indexOf('return');
+    if (earlyReturn >= 0 && earlyReturn < firstClear)
+      add('CRITICAL', 'shop-for', 'no early return before the friend state is cleared',
+          'the branch returns before clearing', 'me branch');
+  }
+
+  // And the gift flow must read the name field and hand it to savePerson --
+  // otherwise "saving a friend" silently keeps nothing.
+  const giftStart = js.indexOf('giftSave.addEventListener');
+  const gift = giftStart >= 0 ? js.slice(giftStart, giftStart + 2200) : '';
+  if (!gift.includes("el('styla-g-name')"))
+    add('CRITICAL', 'shop-for', 'the gift form reads the name the shopper typed',
+        'styla-g-name is never read on save', 'styla-widget.js');
+  if (!gift.includes('savePerson('))
+    add('CRITICAL', 'shop-for', 'a named friend is persisted',
+        'savePerson is never called from the gift save', 'styla-widget.js');
+}
+
+// ------------------------- 8. NO PERCENTAGE MATCH ANYWHERE ----
+// Agreed removed: a shopper cannot calibrate "92% match". It came back once
+// already, from a second line that overwrote the verdict after it was set.
+{
+  for (const rel of ['shopify-app/extensions/styla-fit-widget/assets/styla-widget.js', 'widget.html']) {
+    let src; try { src = readFileSync(new URL('../../' + rel, import.meta.url), 'utf8'); } catch { continue; }
+    // Only flag CONSTRUCTION of the string, not the fit-ui key that still backs
+    // the hover title.
+    if (/["'`]% match/.test(src.replace(/conf_match[^\n]*/g, '')))
+      add('BUG', 'copy', 'no "% match" is rendered to the shopper',
+          'a percentage string is built here', rel);
+  }
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the
