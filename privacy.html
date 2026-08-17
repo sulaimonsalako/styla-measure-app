@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy · Styla</title>
-  <meta name="description" content="How Styla collects, uses, and protects your information." />
+  <meta name="description" content="What Styla collects, why, how long we keep it, and the choices you have — for shoppers and for retailers." />
   <link rel="canonical" href="https://www.styla.ca/privacy.html" />
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,8 +25,14 @@
     .updated{color:var(--dim);font-size:0.9rem;margin-bottom:1.2rem;}
     .notice{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:10px;padding:1rem 1.2rem;color:var(--muted);font-size:0.9rem;margin-bottom:2.5rem;}
     h2{font-family:var(--head);font-size:1.5rem;font-weight:700;margin:2.2rem 0 0.6rem;}
+    h3{font-size:1rem;font-weight:600;margin:1.4rem 0 0.4rem;color:var(--white);}
     p{color:var(--muted);margin-bottom:1rem;}
     ul{color:var(--muted);margin:0 0 1rem 1.2rem;} li{margin-bottom:0.4rem;}
+    table{width:100%;border-collapse:collapse;margin:0 0 1.2rem;font-size:0.88rem;}
+    th,td{text-align:left;padding:0.6rem 0.7rem;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top;}
+    th{color:var(--white);font-weight:600;}
+    .toc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem 1rem 2.2rem;margin-bottom:2.4rem;}
+    .toc li{margin-bottom:0.25rem;}
     footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center;color:var(--dim);font-size:0.82rem;}
     footer a{color:var(--muted);}
   </style>
@@ -36,83 +42,248 @@
   <main>
     <div class="wrap">
       <h1>Privacy Policy</h1>
-      <div class="updated">Last updated: July 24, 2026</div>
+      <div class="updated">Last updated: August 17, 2026</div>
 
-      <p>Styla ("we," "us") helps you find clothing that fits your body. This policy explains what we collect, how we use it, and the choices you have. It applies to www.styla.ca, the Styla browser extension and bookmarklet, and the Styla fit widget where it appears on a retailer's online store.</p>
+      <div class="notice">
+        Styla works out clothing sizes from body measurements. That is personal information, and in some places
+        it is treated as sensitive. This policy is written to be read, not skimmed past — it says what we collect,
+        why we are allowed to, where it goes, and how long we keep it.
+      </div>
 
-      <h2>Who this policy is for</h2>
-      <p>Styla is used by two groups, and the relationship is different for each.</p>
-      <ul>
-        <li><strong>Shoppers.</strong> When you use styla.ca or save a Styla account, we decide how your information is used, and this policy governs it in full.</li>
-        <li><strong>Retailers, and shoppers using the widget on a retailer's store.</strong> When a retailer installs Styla on their store, they decide to offer it and we process shopper information on their behalf. In data-protection terms the retailer is the controller and Styla is the processor. The retailer's own privacy policy also applies, and our agreement with them governs what we may do with that information.</li>
+      <ul class="toc">
+        <li><a href="#who">Who this policy is for</a></li>
+        <li><a href="#collect">What we collect</a></li>
+        <li><a href="#photos">Photographs</a></li>
+        <li><a href="#guest">Measurements kept without an account</a></li>
+        <li><a href="#why">Why we use it, and our legal basis</a></li>
+        <li><a href="#share">Who we share it with</a></li>
+        <li><a href="#transfers">Where your information is stored</a></li>
+        <li><a href="#retention">How long we keep it</a></li>
+        <li><a href="#rights">Your rights, and how to use them</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#automated">Automated size recommendations</a></li>
+        <li><a href="#cookies">Cookies and local storage</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#changes">Changes</a></li>
+        <li><a href="#contact">Contact</a></li>
       </ul>
 
-      <h2>Information we collect</h2>
+      <h2 id="who">Who this policy is for</h2>
+      <p>
+        Styla is used by two groups, and our role differs for each. It matters, because it decides who you go to
+        about your information.
+      </p>
       <ul>
-        <li><strong>Account information</strong> — your email address and password (stored securely, hashed).</li>
-        <li><strong>Fit profile</strong> — the answers you give in our questionnaire and any measurements or fit preferences you save, which we use to recommend sizes.</li>
-        <li><strong>Measurements entered without an account</strong> — if you use the fit widget on a retailer's store as a guest, the measurements needed to size you are stored in your own browser on that retailer's website, so we can answer without asking you again. See "Guest measurements" below.</li>
-        <li><strong>Sharing information</strong> — if you share your size with someone (for gifting or a stylist), the email address of the person you share with and the status of that share.</li>
-        <li><strong>Payment information</strong> — when you make a purchase, payments are processed by Stripe. We do not store your full card details.</li>
-        <li><strong>Retailer information</strong> — when a retailer installs the Styla app, we read their product catalogue, inventory, shipping settings and published theme in order to recommend sizes on their product pages, together with the size charts they upload and their app settings. We do not request access to a retailer's customer records or orders.</li>
-        <li><strong>Usage data</strong> — basic technical information such as device, browser, and pages visited, used to operate and improve the service.</li>
+        <li>
+          <strong>Shoppers.</strong> When you use styla.ca, the Styla browser extension or the bookmarklet, or when
+          you save a Styla account, we decide how your information is used. We are the controller and this policy
+          governs it in full.
+        </li>
+        <li>
+          <strong>Shoppers using the Styla widget on a retailer's store.</strong> The retailer chose to offer Styla
+          on their site, and we process shopper information on their behalf and under their instructions. They are
+          the controller; we are the processor. Their privacy policy applies alongside this one, and requests about
+          that information can be made to either of us.
+        </li>
+        <li>
+          <strong>Retailers.</strong> When you install the Styla app, we process your store's information to run the
+          service for you. What we may do with it is set by our agreement with you.
+        </li>
       </ul>
 
-      <h2>Photographs</h2>
-      <p>Styla does not ask for, take, or process photographs of you. Sizes are worked out from the answers and measurements you provide yourself. If we ever add a camera-based option, it will be optional, we will say who processes the images before you use it, and we will update this policy first.</p>
-
-      <h2>Guest measurements</h2>
-      <p>You can use the fit widget without creating an account. When you do, the measurements you provide are kept in your browser's local storage on that retailer's website, and are sent to Styla only to calculate a size. They stay on that site — they do not follow you to other stores, which is what a Styla account is for. They remain until you clear them, clear your browser's site data for that store, or the browser discards them. If you share a device, anyone else using that browser on that store may see the size it produces.</p>
-
-      <h2>How we use your information</h2>
+      <h2 id="collect">What we collect</h2>
       <ul>
-        <li>To build your fit profile and recommend brands and sizes that fit you.</li>
-        <li>To enable size sharing with people you choose.</li>
-        <li>To process payments and provide access to paid features.</li>
-        <li>To send you service emails (confirmations, receipts, and share invites you initiate).</li>
-        <li>To secure, maintain, and improve the service.</li>
+        <li><strong>Account information</strong> — your email address and a password, which we store hashed, never in plain text.</li>
+        <li><strong>Fit profile</strong> — the answers you give our questionnaire, any measurements you enter, a size label you tell us you wear, and your fit preferences.</li>
+        <li><strong>Measurements entered without an account</strong> — see <a href="#guest">below</a>; these stay in your own browser.</li>
+        <li><strong>Sharing information</strong> — if you share your size with someone, their email address and the status of that share.</li>
+        <li><strong>Questions you ask the fit assistant</strong> — your message, plus the product and size-chart details needed to answer it.</li>
+        <li><strong>Payment information</strong> — handled by Stripe. We receive confirmation that a payment succeeded and what it was for. We never see or store your full card number.</li>
+        <li><strong>Retailer information</strong> — for stores that install our app: product catalogue, inventory, shipping settings, published theme, the size charts you upload, and your app settings. <strong>We do not request access to your customer records or your orders.</strong></li>
+        <li><strong>Technical information</strong> — device and browser type, pages visited, and error logs, used to operate and fix the service.</li>
       </ul>
+      <p>
+        We do not buy personal information from data brokers, and we do not enrich your profile from outside sources.
+        Everything above comes from you, or from a retailer about their own store.
+      </p>
 
-      <h2>How we share information</h2>
-      <p>We do not sell your personal information, and we do not use it to serve advertising. We share it only with the service providers that make Styla work, and only as much as each one needs:</p>
+      <h2 id="photos">Photographs</h2>
+      <p>
+        Styla does not ask for, take, or process photographs of you. Sizes are worked out from the answers and
+        measurements you provide yourself. If we ever add a camera-based option it will be optional, we will name
+        who processes the images before you use it, and we will update this policy first.
+      </p>
+
+      <h2 id="guest">Measurements kept without an account</h2>
+      <p>
+        You can use the fit widget on a retailer's store without creating anything. When you do, the measurements
+        you provide are stored <strong>in your own browser</strong>, on that retailer's website, so we do not have to
+        ask again on the next product. They are sent to Styla only to calculate a size, and are not saved to an
+        account.
+      </p>
+      <p>
+        Two consequences worth being plain about. They stay on that store only — they do not follow you elsewhere,
+        which is the thing a Styla account is actually for. And they remain until you clear them or clear that site's
+        data in your browser, so on a shared device the next person may see the size they produce. Clearing your
+        browser's site data for that store removes them completely.
+      </p>
+
+      <h2 id="why">Why we use it, and our legal basis</h2>
+      <table>
+        <tr><th>What we do</th><th>Why</th><th>Legal basis (UK/EU GDPR)</th></tr>
+        <tr><td>Work out your size and recommend garments</td><td>It is the service you asked for</td><td>Performance of a contract</td></tr>
+        <tr><td>Answer your questions in the fit assistant</td><td>Same</td><td>Performance of a contract</td></tr>
+        <tr><td>Keep your profile so you don't re-enter it</td><td>Same</td><td>Performance of a contract</td></tr>
+        <tr><td>Share your size with someone you nominate</td><td>You asked us to</td><td>Consent</td></tr>
+        <tr><td>Take payment for paid features</td><td>To complete the purchase</td><td>Performance of a contract; legal obligation for records</td></tr>
+        <tr><td>Keep the service secure and working</td><td>Fraud prevention, debugging, abuse</td><td>Legitimate interests</td></tr>
+        <tr><td>Improve accuracy of sizing</td><td>To make recommendations better</td><td>Legitimate interests</td></tr>
+        <tr><td>Send service emails you initiate</td><td>Receipts, share invitations</td><td>Performance of a contract</td></tr>
+      </table>
+      <p>
+        Where we rely on legitimate interests, we have considered whether it is fair to you and you can object at any
+        time using the contact details below. Where we rely on consent, you can withdraw it at any time, without
+        affecting anything done before you did.
+      </p>
+      <p>
+        <strong>We do not use your information for advertising</strong>, we do not sell or share it for cross-context
+        behavioural advertising as those terms are defined under US state privacy laws, and we do not profile you for
+        any purpose other than recommending a size.
+      </p>
+
+      <h2 id="share">Who we share it with</h2>
+      <p>We share only what each provider needs to do its job:</p>
+      <table>
+        <tr><th>Provider</th><th>What for</th><th>What they receive</th></tr>
+        <tr><td>Supabase</td><td>Database and sign-in</td><td>Account details and fit profile</td></tr>
+        <tr><td>Google (Gemini)</td><td>The fit assistant and product search</td><td>Your question, the product details, the size chart</td></tr>
+        <tr><td>Vercel</td><td>Hosting and delivery</td><td>Requests to our service, including IP address</td></tr>
+        <tr><td>Stripe</td><td>Payments</td><td>Payment details you enter directly with them</td></tr>
+        <tr><td>Shopify</td><td>Running the app on a retailer's store</td><td>Store and product information</td></tr>
+        <tr><td>Our email provider</td><td>Receipts and invitations you initiate</td><td>Email address and message</td></tr>
+      </table>
+      <p>
+        Your fit profile is shared with another person only when you explicitly choose to share it, and you can revoke
+        that at any time. We do not share one retailer's information with another retailer. We may disclose
+        information if we are legally required to, or to protect someone's safety or our legal rights — and we will
+        tell you unless we are prohibited from doing so.
+      </p>
+      <p>
+        If Styla is ever acquired or merged, information may transfer as part of that transaction. You would be told
+        before it happened and this policy would continue to apply until it was replaced.
+      </p>
+
+      <h2 id="transfers">Where your information is stored</h2>
+      <p>
+        Styla is operated from Canada. Our database and hosting run on infrastructure located in the
+        <strong>United States</strong>, so if you are in the UK, the EEA, or elsewhere, your information is
+        transferred outside your country. Where the law requires a transfer mechanism, we rely on the European
+        Commission's Standard Contractual Clauses and the UK Addendum with our providers, along with the technical
+        measures described under <a href="#security">Security</a>.
+      </p>
+
+      <h2 id="retention">How long we keep it</h2>
+      <table>
+        <tr><th>What</th><th>How long</th></tr>
+        <tr><td>Account and fit profile</td><td>While your account is active. Deleted within 30 days of you asking, or of you deleting the account.</td></tr>
+        <tr><td>Measurements kept without an account</td><td>In your browser, until you clear them. We do not hold a copy.</td></tr>
+        <tr><td>Fit assistant conversations</td><td>Not retained after the session ends.</td></tr>
+        <tr><td>Share records</td><td>Until you revoke the share, then deleted.</td></tr>
+        <tr><td>Payment records</td><td>Seven years, because tax and accounting law requires it.</td></tr>
+        <tr><td>Retailer store information</td><td>Erased when the app is uninstalled. Shopify notifies us 48 hours after uninstall and we delete that store's catalogue, size charts, settings and sessions.</td></tr>
+        <tr><td>Privacy and deletion requests</td><td>A record that the request was received and actioned, so we can demonstrate we handled it.</td></tr>
+        <tr><td>Technical and error logs</td><td>Up to 90 days.</td></tr>
+      </table>
+
+      <h2 id="rights">Your rights, and how to use them</h2>
+      <p>Wherever you live, you can ask us to:</p>
       <ul>
-        <li><strong>Supabase</strong> — database and authentication.</li>
-        <li><strong>Google (Gemini)</strong> — powers the fit assistant and the product search behind it. Your question and the relevant product and size-chart details are sent to answer it.</li>
-        <li><strong>Vercel</strong> — hosting.</li>
-        <li><strong>Stripe</strong> — payments.</li>
-        <li><strong>Shopify</strong> — where a retailer runs their store on Shopify, for the app to function on their product pages.</li>
-        <li>Our email provider, for service messages and share invitations you initiate.</li>
+        <li>tell you what we hold about you, and give you a copy;</li>
+        <li>correct anything that is wrong;</li>
+        <li>delete your information;</li>
+        <li>export it in a portable format;</li>
+        <li>stop or restrict a particular use, or withdraw consent;</li>
+        <li>object to a use we base on legitimate interests.</li>
       </ul>
-      <p>Your fit profile is shared with another person only when you explicitly choose to share it. We do not share one retailer's information with another.</p>
+      <p>
+        Email <a href="mailto:contact@styla.ca">contact@styla.ca</a> and we will respond within 30 days. We will not
+        charge you, and we will not treat you differently for asking. If someone makes a request on your behalf we
+        will need to confirm they are authorised.
+      </p>
+      <h3>If you are in the UK or the EEA</h3>
+      <p>
+        You may complain to your local supervisory authority. In the UK that is the Information Commissioner's Office.
+        We would rather you came to us first so we can put it right.
+      </p>
+      <h3>If you are in Canada</h3>
+      <p>
+        PIPEDA gives you the rights above, and you may complain to the Office of the Privacy Commissioner of Canada.
+      </p>
+      <h3>If you are in California or another US state with a privacy law</h3>
+      <p>
+        You have the rights above, including the right to know, delete, correct, and to opt out of sale or sharing —
+        though as stated, we do not sell or share your personal information, and we do not use it for cross-context
+        behavioural advertising. You may also appeal a decision we make about your request by replying to it.
+      </p>
+      <h3>If you used the widget on a retailer's store</h3>
+      <p>
+        That retailer is the controller for that information. You can send your request to them or to us; if it
+        reaches us we will act on it and tell them.
+      </p>
 
-      <h2>Automated size recommendations</h2>
-      <p>Sizes are calculated automatically by comparing your measurements against a brand's published size chart. No decision with a legal or similarly significant effect is made about you. Every recommendation shows the reasoning behind it, and you can always disregard it.</p>
+      <h2 id="security">Security</h2>
+      <p>
+        Traffic is encrypted in transit with TLS, and data is encrypted at rest by our infrastructure providers.
+        Passwords are hashed with bcrypt and are never stored or logged in readable form. Access to production data is
+        restricted to those who need it, and our database enforces row-level security so one account cannot read
+        another's records. Payment card details never touch our servers — they go directly to Stripe.
+      </p>
+      <p>
+        No system is perfectly secure. If a breach affects your information and the law requires it, we will notify
+        you and the relevant regulator within the required time.
+      </p>
 
-      <h2>Cookies</h2>
-      <p>We use essential cookies and similar technologies to keep you logged in and to operate the service. The fit widget on a retailer's store uses your browser's local storage, not advertising cookies, and only to remember the size information you gave it. You can control cookies and clear site data through your browser settings.</p>
+      <h2 id="automated">Automated size recommendations</h2>
+      <p>
+        Sizes are calculated automatically, by comparing your measurements against a brand's published size chart.
+        No decision with a legal or similarly significant effect is made about you — the outcome is a suggested size
+        you are free to ignore. Every recommendation shows the reasoning behind it, and you can ask us to explain or
+        review any result.
+      </p>
+      <p>
+        The fit assistant uses a large language model to answer questions. It can be wrong. Treat it as a helpful
+        shop assistant, not as a guarantee, and check the brand's own chart and returns policy before you buy.
+      </p>
 
-      <h2>Data retention</h2>
-      <ul>
-        <li><strong>Your account and fit profile</strong> — kept while your account is active. You can ask us to delete it at any time.</li>
-        <li><strong>Guest measurements</strong> — held in your own browser until you clear them; see "Guest measurements" above.</li>
-        <li><strong>Retailer information</strong> — when a retailer uninstalls the Styla app, Shopify notifies us 48 hours later and we erase that store's catalogue, size charts, settings and session data from our systems. Retailers who reinstall after that point start fresh.</li>
-        <li><strong>Privacy requests</strong> — we keep a record that a request was received and actioned, so we can demonstrate we handled it.</li>
-      </ul>
+      <h2 id="cookies">Cookies and local storage</h2>
+      <p>
+        On styla.ca we use only essential cookies — the ones that keep you signed in and keep the site working. We do
+        not use advertising or analytics cookies that track you across other websites.
+      </p>
+      <p>
+        The fit widget on a retailer's store uses your browser's local storage rather than cookies, and only to hold
+        the size information you gave it and your sign-in state. Clearing that site's data in your browser removes it.
+      </p>
 
-      <h2>Your rights</h2>
-      <p>Depending on where you live (including under Canada's PIPEDA and, where applicable, the GDPR), you may have the right to access, correct, export, or delete your personal information, and to withdraw consent. To exercise these rights, contact us at the email below.</p>
+      <h2 id="children">Children</h2>
+      <p>
+        Styla is not directed to children under 16 and we do not knowingly collect their information. Adults do buy
+        clothing for children through Styla; the information in that case is the adult's estimate, given by the
+        adult. If you believe a child has given us information directly, email us and we will delete it.
+      </p>
 
-      <h2>Security</h2>
-      <p>We use industry-standard measures to protect your information, including encrypted connections and access controls. No system is perfectly secure, but we work to safeguard your data.</p>
+      <h2 id="changes">Changes</h2>
+      <p>
+        We may update this policy. The date at the top always shows the current version. If a change materially
+        affects how we use information we already hold, we will tell account holders by email before it takes effect.
+      </p>
 
-      <h2>Children</h2>
-      <p>Styla is not directed to children under 16, and we do not knowingly collect their information.</p>
-
-      <h2>Changes to this policy</h2>
-      <p>We may update this policy from time to time. We'll post the new version here with an updated date.</p>
-
-      <h2>Contact us</h2>
-      <p>Questions about privacy? Email <a href="mailto:contact@styla.ca">contact@styla.ca</a>.</p>
+      <h2 id="contact">Contact</h2>
+      <p>
+        Privacy questions, requests, or complaints: <a href="mailto:contact@styla.ca">contact@styla.ca</a>.
+        Styla is based in Canada. If you are a retailer and need a data processing agreement, ask us at the same
+        address.
+      </p>
     </div>
   </main>
   <footer><div class="wrap">© <span id="y"></span> Styla · <a href="/terms.html">Terms</a> · <a href="/index.html">Home</a></div></footer>
