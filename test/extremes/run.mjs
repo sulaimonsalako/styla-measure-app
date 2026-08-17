@@ -561,6 +561,36 @@ for (const c of CHARTS) {
   }
 }
 
+// ---------------- 8. NO SELECTOR IS STYLED IN TWO PLACES ----
+// "Continue with Styla" disappeared under the cursor. Two .styla-connect-btn
+// rules and two :hover rules existed -- a leftover pale-pink set from when the
+// button lived in the body, and the solid set for the header. Identical
+// specificity, so the cascade merged them PER PROPERTY: `filter` from the later
+// hover, `background:#fdf0f4` from the EARLIER hover, `color:#fff` from the
+// later base. White text on a near-white background.
+//
+// Nothing throws, nothing looks wrong in the source, and it only shows on hover
+// -- so it survives every review that isn't someone moving a mouse. The rule:
+// one hover block per selector.
+{
+  const css = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.css',
+                                   import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');          // comments quote selectors
+  const hoverCount = {};
+  const COLOURING = /(^|;)\s*(background|background-color|color|border-color|opacity|visibility)\s*:/;
+  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const sel = m[1].trim().replace(/\s+/g, ' ');
+    if (!sel.includes(':hover') || sel.includes(',') || sel.startsWith('@')) continue;
+    if (!COLOURING.test(';' + m[2])) continue;      // only rules that repaint
+    hoverCount[sel] = (hoverCount[sel] || 0) + 1;
+  }
+  for (const [sel, n] of Object.entries(hoverCount))
+    if (n > 1)
+      add('CRITICAL', 'css', 'one hover block per selector',
+          `${sel} is declared ${n} times; the cascade will merge them per property`,
+          'styla-widget.css');
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the

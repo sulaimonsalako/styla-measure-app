@@ -726,8 +726,6 @@
 .styla-fit-analysis-panel, .styla-intent-card, .styla-size-picker-section { padding: 12px 14px !important; }
 
 /* Continue with Styla */
-.styla-connect-wrap{margin-bottom:14px;text-align:center;}
-/* .styla-connect-btn is styled once, further down (secondary pill). */
 .styla-connect-or{font-size:.76rem;color:#8a90a0;margin-top:7px;}
 .styla-save-alt{font-size:.8rem;color:#8a90a0;margin-top:10px;text-align:center;}
 .styla-connect-link{background:none;border:none;color:#e11d48;font-weight:700;cursor:pointer;font-size:.8rem;padding:0;text-decoration:underline;}
@@ -1113,17 +1111,14 @@
 
 /* "Continue with Styla" is an alternative, not the headline — the three cards
    are. It was a full-width primary block competing with them. */
-.styla-connect-wrap{ margin-bottom:16px; text-align:center; }
-.styla-connect-btn{
-  width:auto; display:inline-flex; align-items:center; gap:7px; cursor:pointer;
-  padding:9px 18px; font-size:.84rem; font-weight:600;
-  border-radius:100px; background:#fff; color:#c2185b; border:1px solid #f6c9d8;
-}
-.styla-connect-btn:hover{ border-color:#ff2a75; background:#fdf0f4; }
-.styla-connect-or{ font-size:.74rem; margin-top:6px; }
-
-/* Auth lives top-right: "Continue with Styla" when signed out, "Sign out" when
-   in. Keeps the pink, loses the full-width block that fought the cards. */
+/* NOTE: there is exactly ONE .styla-connect-btn rule and ONE :hover for it.
+   There used to be two of each — a leftover pale-pink set from when the button
+   lived in the body, and the solid set for the header. Same specificity, so the
+   cascade merged them PER PROPERTY: `filter` came from the later hover, but
+   `background:#fdf0f4` came from the earlier one, while `color:#fff` came from
+   the later base rule. White text on near-white background — the button
+   vanished under the cursor. If you add a variant, replace this rule; don't
+   append a second one. */
 .styla-authslot{ margin-left:auto; flex:none; display:flex; align-items:center; gap:8px; }
 .styla-connect-btn{
   width:auto; display:inline-flex; align-items:center; cursor:pointer;
@@ -1344,13 +1339,6 @@
 .styla-save-x{ position:absolute; top:6px; right:8px; border:0; background:none;
   font-size:1.15rem; line-height:1; color:#b9909f; cursor:pointer; padding:4px 6px; }
 .styla-save-x:hover{ color:#c2185b; }
-
-/* Privacy line on the method chooser — the screen where a shopper is about to
-   hand over body measurements. Quiet, but present at the point of collection;
-   a link in the app-store listing is for the merchant, not for them. */
-.styla-privacy-note{ margin:-2px 0 14px; font-size:.73rem; line-height:1.5; opacity:.6; }
-.styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
-.styla-privacy-note a:hover{ color:#c2185b; }
 
 /* Always-on privacy link — one word pair in the footer, above the composer and
    outside every screen, so no panel can hide it and it costs one line. */
