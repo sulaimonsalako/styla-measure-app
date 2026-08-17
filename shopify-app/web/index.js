@@ -40,7 +40,10 @@ const shopify = shopifyApi({
   // Only what we use: catalog + collections (read_products), live stock
   // (read_inventory), and real shipping destinations (read_shipping) so Styla
   // never recommends a brand that can't deliver to the shopper.
-  scopes: ['read_products', 'read_inventory', 'read_shipping'],
+  // Must match shopify.app.toml exactly. read_themes was added there (to check
+  // whether the merchant actually placed the widget block in their live theme)
+  // and never here, so the two disagreed about what the app asks for.
+  scopes: ['read_products', 'read_inventory', 'read_shipping', 'read_themes'],
   hostName: process.env.HOST ? process.env.HOST.replace(/https:\/\//, '') : 'localhost:8080',
   apiVersion: ApiVersion.April24,
   isEmbeddedApp: true

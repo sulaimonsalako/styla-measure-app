@@ -38,6 +38,12 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      # REQUIRED. shopify.auth.begin() builds the OAuth redirect_uri from this,
+      # and registerWebhooks() builds the delivery address from it. Unset, the
+      # code falls back to `localhost:8080` and every install dies with
+      # "The redirect_uri is not whitelisted" -- which is exactly what happened.
+      - key: HOST
+        value: https://app.styla.ca
       - key: STYLA_URL
         value: https://www.styla.ca
       - key: NODE_VERSION
