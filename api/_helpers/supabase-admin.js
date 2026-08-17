@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js';
 // via the public-read RLS policies. The SERVICE ROLE key is secret and stays
 // env-only; without it, writes to RLS-protected tables will fail (as intended).
 const PUBLIC_URL = 'https://tneflxtpmzodauygtslk.supabase.co';
-const PUBLIC_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc';
+const PUBLIC_ANON = 'sb_publishable_ofY7_ihU8ztHhxLohqXQLg_fypNnb2M';
 
 const supabaseUrl = process.env.SUPABASE_URL || PUBLIC_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';

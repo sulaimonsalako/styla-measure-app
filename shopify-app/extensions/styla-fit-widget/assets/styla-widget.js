@@ -15,7 +15,7 @@
   var API = 'https://www.styla.ca';
   var STYLA_ORIGIN = 'https://www.styla.ca';
   var SB_URL = 'https://tneflxtpmzodauygtslk.supabase.co';
-  var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc';
+  var SB_ANON = 'sb_publishable_ofY7_ihU8ztHhxLohqXQLg_fypNnb2M';
   var LS_PROFILE = 'styla_widget_profile';
   var LS_TOKEN = 'styla_widget_token';
   var LS_REFRESH = 'styla_widget_refresh';

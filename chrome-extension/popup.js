@@ -1048,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cloudSyncMsg = document.getElementById('cloud-sync-msg');
 
   const SUPABASE_URL = "https://tneflxtpmzodauygtslk.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuZWZseHRwbXpvZGF1eWd0c2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzA1NTMsImV4cCI6MjA5MzkwNjU1M30.DkzB5-novfMp1IaY4d9710YTv_U7DME3_EC8Jc87MLc";
+  const SUPABASE_ANON_KEY = "sb_publishable_ofY7_ihU8ztHhxLohqXQLg_fypNnb2M";
 
   // Helper to show messages in cloud sync panel
   function showSyncMsg(text, isError = false) {
