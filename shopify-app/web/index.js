@@ -232,7 +232,10 @@ app.get('/api/auth/callback', async (req, res) => {
 // Register webhook helper
 async function registerShopifyWebhooks(shop, accessToken) {
   const host = process.env.HOST || `https://${shop}`;
-  const webhooksToRegister = ['app/uninstalled', 'products/create', 'products/update', 'products/delete', 'inventory_levels/update'];
+  // app/uninstalled is declared in shopify.app.toml alongside the compliance
+  // topics, so registering it here too would create a second subscription to the
+  // same URI and deliver every uninstall twice.
+  const webhooksToRegister = ['products/create', 'products/update', 'products/delete', 'inventory_levels/update'];
   
   for (const topic of webhooksToRegister) {
     try {
@@ -258,23 +261,147 @@ async function registerShopifyWebhooks(shop, accessToken) {
 // ----------------------------------------------------
 // 2. Shopify Webhook Handlers
 // ----------------------------------------------------
+// ---------------------------------------------------------------------------
+// MANDATORY COMPLIANCE WEBHOOKS (GDPR / CCPA)
+//
+// Required for every app distributed through the Shopify App Store, whether or
+// not the app touches customer data. Declared in shopify.app.toml (they cannot
+// be registered over the Admin API like our product webhooks) and applied with
+// `shopify app deploy`. Shopify requires a 2xx on receipt and the action
+// completed within 30 days.
+//
+// Every request is recorded in `compliance_requests`, because the requirement is
+// not only to act but to be able to EVIDENCE that we acted — which is the part
+// that matters when a merchant or a regulator asks.
+// ---------------------------------------------------------------------------
+const COMPLIANCE_TOPICS = ['customers/data_request', 'customers/redact', 'shop/redact'];
+
+// A redaction routine that ran with an empty, wildcard or attacker-supplied shop
+// would delete a DIFFERENT merchant's catalogue. Nothing destructive runs unless
+// the value is a real myshopify domain.
+function validShopDomain(s) {
+  return typeof s === 'string' && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(s.trim());
+}
+
+async function logCompliance(topic, shop, payload) {
+  try {
+    const { data, error } = await supabase.from('compliance_requests')
+      .insert({ topic, shop: shop || '(unknown)',
+                shop_id: payload && payload.shop_id ? Number(payload.shop_id) : null,
+                payload: payload || null })
+      .select('id').single();
+    if (error) throw error;
+    return data ? data.id : null;
+  } catch (e) { console.error('compliance log failed:', e.message); return null; }
+}
+
+async function finishCompliance(id, outcome, rowsDeleted) {
+  if (!id) return;
+  try {
+    await supabase.from('compliance_requests')
+      .update({ completed_at: new Date().toISOString(), outcome, rows_deleted: rowsDeleted || null })
+      .eq('id', id);
+  } catch (e) { console.error('compliance log update failed:', e.message); }
+}
+
+// shop/redact — fires 48 hours after uninstall. Erase everything we hold for
+// that store. Children before parents, so nothing is orphaned by a failed step.
+async function eraseShopData(shop) {
+  const deleted = {};
+  const wipe = async (table, col, val) => {
+    if (val === null || val === undefined || val === '') return;
+    const { data, error } = await supabase.from(table).delete().eq(col, val).select();
+    if (error) { console.error(`shop/redact ${table} failed:`, error.message); deleted[table] = 'ERROR'; return; }
+    deleted[table] = (data || []).length;
+  };
+
+  // The merchant's own brand row is the join to everything brand-scoped. Matching
+  // on shopify_domain can only ever hit a merchant brand — Styla's own imported
+  // brands (7FAM, AG Jeans …) carry `domain`, never `shopify_domain`.
+  const { data: brandRow } = await supabase
+    .from('brands').select('id').eq('shopify_domain', shop).maybeSingle();
+  const brandId = brandRow ? brandRow.id : null;
+
+  // product_size_charts is keyed only by shopify_product_id, with no shop column,
+  // so the shop's product ids have to be read before the catalogue rows go.
+  const { data: prods } = await supabase
+    .from('catalog_products').select('external_id').eq('shop_domain', shop);
+  const externalIds = (prods || []).map((p) => p.external_id).filter(Boolean);
+  if (externalIds.length) {
+    const { data, error } = await supabase
+      .from('product_size_charts').delete().in('shopify_product_id', externalIds).select();
+    deleted.product_size_charts = error ? 'ERROR' : (data || []).length;
+  }
+
+  await wipe('catalog_products', 'shop_domain', shop);
+  await wipe('chart_parse_feedback', 'shop_domain', shop);
+  if (brandId) {
+    await wipe('products_cache', 'brand_id', brandId);   // references size_charts
+    await wipe('size_charts', 'brand_id', brandId);      // the merchant's own charts
+  }
+  await wipe('shop_settings', 'shop', shop);
+  await wipe('merchant_sessions', 'shop', shop);
+  if (brandId) await wipe('brands', 'shopify_domain', shop);
+
+  return deleted;
+}
+
 app.post('/api/webhooks', async (req, res) => {
   const hmac = req.get('X-Shopify-Hmac-Sha256');
   const topic = req.get('X-Shopify-Topic');
   const shop = req.get('X-Shopify-Shop-Domain');
 
-  // Verify HMAC signature
+  // Verify HMAC signature. timingSafeEqual, not !== : a plain string compare
+  // exits at the first differing byte and leaks the signature a byte at a time.
   const generatedHash = crypto
     .createHmac('sha256', process.env.SHOPIFY_API_SECRET || 'mock_secret')
     .update(req.rawBody)
     .digest('base64');
 
-  if (generatedHash !== hmac) {
+  let signatureOk = false;
+  try {
+    const a = Buffer.from(generatedHash, 'utf8');
+    const b = Buffer.from(String(hmac || ''), 'utf8');
+    signatureOk = a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch (e) { signatureOk = false; }
+  if (!signatureOk) {
     return res.status(401).send('Unauthorized webhook signature');
   }
 
   console.log(`Received Shopify Webhook: ${topic} for ${shop}`);
   const payload = req.body;
+
+  // Compliance topics are handled first and always answered 200 once the request
+  // is recorded. Shopify retries on a non-2xx, and a retry storm on a redaction
+  // endpoint is worse than completing the work on our own schedule.
+  if (COMPLIANCE_TOPICS.includes(topic)) {
+    const logId = await logCompliance(topic, shop, payload);
+    res.status(200).send('OK');
+    try {
+      if (topic === 'shop/redact') {
+        if (!validShopDomain(shop)) {
+          console.error('shop/redact refused: implausible shop domain', shop);
+          await finishCompliance(logId, 'refused: invalid shop domain');
+          return;
+        }
+        const deleted = await eraseShopData(shop);
+        console.log(`shop/redact erased data for ${shop}:`, deleted);
+        await finishCompliance(logId, 'erased', deleted);
+      } else {
+        // We hold NO data keyed to a Shopify customer. Our scopes are
+        // read_products, read_inventory, read_shipping and read_themes — no
+        // read_customers, no read_orders — and shopper measurements live under a
+        // Styla account that is never linked to a Shopify customer id. So there
+        // is nothing to return for a data request and nothing to redact. Recorded
+        // anyway: "we checked and held nothing" is itself the required answer.
+        await finishCompliance(logId, 'no data held for this customer');
+      }
+    } catch (err) {
+      console.error(`Compliance webhook ${topic} failed for ${shop}:`, err);
+      await finishCompliance(logId, 'FAILED: ' + err.message);
+    }
+    return;
+  }
 
   try {
     if (topic === 'app/uninstalled') {

@@ -2,11 +2,30 @@
 
 name = "Styla Fit Engine"
 client_id = "ae97233671ed9354af95498cd5c7fc62"
+# BLOCKER FOR SUBMISSION: this is a localtunnel from a dev session. Replace with
+# the app's stable production HTTPS host (and the matching redirect_urls below)
+# before running `shopify app deploy` for review. Set
+# build.automatically_update_urls_on_dev = false at the same time, or the next
+# `shopify app dev` will overwrite it with a fresh tunnel.
 application_url = "https://real-candles-visit.loca.lt"
 embedded = true
 
 [webhooks]
-api_version = "2024-04"
+# 2024-04 went out of support in April 2025. Stable versions live 12 months;
+# 2026-07 is current. Review rejects an unsupported version.
+api_version = "2026-07"
+
+# MANDATORY for every app distributed through the Shopify App Store, whether or
+# not it touches customer data. Unlike our product/inventory webhooks (registered
+# over the API at install time in web/index.js), the three compliance topics are
+# declared HERE and applied with `shopify app deploy` — you cannot register them
+# from the Admin API. Missing them is an automatic review rejection.
+#
+# All three land on the same endpoint, which verifies HMAC and returns 200.
+[[webhooks.subscriptions]]
+topics = [ "app/uninstalled" ]
+compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+uri = "/api/webhooks"
 
 [pos]
 embedded = false
