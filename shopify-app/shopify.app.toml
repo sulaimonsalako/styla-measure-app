@@ -2,12 +2,11 @@
 
 name = "Styla Fit Engine"
 client_id = "ae97233671ed9354af95498cd5c7fc62"
-# BLOCKER FOR SUBMISSION: this is a localtunnel from a dev session. Replace with
-# the app's stable production HTTPS host (and the matching redirect_urls below)
-# before running `shopify app deploy` for review. Set
-# build.automatically_update_urls_on_dev = false at the same time, or the next
-# `shopify app dev` will overwrite it with a fresh tunnel.
-application_url = "https://real-candles-visit.loca.lt"
+# Production. The app server runs on Render (service styla-shopify-app, Ohio,
+# Starter) behind our own domain rather than the onrender.com subdomain, so the
+# host can be changed later without re-registering the app with Shopify and
+# reinstalling on every store.
+application_url = "https://app.styla.ca"
 embedded = true
 
 [webhooks]
@@ -40,8 +39,13 @@ scopes = "read_products,read_inventory,read_shipping,read_themes"
 
 [auth]
 redirect_urls = [
-  "https://real-candles-visit.loca.lt/api/auth/callback"
+  "https://app.styla.ca/api/auth/callback"
 ]
 
 [build]
-automatically_update_urls_on_dev = true
+# false, deliberately. With this on, every `shopify app dev` rewrites
+# application_url and redirect_urls to that session's throwaway tunnel and
+# pushes it -- which is how the production URL became a loca.lt address in the
+# first place. Local development now runs against the tunnel without touching
+# the released configuration.
+automatically_update_urls_on_dev = false
