@@ -26,23 +26,12 @@
   function saveDismissed() { try { return localStorage.getItem(LS_SAVE_X) === '1'; } catch (e) { return false; } }
   function setSaveDismissed() { try { localStorage.setItem(LS_SAVE_X, '1'); } catch (e) {} }
 
-  function getPeople() { try { return JSON.parse(localStorage.getItem(LS_PEOPLE) || '[]'); } catch (e) { return []; } }
-  function savePeople(list) {
-    try { localStorage.setItem(LS_PEOPLE, JSON.stringify(list)); } catch (e) {}
-    return list;
-  }
-  function savePerson(person) {
-    var list = getPeople().filter(function (p) { return p.id !== person.id; });
-    list.push(person);
-    return savePeople(list);
-  }
-  // One-time cleanup: earlier builds auto-saved every estimate as "Friend 1",
-  // "Friend 2". The shopper never chose to keep those and the names carry no
-  // meaning, so drop them rather than make everyone tidy up by hand.
-  (function purgeAutoNamed() {
-    var list = getPeople();
-    var kept = list.filter(function (p) { return !/^Friend \d+$/.test(String((p && p.name) || '')); });
-    if (kept.length !== list.length) savePeople(kept);
+  // The widget no longer keeps people the shopper estimated -- it answers and
+  // stops. Anything an earlier build stored (auto-named "Friend 1", or named by
+  // hand while the opt-in save existed) is dropped on load; leaving it would
+  // show chips for a feature that no longer exists.
+  (function purgeLocalPeople() {
+    try { if (localStorage.getItem(LS_PEOPLE)) localStorage.removeItem(LS_PEOPLE); } catch (e) {}
   }());
 
 
@@ -312,9 +301,8 @@
       async function renderShopFor() {
         var slot = el('styla-shopfor-slot'); if (!slot) return;
 
-        var local = getPeople().map(function (p) {
-          return { id: p.id, label: p.name, profile: p.profile, answers: p.answers, local: true };
-        });
+        // Shared Styla profiles only. Estimates are not persisted, so there is
+        // nothing local to list.
         var shared = [];
         if (getToken()) {
           try {
@@ -325,14 +313,12 @@
             });
           } catch (e) {}
         }
-        STATE.people = shared.concat(local);
+        STATE.people = shared;
         var friendMode = !!STATE.friendMode || !!STATE.shopForId;
 
         var chips = STATE.people.map(function (p) {
-          return '<span class="styla-who-wrap"><button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
-                 '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>' +
-                 (p.local ? '<button type="button" class="styla-who-x" data-forget="' + esc(p.id) +
-                            '" aria-label="Forget ' + esc(p.label) + '">×</button>' : '') + '</span>';
+          return '<button type="button" class="styla-who' + (p.id === STATE.shopForId ? ' on' : '') +
+                 '" data-id="' + esc(p.id) + '">' + esc(p.label) + '</button>';
         }).join('');
 
         // "Shop for a friend" is the agreed wording — it was set deliberately in
@@ -382,19 +368,6 @@
                 renderShopFor();                       // light the pill FIRST
                 if (!STATE.people.length) showFormForOther();
               }
-              return;
-            }
-            // Anything saved here was saved by the shopper, so they must be able
-            // to unsave it. A list you can only add to is how "Friend 1" ends up
-            // living in someone's widget forever.
-            var forget = ev.target.closest('.styla-who-x');
-            if (forget) {
-              var fid = forget.getAttribute('data-forget');
-              savePeople(getPeople().filter(function (p) { return p.id !== fid; }));
-              if (STATE.shopForId === fid) {
-                STATE.shopForId = null; STATE.shopForProfile = null; STATE.shopForAnswers = null;
-                renderShopFor(); STATE.result = null; loadFit();
-              } else renderShopFor();
               return;
             }
             var who = ev.target.closest('.styla-who');
@@ -464,11 +437,22 @@
 
       function renderFit() {
         setHasAnswer(true);
-        syncHeadChart();
+        // renderNoChart hides all four disclosure links. renderAlternatives,
+        // renderLengths and renderChart each un-hide their own again — but
+        // NOTHING un-hid "Why this size", so once a shopper hit a product with no
+        // chart (or switched to a friend we couldn't size), the explanation link
+        // stayed gone for the rest of the session on every other product.
+        var lnkFit = el('styla-lnk-fit');
+        if (lnkFit) lnkFit.classList.remove('styla-hidden');
         renderCuts();
         renderAlternatives();
         renderLengths();
         renderChart();
+        // AFTER renderChart, not before. syncHeadChart mirrors the visibility of
+        // the chart disclosure link, and renderChart is what un-hides that link —
+        // so running it first read the PREVIOUS product's state and hid the
+        // header button on exactly the pages that do have a chart.
+        syncHeadChart();
         renderSize(STATE.activeSize);
       }
 
@@ -646,6 +630,11 @@
         // answer forever, and dismissing it was impossible.
         if (!STATE.answeredNow) return;
         if (saveDismissed()) return;
+        // Shown ONCE. answeredNow stays true for the session, and maybeShowSave
+        // runs on every renderSize, so tapping through sizes or backing out of a
+        // panel kept re-adding the form after it had been closed.
+        if (STATE.saveShown) return;
+        STATE.saveShown = true;
         var host = detailsBody; if (!host || host.querySelector('.styla-save-cta')) return;
         var box = document.createElement('div');
         box.className = 'styla-save-cta';
@@ -926,9 +915,6 @@
       // keeps the whole thing in the widget.
       function showFormForOther() {
         STATE.forOther = true;
-        // Blank the name each time, or the second friend inherits the first
-        // one's name and quietly overwrites the wrong person.
-        var nm = el('styla-g-name'); if (nm) nm.value = '';
         paintGiftUnit();
         paintBuildLabels();
         formView('gift');                      // the self-quiz asks things you can't know about a friend
@@ -1344,20 +1330,12 @@
           suit: men ? (((el('styla-g-suit') || {}).value || '').trim() || undefined) : undefined,
           size: men ? undefined : (((el('styla-g-wsize') || {}).value || '').trim() || undefined),
         };
-        // Saving is opt-in, and opting in means naming them. Auto-saving every
-        // estimate as "Friend 1" put a permanent, meaningless entry in the
-        // shopper's widget that they never asked for and couldn't remove.
-        var name = (((el('styla-g-name') || {}).value) || '').trim().slice(0, 24);
+        // Nothing is kept. Answer the question and stop — the shopper asked for
+        // a size, not for us to start a contact list on their device.
         STATE.friendMode = true;
         STATE.shopForProfile = null;
         STATE.shopForAnswers = answers;             // server converts these
-        if (name) {
-          var person = { id: 'local:' + Date.now().toString(36), name: name, answers: answers, local: true };
-          savePerson(person);
-          STATE.shopForId = person.id;
-        } else {
-          STATE.shopForId = null;                   // this visit only
-        }
+        STATE.shopForId = null;
         exitOtherMode(); hideForm();
         renderShopFor();                            // repaint, don't blank-then-repaint
         STATE.result = null; loadFit();

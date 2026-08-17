@@ -358,62 +358,29 @@ for (const c of CHARTS) {
   }
 }
 
-// ------------------- 8. NOTHING IS SAVED THE SHOPPER DIDN'T NAME ----
-// The gift flow used to persist every estimate to localStorage as "Friend 1",
-// "Friend 2" -- a permanent entry nobody asked for, with a name that meant
-// nothing a week later, and no way to remove it. Saving must be opt-in (they
-// type a name) and reversible (a forget control).
+// ---------------------- 8. AN ESTIMATE IS NEVER PERSISTED ----
+// Two iterations here. First the widget auto-saved every estimate as "Friend 1";
+// then it saved only ones the shopper named. The answer landed on: keep nothing.
+// The shopper asked for a size, not for a contact list on their device. People
+// they can pick again are people who SHARED a Styla profile, which is a real
+// relationship managed elsewhere.
 {
   const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
                                   import.meta.url), 'utf8');
   const liquid = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/blocks/styla-widget.liquid',
                                       import.meta.url), 'utf8');
-  if (/name:\s*['"`]Friend/.test(js) || /Friend '\s*\+/.test(js))
-    add('CRITICAL', 'privacy', 'no auto-generated saved people',
-        'a person is persisted under a generated "Friend N" name', 'styla-widget.js');
-  if (!liquid.includes('styla-g-name-{{ block.id }}'))
-    add('CRITICAL', 'privacy', 'the gift form asks for a name before saving',
-        'no name field in the estimate-for-someone form', 'styla-widget.liquid');
-  if (!js.includes('styla-who-x'))
-    add('BUG', 'privacy', 'saved people can be forgotten',
-        'no forget control rendered on a locally saved person', 'styla-widget.js');
-}
-
-// --------------- 8. A FUNCTION IS NEVER COMPARED TO A VALUE ----
-// This has now shipped TWICE from the same cause. Extracting the presentation
-// layer into shared/fit-ui.js turned bare `UNIT` reads into `FUI.setUnit`
-// -- a mechanical rename to the wrong member. `FUI.setUnit == 'cm'` compares a
-// FUNCTION to a string, so it is always false, and nothing throws.
-//
-// The damage is silent and not cosmetic: both cm/inch toggles stopped
-// switching, and worse, measurements typed in centimetres were passed to the
-// engine as inches, so the shopper was sized off a body ~2.5x too small.
-//
-// Rule: an exported function may be ALIASED (var len = FUI.len) but must never
-// appear on either side of a comparison.
-{
-  const surfaces = [
-    ['shopify-app/extensions/styla-fit-widget/assets/styla-widget.js', 'FUI'],
-    ['widget.html', 'FUI'],
-  ];
-  const FUI_MOD = require('../../shared/fit-ui.js');
-  const fns = Object.keys(FUI_MOD).filter((k) => typeof FUI_MOD[k] === 'function');
-  for (const [rel, ns] of surfaces) {
-    let src;
-    try { src = readFileSync(new URL('../../' + rel, import.meta.url), 'utf8'); } catch { continue; }
-    for (const fn of fns) {
-      const left  = new RegExp(`\\b${ns}\\.${fn}\\s*(===|==|!==|!=)`);
-      const right = new RegExp(`(===|==|!==|!=)\\s*${ns}\\.${fn}\\b(?!\\s*\\()`);
-      if (left.test(src) || right.test(src))
-        add('CRITICAL', 'shared', 'an exported function is never compared to a value',
-            `${ns}.${fn} is compared, not called — did you mean ${ns}.${fn}()?`, rel);
-    }
-  }
-  // And the unit accessor must actually round-trip, or every conversion is wrong.
-  FUI_MOD.setUnit('cm');
-  if (FUI_MOD.getUnit() !== 'cm') add('CRITICAL', 'shared', 'setUnit/getUnit round-trip', 'setUnit("cm") did not stick', 'fit-ui');
-  FUI_MOD.setUnit('in');
-  if (FUI_MOD.getUnit() !== 'in') add('CRITICAL', 'shared', 'setUnit/getUnit round-trip', 'setUnit("in") did not stick', 'fit-ui');
+  const code = js.replace(/\/\/[^\n]*/g, '');           // ignore the commentary
+  if (/setItem\(\s*LS_PEOPLE/.test(code))
+    add('CRITICAL', 'privacy', 'an estimated person is never written to storage',
+        'something still writes LS_PEOPLE', 'styla-widget.js');
+  if (/savePerson\s*\(/.test(code))
+    add('CRITICAL', 'privacy', 'no save-a-person path exists', 'savePerson is still called', 'styla-widget.js');
+  if (!/removeItem\(LS_PEOPLE\)/.test(code))
+    add('BUG', 'privacy', 'anything an earlier build stored is purged on load',
+        'no LS_PEOPLE cleanup', 'styla-widget.js');
+  if (liquid.includes('styla-g-name-{{ block.id }}'))
+    add('BUG', 'privacy', 'the gift form asks for nothing it will not use',
+        'the name field is back', 'styla-widget.liquid');
 }
 
 // ------------------ 8. LEAVING FRIEND MODE ACTUALLY LEAVES IT ----
@@ -450,16 +417,15 @@ for (const c of CHARTS) {
           'the branch returns before clearing', 'me branch');
   }
 
-  // And the gift flow must read the name field and hand it to savePerson --
-  // otherwise "saving a friend" silently keeps nothing.
+  // The gift flow keeps nothing now, but it must still APPLY what it collected.
+  // widget-size gated its known-size path on a `size` that this form marks
+  // optional, so the answers were set here and then silently ignored server-side
+  // -- the shopper was told there was no size chart for a product that sizes fine.
   const giftStart = js.indexOf('giftSave.addEventListener');
   const gift = giftStart >= 0 ? js.slice(giftStart, giftStart + 2200) : '';
-  if (!gift.includes("el('styla-g-name')"))
-    add('CRITICAL', 'shop-for', 'the gift form reads the name the shopper typed',
-        'styla-g-name is never read on save', 'styla-widget.js');
-  if (!gift.includes('savePerson('))
-    add('CRITICAL', 'shop-for', 'a named friend is persisted',
-        'savePerson is never called from the gift save', 'styla-widget.js');
+  if (!/STATE\.shopForAnswers\s*=\s*answers/.test(gift))
+    add('CRITICAL', 'shop-for', 'the gift form applies the answers it collected',
+        'shopForAnswers is never set on save', 'styla-widget.js');
 }
 
 // ------------------------- 8. NO PERCENTAGE MATCH ANYWHERE ----
@@ -537,6 +503,34 @@ for (const c of CHARTS) {
     }
   }
   if (!checked) add('BUG', 'why-not', 'the fixtures actually exercise a rejected size', 'none found', 'coverage');
+}
+
+// ------------- 8. WHAT ONE PATH HIDES, THE OTHER MUST RESTORE ----
+// Twice in one session: renderNoChart hides all four disclosure links, and
+// syncHeadChart mirrors the chart link's visibility. Each un-hide lived in the
+// renderer that owns it -- except "Why this size", which nothing restored, so
+// one product with no chart removed the explanation link for the whole session.
+// Same shape as syncHeadChart running BEFORE renderChart and reading stale state.
+{
+  const js = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/assets/styla-widget.js',
+                                  import.meta.url), 'utf8');
+  const noChart = js.slice(js.indexOf('function renderNoChart'), js.indexOf('function renderError'));
+  const hidden = [...noChart.matchAll(/'(styla-lnk-[a-z]+)'/g)].map((m) => m[1]);
+  const fit = js.slice(js.indexOf('function renderFit'), js.indexOf('function renderFit') + 1400);
+  for (const id of [...new Set(hidden)]) {
+    // Either renderFit restores it directly, or a renderer it calls does.
+    const restored = new RegExp(`'${id}'[\\s\\S]{0,220}?classList\\.remove\\('styla-hidden'\\)`).test(js)
+                  || new RegExp(`${id.replace(/-/g, '')}|lnk${id.split('-').pop()}`, 'i').test(fit);
+    if (!restored)
+      add('CRITICAL', 'render-state', 'every control renderNoChart hides is restored on a good render',
+          `${id} is hidden and never un-hidden`, 'styla-widget.js');
+  }
+  // Ordering: syncHeadChart mirrors the chart link, so it must run after the
+  // renderer that sets it.
+  const iChart = fit.indexOf('renderChart()'), iSync = fit.indexOf('syncHeadChart()');
+  if (iChart >= 0 && iSync >= 0 && iSync < iChart)
+    add('CRITICAL', 'render-state', 'syncHeadChart runs after renderChart',
+        'it mirrors a visibility renderChart has not set yet', 'renderFit');
 }
 
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----

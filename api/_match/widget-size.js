@@ -109,12 +109,20 @@ export default async function widgetSize(req, res) {
     // than in the widget so there's one conversion table, and so we can later
     // invert the named brand's own chart (exact) instead of the nominal table
     // (approximate) without shipping new widget code.
-    if (!profile && knownSize && knownSize.size) {
+    // Gating on `size` alone silently broke Shop-for-a-friend. That flow's only
+    // REQUIRED field is height — the size label and the jacket number are both
+    // marked optional, exactly because a gift buyer usually doesn't know them.
+    // So the common case arrived here as {heightIn, build, gender} with no
+    // `size`, fell straight through this block with no profile and no
+    // measurements, and the shopper was told we had no size chart for a product
+    // that sizes fine for them. toMeasurements() has always handled suit-only
+    // and height-only; nothing ever reached it.
+    if (!profile && knownSize && (knownSize.size || knownSize.suit || knownSize.heightIn)) {
       let derived = null;
 
       // Exact path first: did they tell us WHICH brand that size is from, and do
       // we hold that brand's chart?
-      if (knownSize.brand) {
+      if (knownSize.brand && knownSize.size) {
         const { data: b } = await supabaseAdmin.from('brands')
           .select('id, name').ilike('name', String(knownSize.brand).trim()).maybeSingle();
         if (b) {
@@ -136,9 +144,13 @@ export default async function widgetSize(req, res) {
         });
       }
       if (!derived) {
+        // Only name the label if there WAS one. Reaching here from the
+        // height-only path produced "We don't recognise undefined as a  size."
         return res.status(200).json({
           unknown_size: true,
-          message: `We don't recognise ${String(knownSize.size)} as a ${String(knownSize.system || '').toUpperCase()} size. Check the system, or enter your measurements.`,
+          message: knownSize.size
+            ? `We don't recognise ${String(knownSize.size)} as a ${String(knownSize.system || '').toUpperCase()} size. Check the system, or enter your measurements.`
+            : "We couldn't work out a size from that. Add a size they usually wear, or enter measurements.",
         });
       }
       if (knownSize.heightIn && !derived.height) {
