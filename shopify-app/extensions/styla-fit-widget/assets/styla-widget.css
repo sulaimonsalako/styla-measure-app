@@ -1344,3 +1344,10 @@
 .styla-save-x{ position:absolute; top:6px; right:8px; border:0; background:none;
   font-size:1.15rem; line-height:1; color:#b9909f; cursor:pointer; padding:4px 6px; }
 .styla-save-x:hover{ color:#c2185b; }
+
+/* Privacy line on the method chooser — the screen where a shopper is about to
+   hand over body measurements. Quiet, but present at the point of collection;
+   a link in the app-store listing is for the merchant, not for them. */
+.styla-privacy-note{ margin:-2px 0 14px; font-size:.73rem; line-height:1.5; opacity:.6; }
+.styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
+.styla-privacy-note a:hover{ color:#c2185b; }
