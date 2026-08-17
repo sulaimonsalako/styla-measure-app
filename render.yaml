@@ -1,0 +1,44 @@
+# Render blueprint for the Shopify app server.
+#
+# This is the HALF OF STYLA THAT IS NOT ON VERCEL. styla.ca serves the sizing
+# API the storefront widget calls; this server does the three things only a
+# long-running process can do:
+#
+#   - OAuth install    (/api/auth/callback)  — how a merchant installs the app
+#   - the admin screen (/)                   — paste charts, sync catalogue, assign
+#   - webhooks         (/api/webhooks)       — products, and the compliance topics
+#
+# Why not serverless: Shopify allows FIVE SECONDS to answer a webhook, and
+# deletes an Admin-API-registered subscription after 8 consecutive failures. A
+# cold start plus a database round trip does not reliably fit in five seconds,
+# and a deleted subscription is silent — the merchant's catalogue simply stops
+# updating and nothing says so.
+#
+# Do not move this to a plan that sleeps, for the same reason.
+services:
+  - type: web
+    name: styla-shopify-app
+    runtime: node
+    plan: starter              # always on. NOT `free`, which idles after 15 min.
+    region: ohio               # same side of the continent as the Supabase project (us-east-1)
+    rootDir: shopify-app       # package.json lives here, not at the repo root
+    buildCommand: npm install
+    startCommand: npm start    # -> node web/index.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # Values are set in the Render dashboard, never committed. `sync: false`
+      # means "prompt me for this", so a missing secret is caught at deploy time
+      # rather than by the server quietly falling back to a mock client.
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: STYLA_URL
+        value: https://www.styla.ca
+      - key: NODE_VERSION
+        value: "22"

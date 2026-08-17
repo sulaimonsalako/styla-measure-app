@@ -1612,6 +1612,24 @@ app.get('/api/merchant/analytics', async (req, res) => {
 });
 
 // Catch-all: any non-API GET renders the app UI (the chart manager). This makes
+// Health check for the host (Render, Railway, a load balancer). Deliberately
+// ABOVE the catch-all below, which would otherwise serve the app HTML and make
+// a broken deploy look healthy.
+//
+// Reports whether each secret is PRESENT, never its value. A server booted
+// without SUPABASE_SERVICE_ROLE_KEY falls back to a mock client and fails
+// silently on every write — this makes that visible in one request instead of
+// after a merchant's catalogue quietly stops syncing.
+app.get('/healthz', (req, res) => {
+  const need = ['SHOPIFY_API_KEY', 'SHOPIFY_API_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+  const missing = need.filter((k) => !process.env[k]);
+  res.status(missing.length ? 503 : 200).json({
+    ok: missing.length === 0,
+    missing_env: missing,          // names only
+    uptime_s: Math.round(process.uptime()),
+  });
+});
+
 // the embedded app load a real page no matter what path Shopify requests.
 app.get(/^(?!\/api\/).*/, serveApp);
 
