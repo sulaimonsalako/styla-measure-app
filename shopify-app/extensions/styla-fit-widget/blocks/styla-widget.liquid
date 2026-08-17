@@ -494,17 +494,14 @@
       </div>
 
       {%- comment -%}
-        ALWAYS VISIBLE. This has now been in two places that each turned out to
-        be conditional — inside the chooser (first visit only) and at the foot of
-        the form (entry screens only). Anything scoped to a screen is invisible
-        to the shopper who is already past that screen, which is exactly the one
-        whose measurements we hold. As a sibling of the composer it is outside
-        every screen and cannot be hidden by any of them.
+        ALWAYS VISIBLE, and just the link. It has been in two places that each
+        turned out to be conditional — the chooser (first visit only) and the
+        foot of the form (entry screens only) — so it now sits outside every
+        screen, as a sibling of the composer. The explanatory sentence went with
+        the redesign: the policy says it properly, and a paragraph of small print
+        above the message box was reading as clutter, not as reassurance.
       {%- endcomment -%}
-      <p class="styla-privacy-note">
-        Your measurements are used to size you and stay on this store unless you save a Styla account.
-        <a href="https://www.styla.ca/privacy.html" target="_blank" rel="noopener">How Styla uses your data</a>
-      </p>
+      <p class="styla-privacy-note"><a href="https://www.styla.ca/privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
 
       <!-- Composer: a sibling of the scroll area, so it stays put. -->
       <div class="styla-composer">

@@ -1352,8 +1352,8 @@
 .styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
 .styla-privacy-note a:hover{ color:#c2185b; }
 
-/* Always-on privacy line. Sits above the composer, outside every screen, so it
-   cannot be hidden by whichever panel happens to be open. */
-.styla-privacy-note{ margin:0; padding:8px 18px 0; font-size:.7rem; line-height:1.45; opacity:.5; }
-.styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
-.styla-privacy-note a:hover{ color:#c2185b; opacity:1; }
+/* Always-on privacy link — one word pair in the footer, above the composer and
+   outside every screen, so no panel can hide it and it costs one line. */
+.styla-privacy-note{ margin:0; padding:6px 18px 0; text-align:right; font-size:.68rem; line-height:1.3; }
+.styla-privacy-note a{ color:inherit; opacity:.45; text-decoration:underline; text-underline-offset:2px; }
+.styla-privacy-note a:hover{ opacity:.9; color:#c2185b; }
