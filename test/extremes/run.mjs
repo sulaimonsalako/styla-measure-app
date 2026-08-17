@@ -533,6 +533,34 @@ for (const c of CHARTS) {
         'it mirrors a visibility renderChart has not set yet', 'renderFit');
 }
 
+// -------- 8. THE PRIVACY LINK CANNOT BE SCOPED TO A SCREEN ----
+// Twice placed somewhere conditional: inside the chooser (first visit only),
+// then at the foot of the form (entry screens only). Both are invisible to the
+// shopper who is already past that screen -- which is exactly the shopper whose
+// measurements we are holding. It has to live outside every screen, and the
+// composer is the only thing in the modal that is always on.
+{
+  const liquid = readFileSync(new URL('../../shopify-app/extensions/styla-fit-widget/blocks/styla-widget.liquid',
+                                      import.meta.url), 'utf8');
+  const note = liquid.indexOf('styla-privacy-note');
+  if (note < 0) {
+    add('CRITICAL', 'privacy', 'the widget links its privacy policy at all', 'no privacy note', 'styla-widget.liquid');
+  } else {
+    // Every screen lives inside the form panel; the note must come after it.
+    const lastScreen = Math.max(
+      liquid.lastIndexOf('id="styla-chooser-'), liquid.lastIndexOf('id="styla-quiz-'),
+      liquid.lastIndexOf('id="styla-manual-'), liquid.lastIndexOf('id="styla-known-'),
+      liquid.lastIndexOf('id="styla-forwho-'), liquid.lastIndexOf('id="styla-form-'));
+    const composer = liquid.indexOf('class="styla-composer"');
+    if (note < lastScreen)
+      add('CRITICAL', 'privacy', 'the privacy link is not scoped to one screen',
+          'it sits inside the form panel, which is hidden once an answer exists', 'styla-widget.liquid');
+    if (composer < 0 || note > composer || composer - note > 500)
+      add('BUG', 'privacy', 'the privacy link sits with the always-on composer',
+          'it is not immediately before the composer', 'styla-widget.liquid');
+  }
+}
+
 // ------------------------------------------- 8. SHARED-COPY DRIFT ----
 // The Shopify theme extension can only load local assets, so shared/ modules are
 // COPIED into its assets folder. A copy that silently drifts is exactly how the

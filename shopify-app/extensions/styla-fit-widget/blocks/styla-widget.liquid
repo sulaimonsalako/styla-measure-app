@@ -478,16 +478,6 @@
                 <button type="button" class="styla-form-btn save" id="styla-save-specs-{{ block.id }}">Calculate Fit</button>
               </div>
 
-              {%- comment -%}
-                At the point of collection, on EVERY entry screen. This first sat
-                inside the chooser, which only shows on a first visit — so a
-                shopper with a saved profile never saw it, which is precisely the
-                shopper whose measurements we already hold.
-              {%- endcomment -%}
-              <p class="styla-privacy-note">
-                Your measurements are used to size you and stay on this store unless you save a Styla account.
-                <a href="https://www.styla.ca/privacy.html" target="_blank" rel="noopener">How Styla uses your data</a>
-              </p>
             </div>
             
           </div>
@@ -502,6 +492,19 @@
           <div class="styla-chat-suggest" id="styla-chat-suggest-{{ block.id }}"></div>
         </div>
       </div>
+
+      {%- comment -%}
+        ALWAYS VISIBLE. This has now been in two places that each turned out to
+        be conditional — inside the chooser (first visit only) and at the foot of
+        the form (entry screens only). Anything scoped to a screen is invisible
+        to the shopper who is already past that screen, which is exactly the one
+        whose measurements we hold. As a sibling of the composer it is outside
+        every screen and cannot be hidden by any of them.
+      {%- endcomment -%}
+      <p class="styla-privacy-note">
+        Your measurements are used to size you and stay on this store unless you save a Styla account.
+        <a href="https://www.styla.ca/privacy.html" target="_blank" rel="noopener">How Styla uses your data</a>
+      </p>
 
       <!-- Composer: a sibling of the scroll area, so it stays put. -->
       <div class="styla-composer">

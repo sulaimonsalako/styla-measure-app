@@ -139,16 +139,23 @@
       // demoting these out of the always-on list.
       var PANELS = [['styla-lnk-fit', discFit], ['styla-lnk-sizes', discSizes],
                     ['styla-lnk-len', discLen], ['styla-lnk-chart', discChart]];
+      // Open exactly one panel, or none. Used by the links AND by renderFit, so
+      // there is one definition of "which panel is showing" instead of the
+      // open/closed state being whatever the last code path happened to leave.
+      function openPanel(id) {
+        PANELS.forEach(function (o) {
+          var b = el(o[0]);
+          var isTarget = o[0] === id;
+          if (o[1]) o[1].classList.toggle('styla-hidden', !isTarget);
+          if (b) b.setAttribute('aria-expanded', isTarget ? 'true' : 'false');
+        });
+      }
       PANELS.forEach(function (pair) {
         var btn = el(pair[0]), panel = pair[1];
         if (!btn || !panel) return;
         btn.addEventListener('click', function () {
           var open = !panel.classList.contains('styla-hidden');
-          PANELS.forEach(function (o) {
-            if (o[1]) o[1].classList.add('styla-hidden');
-            var b = el(o[0]); if (b) b.setAttribute('aria-expanded', 'false');
-          });
-          if (!open) { panel.classList.remove('styla-hidden'); btn.setAttribute('aria-expanded', 'true'); }
+          openPanel(open ? null : pair[0]);     // clicking the open one closes it
         });
       });
       var suggestEl = el('styla-chat-suggest');
@@ -454,6 +461,13 @@
         // header button on exactly the pages that do have a chart.
         syncHeadChart();
         renderSize(STATE.activeSize);
+        // Deterministic. Which panel was open used to depend on whether a
+        // no-chart message had been shown earlier in the session -- showNote()
+        // un-hides the fit panel and nothing ever closed it again -- so the fit
+        // breakdown appeared on some products and not others for no reason the
+        // shopper could see. It is the evidence for the size, so on a fresh
+        // answer it is the one that opens; the link still closes it.
+        openPanel('styla-lnk-fit');
       }
 
       // ---- Compare other sizes (inline, no navigation) ----

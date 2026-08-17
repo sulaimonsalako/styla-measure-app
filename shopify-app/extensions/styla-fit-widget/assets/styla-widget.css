@@ -1351,3 +1351,9 @@
 .styla-privacy-note{ margin:-2px 0 14px; font-size:.73rem; line-height:1.5; opacity:.6; }
 .styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
 .styla-privacy-note a:hover{ color:#c2185b; }
+
+/* Always-on privacy line. Sits above the composer, outside every screen, so it
+   cannot be hidden by whichever panel happens to be open. */
+.styla-privacy-note{ margin:0; padding:8px 18px 0; font-size:.7rem; line-height:1.45; opacity:.5; }
+.styla-privacy-note a{ color:inherit; text-decoration:underline; text-underline-offset:2px; white-space:nowrap; }
+.styla-privacy-note a:hover{ color:#c2185b; opacity:1; }
