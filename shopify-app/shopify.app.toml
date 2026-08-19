@@ -43,13 +43,6 @@ redirect_urls = [
 ]
 
 [build]
-# Without this, `shopify app deploy` ships EXTENSIONS ONLY. The URLs, scopes and
-# webhook subscriptions in this file stay on the developer's machine and never
-# reach Shopify -- which is why the redirect_urls below read app.styla.ca while
-# Shopify was still refusing the callback against a loca.lt address it had
-# stored months earlier. The deploy log is the tell: it says "Bundling theme
-# extension" and nothing about configuration.
-include_config_on_deploy = true
 
 # false, deliberately. With this on, every `shopify app dev` rewrites
 # application_url and redirect_urls to that session's throwaway tunnel and

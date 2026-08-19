@@ -188,14 +188,24 @@ app.get('/api/auth', async (req, res) => {
     return res.status(400).send('Missing shop parameter');
   }
 
-  // Redirect to Shopify OAuth authorization screen
-  res.redirect(await shopify.auth.begin({
-    shop,
-    callbackPath: '/api/auth/callback',
-    isOnline: false,
-    rawRequest: req,
-    rawResponse: res
-  }));
+  // Begin OAuth. Because rawResponse is passed, shopify.auth.begin WRITES the
+  // redirect to `res` itself -- sets the Location header and ends the response.
+  // Wrapping its return in res.redirect() (as this did) sends headers a second
+  // time -> ERR_HTTP_HEADERS_SENT -> the request throws -> Render answers 502.
+  // Latent since it was written: installs never reached this handler until the
+  // OAuth URLs were finally correct, so the double-send had never been hit.
+  try {
+    await shopify.auth.begin({
+      shop,
+      callbackPath: '/api/auth/callback',
+      isOnline: false,
+      rawRequest: req,
+      rawResponse: res
+    });
+  } catch (e) {
+    console.error('auth.begin failed for', shop, e);
+    if (!res.headersSent) res.status(500).send('Could not start authentication. Please try again.');
+  }
 });
 
 app.get('/api/auth/callback', async (req, res) => {
