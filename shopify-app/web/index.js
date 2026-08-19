@@ -44,7 +44,13 @@ const shopify = shopifyApi({
   // whether the merchant actually placed the widget block in their live theme)
   // and never here, so the two disagreed about what the app asks for.
   scopes: ['read_products', 'read_inventory', 'read_shipping', 'read_themes'],
-  hostName: process.env.HOST ? process.env.HOST.replace(/https:\/\//, '') : 'localhost:8080',
+  // The library builds redirect_uri as `https://${hostName}${callbackPath}`, and
+  // Shopify demands an EXACT match against the whitelisted URL. The old
+  // `.replace(/https:\/\//,'')` only stripped the scheme -- a trailing slash on
+  // HOST ("https://app.styla.ca/") survived and produced
+  // "https://app.styla.ca//api/auth/callback", a double slash Shopify rejects as
+  // "redirect_uri is not whitelisted". Strip scheme AND any trailing slashes.
+  hostName: (process.env.HOST || 'localhost:8080').replace(/^https?:\/\//, '').replace(/\/+$/, ''),
   apiVersion: ApiVersion.April24,
   isEmbeddedApp: true
 });
