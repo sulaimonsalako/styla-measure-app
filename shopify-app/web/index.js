@@ -194,24 +194,24 @@ app.get('/api/auth', async (req, res) => {
     return res.status(400).send('Missing shop parameter');
   }
 
-  // Begin OAuth. Because rawResponse is passed, shopify.auth.begin WRITES the
-  // redirect to `res` itself -- sets the Location header and ends the response.
-  // Wrapping its return in res.redirect() (as this did) sends headers a second
-  // time -> ERR_HTTP_HEADERS_SENT -> the request throws -> Render answers 502.
-  // Latent since it was written: installs never reached this handler until the
-  // OAuth URLs were finally correct, so the double-send had never been hit.
-  try {
-    await shopify.auth.begin({
-      shop,
-      callbackPath: '/api/auth/callback',
-      isOnline: false,
-      rawRequest: req,
-      rawResponse: res
-    });
-  } catch (e) {
-    console.error('auth.begin failed for', shop, e);
-    if (!res.headersSent) res.status(500).send('Could not start authentication. Please try again.');
-  }
+  // MANAGED INSTALLATION — do not start legacy OAuth here.
+  //
+  // This app has no use_legacy_install_flow in shopify.app.toml, so it uses
+  // Shopify managed installation: Shopify grants the scopes declared in the
+  // toml when the merchant installs, and the server obtains its Admin token via
+  // token exchange (getOfflineToken) the first time the embedded app opens.
+  // The /oauth/authorize authorization-code flow this handler used to start is
+  // DISABLED for managed-install apps; Shopify rejects it with the misleading
+  // "redirect_uri is not whitelisted" even when the redirect_uri matches the
+  // whitelist exactly. We chased that error through three real fixes (HOST
+  // unset, a header double-send, slash normalisation) before reading the
+  // getOfflineToken comment that says all of this — the flow itself was wrong.
+  //
+  // Kept as a convenience redirect so old bookmarks and docs still land
+  // somewhere useful: the store's app listing, where Shopify runs the managed
+  // install itself.
+  const store = String(shop).replace('.myshopify.com', '');
+  res.redirect(`https://admin.shopify.com/store/${encodeURIComponent(store)}/oauth/install?client_id=${encodeURIComponent(process.env.SHOPIFY_API_KEY || '')}`);
 });
 
 app.get('/api/auth/callback', async (req, res) => {
