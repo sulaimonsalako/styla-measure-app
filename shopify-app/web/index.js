@@ -845,7 +845,24 @@ app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/shared', express.static(path.join(__dirname, '..', '..', 'shared')));
 // App home (embedded) = the size-chart manager. Serve it at / and /charts so the
 // app loads a real page instead of "Invalid path" when Shopify opens it.
-function serveApp(req, res) { res.sendFile(path.join(__dirname, 'public', 'charts.html')); }
+//
+// FRAME-ANCESTORS IS MANDATORY. Shopify requires every embedded app to send
+// Content-Security-Policy: frame-ancestors naming the merchant's shop and
+// admin.shopify.com, and enforces it — without the header the admin shows the
+// broken-page icon while the exact same URL loads fine in a normal tab, which
+// is precisely the symptom that led here. Set per-shop when we know the shop
+// (Shopify always passes ?shop= when loading the iframe); wildcard otherwise.
+function frameAncestors(req, res) {
+  const shop = String(req.query.shop || '');
+  const csp = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)
+    ? `frame-ancestors https://${shop} https://admin.shopify.com;`
+    : 'frame-ancestors https://*.myshopify.com https://admin.shopify.com;';
+  res.setHeader('Content-Security-Policy', csp);
+}
+function serveApp(req, res) {
+  frameAncestors(req, res);
+  res.sendFile(path.join(__dirname, 'public', 'charts.html'));
+}
 app.get('/', serveApp);
 app.get('/charts', serveApp);
 
